@@ -1,6 +1,6 @@
 { 
-    "name" : "isubsoft/ddav",
-    "description" : "This is the FOO WebDAV server",
+    "name" : "isubsoft/dav",
+    "description" : "This is the isubsoft WebDAV server",
     "require" : {
         "sabre/dav" : "~3.2.0"
     },
