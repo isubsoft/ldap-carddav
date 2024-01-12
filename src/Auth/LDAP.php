@@ -6,17 +6,37 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
 
 
     /**
-     * Store ldap directory access structure
+     * Store ldap directory access credentials
      *
      * @var array
      */
     public $config;
 
 
-    function __construct($config) {
+    /**
+     * Creates the backend.
+     *
+     * configuration array must be provided
+     * to access initial directory access.
+     *
+     * @param array $config
+     * @return void
+     */
+    function __construct(array $config) {
         $this->config = $config;
     }
 
+
+    /**
+     * Validates a username and password
+     *
+     * This method should return true or false depending on if login
+     * succeeded.
+     *
+     * @param string $username
+     * @param string $password
+     * @return bool
+     */
     function validateUserPass($username, $password)
     {
         // connect to ldap server
@@ -43,7 +63,7 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
                 $filter = str_replace('%u', $username, $this->config['auth']['ldap']['search_filter']);  // single filter
                 $attributes = ['dn'];
 
-                $result = ldap_search($ldapConn,$ldaptree, $filter, $attributes) or die ("Error in search query: ".ldap_error($ldapConn));
+                $result = ldap_search($ldapConn,$ldaptree, $filter, $attributes); 
                 $data = ldap_get_entries($ldapConn, $result);
                 
                 if($data['count'] == 1)
@@ -55,17 +75,8 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
                     {
                         return true;
                     }
-                    else{
-                        return false;
-                    }
                 }
-                else
-                {
-                    return false;
-                }
-
-            } else {
-                return false;
+                
             }
 
         }

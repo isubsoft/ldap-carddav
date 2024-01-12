@@ -28,7 +28,17 @@ class Backend extends \Sabre\CardDAV\Backend\AbstractBackend {
      */
     function getAddressBooksForUser($principalUri)
     {
-        echo 'a';
+        echo 'f';
+        
+        // $addressBooks[] = [
+        //     'id'                                                          => 'personal',
+        //     'uri'                                                         => 'addressbooks',
+        //     'principaluri'                                                => $principalUri,
+        //     // '{DAV:}displayname'                                           => $row['displayname'],
+        //     // '{' . CardDAV\Plugin::NS_CARDDAV . '}addressbook-description' => $row['description'],
+        //     // '{http://calendarserver.org/ns/}getctag'                      => $row['synctoken'],
+        //     // '{http://sabredav.org/ns}sync-token'                          => $row['synctoken'] ? $row['synctoken'] : '0',
+        // ];
     }
 
     /**

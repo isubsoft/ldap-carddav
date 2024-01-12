@@ -26,6 +26,9 @@ require 'conf/conf.php';
 // Backends
 $authBackend = new isubsoft\dav\Auth\LDAP($config);
 $carddavBackend = new isubsoft\dav\CardDav\Backend();
+$principalBackend = new isubsoft\dav\DAVACL\PrincipalBackend();
+
+
 // $authBackend = new Sabre\DAV\Auth\Backend\PDO($pdo);
 // $principalBackend = new Sabre\DAVACL\PrincipalBackend\PDO($pdo);
 // $carddavBackend = new Sabre\CardDAV\Backend\PDO($pdo);
@@ -33,14 +36,14 @@ $carddavBackend = new isubsoft\dav\CardDav\Backend();
 
 
 // Setting up the directory tree //
-// $nodes = [
-//     new Sabre\DAVACL\PrincipalCollection($principalBackend),
-// //    new Sabre\CalDAV\CalendarRoot($authBackend, $caldavBackend),
-//     new Sabre\CardDAV\AddressBookRoot($principalBackend, $carddavBackend),
-// ];
+$nodes = [
+    new Sabre\DAVACL\PrincipalCollection($principalBackend),
+//    new Sabre\CalDAV\CalendarRoot($authBackend, $caldavBackend),
+    new Sabre\CardDAV\AddressBookRoot($principalBackend, $carddavBackend),
+];
 
 // The object tree needs in turn to be passed to the server class
-$server = new Sabre\DAV\Server();
+$server = new Sabre\DAV\Server($nodes);
 $server->setBaseUri($baseUri);
 
 // Plugins
