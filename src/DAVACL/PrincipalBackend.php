@@ -26,7 +26,11 @@ class PrincipalBackend extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      */
     function getPrincipalsByPrefix($prefixPath)
     {
-        print_r($prefixPath);
+        $principals[] = ['uri' => 'principals/admin',
+                        '{DAV:}displayname' => 'Administrator',
+                        '{http://sabredav.org/ns}email-address' => 'admin@example.org'];
+
+                        return $principals;
     }
 
     /**
@@ -39,7 +43,12 @@ class PrincipalBackend extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      */
     function getPrincipalByPath($path)
     {
-        echo 'deb';
+        $principal = ['id' => '1',
+            'uri' => 'principals/admin',
+        '{DAV:}displayname' => 'Administrator',
+        '{http://sabredav.org/ns}email-address' => 'admin@example.org'];
+
+        return $principal;
     }
 
     /**

@@ -17,7 +17,7 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
      * Creates the backend.
      *
      * configuration array must be provided
-     * to access initial directory access.
+     * to access initial directory.
      *
      * @param array $config
      * @return void

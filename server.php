@@ -36,11 +36,21 @@ $principalBackend = new isubsoft\dav\DAVACL\PrincipalBackend();
 
 
 // Setting up the directory tree //
+// $nodes = [
+//     new Sabre\DAVACL\PrincipalCollection($principalBackend),
+// //    new Sabre\CalDAV\CalendarRoot($authBackend, $caldavBackend),
+//     new Sabre\CardDAV\AddressBookRoot($principalBackend, $carddavBackend),
+// ];
+
 $nodes = [
-    new Sabre\DAVACL\PrincipalCollection($principalBackend),
-//    new Sabre\CalDAV\CalendarRoot($authBackend, $caldavBackend),
-    new Sabre\CardDAV\AddressBookRoot($principalBackend, $carddavBackend),
+    new Sabre\DAV\SimpleCollection('principals', [
+        new Sabre\DAVACL\PrincipalCollection($principalBackend, 'principals/users')
+    ]),
+    new Sabre\DAV\SimpleCollection('addressbooks', [
+        new isubsoft\dav\AddressBookRoot($principalBackend, $carddavBackend, 'principals/users')
+    ])
 ];
+
 
 // The object tree needs in turn to be passed to the server class
 $server = new Sabre\DAV\Server($nodes);
@@ -50,7 +60,7 @@ $server->setBaseUri($baseUri);
 $server->addPlugin(new Sabre\DAV\Auth\Plugin($authBackend));
 $server->addPlugin(new Sabre\DAV\Browser\Plugin());
 //$server->addPlugin(new Sabre\CalDAV\Plugin());
-$server->addPlugin(new Sabre\CardDAV\Plugin());
+$server->addPlugin(new isubsoft\dav\CardDAVPlugin());
 // $server->addPlugin(new Sabre\DAVACL\Plugin());
 $server->addPlugin(new Sabre\DAV\Sync\Plugin());
 
