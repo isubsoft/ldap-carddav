@@ -25,8 +25,8 @@ require 'conf/conf.php';
 
 // Backends
 $authBackend = new isubsoft\dav\Auth\LDAP($config);
-$carddavBackend = new isubsoft\dav\CardDav\Backend();
-$principalBackend = new isubsoft\dav\DAVACL\PrincipalBackend();
+$carddavBackend = new isubsoft\dav\CardDav\LDAP();
+$principalBackend = new isubsoft\dav\DAVACL\PrincipalBackend\LDAP($config);
 
 
 // $authBackend = new Sabre\DAV\Auth\Backend\PDO($pdo);
