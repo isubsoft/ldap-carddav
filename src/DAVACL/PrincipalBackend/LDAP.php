@@ -1,6 +1,7 @@
 <?php
 
 namespace isubsoft\dav\DAVACL\PrincipalBackend;
+session_start();
 
 class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
 
@@ -72,50 +73,64 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      */
     function getPrincipalsByPrefix($prefixPath)
     {
+        
         $principals = [];
 
-        // connect to ldap server
-        $ldapUri = ($this->config['principal']['ldap']['use_tls'] ? 'ldaps://' : 'ldap://') . $this->config['principal']['ldap']['host'] . ':' . $this->config['principal']['ldap']['port'];
-        $ldapConn = ldap_connect($ldapUri);
+        if( session_id() != null && isset($_SESSION['user-credentials']))
+        {
+            $userCredential = $this->getUsercredential($_SESSION['user-credentials']);
         
-        ldap_set_option($ldapConn, LDAP_OPT_PROTOCOL_VERSION, $this->config['principal']['ldap']['ldap_version']);
-        ldap_set_option($ldapConn, LDAP_OPT_NETWORK_TIMEOUT, $this->config['principal']['ldap']['network_timeout']);
+            // connect to ldap server
+            $ldapUri = ($this->config['principal']['ldap']['use_tls'] ? 'ldaps://' : 'ldap://') . $this->config['principal']['ldap']['host'] . ':' . $this->config['principal']['ldap']['port'];
+            $ldapConn = ldap_connect($ldapUri);
+            
+            ldap_set_option($ldapConn, LDAP_OPT_PROTOCOL_VERSION, $this->config['principal']['ldap']['ldap_version']);
+            ldap_set_option($ldapConn, LDAP_OPT_NETWORK_TIMEOUT, $this->config['principal']['ldap']['network_timeout']);
 
-        // using ldap bind
-        $searchBindDn  = $this->config['principal']['ldap']['search_bind_dn'];     // ldap rdn or dn
-        $searchBindPass = $this->config['principal']['ldap']['search_bind_pw'];  // associated password
 
+            if ($ldapConn) {
 
-        if ($ldapConn) {
+                // binding to ldap server
+                $ldapBind = ldap_bind($ldapConn, $userCredential['userDn'], $userCredential['userPw']);
 
-            // binding to ldap server
-            $ldapBind = ldap_bind($ldapConn, $searchBindDn, $searchBindPass);
+                // verify binding
+                if ($ldapBind) {
+                    
+                    $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
+                    $filter = str_replace('%u', '*', $this->config['principal']['ldap']['search_filter']); 
+                    $attributes = ['displayName','mail'];
 
-            // verify binding
-            if ($ldapBind) {
-                
-                $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
-                $filter = $this->config['principal']['ldap']['search_filter'];  // single filter
-                $attributes = ['displayName','mail'];
-
-                $result = ldap_search($ldapConn,$ldaptree, $filter, $attributes);
-                $data = ldap_get_entries($ldapConn, $result);
-                
-                if($data['count'] > 1)
-                {
-                    for ($i=0; $i < $data['count']; $i++) { 
-
-                        $principal = [
-                            'uri' => $prefixPath. '/' . str_replace('uid=', '',explode(',',$data[$i]['dn'])[0]),
-                        ];
-                        foreach ($this->fieldMap as $key => $value) {
-                            if ($data[$i][$value['dbField']]) {
-                                $principal[$key] = $data[$i][$value['dbField']][0];
-                            }
-                        }
-                        $principals[] = $principal;
+                    if(strtolower($this->config['auth']['ldap']['scope']) == 'base')
+                    {
+                        $result = ldap_read($ldapConn, $ldaptree, $filter, $attributes);
                     }
-    
+                    else if(strtolower($this->config['auth']['ldap']['scope']) == 'one')
+                    {
+                        $result = ldap_list($ldapConn, $ldaptree, $filter, $attributes);
+                    }
+                    else
+                    {
+                        $result = ldap_search($ldapConn, $ldaptree, $filter, $attributes);
+                    }
+
+                    $data = ldap_get_entries($ldapConn, $result);
+                    
+                    if($data['count'] > 0)
+                    {
+                        for ($i=0; $i < $data['count']; $i++) { 
+
+                            $principal = [
+                                'uri' => $prefixPath. '/' . str_replace('uid=', '',explode(',',$data[$i]['dn'])[0]),
+                            ];
+                            foreach ($this->fieldMap as $key => $value) {
+                                if ($data[$i][$value['dbField']]) {
+                                    $principal[$key] = $data[$i][$value['dbField']][0];
+                                }
+                            }
+                            $principals[] = $principal;
+                        }
+        
+                    }
                 }
             }
         }
@@ -132,51 +147,66 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      */
     function getPrincipalByPath($path)
     {
-        
-        $id = str_replace($this->prefix.'/','',$path);
+        if( session_id() != null && isset($_SESSION['user-credentials']))
+        {
+            $userCredential = $this->getUsercredential($_SESSION['user-credentials']);
+            $id = str_replace($this->prefix.'/','',$path);
 
-        // connect to ldap server
-        $ldapUri = ($this->config['principal']['ldap']['use_tls'] ? 'ldaps://' : 'ldap://') . $this->config['principal']['ldap']['host'] . ':' . $this->config['principal']['ldap']['port'];
-        $ldapConn = ldap_connect($ldapUri);
-        
-        ldap_set_option($ldapConn, LDAP_OPT_PROTOCOL_VERSION, $this->config['principal']['ldap']['ldap_version']);
-        ldap_set_option($ldapConn, LDAP_OPT_NETWORK_TIMEOUT, $this->config['principal']['ldap']['network_timeout']);
+            // connect to ldap server
+            $ldapUri = ($this->config['principal']['ldap']['use_tls'] ? 'ldaps://' : 'ldap://') . $this->config['principal']['ldap']['host'] . ':' . $this->config['principal']['ldap']['port'];
+            $ldapConn = ldap_connect($ldapUri);
+            
+            ldap_set_option($ldapConn, LDAP_OPT_PROTOCOL_VERSION, $this->config['principal']['ldap']['ldap_version']);
+            ldap_set_option($ldapConn, LDAP_OPT_NETWORK_TIMEOUT, $this->config['principal']['ldap']['network_timeout']);
 
-        // using ldap bind
-        $searchBindDn  = $this->config['principal']['ldap']['search_bind_dn'];     // ldap rdn or dn
-        $searchBindPass = $this->config['principal']['ldap']['search_bind_pw'];  // associated password
+            // using ldap bind
+            $searchBindDn  = $this->config['principal']['ldap']['search_bind_dn'];     // ldap rdn or dn
+            $searchBindPass = $this->config['principal']['ldap']['search_bind_pw'];  // associated password
 
 
-        if ($ldapConn) {
+            if ($ldapConn) {
 
-            // binding to ldap server
-            $ldapBind = ldap_bind($ldapConn, $searchBindDn, $searchBindPass);
+                // binding to ldap server
+                $ldapBind = ldap_bind($ldapConn, $userCredential['userDn'], $userCredential['userPw']);
 
-            // verify binding
-            if ($ldapBind) {
-                
-                $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
-                $filter = str_replace('*', $id, $this->config['principal']['ldap']['search_filter']);  // single filter
-                $attributes = ['displayName','mail'];
+                // verify binding
+                if ($ldapBind) {
+                    
+                    $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
+                    $filter = str_replace('%u', $id, $this->config['principal']['ldap']['search_filter']);  // single filter
+                    $attributes = ['displayName','mail'];
 
-                $result = ldap_search($ldapConn,$ldaptree, $filter, $attributes);
-                $data = ldap_get_entries($ldapConn, $result);
-                
-                if($data['count'] == 1)
-                { 
-
-                    $principal = [
-                        'id'  => str_replace($prefix.'/','',$path),
-                        'uri' => $path,
-                    ];
-
-                    foreach ($this->fieldMap as $key => $value) {
-                        if ($data[0][$value['dbField']]) {
-                            $principal[$key] = $data[0][$value['dbField']][0];
-                        }
+                    if(strtolower($this->config['auth']['ldap']['scope']) == 'base')
+                    {
+                        $result = ldap_read($ldapConn, $ldaptree, $filter, $attributes);
                     }
-                    return $principal;
-    
+                    else if(strtolower($this->config['auth']['ldap']['scope']) == 'one')
+                    {
+                        $result = ldap_list($ldapConn, $ldaptree, $filter, $attributes);
+                    }
+                    else
+                    {
+                        $result = ldap_search($ldapConn, $ldaptree, $filter, $attributes);
+                    }
+
+                    $data = ldap_get_entries($ldapConn, $result);
+                            
+                    if($data['count'] == 1)
+                    { 
+
+                        $principal = [
+                            'id'  => $id,
+                            'uri' => $path
+                        ];
+
+                        foreach ($this->fieldMap as $key => $value) {
+                            if ($data[0][$value['dbField']]) {
+                                $principal[$key] = $data[0][$value['dbField']][0];
+                            }
+                        }
+                        return $principal;
+        
+                    }
                 }
             }
         }
@@ -295,6 +325,17 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
     function setGroupMemberSet($principal, array $members)
     {
         echo 'd';
+    }
+
+    /*
+    Get credentials store in session
+    */
+    function getUsercredential($sessionData)
+    {
+        $userCredential = explode('|', $sessionData);
+
+        return ['userDn' => str_replace('userdn=', '', $userCredential[0]),
+                'userPw' => str_replace('pw=', '', $userCredential[1])];
     }
 }
 ?>

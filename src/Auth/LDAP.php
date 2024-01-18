@@ -1,6 +1,7 @@
 <?php
 
 namespace isubsoft\dav\Auth;
+session_start();
 
 class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
 
@@ -39,49 +40,69 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
      */
     function validateUserPass($username, $password)
     {
-        // connect to ldap server
-        $ldapUri = ($this->config['auth']['ldap']['use_tls'] ? 'ldaps://' : 'ldap://') . $this->config['auth']['ldap']['host'] . ':' . $this->config['auth']['ldap']['port'];
-        $ldapConn = ldap_connect($ldapUri);
+        if( session_id() != null && isset($_SESSION['user-credentials']))
+        {
+            return true;
+        }
+        else
+        {
+            // connect to ldap server
+            $ldapUri = ($this->config['auth']['ldap']['use_tls'] ? 'ldaps://' : 'ldap://') . $this->config['auth']['ldap']['host'] . ':' . $this->config['auth']['ldap']['port'];
+            $ldapConn = ldap_connect($ldapUri);
 
-        ldap_set_option($ldapConn, LDAP_OPT_PROTOCOL_VERSION, $this->config['auth']['ldap']['ldap_version']);
-        ldap_set_option($ldapConn, LDAP_OPT_NETWORK_TIMEOUT, $this->config['auth']['ldap']['network_timeout']);
+            ldap_set_option($ldapConn, LDAP_OPT_PROTOCOL_VERSION, $this->config['auth']['ldap']['ldap_version']);
+            ldap_set_option($ldapConn, LDAP_OPT_NETWORK_TIMEOUT, $this->config['auth']['ldap']['network_timeout']);
 
-        // using ldap bind
-        $searchBindDn  = $this->config['auth']['ldap']['search_bind_dn'];     // ldap rdn or dn
-        $searchBindPass = $this->config['auth']['ldap']['search_bind_pw'];  // associated password
+            // using ldap bind
+            $searchBindDn  = $this->config['auth']['ldap']['search_bind_dn'];     // ldap rdn or dn
+            $searchBindPass = $this->config['auth']['ldap']['search_bind_pw'];  // associated password
 
 
-        if ($ldapConn) {
+            if ($ldapConn) {
 
-            // binding to ldap server
-            $ldapBind = ldap_bind($ldapConn, $searchBindDn, $searchBindPass);
+                // binding to ldap server
+                $ldapBind = ldap_bind($ldapConn, $searchBindDn, $searchBindPass);
 
-            // verify binding
-            if ($ldapBind) {
-                
-                $ldaptree = ($this->config['auth']['ldap']['search_base_dn'] !== '') ? $this->config['auth']['ldap']['search_base_dn'] : $this->config['auth']['ldap']['base_dn'];
-                $filter = str_replace('%u', $username, $this->config['auth']['ldap']['search_filter']);  // single filter
-                $attributes = ['dn'];
-
-                $result = ldap_search($ldapConn,$ldaptree, $filter, $attributes); 
-                $data = ldap_get_entries($ldapConn, $result);
-                
-                if($data['count'] == 1)
-                {
-                    $ldapDn = $data[0]['dn'];
-                    $ldapUserBind = ldap_bind($ldapConn, $ldapDn, $password);
+                // verify binding
+                if ($ldapBind) {
                     
-                    if($ldapUserBind)
+                    $ldaptree = ($this->config['auth']['ldap']['search_base_dn'] !== '') ? $this->config['auth']['ldap']['search_base_dn'] : $this->config['auth']['ldap']['base_dn'];
+                    $filter = str_replace('%u', $username, $this->config['auth']['ldap']['search_filter']);  
+                    $attributes = ['dn'];
+
+                    if(strtolower($this->config['auth']['ldap']['scope']) == 'base')
                     {
-                        return true;
+                        $result = ldap_read($ldapConn, $ldaptree, $filter, $attributes);
                     }
+                    else if(strtolower($this->config['auth']['ldap']['scope']) == 'one')
+                    {
+                        $result = ldap_list($ldapConn, $ldaptree, $filter, $attributes);
+                    }
+                    else
+                    {
+                        $result = ldap_search($ldapConn, $ldaptree, $filter, $attributes);
+                    }
+                    
+                    $data = ldap_get_entries($ldapConn, $result);
+                    
+                    if($data['count'] == 1)
+                    {
+                        $ldapDn = $data[0]['dn'];
+                        $ldapUserBind = ldap_bind($ldapConn, $ldapDn, $password);  
+                        
+                        if($ldapUserBind)
+                        {
+                            $_SESSION['user-credentials'] = 'userdn='.$ldapDn.'|pw='.$password;
+                            return true;
+                        }
+                    }
+                    
                 }
-                
+
             }
 
+            return false;
         }
-
-        return false;
     }
 }
 
