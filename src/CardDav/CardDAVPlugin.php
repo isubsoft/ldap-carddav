@@ -1,6 +1,6 @@
 <?php
 
-namespace isubsoft\dav;
+namespace isubsoft\dav\CardDav;
 
 class CardDAVPlugin extends \Sabre\CardDAV\Plugin {
 

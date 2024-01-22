@@ -15,32 +15,14 @@ date_default_timezone_set("Asia/Calcutta");
 // This can be for example the root / or a complete path to your server script
 $baseUri = '/';
 
-/* Database */
-// $pdo = new PDO('sqlite:data/db.sqlite');
-// $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
 // Autoloader
 require_once 'vendor/autoload.php';
 require 'conf/conf.php';
 
 // Backends
 $authBackend = new isubsoft\dav\Auth\LDAP($config);
-$carddavBackend = new isubsoft\dav\CardDav\LDAP();
+$carddavBackend = new isubsoft\dav\CardDav\LDAP($config);
 $principalBackend = new isubsoft\dav\DAVACL\PrincipalBackend\LDAP($config);
-
-
-// $authBackend = new Sabre\DAV\Auth\Backend\PDO($pdo);
-// $principalBackend = new Sabre\DAVACL\PrincipalBackend\PDO($pdo);
-// $carddavBackend = new Sabre\CardDAV\Backend\PDO($pdo);
-//$caldavBackend    = new Sabre\CalDAV\Backend\PDO($pdo);
-
-
-// Setting up the directory tree //
-// $nodes = [
-//     new Sabre\DAVACL\PrincipalCollection($principalBackend),
-// //    new Sabre\CalDAV\CalendarRoot($authBackend, $caldavBackend),
-//     new Sabre\CardDAV\AddressBookRoot($principalBackend, $carddavBackend),
-// ];
 
 $nodes = [
     new Sabre\DAV\SimpleCollection('principals', [
@@ -60,7 +42,7 @@ $server->setBaseUri($baseUri);
 $server->addPlugin(new Sabre\DAV\Auth\Plugin($authBackend));
 $server->addPlugin(new Sabre\DAV\Browser\Plugin());
 //$server->addPlugin(new Sabre\CalDAV\Plugin());
-$server->addPlugin(new isubsoft\dav\CardDAVPlugin());
+$server->addPlugin(new isubsoft\dav\CardDav\CardDAVPlugin());
 // $server->addPlugin(new Sabre\DAVACL\Plugin());
 $server->addPlugin(new Sabre\DAV\Sync\Plugin());
 

@@ -4,8 +4,25 @@ namespace isubsoft\dav\CardDav;
 
 class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
 
-    public function __construct() {
-        // echo 'hello';
+    /**
+     * Store ldap directory access credentials
+     *
+     * @var array
+     */
+    public $config;
+
+
+    /**
+     * Creates the backend.
+     *
+     * configuration array must be provided
+     * to access initial directory.
+     *
+     * @param array $config
+     * @return void
+     */
+    function __construct(array $config) {
+        $this->config = $config;
     }
 
 
@@ -27,18 +44,25 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
      * @return array
      */
     function getAddressBooksForUser($principalUri)
-    {
-        echo 'f';
-        
-        // $addressBooks[] = [
-        //     'id'                                                          => 'personal',
-        //     'uri'                                                         => 'addressbooks',
-        //     'principaluri'                                                => $principalUri,
-        //     // '{DAV:}displayname'                                           => $row['displayname'],
-        //     // '{' . CardDAV\Plugin::NS_CARDDAV . '}addressbook-description' => $row['description'],
-        //     // '{http://calendarserver.org/ns/}getctag'                      => $row['synctoken'],
-        //     // '{http://sabredav.org/ns}sync-token'                          => $row['synctoken'] ? $row['synctoken'] : '0',
-        // ];
+    {       
+        $addressBooks = [];
+        $i = 0;
+
+        foreach ($this->config['card']['ldap'] as $key => $value) {
+
+            $addressBooks[] = [
+                'id'                                                          => $i,
+                'uri'                                                         => $key,
+                'principaluri'                                                => $principalUri,
+                '{DAV:}displayname'                                           => $value['name'],
+                '{' . CardDAVPlugin::NS_CARDDAV . '}addressbook-description'  => $value['description'],
+                '{http://calendarserver.org/ns/}getctag'                      => $value['synctoken'],
+                '{http://sabredav.org/ns}sync-token'                          => $value['synctoken'] ? $value['synctoken'] : '0',
+            ];
+            $i++;
+        }
+
+        return $addressBooks;
     }
 
     /**
@@ -110,7 +134,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
      */
     function getCards($addressbookId)
     {
-        echo 'a';
+        echo 'ad';
     }
 
     /**
