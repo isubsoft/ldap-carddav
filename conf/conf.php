@@ -55,7 +55,7 @@ $config['card']['ldap']['private'] = [
 	'writable'     	 	=> true,
 	// If writable is true then these fields need to be populated:
 	// LDAP_Object_Classes, required_fields, LDAP_rdn
-	'LDAP_Object_Classes' => ['customContact'],
+	'LDAP_Object_Classes' => ['inetOrgPerson'],
 	'required_fields'     => ['cn'],
 	'LDAP_rdn'      			=> 'cn',
 	'search_fields' 			=> ['cn', 'mail'],
