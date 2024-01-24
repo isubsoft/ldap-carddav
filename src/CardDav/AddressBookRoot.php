@@ -1,6 +1,6 @@
 <?php
 
-namespace isubsoft\dav;
+namespace isubsoft\dav\CardDav;
 
 class AddressBookRoot extends \Sabre\CardDAV\AddressBookRoot {
 

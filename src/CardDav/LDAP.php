@@ -1,6 +1,7 @@
 <?php
 
 namespace isubsoft\dav\CardDav;
+session_start();
 
 class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
 
@@ -46,20 +47,21 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
     function getAddressBooksForUser($principalUri)
     {       
         $addressBooks = [];
-        $i = 0;
 
-        foreach ($this->config['card']['ldap'] as $key => $value) {
+        foreach ($this->config['card']['ldap'] as $index => $configs) {
 
-            $addressBooks[] = [
-                'id'                                                          => $i,
-                'uri'                                                         => $key,
-                'principaluri'                                                => $principalUri,
-                '{DAV:}displayname'                                           => $value['name'],
-                '{' . CardDAVPlugin::NS_CARDDAV . '}addressbook-description'  => $value['description'],
-                '{http://calendarserver.org/ns/}getctag'                      => $value['synctoken'],
-                '{http://sabredav.org/ns}sync-token'                          => $value['synctoken'] ? $value['synctoken'] : '0',
-            ];
-            $i++;
+            foreach($configs as $addressBookName => $params)
+            {
+                $addressBooks[] = [
+                    'id'                                                          => $index,
+                    'uri'                                                         => $addressBookName,
+                    'principaluri'                                                => $principalUri,
+                    '{DAV:}displayname'                                           => $params['name'],
+                    '{' . CardDAVPlugin::NS_CARDDAV . '}addressbook-description'  => $params['description'],
+                    '{http://calendarserver.org/ns/}getctag'                      => $params['synctoken'],
+                    '{http://sabredav.org/ns}sync-token'                          => $params['synctoken'] ? $params['synctoken'] : '0',
+                ];
+            }
         }
 
         return $addressBooks;
@@ -132,9 +134,74 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
      * @param mixed $addressbookId
      * @return array
      */
-    function getCards($addressbookId)
+    function getCards($id)
     {
-        echo 'ad';
+        $result = [];
+        $addressBookConfigs = null;
+        
+        foreach ($this->config['card']['ldap'][$id] as $configs) {
+            $addressBookConfig = $configs;
+        }
+        
+        if( session_id() != null && isset($_SESSION['user-credentials']))
+        {
+            $userCredential = $this->getUsercredential($_SESSION['user-credentials']);
+        
+            // connect to ldap server
+            $ldapUri = ($addressBookConfig['use_tls'] ? 'ldaps://' : 'ldap://') . $addressBookConfig['host'] . ':' . $addressBookConfig['port'];
+            $ldapConn = ldap_connect($ldapUri);
+            
+            ldap_set_option($ldapConn, LDAP_OPT_PROTOCOL_VERSION, $addressBookConfig['ldap_version']);
+            ldap_set_option($ldapConn, LDAP_OPT_NETWORK_TIMEOUT, $addressBookConfig['network_timeout']);
+
+
+            if ($ldapConn) {
+
+                // binding to ldap server
+                $ldapBind = ldap_bind($ldapConn, $userCredential['userDn'], $userCredential['userPw']);
+
+                // verify binding
+                if ($ldapBind) {
+                    
+                    $ldaptree =  str_replace('%dn', $userCredential['userDn'], $addressBookConfig['base_dn']);
+                    $filter = $addressBookConfig['filter']; 
+                    // $attributes = ['displayName','mail'];
+
+                    if(strtolower($addressBookConfig['scope']) == 'base')
+                    {
+                        $ldapResult = ldap_read($ldapConn, $ldaptree, $filter);
+                    }
+                    else if(strtolower($addressBookConfig['scope']) == 'list')
+                    {
+                        $ldapResult = ldap_list($ldapConn, $ldaptree, $filter);
+                    }
+                    else
+                    {
+                        $ldapResult = ldap_search($ldapConn, $ldaptree, $filter);
+                    }
+
+                    $data = ldap_get_entries($ldapConn, $ldapResult);
+
+                    if($data['count'] > 0)
+                    {
+                        for ($i=0; $i < $data['count']; $i++) { 
+
+                            $row = [   'id' => $i,
+                                        'uri' => $data[$i]['cn'][0],
+                                        'lastmodified' => 1706069236,
+                                        'etag' => "5467-323",
+                                        'size' => 510
+                                        ];
+
+                            $result[] = $row;
+                        }
+        
+                    }
+                }
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -151,7 +218,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
      */
     function getCard($addressBookId, $cardUri)
     {
-        echo 'a';
+        print_r($addressbookId);
+        print_r($cardUri);
+        echo 'abc';
     }
 
     /**
@@ -168,7 +237,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
      */
     function getMultipleCards($addressBookId, array $uris)
     {
-        echo 'a';
+        echo 'ac';
     }
 
     /**
@@ -241,6 +310,17 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
     function deleteCard($addressBookId, $cardUri)
     {
         echo 'a';
+    }
+
+     /*
+    Get credentials stored in session
+    */
+    function getUsercredential($sessionData)
+    {
+        $userCredential = explode('|', $sessionData);
+
+        return ['userDn' => str_replace('userdn=', '', $userCredential[0]),
+                'userPw' => str_replace('pw=', '', $userCredential[1])];
     }
 }
 

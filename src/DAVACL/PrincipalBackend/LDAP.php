@@ -100,11 +100,11 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
                     $filter = str_replace('%u', '*', $this->config['principal']['ldap']['search_filter']); 
                     $attributes = ['displayName','mail'];
 
-                    if(strtolower($this->config['auth']['ldap']['scope']) == 'base')
+                    if(strtolower($this->config['principal']['ldap']['scope']) == 'base')
                     {
                         $result = ldap_read($ldapConn, $ldaptree, $filter, $attributes);
                     }
-                    else if(strtolower($this->config['auth']['ldap']['scope']) == 'one')
+                    else if(strtolower($this->config['principal']['ldap']['scope']) == 'list')
                     {
                         $result = ldap_list($ldapConn, $ldaptree, $filter, $attributes);
                     }
@@ -176,11 +176,11 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
                     $filter = str_replace('%u', $id, $this->config['principal']['ldap']['search_filter']);  // single filter
                     $attributes = ['displayName','mail'];
 
-                    if(strtolower($this->config['auth']['ldap']['scope']) == 'base')
+                    if(strtolower($this->config['principal']['ldap']['scope']) == 'base')
                     {
                         $result = ldap_read($ldapConn, $ldaptree, $filter, $attributes);
                     }
-                    else if(strtolower($this->config['auth']['ldap']['scope']) == 'one')
+                    else if(strtolower($this->config['principal']['ldap']['scope']) == 'list')
                     {
                         $result = ldap_list($ldapConn, $ldaptree, $filter, $attributes);
                     }
@@ -328,7 +328,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
     }
 
     /*
-    Get credentials store in session
+    Get credentials stored in session
     */
     function getUsercredential($sessionData)
     {

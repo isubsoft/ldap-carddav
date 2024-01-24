@@ -29,7 +29,7 @@ $nodes = [
         new Sabre\DAVACL\PrincipalCollection($principalBackend, 'principals/users')
     ]),
     new Sabre\DAV\SimpleCollection('addressbooks', [
-        new isubsoft\dav\AddressBookRoot($principalBackend, $carddavBackend, 'principals/users')
+        new isubsoft\dav\CardDav\AddressBookRoot($principalBackend, $carddavBackend, 'principals/users')
     ])
 ];
 

@@ -13,6 +13,13 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
      */
     public $config;
 
+    /**
+     * This is the prefix that will be used to generate principal urls.
+     *
+     * @var string
+     */
+    public $principalPrefix = 'principals/users/';
+
 
     /**
      * Creates the backend.
@@ -74,7 +81,7 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
                     {
                         $result = ldap_read($ldapConn, $ldaptree, $filter, $attributes);
                     }
-                    else if(strtolower($this->config['auth']['ldap']['scope']) == 'one')
+                    else if(strtolower($this->config['auth']['ldap']['scope']) == 'list')
                     {
                         $result = ldap_list($ldapConn, $ldaptree, $filter, $attributes);
                     }
