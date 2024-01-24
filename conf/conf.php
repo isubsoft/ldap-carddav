@@ -18,7 +18,7 @@ $config['auth']['ldap'] = [
   // DN and password to bind as before searching for bind DN, if anonymous search is not allowed
   'search_bind_dn' => 'cn=authclient,ou=People,dc=example,dc=com',
   'search_bind_pw' => 'authclient123',
-  'scope' => 'sub' // e.g. base, one, sub, subordinates
+  'scope' => 'sub' // search mode: sub|base|list
 ];
 
 $config['principal']['ldap'] = [
@@ -37,37 +37,75 @@ $config['principal']['ldap'] = [
   // DN and password to bind as before searching for bind DN, if anonymous search is not allowed
   'search_bind_dn' => 'cn=authclient,ou=People,dc=example,dc=com',
   'search_bind_pw' => 'authclient123',
-  'scope' => 'sub' // e.g. base, one, sub, subordinates
+  'scope' => 'sub' // search mode: sub|base|list
 ];
 
-$config['card']['ldap']['private'] = [
-	'name'          	=> 'Personal Address Book',
-	'host'         		=> 'dev-db.intranet.isubsoft.com',
-	'port'          	=> 389,
-	'use_tls'	   			=> false,
-  'ldap_version'		=> 3,       // using LDAPv3
-	'network_timeout' => 15,
-	'user_specific' 	=> true,
-	'base_dn'       	=> 'ou=Address Book,%dn',
-	'bind_dn'       	=> '',
-	//    'bind_pass'     => '',
-	'filter'        	=> '(objectClass=inetOrgPerson)',
-	'writable'     	 	=> true,
-	// If writable is true then these fields need to be populated:
-	// LDAP_Object_Classes, required_fields, LDAP_rdn
-	'LDAP_Object_Classes' => ['inetOrgPerson'],
-	'required_fields'     => ['cn'],
-	'LDAP_rdn'      			=> 'cn',
-	'search_fields' 			=> ['cn', 'mail'],
-	'fieldmap'      => [
-		// vCard    => LDAP
-		'name'          => 'cn',
-		'email'         => 'mail:*',
-		'org'         	=> 'o',
-		'photo'         => 'jpegPhoto',
-    'note'        	=> 'notes',
-	],
-	'sort'          => 'cn',    // The field to sort the listing by.
-	'scope'         => 'list',   // search mode: sub|base|list
-	'fuzzy_search'  => true,     // server allows wildcard search
+// $config['card']['ldap']['private'] = [
+// 	'name'          	=> 'Personal Address Book',
+//   'description'     => 'New Book',
+//   'synctoken'       => '1',
+// 	'host'         		=> 'dev-db.intranet.isubsoft.com',
+// 	'port'          	=> 389,
+// 	'use_tls'	   			=> false,
+//   'ldap_version'		=> 3,       // using LDAPv3
+// 	'network_timeout' => 15,
+// 	'user_specific' 	=> true,
+// 	'base_dn'       	=> 'ou=Address Book,%dn',
+// 	'bind_dn'       	=> '',
+// 	//    'bind_pass'     => '',
+// 	'filter'        	=> '(objectClass=inetOrgPerson)',
+// 	'writable'     	 	=> true,
+// 	// If writable is true then these fields need to be populated:
+// 	// LDAP_Object_Classes, required_fields, LDAP_rdn
+// 	'LDAP_Object_Classes' => ['inetOrgPerson'],
+// 	'required_fields'     => ['cn'],
+// 	'LDAP_rdn'      			=> 'cn',
+// 	'search_fields' 			=> ['cn', 'mail'],
+// 	'fieldmap'      => [
+// 		// vCard    => LDAP
+// 		'name'          => 'cn',
+// 		'email'         => 'mail:*',
+// 		'org'         	=> 'o',
+// 		'photo'         => 'jpegPhoto',
+//     'note'        	=> 'notes',
+// 	],
+// 	'sort'          => 'cn',    // The field to sort the listing by.
+// 	'scope'         => 'list',   // search mode: sub|base|list
+// 	'fuzzy_search'  => true,     // server allows wildcard search
+// ];
+
+$config['card']['ldap'][] = [
+                              'private' => [
+                                'name'          	=> 'Personal Address Book',
+                                'description'     => 'New Book',
+                                'synctoken'       => '1',
+                                'host'         		=> 'dev-db.intranet.isubsoft.com',
+                                'port'          	=> 389,
+                                'use_tls'	   			=> false,
+                                'ldap_version'		=> 3,       // using LDAPv3
+                                'network_timeout' => 15,
+                                'user_specific' 	=> true,
+                                'base_dn'       	=> 'ou=Address Book,%dn',
+                                'bind_dn'       	=> '',
+                                //    'bind_pass'     => '',
+                                'filter'        	=> '(objectClass=inetOrgPerson)',
+                                'writable'     	 	=> true,
+                                // If writable is true then these fields need to be populated:
+                                // LDAP_Object_Classes, required_fields, LDAP_rdn
+                                'LDAP_Object_Classes' => ['inetOrgPerson'],
+                                'required_fields'     => ['cn'],
+                                'LDAP_rdn'      			=> 'cn',
+                                'search_fields' 			=> ['cn', 'mail'],
+                                'fieldmap'      => [
+                                  // vCard    => LDAP
+                                  'name'          => 'cn',
+                                  'email'         => 'mail:*',
+                                  'org'         	=> 'o',
+                                  'photo'         => 'jpegPhoto',
+                                  'note'        	=> 'notes',
+                                ],
+                                'sort'          => 'cn',    // The field to sort the listing by.
+                                'scope'         => 'list',   // search mode: sub|base|list
+                                'fuzzy_search'  => true,     // server allows wildcard search
+                              ]
 ];
