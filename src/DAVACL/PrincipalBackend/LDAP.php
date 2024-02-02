@@ -18,7 +18,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      *
      * @var string
      */
-    public $prefix = 'principals/users';
+    public $prefix = 'principals/users/';
 
     /**
      * A list of additional fields to support
@@ -150,7 +150,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         if( session_id() != null && isset($_SESSION['user-credentials']))
         {
             $userCredential = $this->getUsercredential($_SESSION['user-credentials']);
-            $id = str_replace($this->prefix.'/','',$path);
+            $searchUserId = str_replace($this->prefix,'',$path);
 
             // connect to ldap server
             $ldapUri = ($this->config['principal']['ldap']['use_tls'] ? 'ldaps://' : 'ldap://') . $this->config['principal']['ldap']['host'] . ':' . $this->config['principal']['ldap']['port'];
@@ -173,7 +173,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
                 if ($ldapBind) {
                     
                     $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
-                    $filter = str_replace('%u', $id, $this->config['principal']['ldap']['search_filter']);  // single filter
+                    $filter = str_replace('%u', $searchUserId, $this->config['principal']['ldap']['search_filter']);  // single filter
                     $attributes = ['displayName','mail'];
 
                     if(strtolower($this->config['principal']['ldap']['scope']) == 'base')
@@ -195,7 +195,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
                     { 
 
                         $principal = [
-                            'id'  => $id,
+                            'id'  => $searchUserId,
                             'uri' => $path
                         ];
 

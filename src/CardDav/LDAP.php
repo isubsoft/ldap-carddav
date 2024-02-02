@@ -12,6 +12,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
      */
     public $config;
 
+    /**
+     * prefix for ldap
+     *
+     * @var string
+     */
+    public $principalPrefix = 'principals/users/';
+
 
     /**
      * Creates the backend.
@@ -24,6 +31,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
      */
     function __construct(array $config) {
         $this->config = $config;
+        date_default_timezone_set("Asia/Calcutta");
     }
 
 
@@ -47,21 +55,74 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
     function getAddressBooksForUser($principalUri)
     {       
         $addressBooks = [];
+        $searchDn = null;
+        
+        if( session_id() != null && isset($_SESSION['user-credentials']))
+        {
+            $userCredential = $this->getUsercredential($_SESSION['user-credentials']);
+            $searchUserId = str_replace($this->principalPrefix,'',$principalUri);
 
-        foreach ($this->config['card']['ldap'] as $index => $configs) {
+            // connect to ldap server
+            $ldapUri = ($this->config['principal']['ldap']['use_tls'] ? 'ldaps://' : 'ldap://') . $this->config['principal']['ldap']['host'] . ':' . $this->config['principal']['ldap']['port'];
+            $ldapConn = ldap_connect($ldapUri);
+            
+            ldap_set_option($ldapConn, LDAP_OPT_PROTOCOL_VERSION, $this->config['principal']['ldap']['ldap_version']);
+            ldap_set_option($ldapConn, LDAP_OPT_NETWORK_TIMEOUT, $this->config['principal']['ldap']['network_timeout']);
 
-            foreach($configs as $addressBookName => $params)
-            {
+            // using ldap bind
+            $searchBindDn  = $this->config['principal']['ldap']['search_bind_dn'];     // ldap rdn or dn
+            $searchBindPass = $this->config['principal']['ldap']['search_bind_pw'];  // associated password
+
+
+            if ($ldapConn) {
+
+                // binding to ldap server
+                $ldapBind = ldap_bind($ldapConn, $userCredential['userDn'], $userCredential['userPw']);
+
+                // verify binding
+                if ($ldapBind) {
+                    
+                    $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
+                    $filter = str_replace('%u', $searchUserId, $this->config['principal']['ldap']['search_filter']);  // single filter
+                    $attributes = ['dn'];
+
+                    if(strtolower($this->config['principal']['ldap']['scope']) == 'base')
+                    {
+                        $result = ldap_read($ldapConn, $ldaptree, $filter, $attributes);
+                    }
+                    else if(strtolower($this->config['principal']['ldap']['scope']) == 'list')
+                    {
+                        $result = ldap_list($ldapConn, $ldaptree, $filter, $attributes);
+                    }
+                    else
+                    {
+                        $result = ldap_search($ldapConn, $ldaptree, $filter, $attributes);
+                    }
+                    
+                    $data = ldap_get_entries($ldapConn, $result);
+                            
+                    if($data['count'] == 1)
+                    {
+                        $searchDn = $data[0]['dn'];
+                    }
+                }
+            }
+        }
+
+        foreach ($this->config['card']['ldap'] as $addressBookName => $configParams) {
+
+                $addressBookDn = str_replace('%dn', $searchDn, $configParams['base_dn']);
+
                 $addressBooks[] = [
-                    'id'                                                          => $index,
+                    'id'                                                          => $addressBookDn,
                     'uri'                                                         => $addressBookName,
                     'principaluri'                                                => $principalUri,
-                    '{DAV:}displayname'                                           => $params['name'],
-                    '{' . CardDAVPlugin::NS_CARDDAV . '}addressbook-description'  => $params['description'],
-                    '{http://calendarserver.org/ns/}getctag'                      => $params['synctoken'],
-                    '{http://sabredav.org/ns}sync-token'                          => $params['synctoken'] ? $params['synctoken'] : '0',
+                    '{DAV:}displayname'                                           => $configParams['name'],
+                    '{' . CardDAVPlugin::NS_CARDDAV . '}addressbook-description'  => $configParams['description'],
+                    '{http://calendarserver.org/ns/}getctag'                      => $configParams['synctoken'],
+                    '{http://sabredav.org/ns}sync-token'                          => $configParams['synctoken'] ? $configParams['synctoken'] : '0',
                 ];
-            }
+                $_SESSION['config'][$addressBookDn] = $configParams;
         }
 
         return $addressBooks;
@@ -134,14 +195,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
      * @param mixed $addressbookId
      * @return array
      */
-    function getCards($id)
+    function getCards($addressBookDn)
     {
-        $result = [];
-        $addressBookConfigs = null;
+        $result = [];     
+        $addressBookConfig = $_SESSION['config'][$addressBookDn];
         
-        foreach ($this->config['card']['ldap'][$id] as $configs) {
-            $addressBookConfig = $configs;
-        }
         
         if( session_id() != null && isset($_SESSION['user-credentials']))
         {
@@ -162,35 +220,34 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
 
                 // verify binding
                 if ($ldapBind) {
-                    
-                    $ldaptree =  str_replace('%dn', $userCredential['userDn'], $addressBookConfig['base_dn']);
+        
                     $filter = $addressBookConfig['filter']; 
-                    // $attributes = ['displayName','mail'];
+                    $attributes = ['cn','entryuuid', 'modifytimestamp'];
 
                     if(strtolower($addressBookConfig['scope']) == 'base')
                     {
-                        $ldapResult = ldap_read($ldapConn, $ldaptree, $filter);
+                        $ldapResult = ldap_read($ldapConn, $addressBookDn, $filter, $attributes);
                     }
                     else if(strtolower($addressBookConfig['scope']) == 'list')
                     {
-                        $ldapResult = ldap_list($ldapConn, $ldaptree, $filter);
+                        $ldapResult = ldap_list($ldapConn, $addressBookDn, $filter, $attributes);
                     }
                     else
                     {
-                        $ldapResult = ldap_search($ldapConn, $ldaptree, $filter);
+                        $ldapResult = ldap_search($ldapConn, $addressBookDn, $filter, $attributes);
                     }
 
                     $data = ldap_get_entries($ldapConn, $ldapResult);
-
+                    
                     if($data['count'] > 0)
                     {
                         for ($i=0; $i < $data['count']; $i++) { 
-
-                            $row = [   'id' => $i,
+                            
+                            $row = [    'id' => $data[$i]['entryuuid'][0],
                                         'uri' => $data[$i]['cn'][0],
-                                        'lastmodified' => 1706069236,
-                                        'etag' => "5467-323",
-                                        'size' => 510
+                                        'lastmodified' => $this->showDateString($data[$i]['modifytimestamp'][0]),
+                                        'etag' => '"' .$data[$i]['modifytimestamp'][0]. '"',
+                                        'size' => strlen($data[$i]['cn'][0])
                                         ];
 
                             $result[] = $row;
@@ -200,7 +257,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
                 }
             }
         }
-
+        
         return $result;
     }
 
@@ -218,9 +275,82 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
      */
     function getCard($addressBookId, $cardUri)
     {
-        print_r($addressbookId);
-        print_r($cardUri);
-        echo 'abc';
+        $addressBookConfig = $_SESSION['config'][$addressBookId];
+        $result = [];
+        
+        if( session_id() != null && isset($_SESSION['user-credentials']))
+        {
+            $userCredential = $this->getUsercredential($_SESSION['user-credentials']);
+        
+            // connect to ldap server
+            $ldapUri = ($addressBookConfig['use_tls'] ? 'ldaps://' : 'ldap://') . $addressBookConfig['host'] . ':' . $addressBookConfig['port'];
+            $ldapConn = ldap_connect($ldapUri);
+            
+            ldap_set_option($ldapConn, LDAP_OPT_PROTOCOL_VERSION, $addressBookConfig['ldap_version']);
+            ldap_set_option($ldapConn, LDAP_OPT_NETWORK_TIMEOUT, $addressBookConfig['network_timeout']);
+
+            if ($ldapConn) {
+
+                // binding to ldap server
+                $ldapBind = ldap_bind($ldapConn, $userCredential['userDn'], $userCredential['userPw']);
+
+                // verify binding
+                if ($ldapBind) {
+        
+                    $ldapTree = $addressBookConfig['LDAP_rdn']. '='. $cardUri. ',' .$addressBookId;
+                    $filter = $addressBookConfig['filter']; 
+                    $attributes = ['entryuuid', 'modifytimestamp'];
+
+                    $ldapResult = ldap_read($ldapConn, $ldapTree, $filter);
+                    $ldapAdditionalResult = ldap_read($ldapConn, $ldapTree, $filter, $attributes);
+                    
+                    $data = ldap_get_entries($ldapConn, $ldapResult);
+                    $additionalData = ldap_get_entries($ldapConn, $ldapAdditionalResult);
+                    
+                    if($data['count'] > 0)
+                    {
+                       $cardInfo = [];
+                       foreach($addressBookConfig['fieldmap'] as $vCardKey => $ldapKey)
+                       {
+                        if(strpos($ldapKey, ':*'))
+                        {
+                            $newLdapKey = str_replace(':*', '', $ldapKey);
+                            if($data[0][$newLdapKey])
+                            {
+                                foreach($data[0][$newLdapKey] as $key => $values)
+                                {
+                                    if($key === 'count')
+                                    continue;
+
+                                    $cardInfo[$vCardKey][] = $values;
+                                }
+                            }   
+                        }
+                        else if($data[0][$ldapKey])
+                        {           
+                            $cardInfo[$vCardKey] = $data[0][$ldapKey][0];
+                        } 
+                       } 
+
+                    $vcard = new \Sabre\VObject\Component\VCard($cardInfo);
+                    
+                    $result = [
+                        'id' => $additionalData[0]['entryuuid'][0],
+                        'carddata'  => $vcard->serialize(),
+                        'uri' => $cardUri,
+                        'lastmodified' => $this->showDateString($additionalData[0]['modifytimestamp'][0]),
+                        'etag' => '"' .$additionalData[0]['modifytimestamp'][0]. '"',
+                        'size' => strlen($data[0]['cn'][0])
+                    ];
+
+                        return $result;
+                    }
+                }
+            }
+        }
+
+        return false;
+        
     }
 
     /**
@@ -267,7 +397,82 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
      */
     function createCard($addressBookId, $cardUri, $cardData)
     {
-        echo 'a';
+
+        $addressBookConfig = $_SESSION['config'][$addressBookId];
+        $ldapInfo = [];
+        $ldapInfo['cn'] = $cardUri;
+        $ldapInfo['objectclass'] = $addressBookConfig['LDAP_Object_Classes'];
+
+        $vcard = \Sabre\VObject\Reader::read($cardData);
+        
+
+        foreach($addressBookConfig['fieldmap'] as $vCardKey => $ldapKey)
+        {
+            if(isset($vcard->$vCardKey))
+            {
+                
+                if(strpos($ldapKey, ':*'))
+                {
+                    $newLdapKey = str_replace(':*', '', $ldapKey);
+                    foreach($vcard->$vCardKey as $values)
+                    {
+                        $ldapInfo[$newLdapKey][] = (string)$values;
+                    }
+                }
+                else
+                {           
+                    $ldapInfo[$ldapKey] = (string)$vcard->$vCardKey;
+                }
+            }
+            
+        }
+
+        foreach ($addressBookConfig['required_fields'] as $key) {
+            if(! array_key_exists($key, $ldapInfo))
+            return false;
+        }
+
+        if( session_id() != null && isset($_SESSION['user-credentials']))
+        {
+            $userCredential = $this->getUsercredential($_SESSION['user-credentials']);
+        
+            // connect to ldap server
+            $ldapUri = ($addressBookConfig['use_tls'] ? 'ldaps://' : 'ldap://') . $addressBookConfig['host'] . ':' . $addressBookConfig['port'];
+            $ldapConn = ldap_connect($ldapUri);
+            
+            ldap_set_option($ldapConn, LDAP_OPT_PROTOCOL_VERSION, $addressBookConfig['ldap_version']);
+            ldap_set_option($ldapConn, LDAP_OPT_NETWORK_TIMEOUT, $addressBookConfig['network_timeout']);
+
+
+            if ($ldapConn) {
+
+                // binding to ldap server
+                $ldapBind = ldap_bind($ldapConn, $userCredential['userDn'], $userCredential['userPw']);
+
+                // verify binding
+                if ($ldapBind) {
+
+                    $ldapTree = $addressBookConfig['LDAP_rdn']. '='. $cardUri. ',' .$addressBookId;
+                    $r = ldap_add($ldapConn, $ldapTree, $ldapInfo);
+                    
+                    if ($r) {
+
+                        $filter = $addressBookConfig['filter']; 
+                        $attributes = ['modifytimestamp'];
+
+                        $ldapResult = ldap_read($ldapConn, $ldapTree, $filter, $attributes);
+                        
+                        $data = ldap_get_entries($ldapConn, $ldapResult);
+
+                        return '"' .$data[0]['modifytimestamp'][0]. '"';
+                    }
+                    
+                }
+            }
+        }
+
+        return false;
+
     }
 
     /**
@@ -309,7 +514,39 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
      */
     function deleteCard($addressBookId, $cardUri)
     {
-        echo 'a';
+        $addressBookConfig = $_SESSION['config'][$addressBookId];
+        
+        if( session_id() != null && isset($_SESSION['user-credentials']))
+        {
+            $userCredential = $this->getUsercredential($_SESSION['user-credentials']);
+        
+            // connect to ldap server
+            $ldapUri = ($addressBookConfig['use_tls'] ? 'ldaps://' : 'ldap://') . $addressBookConfig['host'] . ':' . $addressBookConfig['port'];
+            $ldapConn = ldap_connect($ldapUri);
+            
+            ldap_set_option($ldapConn, LDAP_OPT_PROTOCOL_VERSION, $addressBookConfig['ldap_version']);
+            ldap_set_option($ldapConn, LDAP_OPT_NETWORK_TIMEOUT, $addressBookConfig['network_timeout']);
+
+            if ($ldapConn) {
+
+                // binding to ldap server
+                $ldapBind = ldap_bind($ldapConn, $userCredential['userDn'], $userCredential['userPw']);
+
+                // verify binding
+                if ($ldapBind) {
+        
+                    $ldapTree = $addressBookConfig['LDAP_rdn']. '='. $cardUri. ',' .$addressBookId;
+                    
+                    if(ldap_delete($ldapConn, $ldapTree))
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+
     }
 
      /*
@@ -322,6 +559,23 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
         return ['userDn' => str_replace('userdn=', '', $userCredential[0]),
                 'userPw' => str_replace('pw=', '', $userCredential[1])];
     }
+
+    /**
+     * return date in specific format, given a timestamp.
+     *
+     * @param  timestamp  $datetime
+     * @return string
+     */
+    function showDateString($timestamp)
+    {
+      if ($timestamp !== NULL) {
+
+        $timestamp = strtotime($timestamp);  
+        return new \DateTime( "@" . $timestamp );
+      }
+      return '';
+    }
+
 }
 
 ?>

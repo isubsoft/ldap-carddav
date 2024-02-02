@@ -58,19 +58,18 @@ $config['card']['ldap']['private'] = [
 	// If writable is true then these fields need to be populated:
 	// LDAP_Object_Classes, required_fields, LDAP_rdn
 	'LDAP_Object_Classes' => ['inetOrgPerson'],
-	'required_fields'     => ['cn'],
+	'required_fields'     => ['cn', 'sn'],
 	'LDAP_rdn'      			=> 'cn',
 	'search_fields' 			=> ['cn', 'mail'],
 	'fieldmap'      => [
 		// vCard    => LDAP
-		'name'          => 'cn',
+    'sn'            => 'sn',
 		'email'         => 'mail:*',
 		'org'         	=> 'o',
 		'photo'         => 'jpegPhoto',
-    'note'        	=> 'notes',
+    'note'        	=> 'description',
 	],
 	'sort'          => 'cn',    // The field to sort the listing by.
 	'scope'         => 'list',   // search mode: sub|base|list
 	'fuzzy_search'  => true,     // server allows wildcard search
 ];
-
