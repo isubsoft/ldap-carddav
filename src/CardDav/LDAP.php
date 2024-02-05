@@ -342,7 +342,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
                         'etag' => '"' .$additionalData[0]['modifytimestamp'][0]. '"',
                         'size' => strlen($data[0]['cn'][0])
                     ];
-
+                    
                         return $result;
                     }
                 }
@@ -367,7 +367,14 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
      */
     function getMultipleCards($addressBookId, array $uris)
     {
-        echo 'ac';
+        $result = [];
+
+        foreach($uris as $uri)
+        {
+            $result[] = $this->getCard($addressBookId, $uri);
+        }
+
+        return $result;
     }
 
     /**
@@ -453,9 +460,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
                 if ($ldapBind) {
 
                     $ldapTree = $addressBookConfig['LDAP_rdn']. '='. $cardUri. ',' .$addressBookId;
-                    $r = ldap_add($ldapConn, $ldapTree, $ldapInfo);
+                    $ldapResponse = ldap_add($ldapConn, $ldapTree, $ldapInfo);
                     
-                    if ($r) {
+                    if ($ldapResponse) {
 
                         $filter = $addressBookConfig['filter']; 
                         $attributes = ['modifytimestamp'];
@@ -502,7 +509,87 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
      */
     function updateCard($addressBookId, $cardUri, $cardData)
     {
-        echo 'a';
+        $addressBookConfig = $_SESSION['config'][$addressBookId];
+        $ldapInfo = [];
+        $ldapInfo['cn'] = $cardUri;
+        $ldapInfo['objectclass'] = $addressBookConfig['LDAP_Object_Classes'];
+
+        $vcard = \Sabre\VObject\Reader::read($cardData);
+        
+        foreach($addressBookConfig['fieldmap'] as $vCardKey => $ldapKey)
+        {
+            if(isset($vcard->$vCardKey))
+            {               
+                if(strpos($ldapKey, ':*'))
+                {
+                    $newLdapKey = str_replace(':*', '', $ldapKey);
+                    foreach($vcard->$vCardKey as $values)
+                    {
+                        $ldapInfo[$newLdapKey][] = (string)$values;
+                    }
+                }
+                else
+                {           
+                    $ldapInfo[$ldapKey] = (string)$vcard->$vCardKey;
+                }
+            }          
+        }
+
+        foreach ($addressBookConfig['required_fields'] as $key) {
+            if(! array_key_exists($key, $ldapInfo))
+            return false;
+        }
+
+        if( session_id() != null && isset($_SESSION['user-credentials']))
+        {
+            $userCredential = $this->getUsercredential($_SESSION['user-credentials']);
+        
+            // connect to ldap server
+            $ldapUri = ($addressBookConfig['use_tls'] ? 'ldaps://' : 'ldap://') . $addressBookConfig['host'] . ':' . $addressBookConfig['port'];
+            $ldapConn = ldap_connect($ldapUri);
+            
+            ldap_set_option($ldapConn, LDAP_OPT_PROTOCOL_VERSION, $addressBookConfig['ldap_version']);
+            ldap_set_option($ldapConn, LDAP_OPT_NETWORK_TIMEOUT, $addressBookConfig['network_timeout']);
+
+
+            if ($ldapConn) {
+
+                // binding to ldap server
+                $ldapBind = ldap_bind($ldapConn, $userCredential['userDn'], $userCredential['userPw']);
+
+                // verify binding
+                if ($ldapBind) {
+
+                    $ldapTree = $addressBookConfig['LDAP_rdn']. '='. $cardUri. ',' .$addressBookId;
+                    $filter = $addressBookConfig['filter']; 
+                    
+                    $ldapResult = ldap_read($ldapConn, $ldapTree, $filter);
+                    $data = ldap_get_entries($ldapConn, $ldapResult);
+                    
+                    foreach($data[0] as $key => $value) { 
+                        if(is_array($value))
+                        {
+                            if(! isset($ldapInfo[$key]))
+                            $ldapInfo[$key] = [];
+                        }
+                    }
+
+                    $ldapResponse = ldap_mod_replace($ldapConn, $ldapTree, $ldapInfo);
+                    
+                    if ($ldapResponse) {
+
+                        $attributes = ['modifytimestamp'];
+                        $ldapResult = ldap_read($ldapConn, $ldapTree, $filter, $attributes);
+                        $data = ldap_get_entries($ldapConn, $ldapResult);
+
+                        return '"' .$data[0]['modifytimestamp'][0]. '"';
+                    }
+                    
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
