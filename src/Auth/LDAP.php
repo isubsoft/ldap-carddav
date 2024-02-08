@@ -1,7 +1,6 @@
 <?php
 
 namespace isubsoft\dav\Auth;
-session_start();
 
 class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
 
@@ -47,12 +46,6 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
      */
     function validateUserPass($username, $password)
     {
-        if( session_id() != null && isset($_SESSION['user-credentials']))
-        {
-            return true;
-        }
-        else
-        {
             // connect to ldap server
             $ldapUri = ($this->config['auth']['ldap']['use_tls'] ? 'ldaps://' : 'ldap://') . $this->config['auth']['ldap']['host'] . ':' . $this->config['auth']['ldap']['port'];
             $ldapConn = ldap_connect($ldapUri);
@@ -99,17 +92,16 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
                         
                         if($ldapUserBind)
                         {
-                            $_SESSION['user-credentials'] = 'userdn='.$ldapDn.'|pw='.$password;
+                            //set LDAP connection in global variable
+                            $GLOBALS['globalLdapConn'] = $ldapConn;
+
                             return true;
                         }
-                    }
-                    
+                    }          
                 }
-
             }
 
-            return false;
-        }
+        return false;
     }
 }
 

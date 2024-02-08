@@ -66,7 +66,7 @@ $config['card']['ldap']['private'] = [
     'sn'            => 'sn',
 		'email'         => 'mail:*',
 		'org'         	=> 'o',
-		'photo'         => 'jpegPhoto',
+		'photo'         => 'jpegphoto',
     'note'        	=> 'description',
 	],
 	'sort'          => 'cn',    // The field to sort the listing by.
