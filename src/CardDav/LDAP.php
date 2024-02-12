@@ -121,7 +121,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
      */
     function updateAddressBook($addressBookId, \Sabre\DAV\PropPatch $propPatch)
     {
-        echo 'a';
+        return false;
     }
 
     /**
@@ -137,7 +137,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
      */
     function createAddressBook($principalUri, $url, array $properties)
     {
-        echo 'a';
+        return false;
     }
 
     /**
@@ -148,7 +148,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
      */
     function deleteAddressBook($addressBookId)
     {
-        echo 'a';
+        return false;
     }
 
     /**
@@ -276,7 +276,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
                     
                 } 
             } 
-            
+            // print_r($ldapInfo);
         $vcard = new \Sabre\VObject\Component\VCard($cardInfo);
                     
         $result = [
@@ -370,8 +370,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
                 }
                 else
                 {    
-                    if($vcard->$vCardKey['VALUE'] == 'uri')
+                    if($vcard->$vCardKey['VALUE'] == 'URI')
                     {
+                        
+                        
                         $ldapInfo[$ldapKey] = base64_encode((string)$vcard->$vCardKey);
                     }
                     else
@@ -382,7 +384,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
                 }
             }     
         }
-        
+        // print_r($ldapInfo);
         foreach ($addressBookConfig['required_fields'] as $key) {
             if(! array_key_exists($key, $ldapInfo))
             return false;
