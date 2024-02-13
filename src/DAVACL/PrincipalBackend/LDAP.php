@@ -128,7 +128,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
     {
         $searchUserId = str_replace($this->prefix,'',$path);
         $ldapConn = $GLOBALS['globalLdapConn'];
-                    
+          
         $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
         $filter = str_replace('%u', $searchUserId, $this->config['principal']['ldap']['search_filter']);  // single filter
         $attributes = ['displayName','mail'];

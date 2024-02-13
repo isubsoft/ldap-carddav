@@ -21,6 +21,28 @@ $addressBookConfig = null;
 require_once 'vendor/autoload.php';
 require 'conf/conf.php';
 
+// Connect to ldap server
+            $ldapUri = ($config['auth']['ldap']['use_tls'] ? 'ldaps://' : 'ldap://') . $config['auth']['ldap']['host'] . ':' . $config['auth']['ldap']['port'];
+            $ldapConn = ldap_connect($ldapUri);
+
+            ldap_set_option($ldapConn, LDAP_OPT_PROTOCOL_VERSION, $config['auth']['ldap']['ldap_version']);
+            ldap_set_option($ldapConn, LDAP_OPT_NETWORK_TIMEOUT, $config['auth']['ldap']['network_timeout']);
+
+            // using ldap bind
+            $searchBindDn  = $config['auth']['ldap']['search_bind_dn'];     // ldap rdn or dn
+            $searchBindPass = $config['auth']['ldap']['search_bind_pw'];  // associated password
+
+
+            if ($ldapConn) {
+
+                // binding to ldap server
+                $ldapBind = ldap_bind($ldapConn, $searchBindDn, $searchBindPass);
+
+                // verify binding
+                if ($ldapBind) {
+                    $globalLdapConn = $ldapConn;
+                }
+            }
 // Backends
 $authBackend = new isubsoft\dav\Auth\LDAP($config);
 $carddavBackend = new isubsoft\dav\CardDav\LDAP($config);
