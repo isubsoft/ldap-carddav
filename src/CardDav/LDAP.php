@@ -241,10 +241,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
                     
         $data = ldap_get_entries($ldapConn, $ldapResult);
         $additionalData = ldap_get_entries($ldapConn, $ldapAdditionalResult);
-                    
+                   
         if($data['count'] > 0)
         {
             $cardInfo = [];
+            $cardInfoArray = [];
+
             foreach($addressBookConfig['fieldmap'] as $vCardKey => $ldapKey)
             {
                 if(strpos($ldapKey, ':*'))
@@ -257,7 +259,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
                             if($key === 'count')
                             continue;
 
-                            $cardInfo[$vCardKey][] = $values;
+                            $cardInfoArray[$vCardKey][] = $values;
                         }
                     }   
                 }
@@ -276,9 +278,20 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
                     
                 } 
             } 
-            // print_r($ldapInfo);
+
         $vcard = new \Sabre\VObject\Component\VCard($cardInfo);
+
+        if(! empty($cardInfoArray))
+        {
+            foreach($cardInfoArray as $vCardKey => $vCardValues)
+            {
+                foreach ($vCardValues as $vCardValue) {
                     
+                    $vcard->add($vCardKey, $vCardValue);
+                }
+            }
+        }
+
         $result = [
             'id' => $additionalData[0]['entryuuid'][0],
             'carddata'  => $vcard->serialize(),
