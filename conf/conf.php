@@ -59,7 +59,7 @@ $config['card']['ldap']['private'] = [
 	// LDAP_Object_Classes, required_fields, LDAP_rdn
 	'LDAP_Object_Classes' => ['inetOrgPerson'],
 	'required_fields'     => ['cn', 'sn'],
-	'LDAP_rdn'      			=> 'cn',
+	'LDAP_rdn'      			=> 'uid',
 	'search_fields' 			=> ['cn', 'mail'],
 	'fieldmap'      => [
 		// vCard    => LDAP

@@ -179,7 +179,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
         $addressBookConfig = $GLOBALS['addressBookConfig'][$addressBookDn];
         
         $filter = $addressBookConfig['filter']; 
-        $attributes = ['cn','entryuuid', 'modifytimestamp'];
+        $attributes = ['cn','uid','entryuuid', 'modifytimestamp'];
 
         if(strtolower($addressBookConfig['scope']) == 'base')
         {
@@ -201,9 +201,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
             for ($i=0; $i < $data['count']; $i++) { 
                             
                 $row = [    'id' => $data[$i]['entryuuid'][0],
-                            'uri' => $data[$i]['cn'][0],
+                            'uri' => $data[$i]['uid'][0],
                             'lastmodified' => $this->showDateString($data[$i]['modifytimestamp'][0]),
-                            'etag' => '"' .$data[$i]['modifytimestamp'][0]. '"',
+                            'etag' => null,
                             'size' => strlen($data[$i]['cn'][0])
                             ];
 
@@ -274,8 +274,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
                         
                         if($ldapKey == 'jpegphoto') 
                         {
-                            // *** ///
-                            
+                            continue;                         
                         }
                         else
                         {
@@ -321,7 +320,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
                 'carddata'  => $vcard->serialize(),
                 'uri' => $cardUri,
                 'lastmodified' => $this->showDateString($additionalData[0]['modifytimestamp'][0]),
-                'etag' => '"' .$additionalData[0]['modifytimestamp'][0]. '"',
+                'etag' => null,
                 'size' => strlen($data[0]['cn'][0])
             ];
                         
@@ -383,7 +382,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
      */
     function createCard($addressBookId, $cardUri, $cardData)
     {
-
         $ldapConn = $GLOBALS['globalLdapConn'];
         $addressBookConfig = $GLOBALS['addressBookConfig'][$addressBookId];
 
@@ -449,7 +447,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
             return false;
         }
         
-        $ldapTree = $addressBookConfig['LDAP_rdn']. '='. $ldapInfo['cn']. ',' .$addressBookId;
+        $ldapTree = $addressBookConfig['LDAP_rdn']. '='. $cardUri. ',' .$addressBookId;
         $ldapResponse = ldap_add($ldapConn, $ldapTree, $ldapInfo);
                     
         if ($ldapResponse) {
@@ -461,7 +459,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
                         
             $data = ldap_get_entries($ldapConn, $ldapResult);
 
-            return '"' .$data[0]['modifytimestamp'][0]. '"';
+            return null;
         }
 
         return false;
@@ -498,6 +496,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
         $addressBookConfig = $GLOBALS['addressBookConfig'][$addressBookId];
 
         $ldapInfo = [];
+        $ldapInfo['uid'] = $cardUri;
         $ldapInfo['objectclass'] = $addressBookConfig['LDAP_Object_Classes'];
 
         $vcard = \Sabre\VObject\Reader::read($cardData);
@@ -581,7 +580,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
             $ldapResult = ldap_read($ldapConn, $ldapTree, $filter, $attributes);
             $data = ldap_get_entries($ldapConn, $ldapResult);
 
-            return '"' .$data[0]['modifytimestamp'][0]. '"';
+            return null;
         }
 
         return false;
