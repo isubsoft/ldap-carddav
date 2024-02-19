@@ -19,6 +19,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
      */
     public $principalPrefix = 'principals/users/';
 
+    public $vCardKeyParts = ['ADR', 'N', 'ORG'];
+
 
     /**
      * Creates the backend.
@@ -235,75 +237,97 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
         $ldapTree = $addressBookConfig['LDAP_rdn']. '='. $cardUri. ',' .$addressBookId;
         $filter = $addressBookConfig['filter']; 
         $attributes = ['entryuuid', 'modifytimestamp'];
-
+        
         $ldapResult = ldap_read($ldapConn, $ldapTree, $filter);
-        $ldapAdditionalResult = ldap_read($ldapConn, $ldapTree, $filter, $attributes);
-                    
-        $data = ldap_get_entries($ldapConn, $ldapResult);
-        $additionalData = ldap_get_entries($ldapConn, $ldapAdditionalResult);
-                   
-        if($data['count'] > 0)
+
+        if($ldapResult)
         {
-            $cardInfo = [];
-            $cardInfoArray = [];
-
-            foreach($addressBookConfig['fieldmap'] as $vCardKey => $ldapKey)
-            {
-                if(strpos($ldapKey, ':*'))
-                {
-                    $newLdapKey = str_replace(':*', '', $ldapKey);
-                    if($data[0][$newLdapKey])
-                    {
-                        foreach($data[0][$newLdapKey] as $key => $values)
-                        {
-                            if($key === 'count')
-                            continue;
-
-                            $cardInfoArray[$vCardKey][] = $values;
-                        }
-                    }   
-                }
-                else if($data[0][$ldapKey])
-                {      
-                    
-                    if($ldapKey == 'jpegphoto') 
-                    {
+            $ldapAdditionalResult = ldap_read($ldapConn, $ldapTree, $filter, $attributes);
                         
-                        $cardInfo[$vCardKey] = base64_encode($data[0][$ldapKey][0]);
-                    }
-                    else
-                    {
-                        $cardInfo[$vCardKey] = $data[0][$ldapKey][0];
-                    }    
+            $data = ldap_get_entries($ldapConn, $ldapResult);
+            $additionalData = ldap_get_entries($ldapConn, $ldapAdditionalResult);
                     
-                } 
-            } 
-
-        $vcard = new \Sabre\VObject\Component\VCard($cardInfo);
-
-        if(! empty($cardInfoArray))
-        {
-            foreach($cardInfoArray as $vCardKey => $vCardValues)
+            if($data['count'] > 0)
             {
-                foreach ($vCardValues as $vCardValue) {
-                    
-                    $vcard->add($vCardKey, $vCardValue);
+                $cardInfo = [];
+                $cardInfoArray = [];
+
+                foreach($addressBookConfig['fieldmap'] as $vCardKey => $ldapKey)
+                {
+                    $ldapKey = strtolower($ldapKey);
+                    if(strpos($ldapKey, ':*'))
+                    {
+                        $newLdapKey = str_replace(':*', '', $ldapKey);
+                        if(isset($data[0][$newLdapKey]))
+                        {
+                            foreach($data[0][$newLdapKey] as $key => $values)
+                            {
+                                if($key === 'count')
+                                continue;
+
+                                $cardInfoArray[$vCardKey][] = $values;
+                            }
+                        }   
+                    }
+                    else if(isset($data[0][$ldapKey]))
+                    {      
+                        
+                        if($ldapKey == 'jpegphoto') 
+                        {
+                            // *** ///
+                            
+                        }
+                        else
+                        {
+                            if(in_array($vCardKey, $this->vCardKeyParts))
+                            {
+                                $keyParts = explode(';', $data[0][$ldapKey][0]);
+
+                                foreach($keyParts as $element)
+                                {
+                                    $cardInfo[$vCardKey][] = $element;
+                                }
+                            }
+                            else
+                            {
+                                $cardInfo[$vCardKey] = $data[0][$ldapKey][0];
+                            }                          
+                        }    
+                        
+                    } 
+                } 
+                
+            $vcard = new \Sabre\VObject\Component\VCard($cardInfo);
+
+            if(! empty($cardInfoArray))
+            {
+                foreach($cardInfoArray as $vCardKey => $vCardValues)
+                {
+                    foreach ($vCardValues as $vCardValue) {
+                        
+                        $vcard->add($vCardKey, $vCardValue);
+                    }
                 }
             }
+            
+            if(isset($data[0]['jpegphoto']))
+            {
+                $b64vcard = base64_encode($data[0]['jpegphoto'][0]);
+                $vcard->add('PHOTO', $b64vcard, array('type' => 'JPEG', 'encoding' => 'b', 'value' => 'BINARY'));
+            }
+            
+            $result = [
+                'id' => $additionalData[0]['entryuuid'][0],
+                'carddata'  => $vcard->serialize(),
+                'uri' => $cardUri,
+                'lastmodified' => $this->showDateString($additionalData[0]['modifytimestamp'][0]),
+                'etag' => '"' .$additionalData[0]['modifytimestamp'][0]. '"',
+                'size' => strlen($data[0]['cn'][0])
+            ];
+                        
+                return $result;
+            }
         }
-
-        $result = [
-            'id' => $additionalData[0]['entryuuid'][0],
-            'carddata'  => $vcard->serialize(),
-            'uri' => $cardUri,
-            'lastmodified' => $this->showDateString($additionalData[0]['modifytimestamp'][0]),
-            'etag' => '"' .$additionalData[0]['modifytimestamp'][0]. '"',
-            'size' => strlen($data[0]['cn'][0])
-        ];
-                    
-            return $result;
-        }
-
         return false;
         
     }
@@ -364,13 +388,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
         $addressBookConfig = $GLOBALS['addressBookConfig'][$addressBookId];
 
         $ldapInfo = [];
-        $ldapInfo['cn'] = $cardUri;
         $ldapInfo['objectclass'] = $addressBookConfig['LDAP_Object_Classes'];
 
         $vcard = \Sabre\VObject\Reader::read($cardData);
         
         foreach($addressBookConfig['fieldmap'] as $vCardKey => $ldapKey)
         {
+            $ldapKey = strtolower($ldapKey);
             if(isset($vcard->$vCardKey))
             {
                 if(strpos($ldapKey, ':*'))
@@ -382,28 +406,50 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
                     }
                 }
                 else
-                {    
-                    if($vcard->$vCardKey['VALUE'] == 'URI')
+                { 
+                    if($vCardKey == 'PHOTO')
                     {
-                        
-                        
-                        $ldapInfo[$ldapKey] = base64_encode((string)$vcard->$vCardKey);
+                        if((string)$vcard->$vCardKey['ENCODING'] == 'B')
+                        {
+                            $ldapInfo[$ldapKey] = (string)$vcard->$vCardKey;
+                        }
+                        else
+                        {
+                            $image = file_get_contents((string)$vcard->$vCardKey);
+
+                            if ($image !== false)
+                                $ldapInfo[$ldapKey] = $image;          
+                        } 
+                    }
+                    else if($vCardKey == 'N')
+                    {
+                        $ldapInfo[$ldapKey] = (string)$vcard->$vCardKey;
+
+                        $ldapInfo['sn'] = $vcard->$vCardKey->getParts()[0];
                     }
                     else
                     {
                         $ldapInfo[$ldapKey] = (string)$vcard->$vCardKey;
-                    }       
+                    }         
                     
                 }
             }     
         }
-        // print_r($ldapInfo);
+       
+        if(! array_key_exists('sn', $ldapInfo))
+        {
+            if( isset($vcard->FN))
+            {
+                $ldapInfo['sn'] = (string)$vcard->FN;
+            }
+        }
+        
         foreach ($addressBookConfig['required_fields'] as $key) {
             if(! array_key_exists($key, $ldapInfo))
             return false;
         }
-
-        $ldapTree = $addressBookConfig['LDAP_rdn']. '='. $cardUri. ',' .$addressBookId;
+        
+        $ldapTree = $addressBookConfig['LDAP_rdn']. '='. $ldapInfo['cn']. ',' .$addressBookId;
         $ldapResponse = ldap_add($ldapConn, $ldapTree, $ldapInfo);
                     
         if ($ldapResponse) {
@@ -452,15 +498,15 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
         $addressBookConfig = $GLOBALS['addressBookConfig'][$addressBookId];
 
         $ldapInfo = [];
-        $ldapInfo['cn'] = $cardUri;
         $ldapInfo['objectclass'] = $addressBookConfig['LDAP_Object_Classes'];
 
         $vcard = \Sabre\VObject\Reader::read($cardData);
         
         foreach($addressBookConfig['fieldmap'] as $vCardKey => $ldapKey)
         {
+            $ldapKey = strtolower($ldapKey);
             if(isset($vcard->$vCardKey))
-            {               
+            {
                 if(strpos($ldapKey, ':*'))
                 {
                     $newLdapKey = str_replace(':*', '', $ldapKey);
@@ -470,10 +516,42 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
                     }
                 }
                 else
-                {           
-                    $ldapInfo[$ldapKey] = (string)$vcard->$vCardKey;
+                { 
+                    if($vCardKey == 'PHOTO')
+                    {
+                        if((string)$vcard->$vCardKey['ENCODING'] == 'B')
+                        {
+                            $ldapInfo[$ldapKey] = (string)$vcard->$vCardKey;
+                        }
+                        else
+                        {
+                            $image = file_get_contents((string)$vcard->$vCardKey);
+
+                            if ($image !== false)
+                                $ldapInfo[$ldapKey] = $image;          
+                        } 
+                    }
+                    else if($vCardKey == 'N')
+                    {
+                        $ldapInfo[$ldapKey] = (string)$vcard->$vCardKey;
+
+                        $ldapInfo['sn'] = $vcard->$vCardKey->getParts()[0];
+                    }
+                    else
+                    {
+                        $ldapInfo[$ldapKey] = (string)$vcard->$vCardKey;
+                    }         
+                    
                 }
-            }          
+            }     
+        }
+       
+        if(! array_key_exists('sn', $ldapInfo))
+        {
+            if( isset($vcard->FN))
+            {
+                $ldapInfo['sn'] = (string)$vcard->FN;
+            }
         }
 
         foreach ($addressBookConfig['required_fields'] as $key) {
