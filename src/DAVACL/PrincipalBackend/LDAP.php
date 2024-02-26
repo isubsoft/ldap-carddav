@@ -99,7 +99,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         if($data['count'] > 0)
         {
             for ($i=0; $i < $data['count']; $i++) { 
-
+                
                 $principal = [
                     'uri' => $prefixPath. '/' . str_replace('uid=', '',explode(',',$data[$i]['dn'])[0]),
                 ];

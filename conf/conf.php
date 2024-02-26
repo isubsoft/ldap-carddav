@@ -2,6 +2,8 @@
 
 $config = [];
 
+$config['database'] = 'data/db.sqlite';
+
 $config['auth']['ldap'] = [
   'host'         => 'dev-db.intranet.isubsoft.com',
   'port'          => 389,

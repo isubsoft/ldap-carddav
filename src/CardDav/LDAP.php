@@ -1,9 +1,10 @@
 <?php
 
 namespace isubsoft\dav\CardDav;
-// session_start();
 
-class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
+date_default_timezone_set("Asia/Calcutta");
+
+class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\CardDAV\Backend\SyncSupport {
 
     /**
      * Store ldap directory access credentials
@@ -23,6 +24,21 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
 
 
     /**
+     * PDO connection.
+     *
+     * @var PDO
+     */
+    protected $pdo;
+
+    /**
+     * The table name that will be used for tracking changes in address books.
+     *
+     * @var string
+     */
+    public $deletedCardsTableName = 'deleted_cards';
+
+
+    /**
      * Creates the backend.
      *
      * configuration array must be provided
@@ -31,9 +47,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
      * @param array $config
      * @return void
      */
-    function __construct(array $config) {
+    function __construct(array $config, \PDO $pdo) {
         $this->config = $config;
-        date_default_timezone_set("Asia/Calcutta");
+        $this->pdo = $pdo;
     }
 
 
@@ -64,19 +80,18 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
                     
         $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
         $filter = str_replace('%u', $searchUserId, $this->config['principal']['ldap']['search_filter']);  // single filter
-        $attributes = ['dn'];
 
         if(strtolower($this->config['principal']['ldap']['scope']) == 'base')
         {
-            $result = ldap_read($ldapConn, $ldaptree, $filter, $attributes);
+            $result = ldap_read($ldapConn, $ldaptree, $filter);
         }
         else if(strtolower($this->config['principal']['ldap']['scope']) == 'list')
         {
-            $result = ldap_list($ldapConn, $ldaptree, $filter, $attributes);
+            $result = ldap_list($ldapConn, $ldaptree, $filter);
         }
         else
         {
-            $result = ldap_search($ldapConn, $ldaptree, $filter, $attributes);
+            $result = ldap_search($ldapConn, $ldaptree, $filter);
         }
                     
         $data = ldap_get_entries($ldapConn, $result);
@@ -88,6 +103,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
 
         foreach ($this->config['card']['ldap'] as $addressBookName => $configParams) {
 
+                $syncToken = time();
                 $addressBookDn = str_replace('%dn', $searchDn, $configParams['base_dn']);
 
                 $addressBooks[] = [
@@ -96,12 +112,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
                     'principaluri'                                                => $principalUri,
                     '{DAV:}displayname'                                           => $configParams['name'],
                     '{' . CardDAVPlugin::NS_CARDDAV . '}addressbook-description'  => $configParams['description'],
-                    '{http://calendarserver.org/ns/}getctag'                      => $configParams['synctoken'],
-                    '{http://sabredav.org/ns}sync-token'                          => $configParams['synctoken'] ? $configParams['synctoken'] : '0',
+                    '{http://calendarserver.org/ns/}getctag'                      => $syncToken,
+                    '{http://sabredav.org/ns}sync-token'                          => $syncToken ? $syncToken : '0',
                 ];
                 $GLOBALS['addressBookConfig'][$addressBookDn] = $configParams;
         }
-
+        
         return $addressBooks;
     }
 
@@ -450,15 +466,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
         $ldapTree = $addressBookConfig['LDAP_rdn']. '='. $cardUri. ',' .$addressBookId;
         $ldapResponse = ldap_add($ldapConn, $ldapTree, $ldapInfo);
                     
-        if ($ldapResponse) {
-
-            $filter = $addressBookConfig['filter']; 
-            $attributes = ['modifytimestamp'];
-
-            $ldapResult = ldap_read($ldapConn, $ldapTree, $filter, $attributes);
-                        
-            $data = ldap_get_entries($ldapConn, $ldapResult);
-
+        if ($ldapResponse) 
+        {    
             return null;
         }
 
@@ -571,15 +580,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
                 $ldapInfo[$key] = [];
             }
         }
-
+        
         $ldapResponse = ldap_mod_replace($ldapConn, $ldapTree, $ldapInfo);
                     
-        if ($ldapResponse) {
-
-            $attributes = ['modifytimestamp'];
-            $ldapResult = ldap_read($ldapConn, $ldapTree, $filter, $attributes);
-            $data = ldap_get_entries($ldapConn, $ldapResult);
-
+        if ($ldapResponse) 
+        {
             return null;
         }
 
@@ -597,15 +602,163 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend {
     {
         $ldapConn = $GLOBALS['globalLdapConn'];
         $addressBookConfig = $GLOBALS['addressBookConfig'][$addressBookId];
- 
+
         $ldapTree = $addressBookConfig['LDAP_rdn']. '='. $cardUri. ',' .$addressBookId;
                     
         if(ldap_delete($ldapConn, $ldapTree))
-        {
+        { 
+            $this->addChange($addressBookId,$cardUri);
             return true;
         }
 
         return false;
+    }
+
+    /**
+     * The getChanges method returns all the changes that have happened, since
+     * the specified syncToken in the specified address book.
+     *
+     * This function should return an array, such as the following:
+     *
+     * [
+     *   'syncToken' => 'The current synctoken',
+     *   'added'   => [
+     *      'new.txt',
+     *   ],
+     *   'modified'   => [
+     *      'modified.txt',
+     *   ],
+     *   'deleted' => [
+     *      'foo.php.bak',
+     *      'old.txt'
+     *   ]
+     * ];
+     *
+     * The returned syncToken property should reflect the *current* syncToken
+     * of the calendar, as reported in the {http://sabredav.org/ns}sync-token
+     * property. This is needed here too, to ensure the operation is atomic.
+     *
+     * If the $syncToken argument is specified as null, this is an initial
+     * sync, and all members should be reported.
+     *
+     * The modified property is an array of nodenames that have changed since
+     * the last token.
+     *
+     * The deleted property is an array with nodenames, that have been deleted
+     * from collection.
+     *
+     * The $syncLevel argument is basically the 'depth' of the report. If it's
+     * 1, you only have to report changes that happened only directly in
+     * immediate descendants. If it's 2, it should also include changes from
+     * the nodes below the child collections. (grandchildren)
+     *
+     * The $limit argument allows a client to specify how many results should
+     * be returned at most. If the limit is not specified, it should be treated
+     * as infinite.
+     *
+     * If the limit (infinite or not) is higher than you're willing to return,
+     * you should throw a Sabre\DAV\Exception\TooMuchMatches() exception.
+     *
+     * If the syncToken is expired (due to data cleanup) or unknown, you must
+     * return null.
+     *
+     * The limit is 'suggestive'. You are free to ignore it.
+     *
+     * @param string $addressBookId
+     * @param string $syncToken
+     * @param int $syncLevel
+     * @param int $limit
+     * @return array
+     */
+    function getChangesForAddressBook($addressBookId, $syncToken, $syncLevel, $limit = null)
+    {  
+        $result = [
+            'syncToken' => time(),
+            'added'     => [],
+            'modified'  => [],
+            'deleted'   => [],
+        ];
+
+        $ldapConn = $GLOBALS['globalLdapConn'];
+        $addressBookConfig = $GLOBALS['addressBookConfig'][$addressBookId];
+        
+        $filter = $addressBookConfig['filter']; 
+        $attributes = ['uid','createTimestamp', 'modifytimestamp'];
+
+        if(strtolower($addressBookConfig['scope']) == 'base')
+        {
+            $ldapResult = ldap_read($ldapConn, $addressBookId, $filter, $attributes);
+        }
+        else if(strtolower($addressBookConfig['scope']) == 'list')
+        {
+            $ldapResult = ldap_list($ldapConn, $addressBookId, $filter, $attributes);
+        }
+        else
+        {
+            $ldapResult = ldap_search($ldapConn, $addressBookId, $filter, $attributes);
+        }
+
+        $data = ldap_get_entries($ldapConn, $ldapResult);
+                    
+        if($data['count'] > 0)
+        {
+            for ($i=0; $i < $data['count']; $i++) { 
+                            
+                $createdTimestamp = strtotime($data[$i]['createTimestamp'][0]);
+                $modifiedTimestamp = strtotime($data[$i]['modifytimestamp'][0]);
+                $cardUri = $data[$i]['uid'][0];
+                
+                if($createdTimestamp > $syncToken)
+                {
+                    $result['added'][] = $cardUri;
+                }
+                else if($createdTimestamp < $syncToken && $modifiedTimestamp > $syncToken)
+                {
+                    $result['modified'][] = $cardUri;
+                }
+            }  
+        }
+
+        $query = 'SELECT uri, sync_token FROM '.$this->deletedCardsTableName.' WHERE addressbook_id = ?';
+        $stmt = $this->pdo->prepare($query);
+        $stmt->execute([$addressBookId]);
+
+        while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+            
+            if($row['sync_token'] > $syncToken)
+            {
+                $result['deleted'][] = $row['uri'];
+
+                if(in_array($row['uri'], $result['added']))
+                {
+                    $key = array_search($row['uri'], $result['added']);
+                    unset($result['added'][$key]);
+                }
+
+                if(in_array($row['uri'], $result['modified']))
+                {
+                    $key = array_search($row['uri'], $result['modified']);
+                    unset($result['modified'][$key]);
+                }
+            }
+        }
+        
+        return $result;
+    }
+
+    /**
+     * Adds a change record to the addressbookchanges table.
+     *
+     * @param mixed  $addressBookId
+     * @param string $objectUri
+     */
+    protected function addChange($addressBookId, $objectUri)
+    {
+        $query = "INSERT INTO `".$this->deletedCardsTableName."` (`sync_token` ,`addressbook_id` ,`uri`) " 
+            ." VALUES ('".time()."','".$addressBookId."','".$objectUri."')";
+
+        $sql = $this->pdo->prepare($query);
+        $sql->execute();
     }
 
     /**
