@@ -2,7 +2,7 @@
 
 $config = [];
 
-$config['database'] = 'data/db.sqlite';
+$config['database'] = 'data/sync/pdo/sqlite/deleted_cards.db';
 
 $config['auth']['ldap'] = [
   'host'         => 'dev-db.intranet.isubsoft.com',

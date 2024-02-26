@@ -672,8 +672,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     function getChangesForAddressBook($addressBookId, $syncToken, $syncLevel, $limit = null)
     {  
+        $currentTimestamp = time();
+
         $result = [
-            'syncToken' => time(),
+            'syncToken' => $currentTimestamp,
             'added'     => [],
             'modified'  => [],
             'deleted'   => [],
@@ -708,11 +710,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                 $modifiedTimestamp = strtotime($data[$i]['modifytimestamp'][0]);
                 $cardUri = $data[$i]['uid'][0];
                 
-                if($createdTimestamp > $syncToken)
+                if($createdTimestamp <= $currentTimestamp && $createdTimestamp > $syncToken)
                 {
                     $result['added'][] = $cardUri;
                 }
-                else if($createdTimestamp < $syncToken && $modifiedTimestamp > $syncToken)
+                else if($createdTimestamp <= $currentTimestamp && $modifiedTimestamp > $syncToken)
                 {
                     $result['modified'][] = $cardUri;
                 }
@@ -722,27 +724,15 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $query = 'SELECT uri, sync_token FROM '.$this->deletedCardsTableName.' WHERE addressbook_id = ?';
         $stmt = $this->pdo->prepare($query);
         $stmt->execute([$addressBookId]);
-
+        
         while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
             
-            if($row['sync_token'] > $syncToken)
+            if($row['sync_token'] <= $currentTimestamp && $row['sync_token'] > $syncToken)
             {
                 $result['deleted'][] = $row['uri'];
-
-                if(in_array($row['uri'], $result['added']))
-                {
-                    $key = array_search($row['uri'], $result['added']);
-                    unset($result['added'][$key]);
-                }
-
-                if(in_array($row['uri'], $result['modified']))
-                {
-                    $key = array_search($row['uri'], $result['modified']);
-                    unset($result['modified'][$key]);
-                }
             }
         }
-        
+       
         return $result;
     }
 
