@@ -443,9 +443,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                     }
                     else if($vCardKey == 'N')
                     {
-                        $ldapInfo[$ldapKey] = (string)$vcard->$vCardKey;
-
                         $ldapInfo['sn'] = $vcard->$vCardKey->getParts()[0];
+                        $ldapInfo['givenname'] = $vcard->$vCardKey->getParts()[1];
                     }
                     else
                     {

@@ -66,7 +66,6 @@ $config['card']['ldap']['private'] = [
 	'fieldmap'      => [
 		// vCard    => LDAP
     'FN'            => 'cn',
-    'N'             => 'givenName',
 		'EMAIL'         => 'mail:*',
 		'ORG'         	=> 'o',
     'NICKNAME'      => 'displayName',
