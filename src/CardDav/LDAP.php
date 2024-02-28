@@ -78,6 +78,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     function getAddressBooksForUser($principalUri)
     {      
+        $this->syncToken = time();
         $ldapConn = $GLOBALS['globalLdapConn'];
         $searchUserId = str_replace($this->principalPrefix,'',$principalUri);
 
@@ -108,8 +109,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         }
 
         foreach ($this->config['card']['ldap'] as $addressBookName => $configParams) {
-
-                $this->syncToken = time();
+ 
                 $addressBookDn = str_replace('%dn', $searchDn, $configParams['base_dn']);
 
                 $addressBooks[] = [
