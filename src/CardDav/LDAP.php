@@ -19,7 +19,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     public $principalPrefix = 'principals/users/';
 
-    public $vCardKeyParts = ['ADR', 'N', 'ORG'];
+    public $vCardKeyParts = ['ADR', 'ORG'];
+
+    public $vCardKeyMulti = ['TEL'];
 
 
     /**
@@ -202,7 +204,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         
         $filter = '(&'.$addressBookConfig['filter']. '(createtimestamp<=' . gmdate('YmdHis', $this->syncToken) . 'Z))'; 
 
-        $attributes = ['cn','uid','entryuuid','createtimestamp','modifytimestamp'];
+        $attributes = ['cn','uid','entryuuid','modifytimestamp'];
 
         if(strtolower($addressBookConfig['scope']) == 'base')
         {
@@ -271,80 +273,16 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                     
             if($data['count'] > 0)
             {
-                $cardInfo = [];
-                $cardInfoArray = [];
-
-                foreach($addressBookConfig['fieldmap'] as $vCardKey => $ldapKey)
-                {
-                    $ldapKey = strtolower($ldapKey);
-                    if(strpos($ldapKey, ':*'))
-                    {
-                        $newLdapKey = str_replace(':*', '', $ldapKey);
-                        if(isset($data[0][$newLdapKey]))
-                        {
-                            foreach($data[0][$newLdapKey] as $key => $values)
-                            {
-                                if($key === 'count')
-                                continue;
-
-                                $cardInfoArray[$vCardKey][] = $values;
-                            }
-                        }   
-                    }
-                    else if(isset($data[0][$ldapKey]))
-                    {      
-                        
-                        if($ldapKey == 'jpegphoto') 
-                        {
-                            continue;                         
-                        }
-                        else
-                        {
-                            if(in_array($vCardKey, $this->vCardKeyParts))
-                            {
-                                $keyParts = explode(';', $data[0][$ldapKey][0]);
-
-                                foreach($keyParts as $element)
-                                {
-                                    $cardInfo[$vCardKey][] = $element;
-                                }
-                            }
-                            else
-                            {
-                                $cardInfo[$vCardKey] = $data[0][$ldapKey][0];
-                            }                          
-                        }    
-                        
-                    } 
-                } 
+                $cardData = $this->generateVcard($data[0], $addressBookConfig['fieldmap']);
                 
-            $vcard = new \Sabre\VObject\Component\VCard($cardInfo);
-
-            if(! empty($cardInfoArray))
-            {
-                foreach($cardInfoArray as $vCardKey => $vCardValues)
-                {
-                    foreach ($vCardValues as $vCardValue) {
-                        
-                        $vcard->add($vCardKey, $vCardValue);
-                    }
-                }
-            }
-            
-            if(isset($data[0]['jpegphoto']))
-            {
-                $b64vcard = base64_encode($data[0]['jpegphoto'][0]);
-                $vcard->add('PHOTO', $b64vcard, array('type' => 'JPEG', 'encoding' => 'b', 'value' => 'BINARY'));
-            }
-            
-            $result = [
-                'id' => $additionalData[0]['entryuuid'][0],
-                'carddata'  => $vcard->serialize(),
-                'uri' => $cardUri,
-                'lastmodified' => $this->showDateString($additionalData[0]['modifytimestamp'][0]),
-                'etag' => null,
-                'size' => strlen($data[0]['cn'][0])
-            ];
+                $result = [
+                    'id'            => $additionalData[0]['entryuuid'][0],
+                    'carddata'      => $cardData,
+                    'uri'           => $cardUri,
+                    'lastmodified'  => $this->showDateString($additionalData[0]['modifytimestamp'][0]),
+                    'etag'          => null,
+                    'size'          => strlen($data[0]['cn'][0])
+                ];
                         
                 return $result;
             }
@@ -353,6 +291,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         
     }
 
+    
     /**
      * Returns a list of cards.
      *
@@ -409,50 +348,188 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
         $ldapInfo = [];
         $ldapInfo['objectclass'] = $addressBookConfig['LDAP_Object_Classes'];
-
+            
         $vcard = \Sabre\VObject\Reader::read($cardData);
         
         foreach($addressBookConfig['fieldmap'] as $vCardKey => $ldapKey)
         {
-            $ldapKey = strtolower($ldapKey);
-            if(isset($vcard->$vCardKey))
+            if(is_array($ldapKey))
             {
-                if(strpos($ldapKey, ':*'))
+                if(array_key_exists('attr', $ldapKey))
                 {
-                    $newLdapKey = str_replace(':*', '', $ldapKey);
-                    foreach($vcard->$vCardKey as $values)
+                    foreach($ldapKey['attr'] as $index => $ldapElement)
                     {
-                        $ldapInfo[$newLdapKey][] = (string)$values;
+                        if($ldapElement != '' && $ldapElement != null && $vcard->$vCardKey->getParts()[$index] != '')
+                        {
+                            $ldapInfo[strtolower($ldapElement)] = $vcard->$vCardKey->getParts()[$index];                         
+                        }
                     }
                 }
-                else
-                { 
-                    if($vCardKey == 'PHOTO')
-                    {
-                        if((string)$vcard->$vCardKey['ENCODING'] == 'B')
-                        {
-                            $ldapInfo[$ldapKey] = (string)$vcard->$vCardKey;
-                        }
-                        else
-                        {
-                            $image = file_get_contents((string)$vcard->$vCardKey);
 
-                            if ($image !== false)
-                                $ldapInfo[$ldapKey] = $image;          
-                        } 
-                    }
-                    else if($vCardKey == 'N')
-                    {
-                        $ldapInfo['sn'] = $vcard->$vCardKey->getParts()[0];
-                        $ldapInfo['givenname'] = $vcard->$vCardKey->getParts()[1];
+                if(array_key_exists('type', $ldapKey))
+                {
+                    if(in_array($vCardKey, $this->vCardKeyMulti))
+                    {                       
+                        foreach($vcard->$vCardKey as $values) {
+                            
+                            $vCardType = [];
+
+                            if ($param = $values['TYPE']) {
+                                foreach($param as $value) {
+                                  $vCardType[] = $value;
+                                }
+                            }
+                            
+                            if(!empty($vCardType))
+                            {
+                                $vCardElementsMatch = false;
+                                foreach($ldapKey['type'] as $index => $vCardElements)
+                                {                        
+                                    if(in_array($index, $vCardType))
+                                    { 
+                                        $vCardElementsMatch = true;
+                                        $vCardElementMatch = false;
+                                        foreach($vCardElements as $vCardElement => $newLdapKey)
+                                        {
+                                            if(in_array($vCardElement, $vCardType))
+                                            {
+                                                $ldapInfo[strtolower($newLdapKey)][] = (string)$values;
+                                                $vCardElementMatch = true;
+                                            }
+                                        }
+        
+                                        if($vCardElementMatch == false)
+                                        {
+                                            $ldapInfo[strtolower($vCardElements['default'])][] = (string)$values;
+                                        }
+                                    }
+                                }
+                                
+                                if($vCardElementsMatch == false)
+                                {
+                                    $vCardElementMatch = false;
+                                    $vCardDefaultElement = array_key_first($ldapKey['type']);
+                                    foreach($ldapKey['type'][$vCardDefaultElement] as $vCardElement => $newLdapKey)
+                                    {
+                                        if(in_array($vCardElement, $vCardType))
+                                        {
+                                            $ldapInfo[strtolower($newLdapKey)][] = (string)$values;
+                                            $vCardElementMatch = true;
+                                        }
+                                    }
+        
+                                    if($vCardElementMatch == false)
+                                    {
+                                        $ldapInfo[strtolower($ldapKey['type'][$vCardDefaultElement]['default'])][] = (string)$values;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                $vCardDefaultElement = array_key_first($ldapKey['type']);
+                                $ldapInfo[strtolower($ldapKey['type'][$vCardDefaultElement]['default'])][] = (string)$values;
+                            }
+                        }   
                     }
                     else
                     {
-                        $ldapInfo[$ldapKey] = (string)$vcard->$vCardKey;
-                    }         
-                    
+                        $vCardType = [];
+
+                        if ($param = $vcard->$vCardKey['TYPE']) {
+                            foreach($param as $value) {
+                              $vCardType[] = $value;
+                            }
+                        }
+    
+                        if(!empty($vCardType))
+                        {
+                            $vCardElementsMatch = false;
+                            foreach($ldapKey['type'] as $index => $vCardElements)
+                            {                        
+                                if(in_array($index, $vCardType))
+                                {
+                                    $vCardElementsMatch = true;
+                                    $vCardElementMatch = false;
+                                    foreach($vCardElements as $vCardElement => $newLdapKey)
+                                    {
+                                        if(in_array($vCardElement, $vCardType))
+                                        {
+                                            $ldapInfo[strtolower($newLdapKey)] = (string)$vcard->$vCardKey;
+                                            $vCardElementMatch = true;
+                                        }
+                                    }
+    
+                                    if($vCardElementMatch == false)
+                                    {
+                                        $ldapInfo[strtolower($vCardElements['default'])] = (string)$vcard->$vCardKey;
+                                    }
+                                }
+                            }
+                            
+                            if($vCardElementsMatch == false)
+                            {
+                                $vCardElementMatch = false;
+                                $vCardDefaultElement = array_key_first($ldapKey['type']);
+                                foreach($ldapKey['type'][$vCardDefaultElement] as $vCardElement => $newLdapKey)
+                                {
+                                    if(in_array($vCardElement, $vCardType))
+                                    {
+                                        $ldapInfo[strtolower($newLdapKey)] = (string)$vcard->$vCardKey;
+                                        $vCardElementMatch = true;
+                                    }
+                                }
+    
+                                if($vCardElementMatch == false)
+                                {
+                                    $ldapInfo[strtolower($ldapKey['type'][$vCardDefaultElement]['default'])] = (string)$vcard->$vCardKey;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            $vCardDefaultElement = array_key_first($ldapKey['type']);
+                            $ldapInfo[strtolower($ldapKey['type'][$vCardDefaultElement]['default'])] = (string)$vcard->$vCardKey;
+                        }
+                    }    
                 }
-            }     
+            }
+            else
+            {
+                $ldapKey = strtolower($ldapKey);
+                if(isset($vcard->$vCardKey))
+                {
+                    if(strpos($ldapKey, ':*'))
+                    {
+                        $newLdapKey = str_replace(':*', '', $ldapKey);
+                        foreach($vcard->$vCardKey as $values)
+                        {
+                            $ldapInfo[$newLdapKey][] = (string)$values;
+                        }
+                    }
+                    else
+                    { 
+                        if($vCardKey == 'PHOTO')
+                        {
+                            if((string)$vcard->$vCardKey['ENCODING'] == 'B')
+                            {
+                                $ldapInfo[$ldapKey] = (string)$vcard->$vCardKey;
+                            }
+                            else
+                            {
+                                $image = file_get_contents((string)$vcard->$vCardKey);
+
+                                if ($image !== false)
+                                    $ldapInfo[$ldapKey] = $image;          
+                            } 
+                        }
+                        else
+                        {
+                            $ldapInfo[$ldapKey] = (string)$vcard->$vCardKey;
+                        }         
+                        
+                    }
+                } 
+            }    
         }
        
         if(! array_key_exists('sn', $ldapInfo))
@@ -469,6 +546,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         }
         
         $ldapTree = $addressBookConfig['LDAP_rdn']. '='. $cardUri. ',' .$addressBookId;
+        
         $ldapResponse = ldap_add($ldapConn, $ldapTree, $ldapInfo);
                     
         if ($ldapResponse) 
@@ -517,46 +595,183 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         
         foreach($addressBookConfig['fieldmap'] as $vCardKey => $ldapKey)
         {
-            $ldapKey = strtolower($ldapKey);
-            if(isset($vcard->$vCardKey))
+            if(is_array($ldapKey))
             {
-                if(strpos($ldapKey, ':*'))
+                if(array_key_exists('attr', $ldapKey))
                 {
-                    $newLdapKey = str_replace(':*', '', $ldapKey);
-                    foreach($vcard->$vCardKey as $values)
+                    foreach($ldapKey['attr'] as $index => $ldapElement)
                     {
-                        $ldapInfo[$newLdapKey][] = (string)$values;
+                        if($ldapElement != '' && $ldapElement != null && $vcard->$vCardKey->getParts()[$index] != '')
+                        {
+                            $ldapInfo[strtolower($ldapElement)] = $vcard->$vCardKey->getParts()[$index];                         
+                        }
                     }
                 }
-                else
-                { 
-                    if($vCardKey == 'PHOTO')
-                    {
-                        if((string)$vcard->$vCardKey['ENCODING'] == 'B')
-                        {
-                            $ldapInfo[$ldapKey] = (string)$vcard->$vCardKey;
-                        }
-                        else
-                        {
-                            $image = file_get_contents((string)$vcard->$vCardKey);
 
-                            if ($image !== false)
-                                $ldapInfo[$ldapKey] = $image;          
-                        } 
-                    }
-                    else if($vCardKey == 'N')
-                    {
-                        $ldapInfo[$ldapKey] = (string)$vcard->$vCardKey;
+                if(array_key_exists('type', $ldapKey))
+                {
+                    if(in_array($vCardKey, $this->vCardKeyMulti))
+                    {                       
+                        foreach($vcard->$vCardKey as $values) {
+                            
+                            $vCardType = [];
 
-                        $ldapInfo['sn'] = $vcard->$vCardKey->getParts()[0];
+                            if ($param = $values['TYPE']) {
+                                foreach($param as $value) {
+                                  $vCardType[] = $value;
+                                }
+                            }
+                            
+                            if(!empty($vCardType))
+                            {
+                                $vCardElementsMatch = false;
+                                foreach($ldapKey['type'] as $index => $vCardElements)
+                                {                        
+                                    if(in_array($index, $vCardType))
+                                    { 
+                                        $vCardElementsMatch = true;
+                                        $vCardElementMatch = false;
+                                        foreach($vCardElements as $vCardElement => $newLdapKey)
+                                        {
+                                            if(in_array($vCardElement, $vCardType))
+                                            {
+                                                $ldapInfo[strtolower($newLdapKey)][] = (string)$values;
+                                                $vCardElementMatch = true;
+                                            }
+                                        }
+        
+                                        if($vCardElementMatch == false)
+                                        {
+                                            $ldapInfo[strtolower($vCardElements['default'])][] = (string)$values;
+                                        }
+                                    }
+                                }
+                                
+                                if($vCardElementsMatch == false)
+                                {
+                                    $vCardElementMatch = false;
+                                    $vCardDefaultElement = array_key_first($ldapKey['type']);
+                                    foreach($ldapKey['type'][$vCardDefaultElement] as $vCardElement => $newLdapKey)
+                                    {
+                                        if(in_array($vCardElement, $vCardType))
+                                        {
+                                            $ldapInfo[strtolower($newLdapKey)][] = (string)$values;
+                                            $vCardElementMatch = true;
+                                        }
+                                    }
+        
+                                    if($vCardElementMatch == false)
+                                    {
+                                        $ldapInfo[strtolower($ldapKey['type'][$vCardDefaultElement]['default'])][] = (string)$values;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                $vCardDefaultElement = array_key_first($ldapKey['type']);
+                                $ldapInfo[strtolower($ldapKey['type'][$vCardDefaultElement]['default'])][] = (string)$values;
+                            }
+                        }   
                     }
                     else
                     {
-                        $ldapInfo[$ldapKey] = (string)$vcard->$vCardKey;
-                    }         
-                    
+                        $vCardType = [];
+
+                        if ($param = $vcard->$vCardKey['TYPE']) {
+                            foreach($param as $value) {
+                              $vCardType[] = $value;
+                            }
+                        }
+    
+                        if(!empty($vCardType))
+                        {
+                            $vCardElementsMatch = false;
+                            foreach($ldapKey['type'] as $index => $vCardElements)
+                            {                        
+                                if(in_array($index, $vCardType))
+                                {
+                                    $vCardElementsMatch = true;
+                                    $vCardElementMatch = false;
+                                    foreach($vCardElements as $vCardElement => $newLdapKey)
+                                    {
+                                        if(in_array($vCardElement, $vCardType))
+                                        {
+                                            $ldapInfo[strtolower($newLdapKey)] = (string)$vcard->$vCardKey;
+                                            $vCardElementMatch = true;
+                                        }
+                                    }
+    
+                                    if($vCardElementMatch == false)
+                                    {
+                                        $ldapInfo[strtolower($vCardElements['default'])] = (string)$vcard->$vCardKey;
+                                    }
+                                }
+                            }
+                            
+                            if($vCardElementsMatch == false)
+                            {
+                                $vCardElementMatch = false;
+                                $vCardDefaultElement = array_key_first($ldapKey['type']);
+                                foreach($ldapKey['type'][$vCardDefaultElement] as $vCardElement => $newLdapKey)
+                                {
+                                    if(in_array($vCardElement, $vCardType))
+                                    {
+                                        $ldapInfo[strtolower($newLdapKey)] = (string)$vcard->$vCardKey;
+                                        $vCardElementMatch = true;
+                                    }
+                                }
+    
+                                if($vCardElementMatch == false)
+                                {
+                                    $ldapInfo[strtolower($ldapKey['type'][$vCardDefaultElement]['default'])] = (string)$vcard->$vCardKey;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            $vCardDefaultElement = array_key_first($ldapKey['type']);
+                            $ldapInfo[strtolower($ldapKey['type'][$vCardDefaultElement]['default'])] = (string)$vcard->$vCardKey;
+                        }
+                    }    
                 }
-            }     
+            }
+            else
+            {
+                $ldapKey = strtolower($ldapKey);
+                if(isset($vcard->$vCardKey))
+                {
+                    if(strpos($ldapKey, ':*'))
+                    {
+                        $newLdapKey = str_replace(':*', '', $ldapKey);
+                        foreach($vcard->$vCardKey as $values)
+                        {
+                            $ldapInfo[$newLdapKey][] = (string)$values;
+                        }
+                    }
+                    else
+                    { 
+                        if($vCardKey == 'PHOTO')
+                        {
+                            if((string)$vcard->$vCardKey['ENCODING'] == 'B')
+                            {
+                                $ldapInfo[$ldapKey] = (string)$vcard->$vCardKey;
+                            }
+                            else
+                            {
+                                $image = file_get_contents((string)$vcard->$vCardKey);
+
+                                if ($image !== false)
+                                    $ldapInfo[$ldapKey] = $image;          
+                            } 
+                        }
+                        else
+                        {
+                            $ldapInfo[$ldapKey] = (string)$vcard->$vCardKey;
+                        }         
+                        
+                    }
+                } 
+            }    
         }
        
         if(! array_key_exists('sn', $ldapInfo))
@@ -617,6 +832,96 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         }
 
         return false;
+    }
+
+
+    /**
+     * Generate Serialize Data of Vcard
+     *
+     * @param array $data
+     * @param array $fieldMap
+     * @return bool or vcard data
+     */
+    protected function generateVcard($data, $fieldMap)
+    { 
+        if (empty ($data)) {
+            return false;
+        }
+        // build the Vcard
+        $vcard = new \Sabre\VObject\Component\VCard();
+
+        foreach ($fieldMap as $vcardKey => $ldapKey) {
+            if(!is_array($ldapKey))
+            {
+                $ldapKey = strtolower($ldapKey);
+                if(strpos($ldapKey, ':*'))
+                {
+                    $newLdapKey = str_replace(':*', '', $ldapKey);
+                    if(isset($data[$newLdapKey]))
+                    {
+                        foreach($data[$newLdapKey] as $key => $value)
+                        {
+                            if($key === 'count')
+                            continue;
+                            $vcard->add($vcardKey, $value);
+                        }
+                    }   
+                }
+                else if(isset($data[$ldapKey]))
+                {                   
+                    if($ldapKey == 'jpegphoto') 
+                    {
+                        $vcard->add('PHOTO', base64_encode($data['jpegphoto'][0]), ['type' => 'JPEG', 'encoding' => 'b', 'value' => 'BINARY']);                     
+                    }
+                    else
+                    {
+                        if(in_array($vcardKey, $this->vCardKeyParts))
+                        {
+                            $keyParts = explode(';', $data[$ldapKey][0]);
+                            $vcard->add($vcardKey, $keyParts);
+                        }
+                        else
+                        {
+                            $vcard->add($vcardKey, $data[$ldapKey][0]);
+                        }                          
+                    }                      
+                } 
+                
+            }else{
+
+                if(array_key_exists('attr', $ldapKey))
+                {
+                    $elementArr = [];
+                    foreach ($ldapKey['attr'] as $element) {
+                        $elementArr[] = $data[strtolower($element)][0];
+                    }
+                    $vcard->add($vcardKey, $elementArr);
+                }
+
+                if(array_key_exists('type', $ldapKey))
+                {
+                    foreach ($ldapKey['type'] as $vcardIndex => $values) {
+                    foreach ($values as $vcardType => $value) {                   
+                        if(isset($data[strtolower($value)]) && $vcardType!= 'default')
+                            if(in_array($vcardKey, $this->vCardKeyMulti))
+                            {
+                                foreach ($data[strtolower($value)] as $key => $ldapElement) {
+                                    if($key === 'count')
+                                    continue;
+                                    $vcard->add($vcardKey, $ldapElement, ['type' => [$vcardType, $vcardIndex], 'value' => 'uri']);
+                                }
+                            }
+                            else{
+                                $vcard->add($vcardKey, $data[strtolower($value)][0], ['type' => [$vcardType, $vcardIndex], 'value' => 'uri']);
+                            }  
+                        }
+                    }
+                }
+            }   
+        }
+        // send the  VCard
+        $output = $vcard->serialize();
+        return $output;
     }
 
     /**

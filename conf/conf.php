@@ -66,11 +66,23 @@ $config['card']['ldap']['private'] = [
 	'fieldmap'      => [
 		// vCard    => LDAP
     'FN'            => 'cn',
+    'N'							=> ['attr' => [ 0 => 'sn', 1 => 'givenName', 2 => '', 3 => 'title', 4 => '' ]],
 		'EMAIL'         => 'mail:*',
 		'ORG'         	=> 'o',
     'NICKNAME'      => 'displayName',
 		'PHOTO'         => 'jpegphoto',
     'NOTE'        	=> 'description',
+    'TEL'						=> ['type' => [
+                                    'voice' => ['home' => 'homePhone',
+                                                'work' => 'telephoneNumber',
+                                                'default' => 'telephoneNumber',
+                                                ], 
+                                    'cell' => [
+                                                'home' => 'mobile',
+                                                'default' => 'mobile',
+                                                ]
+                                  ]
+                        ],
 	],
 	'sort'          => 'cn',    // The field to sort the listing by.
 	'scope'         => 'list',   // search mode: sub|base|list
