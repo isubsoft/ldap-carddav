@@ -273,7 +273,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                     
             if($data['count'] > 0)
             {
-                $cardData = $this->generateVcard($data[0], $addressBookConfig['fieldmap']);
+                $cardData = $this->generateVcard($data[0], $addressBookConfig['fieldmap'], $cardUri);
                 
                 $result = [
                     'id'            => $additionalData[0]['entryuuid'][0],
@@ -842,13 +842,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      * @param array $fieldMap
      * @return bool or vcard data
      */
-    protected function generateVcard($data, $fieldMap)
+    protected function generateVcard($data, $fieldMap, $cardUri)
     { 
         if (empty ($data)) {
             return false;
         }
         // build the Vcard
-        $vcard = new \Sabre\VObject\Component\VCard();
+        $vcard = new \Sabre\VObject\Component\VCard(['UID' => $cardUri]);
 
         foreach ($fieldMap as $vcardKey => $ldapKey) {
             if(!is_array($ldapKey))
