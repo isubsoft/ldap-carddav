@@ -85,7 +85,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $searchUserId = basename($principalUri);
 
         $addressBooks = [];
-        $searchDn = null;
+        $principalUserDn = null;
                     
         $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
         $filter = str_replace('%u', $searchUserId, $this->config['principal']['ldap']['search_filter']);  // single filter
@@ -105,14 +105,19 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                     
         $data = ldap_get_entries($ldapConn, $result);
                             
-        if($data == false)
+				if($data['count'] === 1)
+        {
+            $principalUserDn = $data[0]['dn'];
+        }
+        else
         {
 					return [];
         }
 
         foreach ($this->config['card']['addressbook']['ldap'] as $addressBookName => $configParams) {
  
-                $addressBookDn = str_replace('%dn', $searchDn, $configParams['base_dn']);
+               	$addressBookDn = str_replace('%dn', $principalUserDn, $configParams['base_dn']);
+               	$addressBookDn = str_replace('%u', $searchUserId, $addressBookDn);
 
                 $addressBooks[] = [
                     'id'                                                          => $addressBookDn,
