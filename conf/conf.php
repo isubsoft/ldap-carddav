@@ -42,7 +42,7 @@ $config['principal']['ldap'] = [
   'scope' => 'list' // search mode: sub|base|list
 ];
 
-$config['card']['ldap']['private'] = [
+$config['card']['addressbook']['ldap']['private'] = [
 	'name'          	=> 'Personal Address Book',
   'description'     => 'New Book',
   'synctoken'       => '1',

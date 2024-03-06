@@ -82,10 +82,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     {      
         $this->syncToken = time();
         $ldapConn = $GLOBALS['globalLdapConn'];
-        $searchUserId = str_replace($this->principalPrefix,'',$principalUri);
+        $searchUserId = basename($principalUri);
 
         $addressBooks = [];
-        $searchDn = null;
+        $principalUserDn = null;
                     
         $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
         $filter = str_replace('%u', $searchUserId, $this->config['principal']['ldap']['search_filter']);  // single filter
@@ -105,14 +105,19 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                     
         $data = ldap_get_entries($ldapConn, $result);
                             
-        if($data['count'] == 1)
+				if($data['count'] === 1)
         {
-            $searchDn = $data[0]['dn'];
+            $principalUserDn = $data[0]['dn'];
+        }
+        else
+        {
+					return [];
         }
 
-        foreach ($this->config['card']['ldap'] as $addressBookName => $configParams) {
+        foreach ($this->config['card']['addressbook']['ldap'] as $addressBookName => $configParams) {
  
-                $addressBookDn = str_replace('%dn', $searchDn, $configParams['base_dn']);
+               	$addressBookDn = str_replace('%dn', $principalUserDn, $configParams['base_dn']);
+               	$addressBookDn = str_replace('%u', $searchUserId, $addressBookDn);
 
                 $addressBooks[] = [
                     'id'                                                          => $addressBookDn,
@@ -120,8 +125,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                     'principaluri'                                                => $principalUri,
                     '{DAV:}displayname'                                           => $configParams['name'],
                     '{' . CardDAVPlugin::NS_CARDDAV . '}addressbook-description'  => $configParams['description'],
-                    '{http://calendarserver.org/ns/}getctag'                      => $this->syncToken,
-                    '{http://sabredav.org/ns}sync-token'                          => $this->syncToken ? $this->syncToken : '0',
+                    '{http://sabredav.org/ns}sync-token'                          => isset($this->syncToken) ? $this->syncToken : 0,
                 ];
                 $GLOBALS['addressBookConfig'][$addressBookDn] = $configParams;
         }
@@ -227,9 +231,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                    
                 $row = [    'id' => $data[$i]['entryuuid'][0],
                             'uri' => $data[$i]['uid'][0],
-                            'lastmodified' => $this->showDateString($data[$i]['modifytimestamp'][0]),
-                            'etag' => null,
-                            'size' => strlen($data[$i]['cn'][0])
+                            'lastmodified' => strtotime($data[$i]['modifytimestamp'][0]),
                             ];
 
                 $result[] = $row;
@@ -260,28 +262,23 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         
         $ldapTree = $addressBookConfig['LDAP_rdn']. '='. $cardUri. ',' .$addressBookId;
         $filter = $addressBookConfig['filter']; 
-        $attributes = ['entryuuid', 'modifytimestamp'];
+        $attributes = ['*', 'entryuuid', 'modifytimestamp'];
         
-        $ldapResult = ldap_read($ldapConn, $ldapTree, $filter);
+        $ldapResult = ldap_read($ldapConn, $ldapTree, $filter, $attributes);
 
         if($ldapResult)
         {
-            $ldapAdditionalResult = ldap_read($ldapConn, $ldapTree, $filter, $attributes);
-                        
             $data = ldap_get_entries($ldapConn, $ldapResult);
-            $additionalData = ldap_get_entries($ldapConn, $ldapAdditionalResult);
                     
             if($data['count'] > 0)
             {
                 $cardData = $this->generateVcard($data[0], $addressBookConfig['fieldmap'], $cardUri);
-                
+                 
                 $result = [
-                    'id'            => $additionalData[0]['entryuuid'][0],
+                    'id'            => $data[0]['entryuuid'][0],
                     'carddata'      => $cardData,
                     'uri'           => $cardUri,
-                    'lastmodified'  => $this->showDateString($additionalData[0]['modifytimestamp'][0]),
-                    'etag'          => null,
-                    'size'          => strlen($data[0]['cn'][0])
+                    'lastmodified'  => strtotime($data[0]['modifytimestamp'][0]),
                 ];
                         
                 return $result;
@@ -1049,7 +1046,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
 
         //DELETED CARDS
-        $query = 'SELECT uri, sync_token FROM '.$this->deletedCardsTableName.' WHERE addressbook_id = ?  and ( sync_token <= ? ) and ( sync_token > ? ) ';
+        $query = 'SELECT uri, sync_token FROM '.$this->deletedCardsTableName.' WHERE addressbook_id = ? and ( sync_token <= ? ) and ( sync_token > ? ) ';
         $stmt = $this->pdo->prepare($query);
         $stmt->execute([$addressBookId, $this->syncToken, $syncToken]);
         
@@ -1069,28 +1066,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     protected function addChange($addressBookId, $objectUri)
     {
         $query = "INSERT INTO `".$this->deletedCardsTableName."` (`sync_token` ,`addressbook_id` ,`uri`) " 
-            ." VALUES ('".time()."','".$addressBookId."','".$objectUri."')";
+            ." VALUES (?, ?, ?)";
 
         $sql = $this->pdo->prepare($query);
-        $sql->execute();
+        $sql->execute(time(), $addressBookId, $objectUri);
     }
-
-    /**
-     * return date in specific format, given a timestamp.
-     *
-     * @param  timestamp  $datetime
-     * @return string
-     */
-    function showDateString($timestamp)
-    {
-      if ($timestamp !== NULL) {
-
-        $timestamp = strtotime($timestamp);  
-        return new \DateTime( "@" . $timestamp );
-      }
-      return '';
-    }
-
 }
 
 ?>
