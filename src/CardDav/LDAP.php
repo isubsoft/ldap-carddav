@@ -231,7 +231,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                    
                 $row = [    'id' => $data[$i]['entryuuid'][0],
                             'uri' => $data[$i]['uid'][0],
-                            'lastmodified' => $this->ldapTimestampToDatetime($data[$i]['modifytimestamp'][0]),
+                            'lastmodified' => strtotime($data[$i]['modifytimestamp'][0]),
                             ];
 
                 $result[] = $row;
@@ -264,7 +264,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $filter = $addressBookConfig['filter']; 
         $attributes = ['*', 'entryuuid', 'modifytimestamp'];
         
-        $ldapResult = ldap_read($ldapConn, $ldapTree, $filter);
+        $ldapResult = ldap_read($ldapConn, $ldapTree, $filter, $attributes);
 
         if($ldapResult)
         {
@@ -278,7 +278,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                     'id'            => $data[0]['entryuuid'][0],
                     'carddata'      => $cardData,
                     'uri'           => $cardUri,
-                    'lastmodified'  => $this->ldapTimestampToDatetime($additionalData[0]['modifytimestamp'][0]),
+                    'lastmodified'  => strtotime($data[0]['modifytimestamp'][0]),
                 ];
                         
                 return $result;
@@ -1071,29 +1071,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $sql = $this->pdo->prepare($query);
         $sql->execute(time(), $addressBookId, $objectUri);
     }
-
-    /**
-     * return date in specific format, given a timestamp.
-     *
-     * @param  timestamp  $datetime
-     * @return string
-     */
-    function ldapTimestampToDatetime($ldapTimestampString)
-    {
-        $dateTimeObj = null;
-        
-        if(str_contains($ldapTimestampString, 'Z'))
-        {
-        	$dateTimeObj = date_create_from_format('YmdHisT', str_replace('Z', '0000', $ldapTimestampString));
-        }
-        else
-        {
-        	$dateTimeObj = date_create_from_format('YmdHisT', $ldapTimestampString));
-        }
-        
-    		return $dateTimeObj;
-    }
-
 }
 
 ?>
