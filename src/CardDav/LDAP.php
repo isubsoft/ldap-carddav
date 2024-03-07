@@ -105,13 +105,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                     
         $data = ldap_get_entries($ldapConn, $result);
                             
-				if($data['count'] === 1)
+		if($data['count'] === 1)
         {
             $principalUserDn = $data[0]['dn'];
         }
         else
         {
-					return [];
+			return [];
         }
 
         foreach ($this->config['card']['addressbook']['ldap'] as $addressBookName => $configParams) {
@@ -990,9 +990,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $addressBookConfig = $GLOBALS['addressBookConfig'][$addressBookId];
         
         //ADDED CARDS
-        $filter = '(&' .$addressBookConfig['filter']. '(createtimestamp<=' .gmdate('YmdHis', $this->syncToken). 'Z)(createtimestamp>' .gmdate('YmdHis', $syncToken). 'Z))';
+        $filter = '(&' .$addressBookConfig['filter']. '(createtimestamp<=' .gmdate('YmdHis', $this->syncToken). 'Z)(!(|(createtimestamp<='.gmdate('YmdHis', $syncToken).'Z)(createtimestamp='.gmdate('YmdHis', $syncToken).'Z))))';
+        
         $attributes = ['uid'];
-
+        
         if(strtolower($addressBookConfig['scope']) == 'base')
         {
             $ldapResult = ldap_read($ldapConn, $addressBookId, $filter, $attributes);
@@ -1018,9 +1019,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
 
         //MODIFIED CARDS
-        $filter = '(&' .$addressBookConfig['filter']. '(createtimestamp<=' .gmdate('YmdHis', $this->syncToken). 'Z)(modifytimestamp>=' .gmdate('YmdHis', $syncToken). 'Z))';
+        $filter = '(&' .$addressBookConfig['filter']. '(createtimestamp<=' .gmdate('YmdHis', $this->syncToken). 'Z)(!(|(modifytimestamp<='.gmdate('YmdHis', $syncToken).'Z)(modifytimestamp='.gmdate('YmdHis', $syncToken).'Z))))';
         $attributes = ['uid'];
-
+        
         if(strtolower($addressBookConfig['scope']) == 'base')
         {
             $ldapResult = ldap_read($ldapConn, $addressBookId, $filter, $attributes);
@@ -1069,7 +1070,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             ." VALUES (?, ?, ?)";
 
         $sql = $this->pdo->prepare($query);
-        $sql->execute(time(), $addressBookId, $objectUri);
+        $sql->execute([time(), $addressBookId, $objectUri]);
     }
 }
 
