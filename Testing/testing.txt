@@ -1,7 +1,7 @@
 
 1. Current User Principal - 
 
-REQUEST (xml)-
+REQUEST -
 curl -u <username>:<password>  --location --request PROPFIND '/' \
 --header 'Content-Type: application/xml' \
 --header 'Accept-Charset: utf-8' \
