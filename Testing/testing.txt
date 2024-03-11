@@ -145,7 +145,7 @@ RESPONSE (xml)-
 5. Download/View Contacts of addressbook - 
 
 REQUEST - 
-curl -u <username>:<password> --location --request REPORT 'http://10.2.0.151/addressbooks/users/avijit/private/' \
+curl -u <username>:<password> --location --request REPORT '/addressbooks/users/avijit/private/' \
 --header 'Content-Type: application/xml' \
 --header 'Depth: 1' \
 --header 'Accept-Charset: utf-8' \
