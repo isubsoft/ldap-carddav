@@ -2,6 +2,8 @@
 
 namespace isubsoft\dav\DAVACL\PrincipalBackend;
 
+use isubsoft\dav\Utility\LDAP as Utility;
+
 class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
 
 
@@ -81,20 +83,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         $filter = str_replace('%u', '*', $this->config['principal']['ldap']['search_filter']); 
         $attributes = ['displayName','mail'];
 
-        if(strtolower($this->config['principal']['ldap']['scope']) == 'base')
-        {
-            $result = ldap_read($ldapConn, $ldaptree, $filter, $attributes);
-        }
-        else if(strtolower($this->config['principal']['ldap']['scope']) == 'list')
-        {
-            $result = ldap_list($ldapConn, $ldaptree, $filter, $attributes);
-        }
-        else
-        {
-            $result = ldap_search($ldapConn, $ldaptree, $filter, $attributes);
-        }
-
-        $data = ldap_get_entries($ldapConn, $result);
+        $data = Utility::LdapQuery($ldapConn, $ldaptree, $filter, $attributes, strtolower($this->config['principal']['ldap']['scope']));
                     
         if($data['count'] > 0)
         {
@@ -104,7 +93,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
                     'uri' => $prefixPath. '/' . str_replace('uid=', '',explode(',',$data[$i]['dn'])[0]),
                 ];
                 foreach ($this->fieldMap as $key => $value) {
-                    if ($data[$i][$value['dbField']]) {
+                    if ( isset($data[$i][$value['dbField']])) {
                         $principal[$key] = $data[$i][$value['dbField']][0];
                     }
                 }
@@ -133,36 +122,21 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         $filter = str_replace('%u', $searchUserId, $this->config['principal']['ldap']['search_filter']);  // single filter
         $attributes = ['displayName','mail'];
 
-        if(strtolower($this->config['principal']['ldap']['scope']) == 'base')
-        {
-            $result = ldap_read($ldapConn, $ldaptree, $filter, $attributes);
-        }
-        else if(strtolower($this->config['principal']['ldap']['scope']) == 'list')
-        {
-            $result = ldap_list($ldapConn, $ldaptree, $filter, $attributes);
-        }
-        else
-        {
-            $result = ldap_search($ldapConn, $ldaptree, $filter, $attributes);
-        }
-
-        $data = ldap_get_entries($ldapConn, $result);
+        $data = Utility::LdapQuery($ldapConn, $ldaptree, $filter, $attributes, strtolower($this->config['principal']['ldap']['scope']));
                     
         if($data['count'] == 1)
         { 
-
             $principal = [
                 'id'  => $searchUserId,
                 'uri' => $path
             ];
 
             foreach ($this->fieldMap as $key => $value) {
-                if ($data[0][$value['dbField']]) {
+                if ( isset($data[0][$value['dbField']])) {
                     $principal[$key] = $data[0][$value['dbField']][0];
                 }
             }
             return $principal;
-        
         }
 
         return ;

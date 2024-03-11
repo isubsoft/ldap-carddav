@@ -2,6 +2,7 @@
 
 namespace isubsoft\dav\CardDav;
 
+use isubsoft\dav\Utility\LDAP as Utility;
 
 class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\CardDAV\Backend\SyncSupport {
 
@@ -90,20 +91,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
         $filter = str_replace('%u', $searchUserId, $this->config['principal']['ldap']['search_filter']);  // single filter
 
-        if(strtolower($this->config['principal']['ldap']['scope']) == 'base')
-        {
-            $result = ldap_read($ldapConn, $ldaptree, $filter);
-        }
-        else if(strtolower($this->config['principal']['ldap']['scope']) == 'list')
-        {
-            $result = ldap_list($ldapConn, $ldaptree, $filter);
-        }
-        else
-        {
-            $result = ldap_search($ldapConn, $ldaptree, $filter);
-        }
-                    
-        $data = ldap_get_entries($ldapConn, $result);
+        $data = Utility::LdapQuery($ldapConn, $ldaptree, $filter, [], strtolower($this->config['principal']['ldap']['scope']));
                             
 		if($data['count'] === 1)
         {
@@ -207,23 +195,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $addressBookConfig = $GLOBALS['addressBookConfig'][$addressBookDn];
         
         $filter = '(&'.$addressBookConfig['filter']. '(createtimestamp<=' . gmdate('YmdHis', $this->syncToken) . 'Z))'; 
-
         $attributes = ['cn','uid','entryuuid','modifytimestamp'];
 
-        if(strtolower($addressBookConfig['scope']) == 'base')
-        {
-            $ldapResult = ldap_read($ldapConn, $addressBookDn, $filter, $attributes);
-        }
-        else if(strtolower($addressBookConfig['scope']) == 'list')
-        {
-            $ldapResult = ldap_list($ldapConn, $addressBookDn, $filter, $attributes);
-        }
-        else
-        {
-            $ldapResult = ldap_search($ldapConn, $addressBookDn, $filter, $attributes);
-        }
-
-        $data = ldap_get_entries($ldapConn, $ldapResult);
+        $data = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, $attributes, strtolower($addressBookConfig['scope']));
                     
         if($data['count'] > 0)
         {
@@ -979,6 +953,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     function getChangesForAddressBook($addressBookId, $syncToken, $syncLevel, $limit = null)
     {         
+        return null;
+        
         $result = [
             'syncToken' => $this->syncToken,
             'added'     => [],
@@ -990,24 +966,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $addressBookConfig = $GLOBALS['addressBookConfig'][$addressBookId];
         
         //ADDED CARDS
-        $filter = '(&' .$addressBookConfig['filter']. '(createtimestamp<=' .gmdate('YmdHis', $this->syncToken). 'Z)(!(|(createtimestamp<='.gmdate('YmdHis', $syncToken).'Z)(createtimestamp='.gmdate('YmdHis', $syncToken).'Z))))';
-        
-        $attributes = ['uid'];
-        
-        if(strtolower($addressBookConfig['scope']) == 'base')
-        {
-            $ldapResult = ldap_read($ldapConn, $addressBookId, $filter, $attributes);
-        }
-        else if(strtolower($addressBookConfig['scope']) == 'list')
-        {
-            $ldapResult = ldap_list($ldapConn, $addressBookId, $filter, $attributes);
-        }
-        else
-        {
-            $ldapResult = ldap_search($ldapConn, $addressBookId, $filter, $attributes);
-        }
+        $filter = '(&' .$addressBookConfig['filter']. '(createtimestamp<=' .gmdate('YmdHis', $this->syncToken). 'Z)(!(|(createtimestamp<='.gmdate('YmdHis', $syncToken).'Z)(createtimestamp='.gmdate('YmdHis', $syncToken).'Z))))'; 
 
-        $data = ldap_get_entries($ldapConn, $ldapResult);
+        $data = Utility::LdapQuery($ldapConn, $addressBookId, $filter, [], strtolower($addressBookConfig['scope']));
                     
         if($data['count'] > 0)
         {
@@ -1020,22 +981,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
         //MODIFIED CARDS
         $filter = '(&' .$addressBookConfig['filter']. '(createtimestamp<=' .gmdate('YmdHis', $this->syncToken). 'Z)(!(|(modifytimestamp<='.gmdate('YmdHis', $syncToken).'Z)(modifytimestamp='.gmdate('YmdHis', $syncToken).'Z))))';
-        $attributes = ['uid'];
-        
-        if(strtolower($addressBookConfig['scope']) == 'base')
-        {
-            $ldapResult = ldap_read($ldapConn, $addressBookId, $filter, $attributes);
-        }
-        else if(strtolower($addressBookConfig['scope']) == 'list')
-        {
-            $ldapResult = ldap_list($ldapConn, $addressBookId, $filter, $attributes);
-        }
-        else
-        {
-            $ldapResult = ldap_search($ldapConn, $addressBookId, $filter, $attributes);
-        }
 
-        $data = ldap_get_entries($ldapConn, $ldapResult);
+        $data = Utility::LdapQuery($ldapConn, $addressBookId, $filter, [], strtolower($addressBookConfig['scope']));
                     
         if($data['count'] > 0)
         {

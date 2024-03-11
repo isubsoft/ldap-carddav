@@ -2,6 +2,8 @@
 
 namespace isubsoft\dav\Auth;
 
+use isubsoft\dav\Utility\LDAP as Utility;
+
 class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
 
 
@@ -45,40 +47,25 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
      * @return bool
      */
     function validateUserPass($username, $password)
-    {
+    {      
+        $ldapConn =  $GLOBALS['globalLdapConn'];
+         
+        $ldaptree = ($this->config['auth']['ldap']['search_base_dn'] !== '') ? $this->config['auth']['ldap']['search_base_dn'] : $this->config['auth']['ldap']['base_dn'];
+        $filter = str_replace('%u', $username, $this->config['auth']['ldap']['search_filter']);  
+        $attributes = ['dn'];
+
+        $data = Utility::LdapQuery($ldapConn, $ldaptree, $filter, $attributes, strtolower($this->config['auth']['ldap']['scope']));
+        
+        if($data['count'] == 1)
+        {
+            $ldapDn = $data[0]['dn'];
+            $ldapUserBind = ldap_bind($ldapConn, $ldapDn, $password);  
             
-                    
-                $ldapConn =  $GLOBALS['globalLdapConn'] ;
-
-                    $ldaptree = ($this->config['auth']['ldap']['search_base_dn'] !== '') ? $this->config['auth']['ldap']['search_base_dn'] : $this->config['auth']['ldap']['base_dn'];
-                    $filter = str_replace('%u', $username, $this->config['auth']['ldap']['search_filter']);  
-                    $attributes = ['dn'];
-
-                    if(strtolower($this->config['auth']['ldap']['scope']) == 'base')
-                    {
-                        $result = ldap_read($ldapConn, $ldaptree, $filter, $attributes);
-                    }
-                    else if(strtolower($this->config['auth']['ldap']['scope']) == 'list')
-                    {
-                        $result = ldap_list($ldapConn, $ldaptree, $filter, $attributes);
-                    }
-                    else
-                    {
-                        $result = ldap_search($ldapConn, $ldaptree, $filter, $attributes);
-                    }
-                    
-                    $data = ldap_get_entries($ldapConn, $result);
-                    
-                    if($data['count'] == 1)
-                    {
-                        $ldapDn = $data[0]['dn'];
-                        $ldapUserBind = ldap_bind($ldapConn, $ldapDn, $password);  
-                        
-                        if($ldapUserBind)
-                        {
-                           return true;
-                        }
-                    }          
+            if($ldapUserBind)
+            {
+               return true;
+            }
+        }          
 
         return false;
     }
