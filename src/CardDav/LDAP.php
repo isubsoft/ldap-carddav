@@ -33,6 +33,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     protected $pdo;
 
     /**
+     * principalBackend object Class.
+     *
+     * @var principalBackend
+     */
+    protected $principalBackend;
+
+    /**
      * The table name that will be used for tracking changes in address books.
      *
      * @var string
@@ -56,9 +63,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      * @param array $config
      * @return void
      */
-    function __construct(array $config, \PDO $pdo) {
+    function __construct(array $config, \PDO $pdo, $principalBackend) {
         $this->config = $config;
         $this->pdo = $pdo;
+        $this->principalBackend = $principalBackend;
     }
 
 
@@ -82,24 +90,16 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     function getAddressBooksForUser($principalUri)
     {      
         $this->syncToken = time();
-        $ldapConn = $GLOBALS['globalLdapConn'];
-        $searchUserId = basename($principalUri);
+        
+        $data = $this->principalBackend->getPrincipalByPath($principalUri);
 
-        $addressBooks = [];
-        $principalUserDn = null;
-                    
-        $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
-        $filter = str_replace('%u', $searchUserId, $this->config['principal']['ldap']['search_filter']);  // single filter
-
-        $data = Utility::LdapQuery($ldapConn, $ldaptree, $filter, [], strtolower($this->config['principal']['ldap']['scope']));
-                            
-		if($data['count'] === 1)
+        if($data == null)
         {
-            $principalUserDn = $data[0]['dn'];
+            return [];
         }
         else
         {
-			return [];
+            $principalUserDn = $data['dn'];
         }
 
         foreach ($this->config['card']['addressbook']['ldap'] as $addressBookName => $configParams) {

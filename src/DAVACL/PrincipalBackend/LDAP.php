@@ -40,7 +40,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
          */
         '{http://sabredav.org/ns}email-address' => [
             'dbField' => 'mail',
-        ],
+        ]
     ];
 
       /**
@@ -128,7 +128,8 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         { 
             $principal = [
                 'id'  => $searchUserId,
-                'uri' => $path
+                'uri' => $path,
+                'dn'  => $data[0]['dn']
             ];
 
             foreach ($this->fieldMap as $key => $value) {
