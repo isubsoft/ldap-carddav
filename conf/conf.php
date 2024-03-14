@@ -4,6 +4,13 @@ $config = [];
 
 $config['database'] = 'data/sync/pdo/sqlite/deleted_cards.db';
 
+$config['encryption'] = [
+  'cipher-method' => 'AES-128-CTR',
+  'iv'            => '1234567891011121',
+  'key'           => 'iSubSoftware',
+  'options'       => '0'
+];
+
 $config['auth']['ldap'] = [
   'host'         => 'dev-db.intranet.isubsoft.com',
   'port'          => 389,
@@ -45,7 +52,6 @@ $config['principal']['ldap'] = [
 $config['card']['addressbook']['ldap']['private'] = [
 	'name'          	=> 'Personal Address Book',
   'description'     => 'New Book',
-  'synctoken'       => '1',
 	'host'         		=> 'dev-db.intranet.isubsoft.com',
 	'port'          	=> 389,
 	'use_tls'	   			=> false,

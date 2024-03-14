@@ -13,7 +13,7 @@ This server features CardDAV support
 // Make sure this setting is turned on and reflect the root url for your WebDAV server.
 // This can be for example the root / or a complete path to your server script
 $baseUri = '/';
-$globalLdapConn = null;
+$LdapUserCredentials = null;
 $addressBookConfig = null;
 
 // Autoloader
@@ -24,29 +24,6 @@ require 'conf/conf.php';
 /* Database */
 $pdo = new PDO('sqlite:'.$config['database']);
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-// Connect to ldap server
-$ldapUri = ($config['auth']['ldap']['use_tls'] ? 'ldaps://' : 'ldap://') . $config['auth']['ldap']['host'] . ':' . $config['auth']['ldap']['port'];
-$ldapConn = ldap_connect($ldapUri);
-
-ldap_set_option($ldapConn, LDAP_OPT_PROTOCOL_VERSION, $config['auth']['ldap']['ldap_version']);
-ldap_set_option($ldapConn, LDAP_OPT_NETWORK_TIMEOUT, $config['auth']['ldap']['network_timeout']);
-
-// using ldap bind
-$searchBindDn  = $config['auth']['ldap']['search_bind_dn'];     // ldap rdn or dn
-$searchBindPass = $config['auth']['ldap']['search_bind_pw'];  // associated password
-
-
-if ($ldapConn) {
-
-    // binding to ldap server
-    $ldapBind = ldap_bind($ldapConn, $searchBindDn, $searchBindPass);
-
-    // verify binding
-    if ($ldapBind) {
-        $globalLdapConn = $ldapConn;
-    }
-}
 
 
 // Backends

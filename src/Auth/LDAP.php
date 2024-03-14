@@ -48,24 +48,47 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
      */
     function validateUserPass($username, $password)
     {      
-        $ldapConn =  $GLOBALS['globalLdapConn'];
-         
-        $ldaptree = ($this->config['auth']['ldap']['search_base_dn'] !== '') ? $this->config['auth']['ldap']['search_base_dn'] : $this->config['auth']['ldap']['base_dn'];
-        $filter = str_replace('%u', $username, $this->config['auth']['ldap']['search_filter']);  
-        $attributes = ['dn'];
+        // Connect to ldap server
+        $ldapUri = ($this->config['auth']['ldap']['use_tls'] ? 'ldaps://' : 'ldap://') . $this->config['auth']['ldap']['host'] . ':' . $this->config['auth']['ldap']['port'];
+        $ldapConn = ldap_connect($ldapUri);
 
-        $data = Utility::LdapQuery($ldapConn, $ldaptree, $filter, $attributes, strtolower($this->config['auth']['ldap']['scope']));
-        
-        if($data['count'] == 1)
-        {
-            $ldapDn = $data[0]['dn'];
-            $ldapUserBind = ldap_bind($ldapConn, $ldapDn, $password);  
-            
-            if($ldapUserBind)
-            {
-               return true;
+        ldap_set_option($ldapConn, LDAP_OPT_PROTOCOL_VERSION, $this->config['auth']['ldap']['ldap_version']);
+        ldap_set_option($ldapConn, LDAP_OPT_NETWORK_TIMEOUT, $this->config['auth']['ldap']['network_timeout']);
+
+        // using ldap bind
+        $searchBindDn  = $this->config['auth']['ldap']['search_bind_dn'];     // ldap rdn or dn
+        $searchBindPass = $this->config['auth']['ldap']['search_bind_pw'];  // associated password
+
+        if ($ldapConn) {
+
+            // binding to ldap server
+            $ldapBind = ldap_bind($ldapConn, $searchBindDn, $searchBindPass);
+
+            // verify binding
+            if ($ldapBind) {
+
+                $ldaptree = ($this->config['auth']['ldap']['search_base_dn'] !== '') ? $this->config['auth']['ldap']['search_base_dn'] : $this->config['auth']['ldap']['base_dn'];
+                $filter = str_replace('%u', $username, $this->config['auth']['ldap']['search_filter']);  
+                $attributes = ['dn'];
+                
+                $data = Utility::LdapQuery($ldapConn, $ldaptree, $filter, $attributes, strtolower($this->config['auth']['ldap']['scope']));
+                
+                if($data['count'] == 1)
+                {
+                    $ldapDn = $data[0]['dn'];
+                    $ldapUserBind = ldap_bind($ldapConn, $ldapDn, $password);  
+                    
+                    if($ldapUserBind)
+                    {
+                        $GLOBALS['LdapUserCredentials'] = [
+                          'dn' => $data[0]['dn'],
+                          'password' => Utility::encrypt($password, $this->config['encryption'])
+                        ];
+                        return true;
+                    }
+                }      
             }
-        }          
+        }    
 
         return false;
     }
