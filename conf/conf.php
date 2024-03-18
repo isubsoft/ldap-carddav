@@ -45,11 +45,6 @@ $config['principal']['ldap'] = [
 $config['card']['addressbook']['ldap']['private'] = [
 	'name'          	=> 'Personal Address Book',
   'description'     => 'New Book',
-	'host'         		=> 'dev-db.intranet.isubsoft.com',
-	'port'          	=> 389,
-	'use_tls'	   			=> false,
-  'ldap_version'		=> 3,       // using LDAPv3
-	'network_timeout' => 15,
 	'user_specific' 	=> true,
 	'base_dn'       	=> 'ou=Address Book,%dn',
 	'bind_dn'       	=> '',
