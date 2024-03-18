@@ -4,7 +4,7 @@ namespace isubsoft\dav\Utility;
 
 class LDAP {
 
-    public static function LdapConnection($credentials, $config, $encryptionconfig)
+    public static function LdapBindConnection($credentials, $config)
     {
         $ldapConn = null;
 
@@ -16,17 +16,17 @@ class LDAP {
         ldap_set_option($ldapConn, LDAP_OPT_NETWORK_TIMEOUT, $config['network_timeout']);
 
         // using ldap bind
-        $bindDn  = $credentials['dn'];     // ldap rdn or dn
-        $bindPass = self::decrypt($credentials['password'], $encryptionconfig);  // associated password
+        $bindDn  = $credentials['bindDn'];     // ldap rdn or dn
+        $bindPass = $credentials['bindPass'];  // associated password
         
         if ($ldapConn) {
-
+            
             // binding to ldap server
             $ldapBind = ldap_bind($ldapConn, $bindDn, $bindPass);
 
             // verify binding
             if ($ldapBind) {
-
+                
                 return $ldapConn;
             }
         }
@@ -56,21 +56,4 @@ class LDAP {
         return $data;
     }
 
-    public static function encrypt($string, $config)
-    {            
-        // Use openssl_encrypt() function to encrypt the data
-        $encryptedString = openssl_encrypt($string, $config['cipher-method'],
-                            $config['key'], $config['options'], $config['iv']);
-
-        return $encryptedString;    
-    }
-
-    public function decrypt($string, $config)
-    {
-        // Use openssl_decrypt() function to decrypt the data
-        $decryptedString = openssl_decrypt($string, $config['cipher-method'],
-                            $config['key'], $config['options'], $config['iv']);
-        
-        return $decryptedString;
-    }
 }

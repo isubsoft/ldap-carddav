@@ -15,13 +15,6 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
     public $config;
 
     /**
-     * prefix for ldap
-     *
-     * @var string
-     */
-    public $prefix = 'principals/users/';
-
-    /**
      * A list of additional fields to support
      *
      * @var array
@@ -74,7 +67,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      */
     function getPrincipalsByPrefix($prefixPath)
     {        
-        $ldapConn = Utility::LdapConnection($GLOBALS['LdapUserCredentials'], $this->config['principal']['ldap'], $this->config['encryption']);
+        $ldapConn = Utility::LdapBindConnection(['bindDn' => $this->config['principal']['ldap']['search_bind_dn'], 'bindPass' => $this->config['principal']['ldap']['search_bind_pw']], $this->config['principal']['ldap']);
   
         $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
         $filter = str_replace('%u', '*', $this->config['principal']['ldap']['search_filter']); 
@@ -113,7 +106,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
     function getPrincipalByPath($path)
     {
         $searchUserId = basename($path);
-        $ldapConn = Utility::LdapConnection($GLOBALS['LdapUserCredentials'], $this->config['principal']['ldap'], $this->config['encryption']);
+        $ldapConn = Utility::LdapBindConnection(['bindDn' => $this->config['principal']['ldap']['search_bind_dn'], 'bindPass' => $this->config['principal']['ldap']['search_bind_pw']], $this->config['principal']['ldap']);
           
         $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
         $filter = str_replace('%u', $searchUserId, $this->config['principal']['ldap']['search_filter']);  // single filter
