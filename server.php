@@ -15,7 +15,6 @@ date_default_timezone_set("Asia/Calcutta");
 // This can be for example the root / or a complete path to your server script
 $baseUri = '/';
 $globalLdapConn = null;
-$addressBookConfig = null;
 
 // Autoloader
 require_once 'vendor/autoload.php';
@@ -52,8 +51,8 @@ if ($ldapConn) {
 
 // Backends
 $authBackend = new isubsoft\dav\Auth\LDAP($config);
-$carddavBackend = new isubsoft\dav\CardDav\LDAP($config, $pdo);
 $principalBackend = new isubsoft\dav\DAVACL\PrincipalBackend\LDAP($config);
+$carddavBackend = new isubsoft\dav\CardDav\LDAP($config, $pdo);
 
 // Setting up the directory tree //
 $nodes = [

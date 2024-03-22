@@ -126,7 +126,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      */
     function getPrincipalByPath($path)
     {
-        $searchUserId = str_replace($this->prefix,'',$path);
+        $searchUserId = basename($path);
         $ldapConn = $GLOBALS['globalLdapConn'];
           
         $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
