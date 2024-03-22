@@ -13,6 +13,10 @@ This server features CardDAV support
 // Make sure this setting is turned on and reflect the root url for your WebDAV server.
 // This can be for example the root / or a complete path to your server script
 $baseUri = '/';
+<<<<<<< HEAD
+=======
+$globalLdapConn = null;
+>>>>>>> d83ff20 (Updated - Code optimization)
 
 // Autoloader
 require_once 'vendor/autoload.php';
@@ -26,9 +30,14 @@ $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 // Backends
 $authBackend = new isubsoft\dav\Auth\LDAP($config);
+<<<<<<< HEAD
 $principalBackend = new isubsoft\dav\DAVACL\PrincipalBackend\LDAP($config, $authBackend);
 $carddavBackend = new isubsoft\dav\CardDav\LDAP($config, $pdo, $authBackend);
 
+=======
+$principalBackend = new isubsoft\dav\DAVACL\PrincipalBackend\LDAP($config);
+$carddavBackend = new isubsoft\dav\CardDav\LDAP($config, $pdo);
+>>>>>>> d83ff20 (Updated - Code optimization)
 
 // Setting up the directory tree //
 $nodes = [
