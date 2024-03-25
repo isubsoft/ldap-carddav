@@ -13,9 +13,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     public $config;
 
-    public $vCardKeyParts = ['ADR', 'ORG'];
+    private $vCardKeyParts = ['ADR', 'ORG'];
 
-    public $vCardKeyMulti = ['TEL'];
+    private $vCardKeyMulti = ['TEL'];
 
 
     /**
@@ -30,14 +30,18 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      *
      * @var string
      */
-    public $deletedCardsTableName = 'deleted_cards';
+    private $deletedCardsTableName = 'cards_deleted';
+
+    private $ldapMapTableName = 'cards_backend_map';
+
+    private $fullSyncTable = 'full_sync';
 
     /**
      * sync Token.
      *
      * @var string
      */
-    protected $syncToken = null;
+    private $syncToken = null;
 
     /**
      * Auth Backend Object class.
@@ -46,6 +50,14 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     public $authBackend = null;
 
+    /**
+     * Principal user
+     *
+     * @var string
+     */    
+    public $principalUser = null;
+
+    private $addressbook = null;
 
     /**
      * Creates the backend.
@@ -85,28 +97,31 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $this->syncToken = time();
 
         $ldapConn = $this->authBackend->userLdapConn;
-        $searchUserId = basename($principalUri);
+        $this->principalUser = basename($principalUri);
+
         $ldaptree = ($this->config['auth']['ldap']['search_base_dn'] !== '') ? $this->config['auth']['ldap']['search_base_dn'] : $this->config['auth']['ldap']['base_dn'];
-        $filter = str_replace('%u', $searchUserId, $this->config['auth']['ldap']['search_filter']);  // single filter
+        $filter = str_replace('%u', $this->principalUser, $this->config['auth']['ldap']['search_filter']);  // single filter
 
         $data = Utility::LdapQuery($ldapConn, $ldaptree, $filter, [], strtolower($this->config['auth']['ldap']['scope']));
 
         $principalUserDn = $data[0]['dn'];
 
-        foreach ($this->config['card']['addressbook']['ldap'] as $addressBookName => $configParams) {
+        foreach ($this->config['card']['addressbook']['ldap'] as $addressbookId => $configParams) {
  
-               	$addressBookDn = str_replace('%dn', $principalUserDn, $configParams['base_dn']);
-               	$addressBookDn = str_replace('%u', $searchUserId, $addressBookDn);
-
+               	$addressBookDn = str_replace('%dn', $principalUserDn, $configParams['base_dn']); 
+               	$addressBookDn = str_replace('%u', $this->principalUser, $addressBookDn);
+                   
                 $addressBooks[] = [
-                    'id'                                                          => $addressBookDn,
-                    'uri'                                                         => $addressBookName,
+                    'id'                                                          => $addressbookId,
+                    'uri'                                                         => $addressbookId,
                     'principaluri'                                                => $principalUri,
                     '{DAV:}displayname'                                           => isset($configParams['name']) ? $configParams['name'] : '',
                     '{' . CardDAVPlugin::NS_CARDDAV . '}addressbook-description'  => isset($configParams['description']) ? $configParams['description'] : '',
                     '{http://sabredav.org/ns}sync-token'                          => isset($this->syncToken) ? $this->syncToken : 0,
                 ];
-                $GLOBALS['addressBookConfig'][$addressBookDn] = $configParams;
+
+                $this->addressbook[$addressbookId]['config'] = $configParams;
+                $this->addressbook[$addressbookId]['addressbookDn'] = $addressBookDn;
         }
         
         return $addressBooks;
@@ -176,27 +191,24 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      * calculating them. If they are specified, you can also ommit carddata.
      * This may speed up certain requests, especially with large cards.
      *
-     * @param mixed $addressbookId
+     * @param mixed $addressBookId
      * @return array
      */
-    function getCards($addressBookDn)
+    function getCards($addressBookId)
     {
         $result = [];     
         
-        $addressBookConfig = $GLOBALS['addressBookConfig'][$addressBookDn];
+        $addressBookConfig = $this->addressbook[$addressBookId]['config'];
+        $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
 
-        $ldapConn = $this->authBackend->userLdapConn;
-        $filter = '(&'.$addressBookConfig['filter']. '(createtimestamp<=' . gmdate('YmdHis', $this->syncToken) . 'Z))'; 
-        $attributes = ['cn','uid','entryuuid','modifytimestamp'];
-
-        $data = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, $attributes, strtolower($addressBookConfig['scope']));
+        $data = $this->fullSyncOperation($addressBookConfig, $addressBookDn, $addressBookId);
                     
-        if($data['count'] > 0)
+        if( !empty($data))
         {
-            for ($i=0; $i < $data['count']; $i++) { 
-                   
+            for ($i=0; $i < count($data); $i++) { 
+
                 $row = [    'id' => $data[$i]['entryuuid'][0],
-                            'uri' => $data[$i]['uid'][0],
+                            'uri' => $data[$i]['card_uri'],
                             'lastmodified' => strtotime($data[$i]['modifytimestamp'][0]),
                             ];
 
@@ -206,6 +218,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         
         return $result;
     }
+
 
     /**
      * Returns a specfic card.
@@ -221,21 +234,14 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     function getCard($addressBookId, $cardUri)
     {
-        $addressBookConfig = $GLOBALS['addressBookConfig'][$addressBookId];
-        $ldapConn = $this->authBackend->userLdapConn;
+        $addressBookConfig = $this->addressbook[$addressBookId]['config'];
+        $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
         $result = [];
         
-        
-        $ldapTree = $addressBookConfig['LDAP_rdn']. '='. $cardUri. ',' .$addressBookId;
-        $filter = $addressBookConfig['filter']; 
-        $attributes = ['*', 'entryuuid', 'modifytimestamp'];
-        
-        $ldapResult = ldap_read($ldapConn, $ldapTree, $filter, $attributes);
+        $data = $this->fetchContactData($addressBookDn, $addressBookId, $cardUri, $addressBookConfig);
 
-        if($ldapResult)
-        {
-            $data = ldap_get_entries($ldapConn, $ldapResult);
-                    
+        if( !empty($data))
+        {           
             if($data['count'] > 0)
             {
                 $cardData = $this->generateVcard($data[0], $addressBookConfig['fieldmap'], $cardUri);
@@ -253,7 +259,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         return false;
         
     }
-
     
     /**
      * Returns a list of cards.
@@ -306,7 +311,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     function createCard($addressBookId, $cardUri, $cardData)
     {
-        $addressBookConfig = $GLOBALS['addressBookConfig'][$addressBookId];
+        $addressBookConfig = $this->addressbook[$addressBookId]['config'];
+        $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
 
         if($addressBookConfig['writable'] == false)
         {
@@ -513,12 +519,19 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         }
         
         $ldapConn = $this->authBackend->userLdapConn;
-        $ldapTree = $addressBookConfig['LDAP_rdn']. '='. $cardUri. ',' .$addressBookId;
+        $ldapTree = $addressBookConfig['LDAP_rdn']. '='. $cardUri. ',' .$addressBookDn;
         
         $ldapResponse = ldap_add($ldapConn, $ldapTree, $ldapInfo);
                     
         if ($ldapResponse) 
         {    
+            $attributes = ['entryuuid'];
+            $data = Utility::LdapQuery($ldapConn, $addressBookDn, $addressBookConfig['filter'], $attributes, strtolower($addressBookConfig['scope']));
+            
+            $query = "INSERT INTO `".$this->ldapMapTableName."` (`card_uri`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?)";
+            $sql = $this->pdo->prepare($query);
+            $sql->execute([$cardUri, $addressBookId, $data[0]['entryuuid'][0], $this->principalUser]);
+                    
             return null;
         }
 
@@ -552,7 +565,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     function updateCard($addressBookId, $cardUri, $cardData)
     {
-        $addressBookConfig = $GLOBALS['addressBookConfig'][$addressBookId];
+        $addressBookConfig = $this->addressbook[$addressBookId]['config'];
+        $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
 
         if($addressBookConfig['writable'] == false)
         {
@@ -760,11 +774,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         } 
 
         $ldapConn = $this->authBackend->userLdapConn;
-        $ldapTree = $addressBookConfig['LDAP_rdn']. '='. $cardUri. ',' .$addressBookId;
-        $filter = $addressBookConfig['filter']; 
-                    
-        $ldapResult = ldap_read($ldapConn, $ldapTree, $filter);
-        $data = ldap_get_entries($ldapConn, $ldapResult);
+        $data = $this->fetchContactData($addressBookDn, $addressBookId, $cardUri, $addressBookConfig);
                     
         foreach($data[0] as $key => $value) { 
             if(is_array($value))
@@ -774,6 +784,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             }
         }
         
+        $ldapTree = $data[0]['dn'];
         $ldapResponse = ldap_mod_replace($ldapConn, $ldapTree, $ldapInfo);
                     
         if ($ldapResponse) 
@@ -793,20 +804,21 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     function deleteCard($addressBookId, $cardUri)
     {
-        $addressBookConfig = $GLOBALS['addressBookConfig'][$addressBookId];
+        $addressBookConfig = $this->addressbook[$addressBookId]['config'];
+        $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
 
         if($addressBookConfig['writable'] == false)
         {
             return false;
         }
         
+        $data = $this->fetchContactData($addressBookDn, $addressBookId, $cardUri, $addressBookConfig);
         $ldapConn = $this->authBackend->userLdapConn;
+        $ldapTree = $data[0]['dn'];
 
-        $ldapTree = $addressBookConfig['LDAP_rdn']. '='. $cardUri. ',' .$addressBookId;
-                    
         if(ldap_delete($ldapConn, $ldapTree))
         { 
-            $this->addChange($addressBookId, $cardUri);
+            $this->addChange($addressBookId, $cardUri, $data[0]['entryuuid'][0]);
             return true;
         }
 
@@ -963,9 +975,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      * @return array
      */
     function getChangesForAddressBook($addressBookId, $syncToken, $syncLevel, $limit = null)
-    {         
-        return null;
-        
+    {     
         $result = [
             'syncToken' => $this->syncToken,
             'added'     => [],
@@ -973,8 +983,40 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             'deleted'   => [],
         ];
 
-        $addressBookConfig = $GLOBALS['addressBookConfig'][$addressBookId];
+        $addressBookConfig = $this->addressbook[$addressBookId]['config'];
+        $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
         $ldapConn = $this->authBackend->userLdapConn;
+
+        //Full sync Operation
+        if($syncToken == null)
+        {
+            $data = $this->fullSyncOperation($addressBookConfig, $addressBookDn, $addressBookId);
+
+            if(! empty($data))
+            {
+                for ($i=0; $i < count($data); $i++) { 
+                    $result['added'][] = $data[$i]['card_uri'];
+                }
+            }
+
+            return $result;
+        } 
+
+        $fullSyncTimestamp = null;
+        $query = 'SELECT full_sync_timestamp FROM '.$this->fullSyncTable.' WHERE addressbook_id = ? ';
+        $stmt = $this->pdo->prepare($query);
+        $stmt->execute([$addressBookId]);
+
+        while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+                $fullSyncTimestamp = $row['full_sync_timestamp'];
+            }
+
+        if( ($syncToken < $fullSyncTimestamp) &&  ($this->syncToken >= $fullSyncTimestamp))
+        {
+            $result['syncToken'] = null;
+
+            return $result;
+        }    
         
         //ADDED CARDS
         $filter = '(&' .$addressBookConfig['filter']. '(createtimestamp<=' .gmdate('YmdHis', $this->syncToken). 'Z)(!(|(createtimestamp<='.gmdate('YmdHis', $syncToken).'Z)(createtimestamp='.gmdate('YmdHis', $syncToken).'Z))))'; 
@@ -984,8 +1026,15 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         if($data['count'] > 0)
         {
             for ($i=0; $i < $data['count']; $i++) { 
-                $cardUri = $data[$i]['uid'][0];                
-                    $result['added'][] = $cardUri;
+
+                $cardUri = $data[$i]['entryuuid'][0] . '.vcf';
+
+                $query = "INSERT INTO `".$this->ldapMapTableName."` (`card_uri`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?)";
+                $sql = $this->pdo->prepare($query);
+                $sql->execute([$cardUri, $addressBookId, $data[$i]['entryuuid'][0], $this->principalUser]);  
+
+                $result['added'][] = $cardUri;
+
                 }       
         }
 
@@ -998,23 +1047,46 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         if($data['count'] > 0)
         {
             for ($i=0; $i < $data['count']; $i++) { 
-                $cardUri = $data[$i]['uid'][0];
-                    $result['modified'][] = $cardUri;
+
+                    $cardUri = null;
+
+                    $query = 'SELECT card_uri FROM '.$this->ldapMapTableName.' WHERE addressbook_id = ? and backend_id = ? and user_id = ?';
+                    $stmt = $this->pdo->prepare($query);
+                    $stmt->execute([$addressBookId, $data[$i]['entryuuid'][0], $this->principalUser]);
+        
+                    while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+                        $cardUri = $row['card_uri'];
+                    }
+
+                    if($cardUri == null)
+                    {
+                        $cardUri = $data[$i]['entryuuid'][0] . '.vcf';
+
+                        $query = "INSERT INTO `".$this->ldapMapTableName."` (`card_uri`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?)";
+                        $sql = $this->pdo->prepare($query);
+                        $sql->execute([$cardUri, $addressBookId, $data[$i]['entryuuid'][0], $this->principalUser]);  
+
+                        $result['added'][] = $cardUri;
+                    }
+                    else{
+                        $result['modified'][] = $cardUri;
+                    }
                 } 
         }
 
 
         //DELETED CARDS
-        $query = 'SELECT uri, sync_token FROM '.$this->deletedCardsTableName.' WHERE addressbook_id = ? and ( sync_token <= ? ) and ( sync_token > ? ) ';
+        $query = 'SELECT card_uri FROM '.$this->deletedCardsTableName.' WHERE addressbook_id = ? and ( sync_token <= ? ) and ( sync_token > ? ) and user_id = ? ';
         $stmt = $this->pdo->prepare($query);
-        $stmt->execute([$addressBookId, $this->syncToken, $syncToken]);
+        $stmt->execute([$addressBookId, $this->syncToken, $syncToken, $this->principalUser]);
         
         while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-                $result['deleted'][] = $row['uri'];
+                $result['deleted'][] = $row['card_uri'];
         }
        
         return $result;
     }
+
 
     /**
      * Adds a change record to the addressbookchanges table.
@@ -1022,13 +1094,121 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      * @param mixed  $addressBookId
      * @param string $objectUri
      */
-    protected function addChange($addressBookId, $objectUri)
+    protected function addChange($addressBookId, $objectUri, $backendId)
     {
-        $query = "INSERT INTO `".$this->deletedCardsTableName."` (`sync_token` ,`addressbook_id` ,`uri`) " 
-            ." VALUES (?, ?, ?)";
 
+        $query = "DELETE FROM `".$this->ldapMapTableName."` WHERE addressbook_id = ? AND backend_id = ? AND user_id = ?"; 
         $sql = $this->pdo->prepare($query);
-        $sql->execute([time(), $addressBookId, $objectUri]);
+        $sql->execute([$addressBookId, $backendId, $this->principalUser]);
+
+
+        $query = "INSERT INTO `".$this->deletedCardsTableName."` (`sync_token` ,`addressbook_id` ,`card_uri`, `user_id`) VALUES (?, ?, ?, ?)"; 
+        $sql = $this->pdo->prepare($query);
+        $sql->execute([time(), $addressBookId, $objectUri, $this->principalUser]);
+    }
+
+
+    /**
+     * Get contact using cards backend map table and ldap directory database.
+     *
+     * @param string  $addressBookDn
+     * @param string  $addressBookId
+     * @param string  $cardUri
+     * @param array $config
+     */
+    function fetchContactData($addressBookDn, $addressBookId, $cardUri, $config)
+    {
+        $result = null;
+        $backendId = null;
+        
+        $query = 'SELECT backend_id FROM '.$this->ldapMapTableName.' WHERE addressbook_id = ? and card_uri = ? and user_id = ?';
+        $stmt = $this->pdo->prepare($query);
+        $stmt->execute([$addressBookId, $cardUri, $this->principalUser]);
+        
+        while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+            $backendId = $row['backend_id'];
+        }
+
+        $ldapConn = $this->authBackend->userLdapConn;
+        $filter = '(&'.$config['filter']. '(entryuuid=' .$backendId. '))'; 
+        $attributes = ['*', 'entryuuid', 'modifytimestamp'];
+        
+        $result = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, $attributes, strtolower($config['scope']));      
+        return $result;
+    }
+
+
+    /**
+     * Full synchronize operation using Ldap database and cards backend map table.
+     *
+     * @param string  $addressBookDn
+     * @param string  $addressBookId
+     * @param array $config
+     */
+    function fullSyncOperation($config, $addressBookDn, $addressBookId)
+    {
+        $result = [];
+        $backendIds = [];
+        $cardUris = [];
+
+        $ldapConn = $this->authBackend->userLdapConn;
+        $filter = '(&'.$config['filter']. '(createtimestamp<=' . gmdate('YmdHis', $this->syncToken) . 'Z))'; 
+        $attributes = ['cn','uid','entryuuid','modifytimestamp'];
+
+        $data = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, $attributes, strtolower($config['scope']));
+
+        $query = 'SELECT card_uri, backend_id FROM '.$this->ldapMapTableName.' WHERE addressbook_id = ? AND user_id = ?';
+        $stmt = $this->pdo->prepare($query);
+        $stmt->execute([$addressBookId, $this->principalUser]);
+        
+        while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+            $backendIds[] = $row['backend_id'];
+            $cardUris[] = $row['card_uri'];
+        }
+
+        if( !empty($data) & $data['count'] > 0)
+        {
+            $uuids = [];
+            for ($i=0; $i < $data['count']; $i++) { 
+
+                if( !in_array($data[$i]['entryuuid'][0], $backendIds))
+                {
+                    $cardUri = $data[$i]['entryuuid'][0] . '.vcf';
+
+                    $query = "INSERT INTO `".$this->ldapMapTableName."` (`card_uri`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?)";
+                    $sql = $this->pdo->prepare($query);
+                    $sql->execute([$cardUri, $addressBookId, $data[$i]['entryuuid'][0], $this->principalUser]);
+
+                    $data[$i]['card_uri'] = $cardUri;
+                }
+                else
+                {
+                    $index = array_search($data[$i]['entryuuid'][0], $backendIds);
+                    $data[$i]['card_uri'] = $cardUris[$index];
+                }
+
+                $uuids[] = $data[$i]['entryuuid'][0];
+                $result[] = $data[$i];
+            }
+            
+            foreach($backendIds as $backendId)
+            {
+                if( !in_array($backendId, $uuids))
+                {
+                    $query = "DELETE FROM `".$this->ldapMapTableName."` WHERE addressbook_id = ? AND backend_id = ? AND user_id = ?"; 
+                    $sql = $this->pdo->prepare($query);
+                    $sql->execute([$addressBookId, $backendId, $this->principalUser]);
+                }
+            }
+        }
+        else
+        {
+            $query = "DELETE FROM `".$this->ldapMapTableName."` WHERE addressbook_id = ? AND user_id = ?"; 
+            $sql = $this->pdo->prepare($query);
+            $sql->execute([$addressBookId, $this->principalUser]);
+        }
+
+        return $result;
     }
 }
 
