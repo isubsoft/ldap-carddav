@@ -56,7 +56,6 @@ $config['card']['addressbook']['ldap']['private'] = [
 	'LDAP_Object_Classes' => ['inetOrgPerson'],
 	'required_fields'     => ['cn', 'sn'],
 	'LDAP_rdn'      			=> 'cn',
-	'search_fields' 			=> ['cn', 'mail'],
 	'fieldmap'      => [
 		// vCard    => LDAP
     'FN'            => 'cn',
@@ -78,7 +77,5 @@ $config['card']['addressbook']['ldap']['private'] = [
                                   ]
                         ],
 	],
-	'sort'          => 'cn',    // The field to sort the listing by.
-	'scope'         => 'list',   // search mode: sub|base|list
-	'fuzzy_search'  => true,     // server allows wildcard search
+	'scope'         => 'list'   // search mode: sub|base|list
 ];
