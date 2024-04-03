@@ -13,7 +13,6 @@ This server features CardDAV support
 // Make sure this setting is turned on and reflect the root url for your WebDAV server.
 // This can be for example the root / or a complete path to your server script
 $baseUri = '/';
-$addressBookConfig = null;
 
 // Autoloader
 require_once 'vendor/autoload.php';
@@ -51,7 +50,7 @@ $server->addPlugin(new Sabre\DAV\Auth\Plugin($authBackend));
 $server->addPlugin(new Sabre\DAV\Browser\Plugin());
 $server->addPlugin(new isubsoft\dav\CardDav\CardDAVPlugin());
 $server->addPlugin(new Sabre\DAVACL\Plugin());
-// $server->addPlugin(new Sabre\DAV\Sync\Plugin());
+$server->addPlugin(new Sabre\DAV\Sync\Plugin());
 
 // And off we go!
 $server->exec();
