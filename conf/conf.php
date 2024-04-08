@@ -59,19 +59,20 @@ $config['card']['addressbook']['ldap']['private'] = [
 	'fieldmap'      => [
 		// vCard    => LDAP
     'FN'            => 'cn',
-    'N'							=> ['attr' => [ 0 => 'sn', 1 => 'givenName', 2 => '', 3 => 'title', 4 => '' ]],
-		'EMAIL'         => 'mail:*',
-		'ORG'         	=> 'o',
+    'N'							=> ['attr' => [ 0 => 'sn', 1 => 'givenName', 2 => '', 3 => '', 4 => '' ]],
+		'EMAIL'         => ['multi_allowed' => true, 'attr' => 'mail'],
+		'ORG'         	=> ['attr' => [ 0 => 'o', 1 => 'organizationalUnitName']],
+    'TITLE'         => 'title',
     'NICKNAME'      => 'displayName',
 		'PHOTO'         => 'jpegphoto',
     'NOTE'        	=> 'description',
-    'TEL'						=> ['type' => [
+    'TEL'						=> [ 'type' => [
                                     'voice' => ['home' => 'homePhone',
                                                 'work' => 'telephoneNumber',
                                                 'default' => 'telephoneNumber',
                                                 ], 
                                     'cell' => [
-                                                'home' => 'mobile',
+                                                'home' => ['multi_allowed' => true, 'attr' => 'mobile'],
                                                 'default' => 'mobile',
                                                 ]
                                   ]
