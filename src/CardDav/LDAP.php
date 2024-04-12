@@ -954,9 +954,14 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
             if(! empty($data))
             {
-                for ($i=0; $i < count($data); $i++) { 
-                    $result['added'][] = $data[$i]['card_uri'];
-                }
+                $query = 'SELECT * FROM '.$this->ldapMapTableName.' WHERE addressbook_id = ? and user_id = ?';
+                    $stmt = $this->pdo->prepare($query);
+                    $stmt->execute([$addressBookId, $this->principalUser]);
+        
+                    while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+                        $cardUri = $row['card_uri'];
+                        $result['added'][] = $cardUri;
+                    }
             }
 
             return $result;
@@ -973,9 +978,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
         if( ($syncToken < $fullSyncTimestamp) &&  ($this->syncToken >= $fullSyncTimestamp))
         {
-            $result['syncToken'] = null;
-
-            return $result;
+            return null;
         }    
         
 
@@ -1123,6 +1126,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $result = [];
         $backendIds = [];
         $cardUris = [];
+        $ts = time();
 
         $ldapConn = $this->authBackend->userLdapConn;
         $filter = '(&'.$config['filter']. '(createtimestamp<=' . gmdate('YmdHis', $this->syncToken) . 'Z))'; 
