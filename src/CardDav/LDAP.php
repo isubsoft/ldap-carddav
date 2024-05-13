@@ -34,7 +34,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
     private $ldapMapTableName = 'cards_backend_map';
 
-    private $fullSyncTable = 'full_sync';
+    private $fullSyncTable = 'cards_full_sync';
 
     /**
      * sync Token.
@@ -968,12 +968,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         } 
 
         $fullSyncTimestamp = null;
-        $query = 'SELECT full_sync_timestamp FROM '.$this->fullSyncTable.' WHERE addressbook_id = ? ';
+        $query = 'SELECT full_sync_ts FROM '.$this->fullSyncTable.' WHERE addressbook_id = ? ';
         $stmt = $this->pdo->prepare($query);
         $stmt->execute([$addressBookId]);
 
         while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-                $fullSyncTimestamp = $row['full_sync_timestamp'];
+                $fullSyncTimestamp = $row['full_sync_ts'];
             }
 
         if( ($syncToken < $fullSyncTimestamp) &&  ($this->syncToken >= $fullSyncTimestamp))
