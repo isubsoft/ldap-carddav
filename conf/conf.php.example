@@ -49,7 +49,7 @@ $config['card']['addressbook']['ldap']['private'] = [
 	'base_dn'       	=> 'ou=Address Book,%dn',
 	'bind_dn'       	=> '',
 	//    'bind_pass'     => '',
-	'filter'        	=> '(objectClass=inetOrgPerson)',
+	'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
 	'writable'     	 	=> true,
 	// If writable is true then these fields need to be populated:
 	// LDAP_Object_Classes, required_fields, LDAP_rdn
@@ -80,6 +80,9 @@ $config['card']['addressbook']['ldap']['private'] = [
 	],
 	'group_LDAP_Object_Classes' => ['groupOfNames'],
 	'group_required_fields'     => ['cn', 'member'],
-	'group_LDAP_rdn'      			=> 'cn',
+	'group_LDAP_rdn'      	    => 'cn',
+	'group_fieldmap'         => [	'FN'            => 'cn',
+					'MEMBER' => 'member'
+				    ],
 	'scope'         => 'list'   // search mode: sub|base|list
 ];
