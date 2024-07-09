@@ -207,7 +207,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         if( !empty($data))
         {
             for ($i=0; $i < count($data); $i++) { 
-
+                
                 $row = [    'id' => $data[$i]['entryuuid'][0],
                             'uri' => $data[$i]['card_uri'],
                             'lastmodified' => strtotime($data[$i]['modifytimestamp'][0]),
@@ -216,7 +216,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                 $result[] = $row;
             }     
         }
-        
+
         return $result;
     }
 
@@ -241,21 +241,19 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         
         $data = $this->fetchContactData($addressBookDn, $addressBookId, $cardUri, $addressBookConfig);
 
-        if( !empty($data))
+        if( !empty($data) && $data['count'] > 0)
         {           
-            if($data['count'] > 0)
-            {
-                $cardData = $this->generateVcard($data[0], $addressBookConfig['fieldmap'], $cardUri);
-                 
-                $result = [
-                    'id'            => $data[0]['entryuuid'][0],
-                    'carddata'      => $cardData,
-                    'uri'           => $cardUri,
-                    'lastmodified'  => strtotime($data[0]['modifytimestamp'][0]),
-                ];
+            $cardData = $this->generateVcard($data[0], $addressBookId, $cardUri);
+             
+            $result = [
+                'id'            => $data[0]['entryuuid'][0],
+                'carddata'      => $cardData,
+                'uri'           => $cardUri,
+                'lastmodified'  => strtotime($data[0]['modifytimestamp'][0]),
+            ];
                         
-                return $result;
-            }
+            return $result;
+            
         }
         return false;
         
@@ -320,10 +318,80 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             return false;
         }
 
-        $ldapInfo = [];
-        $ldapInfo['objectclass'] = $addressBookConfig['LDAP_Object_Classes'];
-            
         $vcard = \Sabre\VObject\Reader::read($cardData);
+        
+        $ldapInfo = [];
+        
+        if( isset($vcard->KIND) && (strtolower((string)$vcard->KIND) === 'group'))
+        {
+            $ldapInfo['objectclass']  = $addressBookConfig['group_LDAP_Object_Classes'];
+
+            foreach($addressBookConfig['group_fieldmap'] as $vCardKey => $ldapKey)
+            {
+                if( isset($vcard->$vCardKey) && is_array($ldapKey))
+                {
+                    if(array_key_exists('multi_allowed', $ldapKey) && $ldapKey['multi_allowed'] == 'true')
+                    {
+                        $newLdapKey = strtolower($ldapKey['attr']);
+                        foreach($vcard->$vCardKey as $values)
+                        {
+                            $uuid = explode(':', (string)$values)[2];
+
+                            $memberCardUri = $uuid.'.vcf';
+                            $query = 'SELECT backend_id FROM '.$this->ldapMapTableName.' WHERE addressbook_id = ? and card_uri = ? and user_id = ?';
+                            $stmt = $this->pdo->prepare($query);
+                            $stmt->execute([$addressBookId, $memberCardUri, $this->principalUser]);
+                            
+                            while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+                                $backendId = $row['backend_id'];
+                            }
+
+                            $ldapConn = $this->authBackend->userLdapConn;
+                            $filter = '(&'.$addressBookConfig['filter']. '(entryuuid=' .$backendId. '))'; 
+                    
+                            $data = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, [], strtolower($addressBookConfig['scope']));
+                            if( !empty($data) && $data['count'] > 0)
+                            {
+                                $ldapInfo[$newLdapKey][] = $data[0]['dn'];
+                            }
+                        }
+                    }
+                }
+                else if( isset($vcard->$vCardKey))
+                {
+                    $ldapKey = strtolower($ldapKey);
+                    $ldapInfo[$ldapKey] = (string)$vcard->$vCardKey;   
+                }
+            }
+            
+            foreach ($addressBookConfig['group_required_fields'] as $key) {
+                if(! array_key_exists($key, $ldapInfo))
+                return false;
+            }
+
+            $ldapConn = $this->authBackend->userLdapConn;
+            $ldapTree = $addressBookConfig['group_LDAP_rdn']. '='. $ldapInfo[$addressBookConfig['group_LDAP_rdn']]. ',' .$addressBookDn;
+    
+            $ldapResponse = ldap_add($ldapConn, $ldapTree, $ldapInfo);
+
+            if ($ldapResponse) 
+            {
+                $result = ldap_read($ldapConn, $ldapTree, $addressBookConfig['filter'], ['entryuuid']);
+                $data = ldap_get_entries($ldapConn, $result);
+                
+                $query = "INSERT INTO `".$this->ldapMapTableName."` (`card_uri`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?)";
+                $sql = $this->pdo->prepare($query);
+                $sql->execute([$cardUri, $addressBookId, $data[0]['entryuuid'][0], $this->principalUser]);
+
+                return null;
+            }
+            
+            return false;
+        }
+
+
+        
+        $ldapInfo['objectclass'] = $addressBookConfig['LDAP_Object_Classes'];
         
         foreach($addressBookConfig['fieldmap'] as $vCardKey => $ldapKey)
         {
@@ -540,10 +608,108 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             return false;
         }
 
-        $ldapInfo = [];
-        $ldapInfo['objectclass'] = $addressBookConfig['LDAP_Object_Classes'];
-
+       
         $vcard = \Sabre\VObject\Reader::read($cardData);
+
+        $ldapInfo = [];
+        
+        if( isset($vcard->KIND) && ((string)$vcard->KIND === 'group'))
+        {
+            $ldapInfo['objectclass']  = $addressBookConfig['group_LDAP_Object_Classes'];
+
+            foreach($addressBookConfig['group_fieldmap'] as $vCardKey => $ldapKey)
+            {
+                if( isset($vcard->$vCardKey) && is_array($ldapKey))
+                {
+                    if(array_key_exists('multi_allowed', $ldapKey) && $ldapKey['multi_allowed'] == 'true')
+                    {
+                        $newLdapKey = strtolower($ldapKey['attr']);
+                        foreach($vcard->$vCardKey as $values)
+                        {
+                            $uuid = explode(':', (string)$values)[2];
+
+                            $memberCardUri = $uuid.'.vcf';
+                            $query = 'SELECT backend_id FROM '.$this->ldapMapTableName.' WHERE addressbook_id = ? and card_uri = ? and user_id = ?';
+                            $stmt = $this->pdo->prepare($query);
+                            $stmt->execute([$addressBookId, $memberCardUri, $this->principalUser]);
+                            
+                            while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+                                $backendId = $row['backend_id'];
+                            }
+
+                            $ldapConn = $this->authBackend->userLdapConn;
+                            $filter = '(&'.$addressBookConfig['filter']. '(entryuuid=' .$backendId. '))'; 
+                    
+                            $data = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, [], strtolower($addressBookConfig['scope']));
+                            if( !empty($data) && $data['count'] > 0)
+                            {
+                                $ldapInfo[$newLdapKey][] = $data[0]['dn'];
+                            }
+                        }
+                    }
+                }
+                else if( isset($vcard->$vCardKey))
+                {
+                    $ldapKey = strtolower($ldapKey);
+                    $ldapInfo[$ldapKey] = (string)$vcard->$vCardKey;   
+                }
+            }
+            
+            foreach ($addressBookConfig['group_required_fields'] as $key) {
+                if(! array_key_exists($key, $ldapInfo))
+                return false;
+            }
+
+            $ldapConn = $this->authBackend->userLdapConn;
+            $data = $this->fetchContactData($addressBookDn, $addressBookId, $cardUri, $addressBookConfig);
+                        
+            $groupLdapRdnValues = null;
+            foreach($data[0] as $key => $value) { 
+                if(is_array($value) && $key!= 'entryuuid' && $key!= 'modifytimestamp')
+                {
+
+                    if($key == $addressBookConfig['group_LDAP_rdn'])
+                    {
+                        for ($i=0; $i < $value['count']; $i++) { 
+                            $groupLdapRdnValues[] = $value[$i];
+                        }
+                        $newGroupLdapRdnValue = $ldapInfo[$key];
+                        $ldapInfo[$key] = $groupLdapRdnValues;
+                    }
+                }
+            }
+            
+            $ldapTree = $data[0]['dn'];
+
+            $ldapResponse = ldap_mod_replace($ldapConn, $ldapTree, $ldapInfo);
+                        
+            if ($ldapResponse) 
+            {
+                $parsr = ldap_explode_dn($ldapTree, 0);
+                $newGroupLdapRdn = $addressBookConfig['group_LDAP_rdn']. '='. $newGroupLdapRdnValue;
+                
+                if($parsr[0] == $newLdapRdn)
+                {
+                    return null;
+                }
+                else{
+                    if(in_array($newGroupLdapRdnValue, $groupLdapRdnValues))
+                    {
+                        ldap_rename($ldapConn, $ldapTree, $newGroupLdapRdn, $addressBookDn, false);
+                    }
+                    else{
+                        ldap_rename($ldapConn, $ldapTree, $newGroupLdapRdn, $addressBookDn, true);
+                    }
+
+                    return null;
+                }
+                
+            }
+            
+            return false;
+        }
+        
+        $ldapInfo['objectclass'] = $addressBookConfig['LDAP_Object_Classes'];
         
         foreach($addressBookConfig['fieldmap'] as $vCardKey => $ldapKey)
         {
@@ -737,7 +903,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                     
         if ($ldapResponse) 
         {
-            $parsr=ldap_explode_dn($ldapTree, 0);
+            $parsr = ldap_explode_dn($ldapTree, 0);
             $newLdapRdn = $addressBookConfig['LDAP_rdn']. '='. $newLdapRdnValue;
             
             if($parsr[0] == $newLdapRdn)
@@ -799,13 +965,75 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      * @param array $fieldMap
      * @return bool or vcard data
      */
-    protected function generateVcard($data, $fieldMap, $cardUri)
+    protected function generateVcard($data, $addressBookId, $cardUri)
     { 
         if (empty ($data)) {
             return false;
         }
+
+        $addressBookConfig = $this->addressbook[$addressBookId]['config'];
+        $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
+        $fieldMap = $addressBookConfig['fieldmap'];
+        $groupFieldMap = $addressBookConfig['group_fieldmap'];
+        $ldapConn = $this->authBackend->userLdapConn;
+
         // build the Vcard
         $vcard = new \Sabre\VObject\Component\VCard(['UID' => $cardUri]);
+        // $vcard = $vcard->convert(\Sabre\VObject\Document::VCARD40);
+
+        if($data['objectclass'][0] === $addressBookConfig['group_LDAP_Object_Classes'][0])
+        {
+            $vcard->add('KIND', 'group');    
+
+            foreach ($groupFieldMap as $vcardKey => $ldapKey) {
+                if(!is_array($ldapKey))
+                {
+                    $ldapKey = strtolower($ldapKey);
+                    if(isset($data[$ldapKey]))
+                    {                   
+                        $vcard->add($vcardKey, $data[$ldapKey][0]);                                              
+                    } 
+
+                }else{
+    
+                    if(array_key_exists('multi_allowed', $ldapKey) && $ldapKey['multi_allowed'] == 'true')
+                    {
+                        $newLdapKey = strtolower($ldapKey['attr']);
+    
+                        if(isset($data[$newLdapKey]))
+                        {
+                            foreach($data[$newLdapKey] as $key => $value)
+                            {
+                                if($key === 'count')
+                                continue;
+    
+                                $result = ldap_read($ldapConn, $value, $addressBookConfig['filter'], ['entryuuid']);
+                                $memberData = ldap_get_entries($ldapConn, $result);
+                                
+                                
+                                if(! empty($memberData) && $memberData['count'] > 0)
+                                { 
+                                    $query = 'SELECT card_uri FROM '.$this->ldapMapTableName.' WHERE addressbook_id = ? and backend_id = ? and user_id = ?';
+                                    $stmt = $this->pdo->prepare($query);
+                                    $stmt->execute([$addressBookId, $memberData[0]['entryuuid'][0], $this->principalUser]);
+                                    
+                                    while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+                                        $uri = $row['card_uri'];
+                                        $clientUID = str_ireplace('.vcf','',$uri);
+                                    }
+                                    
+                                    $vcard->add('MEMBER', 'urn:uuid:'.$clientUID);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // send the  VCard
+            $output = $vcard->serialize();
+            return $output;
+        }
 
         foreach ($fieldMap as $vcardKey => $ldapKey) {
             if(!is_array($ldapKey))
@@ -1130,10 +1358,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
         $ldapConn = $this->authBackend->userLdapConn;
         $filter = '(&'.$config['filter']. '(createtimestamp<=' . gmdate('YmdHis', $this->syncToken) . 'Z))'; 
-        $attributes = ['cn','uid','entryuuid','modifytimestamp'];
-
+        
+        $attributes = ['*','entryuuid','modifytimestamp'];
+        
         $data = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, $attributes, strtolower($config['scope']));
-
+        
         $query = 'SELECT card_uri, backend_id FROM '.$this->ldapMapTableName.' WHERE addressbook_id = ? AND user_id = ?';
         $stmt = $this->pdo->prepare($query);
         $stmt->execute([$addressBookId, $this->principalUser]);
