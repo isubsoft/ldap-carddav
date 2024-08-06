@@ -33,7 +33,7 @@ $config['principal']['ldap'] = [
   // It's possible to bind for an individual address book
   // The login name is used to search for the DN to bind with
   'search_base_dn' => '',
-  'search_filter'  => '(&(objectclass=inetOrgPerson))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
+  'search_filter'  => '(&(objectclass=inetOrgPerson)(uid=%u))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
   // DN and password to bind as before searching for bind DN, if anonymous search is not allowed
   'search_bind_dn' => 'cn=authclient,ou=People,dc=example,dc=com',
   'search_bind_pw' => 'authclient123',
