@@ -67,10 +67,12 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      */
     function getPrincipalsByPrefix($prefixPath)
     {        
-        $ldapConn = Utility::LdapBindConnection(['bindDn' => $this->config['principal']['ldap']['search_bind_dn'], 'bindPass' => $this->config['principal']['ldap']['search_bind_pw']], $this->config['principal']['ldap']);
+        $bindDn = $this->config['principal']['ldap']['search_bind_dn'];
+        $bindPass = $this->config['principal']['ldap']['search_bind_pw'];
+        $ldapConn = Utility::LdapBindConnection(['bindDn' => $bindDn, 'bindPass' => $bindPass], $this->config['principal']['ldap']);
   
         $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
-        $filter = str_replace('%u', '*', $this->config['principal']['ldap']['search_filter']); 
+        $filter = Utility::replace_placeholders($this->config['principal']['ldap']['search_filter'], ['%u' => '*']);
         $attributes = ['displayName','mail'];
 
         $data = Utility::LdapQuery($ldapConn, $ldaptree, $filter, $attributes, strtolower($this->config['principal']['ldap']['scope']));
@@ -106,10 +108,13 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
     function getPrincipalByPath($path)
     {
         $searchUserId = basename($path);
-        $ldapConn = Utility::LdapBindConnection(['bindDn' => $this->config['principal']['ldap']['search_bind_dn'], 'bindPass' => $this->config['principal']['ldap']['search_bind_pw']], $this->config['principal']['ldap']);
+
+        $bindDn = $this->config['principal']['ldap']['search_bind_dn'];
+        $bindPass = $this->config['principal']['ldap']['search_bind_pw'];
+        $ldapConn = Utility::LdapBindConnection(['bindDn' => $bindDn, 'bindPass' => $bindPass], $this->config['principal']['ldap']);
           
         $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
-        $filter = str_replace('%u', $searchUserId, $this->config['principal']['ldap']['search_filter']);  // single filter
+        $filter = Utility::replace_placeholders($this->config['principal']['ldap']['search_filter'], ['%u' => $searchUserId]); // single filter
         $attributes = ['displayName','mail'];
 
         $data = Utility::LdapQuery($ldapConn, $ldaptree, $filter, $attributes, strtolower($this->config['principal']['ldap']['scope']));

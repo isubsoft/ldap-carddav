@@ -99,17 +99,23 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $ldapConn = $this->authBackend->userLdapConn;
         $this->principalUser = basename($principalUri);
 
-        $ldaptree = ($this->config['auth']['ldap']['search_base_dn'] !== '') ? $this->config['auth']['ldap']['search_base_dn'] : $this->config['auth']['ldap']['base_dn'];
-        $filter = str_replace('%u', $this->principalUser, $this->config['auth']['ldap']['search_filter']);  // single filter
-
-        $data = Utility::LdapQuery($ldapConn, $ldaptree, $filter, [], strtolower($this->config['auth']['ldap']['scope']));
-
-        $principalUserDn = $data[0]['dn'];
+        if(($this->config['auth']['ldap']['bind_dn'] != '') && ($this->config['auth']['ldap']['bind_pass'] != ''))
+        {
+            $principalUserDn = Utility::replace_placeholders($this->config['auth']['ldap']['bind_dn'], ['%u' => $this->principalUser]);
+            
+        }else
+        {
+            $ldaptree = ($this->config['auth']['ldap']['search_base_dn'] !== '') ? $this->config['auth']['ldap']['search_base_dn'] : $this->config['auth']['ldap']['base_dn'];
+            $filter = Utility::replace_placeholders($this->config['auth']['ldap']['search_filter'], ['%u' => $this->principalUser]); // single filter
+    
+            $data = Utility::LdapQuery($ldapConn, $ldaptree, $filter, [], strtolower($this->config['auth']['ldap']['scope']));
+    
+            $principalUserDn = $data[0]['dn'];
+        }
        
         foreach ($this->config['card']['addressbook']['ldap'] as $addressbookId => $configParams) {
  
-               	$addressBookDn = str_replace('%dn', $principalUserDn, $configParams['base_dn']); 
-               	$addressBookDn = str_replace('%u', $this->principalUser, $addressBookDn);
+                $addressBookDn = Utility::replace_placeholders($configParams['base_dn'], ['%dn' => $principalUserDn, '%u' => $this->principalUser ]);
                    
                 $addressBooks[] = [
                     'id'                                                          => $addressbookId,
