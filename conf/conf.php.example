@@ -44,7 +44,7 @@ $config['card']['addressbook']['ldap']['private'] = [
 	'name'          	=> 'Personal Address Book',
   'description'     => 'New Book',
 	'user_specific' 	=> true,
-	'base_dn'       	=> 'ou=Address Book,%dn',
+	'base_dn'       	=> 'ou=Address Book,uid=%u,ou=People,dc=example,dc=com',
 	'bind_dn'       	=> '',
 	//    'bind_pass'     => '',
 	'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
