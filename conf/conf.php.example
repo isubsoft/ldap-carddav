@@ -30,8 +30,6 @@ $config['principal']['ldap'] = [
   'ldap_version'  => 3,       // using LDAPv3
   'network_timeout' => 10,    // The timeout (in seconds) for connect + bind attempts. This is only supported in PHP >= 5.3.0 with OpenLDAP 2.x
   'base_dn'       => 'ou=People,dc=example,dc=com',
-  'bind_dn'       => '',
-  'bind_pass'     => '',
   // It's possible to bind for an individual address book
   // The login name is used to search for the DN to bind with
   'search_base_dn' => '',
@@ -46,10 +44,10 @@ $config['card']['addressbook']['ldap']['private'] = [
 	'name'          	=> 'Personal Address Book',
   'description'     => 'New Book',
 	'user_specific' 	=> true,
-	'base_dn'       	=> 'ou=Address Book,%dn',
+	'base_dn'       	=> 'ou=Address Book,uid=%u,ou=People,dc=example,dc=com',
 	'bind_dn'       	=> '',
 	//    'bind_pass'     => '',
-	'filter'        	=> '(objectClass=inetOrgPerson)',
+	'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
 	'writable'     	 	=> true,
 	// If writable is true then these fields need to be populated:
 	// LDAP_Object_Classes, required_fields, LDAP_rdn
@@ -78,5 +76,11 @@ $config['card']['addressbook']['ldap']['private'] = [
                                   ]
                         ],
 	],
+	'group_LDAP_Object_Classes' => ['groupOfNames'],
+	'group_required_fields'     => ['cn', 'member'],
+	'group_LDAP_rdn'      	    => 'cn',
+	'group_fieldmap'         => [	'FN'            => 'cn',
+					'MEMBER' => 'member'
+				    ],
 	'scope'         => 'list'   // search mode: sub|base|list
 ];
