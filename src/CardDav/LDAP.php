@@ -60,6 +60,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     private $addressbook = null;
 
     /**
+     * Ldap Connection.
+     *
+     * @var string
+     */
+    public $userLdapConn = null;
+
+    /**
      * Creates the backend.
      *
      * configuration array must be provided
@@ -96,20 +103,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     {      
         $this->syncToken = time();
 
-        $ldapConn = $this->authBackend->userLdapConn;
         $this->principalUser = basename($principalUri);
-
-        $ldaptree = ($this->config['auth']['ldap']['search_base_dn'] !== '') ? $this->config['auth']['ldap']['search_base_dn'] : $this->config['auth']['ldap']['base_dn'];
-        $filter = str_replace('%u', $this->principalUser, $this->config['auth']['ldap']['search_filter']);  // single filter
-
-        $data = Utility::LdapQuery($ldapConn, $ldaptree, $filter, [], strtolower($this->config['auth']['ldap']['scope']));
-
-        $principalUserDn = $data[0]['dn'];
        
         foreach ($this->config['card']['addressbook']['ldap'] as $addressbookId => $configParams) {
  
-               	$addressBookDn = str_replace('%dn', $principalUserDn, $configParams['base_dn']); 
-               	$addressBookDn = str_replace('%u', $this->principalUser, $addressBookDn);
+                $addressBookDn = Utility::replace_placeholders($configParams['base_dn'], ['%u' => $this->principalUser ]);
                    
                 $addressBooks[] = [
                     'id'                                                          => $addressbookId,
@@ -120,6 +118,19 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                     '{http://sabredav.org/ns}sync-token'                          => isset($this->syncToken) ? $this->syncToken : 0,
                 ];
                 
+                if($configParams['bind_dn'] == '')
+                {
+                    $this->addressbook[$addressbookId]['LdapConnection'] = $this->authBackend->userLdapConn;
+                }
+                else{
+                    if(isset($configParams['bind_pass']) && $configParams['bind_pass'] != '')
+                    {
+                        $this->addressbook[$addressbookId]['LdapConnection'] = Utility::LdapBindConnection(['bindDn' => $configParams['bind_dn'], 'bindPass' => $configParams['bind_pass']], $configParams);
+                    }
+                    else{
+                        $this->addressbook[$addressbookId]['LdapConnection'] = Utility::LdapBindConnection(['bindDn' => $configParams['bind_dn'], 'bindPass' => null], $configParams);
+                    }
+                }
 
                 $this->addressbook[$addressbookId]['config'] = $configParams;
                 $this->addressbook[$addressbookId]['addressbookDn'] = $addressBookDn;
@@ -198,16 +209,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     function getCards($addressBookId)
     {
         $result = [];     
-        
-        $addressBookConfig = $this->addressbook[$addressBookId]['config'];
-        $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
 
-        $data = $this->fullSyncOperation($addressBookConfig, $addressBookDn, $addressBookId);
+        $data = $this->fullSyncOperation($addressBookId);
                     
         if( !empty($data))
         {
             for ($i=0; $i < count($data); $i++) { 
-
+                
                 $row = [    'id' => $data[$i]['entryuuid'][0],
                             'uri' => $data[$i]['card_uri'],
                             'lastmodified' => strtotime($data[$i]['modifytimestamp'][0]),
@@ -216,7 +224,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                 $result[] = $row;
             }     
         }
-        
+
         return $result;
     }
 
@@ -235,27 +243,23 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     function getCard($addressBookId, $cardUri)
     {
-        $addressBookConfig = $this->addressbook[$addressBookId]['config'];
-        $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
         $result = [];
         
-        $data = $this->fetchContactData($addressBookDn, $addressBookId, $cardUri, $addressBookConfig);
+        $data = $this->fetchContactData($addressBookId, $cardUri);
 
-        if( !empty($data))
+        if( !empty($data) && $data['count'] > 0)
         {           
-            if($data['count'] > 0)
-            {
-                $cardData = $this->generateVcard($data[0], $addressBookConfig['fieldmap'], $cardUri);
-                 
-                $result = [
-                    'id'            => $data[0]['entryuuid'][0],
-                    'carddata'      => $cardData,
-                    'uri'           => $cardUri,
-                    'lastmodified'  => strtotime($data[0]['modifytimestamp'][0]),
-                ];
+            $cardData = $this->generateVcard($data[0], $addressBookId, $cardUri);
+             
+            $result = [
+                'id'            => $data[0]['entryuuid'][0],
+                'carddata'      => $cardData,
+                'uri'           => $cardUri,
+                'lastmodified'  => strtotime($data[0]['modifytimestamp'][0]),
+            ];
                         
-                return $result;
-            }
+            return $result;
+            
         }
         return false;
         
@@ -314,16 +318,20 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     {
         $addressBookConfig = $this->addressbook[$addressBookId]['config'];
         $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
+        $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
 
         if($addressBookConfig['writable'] == false)
         {
             return false;
         }
 
-        $ldapInfo = [];
-        $ldapInfo['objectclass'] = $addressBookConfig['LDAP_Object_Classes'];
-            
         $vcard = \Sabre\VObject\Reader::read($cardData);
+        
+        $ldapInfo = [];
+
+
+        //Normal Card
+        $ldapInfo['objectclass'] = $addressBookConfig['LDAP_Object_Classes'];
         
         foreach($addressBookConfig['fieldmap'] as $vCardKey => $ldapKey)
         {
@@ -485,7 +493,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             return false;
         }
         
-        $ldapConn = $this->authBackend->userLdapConn;
         $ldapTree = $addressBookConfig['LDAP_rdn']. '='. $ldapInfo[$addressBookConfig['LDAP_rdn']]. ',' .$addressBookDn;
         
         $ldapResponse = ldap_add($ldapConn, $ldapTree, $ldapInfo);
@@ -534,16 +541,21 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     {
         $addressBookConfig = $this->addressbook[$addressBookId]['config'];
         $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
+        $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
 
         if($addressBookConfig['writable'] == false)
         {
             return false;
         }
 
-        $ldapInfo = [];
-        $ldapInfo['objectclass'] = $addressBookConfig['LDAP_Object_Classes'];
-
+       
         $vcard = \Sabre\VObject\Reader::read($cardData);
+
+        $ldapInfo = [];
+        
+
+        //Normal Card
+        $ldapInfo['objectclass'] = $addressBookConfig['LDAP_Object_Classes'];
         
         foreach($addressBookConfig['fieldmap'] as $vCardKey => $ldapKey)
         {
@@ -710,9 +722,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             return false;
         }
         
-        
-        $ldapConn = $this->authBackend->userLdapConn;
-        $data = $this->fetchContactData($addressBookDn, $addressBookId, $cardUri, $addressBookConfig);
+
+        $data = $this->fetchContactData($addressBookId, $cardUri);
                     
         $ldapRdnValues = null;
         foreach($data[0] as $key => $value) { 
@@ -737,7 +748,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                     
         if ($ldapResponse) 
         {
-            $parsr=ldap_explode_dn($ldapTree, 0);
+            $parsr = ldap_explode_dn($ldapTree, 0);
             $newLdapRdn = $addressBookConfig['LDAP_rdn']. '='. $newLdapRdnValue;
             
             if($parsr[0] == $newLdapRdn)
@@ -771,15 +782,14 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     function deleteCard($addressBookId, $cardUri)
     {
         $addressBookConfig = $this->addressbook[$addressBookId]['config'];
-        $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
+        $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
 
         if($addressBookConfig['writable'] == false)
         {
             return false;
         }
         
-        $data = $this->fetchContactData($addressBookDn, $addressBookId, $cardUri, $addressBookConfig);
-        $ldapConn = $this->authBackend->userLdapConn;
+        $data = $this->fetchContactData($addressBookId, $cardUri);
         $ldapTree = $data[0]['dn'];
 
         if(ldap_delete($ldapConn, $ldapTree))
@@ -799,11 +809,17 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      * @param array $fieldMap
      * @return bool or vcard data
      */
-    protected function generateVcard($data, $fieldMap, $cardUri)
+    protected function generateVcard($data, $addressBookId, $cardUri)
     { 
         if (empty ($data)) {
             return false;
         }
+
+        $addressBookConfig = $this->addressbook[$addressBookId]['config'];
+        $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
+        $fieldMap = $addressBookConfig['fieldmap'];
+        $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
+
         // build the Vcard
         $vcard = new \Sabre\VObject\Component\VCard(['UID' => $cardUri]);
 
@@ -945,12 +961,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
         $addressBookConfig = $this->addressbook[$addressBookId]['config'];
         $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
-        $ldapConn = $this->authBackend->userLdapConn;
+        $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
 
         //Full sync Operation
         if($syncToken == null)
         {
-            $data = $this->fullSyncOperation($addressBookConfig, $addressBookDn, $addressBookId);
+            $data = $this->fullSyncOperation($addressBookId);
 
             if(! empty($data))
             {
@@ -1092,8 +1108,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      * @param string  $cardUri
      * @param array $config
      */
-    function fetchContactData($addressBookDn, $addressBookId, $cardUri, $config)
+    function fetchContactData($addressBookId, $cardUri)
     {
+        $config = $this->addressbook[$addressBookId]['config'];
+        $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
+        $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
         $result = null;
         $backendId = null;
         
@@ -1104,8 +1123,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
             $backendId = $row['backend_id'];
         }
-
-        $ldapConn = $this->authBackend->userLdapConn;
+  
         $filter = '(&'.$config['filter']. '(entryuuid=' .$backendId. '))'; 
         $attributes = ['*', 'entryuuid', 'modifytimestamp'];
         
@@ -1121,19 +1139,21 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      * @param string  $addressBookId
      * @param array $config
      */
-    function fullSyncOperation($config, $addressBookDn, $addressBookId)
+    function fullSyncOperation($addressBookId)
     {
+        $config = $this->addressbook[$addressBookId]['config'];
+        $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
+        $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
         $result = [];
         $backendIds = [];
         $cardUris = [];
         $ts = time();
 
-        $ldapConn = $this->authBackend->userLdapConn;
-        $filter = '(&'.$config['filter']. '(createtimestamp<=' . gmdate('YmdHis', $this->syncToken) . 'Z))'; 
-        $attributes = ['cn','uid','entryuuid','modifytimestamp'];
-
+        $filter = '(&'.$config['filter']. '(createtimestamp<=' . gmdate('YmdHis', $this->syncToken) . 'Z))';     
+        $attributes = ['*','entryuuid','modifytimestamp'];
+        
         $data = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, $attributes, strtolower($config['scope']));
-
+        
         $query = 'SELECT card_uri, backend_id FROM '.$this->ldapMapTableName.' WHERE addressbook_id = ? AND user_id = ?';
         $stmt = $this->pdo->prepare($query);
         $stmt->execute([$addressBookId, $this->principalUser]);

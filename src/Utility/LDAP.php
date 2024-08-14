@@ -4,6 +4,17 @@ namespace isubsoft\dav\Utility;
 
 class LDAP {
 
+    /**
+     * allowed placeholders for configuration
+     *
+     * @var array
+     */
+    private static $allowed_placeholders =  [
+                                            '%u' => 'User name',
+                                            '%p' => 'User password',
+                                            '%dn' => 'User DN in LDAP backend'
+                                        ];
+
     public static function LdapBindConnection($credentials, $config)
     {
         $ldapConn = null;
@@ -54,6 +65,27 @@ class LDAP {
         $data = ldap_get_entries($ldapConn, $result);
 
         return $data;
+    }
+
+    public static function replace_placeholders($string, $values = []){
+
+        foreach(self::$allowed_placeholders as $placeholder => $value)
+        {
+            preg_match('/('.$placeholder.')/', $string, $matches, PREG_OFFSET_CAPTURE);
+            
+            if(!empty($matches))
+            {
+                if(array_key_exists($placeholder, $values))
+                {
+                    $string = str_replace($placeholder, $values[$placeholder], $string);
+                }
+                else{
+                    $string = str_replace($placeholder, '', $string);
+                }
+            }
+        }
+        
+        return $string;
     }
 
 }

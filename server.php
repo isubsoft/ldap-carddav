@@ -26,7 +26,7 @@ $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 // Backends
 $authBackend = new isubsoft\dav\Auth\LDAP($config);
-$principalBackend = new isubsoft\dav\DAVACL\PrincipalBackend\LDAP($config);
+$principalBackend = new isubsoft\dav\DAVACL\PrincipalBackend\LDAP($config, $authBackend);
 $carddavBackend = new isubsoft\dav\CardDav\LDAP($config, $pdo, $authBackend);
 
 
