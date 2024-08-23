@@ -28,6 +28,8 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
      */
     public $userLdapConn = null;
 
+    public $username = null;
+
 
 
 
@@ -57,6 +59,8 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
      */
     function validateUserPass($username, $password)
     {      
+        $this->username = $username;
+        
         if(($this->config['auth']['ldap']['bind_dn'] != '') && ($this->config['auth']['ldap']['bind_pass'] != ''))
         {
             $bindDn = Utility::replace_placeholders($this->config['auth']['ldap']['bind_dn'], ['%u' => $username]);
