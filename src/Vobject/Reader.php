@@ -16,7 +16,7 @@ class Reader extends \Sabre\VObject\Reader{
                     'parameter' => []],
         
         'N' => ['multi_allowed' => false,
-                    'composite_attr'=> true,
+                    'composite_attr'=> [ 0 => 'last_name', 1 => 'first_name', 2 => 'middle_name', 3 => 'prefix', 4 => 'sufix' ],
                     'parameter' => []],
 
         'EMAIL' => ['multi_allowed' => true,
@@ -24,7 +24,7 @@ class Reader extends \Sabre\VObject\Reader{
                         'parameter' => []],
 
         'ORG' => ['multi_allowed' => false,
-                    'composite_attr'=> true,
+                    'composite_attr'=> [ 0 => 'org_name', 1 => 'org_unit_name'],
                     'parameter' => []],
 
         'TITLE' => ['multi_allowed' => false,

@@ -346,11 +346,16 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                 }
                 else if($compositeAttrStatus['status'])  
                 {
-                    foreach($ldapKey['backend_attribute'] as $index => $ldapElement)
+                    $vCardPropValueArr = $vcard->$vCardKey->getParts();
+
+                    foreach($compositeAttrStatus['status'] as $propIndex => $propValue)
                     {
-                        if($ldapElement != '' && $ldapElement != null && isset($vcard->$vCardKey->getParts()[$index]))
+                        if(isset($ldapKey['backend_attribute'][$propValue]))
                         {
-                            $ldapInfo[strtolower($ldapElement)] = $vcard->$vCardKey->getParts()[$index];                         
+                            if(isset($vCardPropValueArr[$propIndex]))
+                            {
+                                $ldapInfo[strtolower($ldapKey['backend_attribute'][$propValue])] = $vcard->$vCardKey->getParts()[$propIndex];
+                            }
                         }
                     }
                 }
