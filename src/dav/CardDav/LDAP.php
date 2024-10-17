@@ -348,13 +348,15 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                 {
                     $vCardPropValueArr = $vcard->$vCardKey->getParts();
 
-                    foreach($compositeAttrStatus['status'] as $propIndex => $propValue)
+                    foreach($ldapKey['backend_attribute'] as $propKey => $backendAttr)
                     {
-                        if(isset($ldapKey['backend_attribute'][$propValue]))
+                        $propIndex = array_search($propKey, $compositeAttrStatus['status']);
+
+                        if(array_key_exists($propIndex, $compositeAttrStatus['status']))
                         {
                             if(isset($vCardPropValueArr[$propIndex]))
                             {
-                                $ldapInfo[strtolower($ldapKey['backend_attribute'][$propValue])] = $vcard->$vCardKey->getParts()[$propIndex];
+                                $ldapInfo[strtolower($backendAttr)] = $vCardPropValueArr[$propIndex];
                             }
                         }
                     }
@@ -473,7 +475,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                 }
             }    
         }
-
     
         if(! array_key_exists('sn', $ldapInfo))
         {
@@ -570,11 +571,18 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                 }
                 else if($compositeAttrStatus['status'])  
                 {
-                    foreach($ldapKey['backend_attribute'] as $index => $ldapElement)
+                    $vCardPropValueArr = $vcard->$vCardKey->getParts();
+
+                    foreach($ldapKey['backend_attribute'] as $propKey => $backendAttr)
                     {
-                        if($ldapElement != '' && $ldapElement != null && isset($vcard->$vCardKey->getParts()[$index]))
+                        $propIndex = array_search($propKey, $compositeAttrStatus['status']);
+
+                        if(array_key_exists($propIndex, $compositeAttrStatus['status']))
                         {
-                            $ldapInfo[strtolower($ldapElement)] = $vcard->$vCardKey->getParts()[$index];                         
+                            if(isset($vCardPropValueArr[$propIndex]))
+                            {
+                                $ldapInfo[strtolower($backendAttr)] = $vCardPropValueArr[$propIndex];
+                            }
                         }
                     }
                 }
