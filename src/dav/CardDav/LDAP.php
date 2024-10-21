@@ -328,7 +328,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         //Normal Card
         $ldapInfo['objectclass'] = $addressBookConfig['LDAP_Object_Classes'];
         
-        foreach($addressBookConfig['fieldmapDemo'] as $vCardKey => $ldapKey)
+        foreach($addressBookConfig['fieldmap'] as $vCardKey => $ldapKey)
         {
             if( isset($vcard->$vCardKey))
             {
@@ -351,10 +351,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                     foreach($ldapKey['backend_attribute'] as $propKey => $backendAttr)
                     {
                         $propIndex = array_search($propKey, $compositeAttrStatus['status']);
-
-                        if(array_key_exists($propIndex, $compositeAttrStatus['status']))
+                        
+                        if($propIndex !== false)
                         {
-                            if(isset($vCardPropValueArr[$propIndex]))
+                            if(isset($vCardPropValueArr[$propIndex]) && $vCardPropValueArr[$propIndex] != '')
                             {
                                 $ldapInfo[strtolower($backendAttr)] = $vCardPropValueArr[$propIndex];
                             }
@@ -553,7 +553,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         //Normal Card
         $ldapInfo['objectclass'] = $addressBookConfig['LDAP_Object_Classes'];
         
-        foreach($addressBookConfig['fieldmapDemo'] as $vCardKey => $ldapKey)
+        foreach($addressBookConfig['fieldmap'] as $vCardKey => $ldapKey)
         {
             if( isset($vcard->$vCardKey))
             {
@@ -577,9 +577,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                     {
                         $propIndex = array_search($propKey, $compositeAttrStatus['status']);
 
-                        if(array_key_exists($propIndex, $compositeAttrStatus['status']))
+                        if($propIndex !== false)
                         {
-                            if(isset($vCardPropValueArr[$propIndex]))
+                            if(isset($vCardPropValueArr[$propIndex]) && $vCardPropValueArr[$propIndex] != '')
                             {
                                 $ldapInfo[strtolower($backendAttr)] = $vCardPropValueArr[$propIndex];
                             }
@@ -820,72 +820,127 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         // build the Vcard
         $vcard = new \Sabre\VObject\Component\VCard(['UID' => $cardUri]);
 
-        foreach ($fieldMap as $vcardKey => $ldapKey) {
-            if(!is_array($ldapKey))
+        foreach ($fieldMap as $vCardKey => $ldapKey) {
+            
+            $multiAllowedStatus = Reader::multi_allowed_status($vCardKey);
+            $compositeAttrStatus = Reader::composite_attr_status($vCardKey);
+            $parameterStatus = Reader::parameter_status($vCardKey);
+
+            if($multiAllowedStatus['status'] && !$compositeAttrStatus['status'] && !$parameterStatus['parameter'])
             {
-                $ldapKey = strtolower($ldapKey);
-                if(isset($data[$ldapKey]))
+                $newLdapKey = strtolower($ldapKey['backend_attribute']);
+                if(isset($data[$newLdapKey]))
+                {
+                    foreach($data[$newLdapKey] as $key => $value)
+                    {
+                        if($key === 'count')
+                        continue;
+                        $vcard->add($vCardKey, $value);
+                    }
+                }
+            }
+            else if($compositeAttrStatus['status'] && !$multiAllowedStatus['status'] && !$parameterStatus['parameter'])  
+            {
+                $isLdapKeyExists = false;
+                $elementArr = [];
+
+                foreach($ldapKey['backend_attribute'] as $backendAttr)
+                {
+                    if(isset($data[strtolower($backendAttr)]))
+                    {
+                        $isLdapKeyExists = true;
+                    }
+                }
+
+                if($isLdapKeyExists == true)
+                {
+                    foreach($compositeAttrStatus['status'] as $propValue)
+                    {
+                        if(isset($ldapKey['backend_attribute'][$propValue]))
+                        {
+                            $newLdapKey = strtolower($ldapKey['backend_attribute'][$propValue]);
+                            if(isset($data[$newLdapKey]))
+                            {
+                                $elementArr[] = $data[$newLdapKey][0];
+                            }
+                        }
+                        else
+                        {
+                            $elementArr[] = '';
+                        }
+                    }
+                    $vcard->add($vCardKey, $elementArr);
+                }
+                
+            }
+            else if(! empty($parameterStatus['parameter']))
+            {
+                foreach($ldapKey as $ldapKeyInfo)
+                {
+                    $newLdapKey = strtolower($ldapKeyInfo['backend_attribute']);
+                    
+                    if(isset($data[$newLdapKey]))
+                    {
+                        
+                        if($multiAllowedStatus['status'])
+                        {
+                            foreach($data[$newLdapKey] as $key => $attrValue)
+                            {
+                                if($key === 'count')
+                                continue;
+                                $backendMapIndex = $ldapKeyInfo['reverse_map_parameter_index'];
+                                if($backendMapIndex !== '')
+                                {
+                                    $paramList = $ldapKeyInfo['parameters'][$backendMapIndex];
+                                    $paramsArr = explode(";", $paramList);
+                                    $vCardParam = [];
+
+                                    foreach($paramsArr as $paramStr)
+                                    {
+                                        $paramStr = str_replace('"', '', $paramStr);
+                                        $paramInfo = explode("=", $paramStr);
+                                        $paramValues = explode(',', $paramInfo[1]);
+                                        
+                                        if(! isset($paramValues[1]))
+                                        {
+                                            $vCardParam[strtolower($paramInfo[0])] = $paramValues[0];
+                                        }
+                                        else
+                                        {
+                                            foreach($paramValues as $paramValue)
+                                            {
+                                                $vCardParam[strtolower($paramInfo[0])][] = $paramValue;
+                                            }
+                                        }
+                                    }
+                                    $vcard->add($vCardKey, $attrValue, $vCardParam);
+                                }
+                                else
+                                {
+                                    $vcard->add($vCardKey, $attrValue); 
+                                }
+                            }
+                        }
+                    }
+                }    
+            }
+            else
+            {
+                $newLdapKey = strtolower($ldapKey['backend_attribute']);
+                if(isset($data[$newLdapKey]))
                 {                   
-                    if($ldapKey == 'jpegphoto') 
+                    if($newLdapKey == 'jpegphoto') 
                     {
                         $vcard->add('PHOTO', base64_encode($data['jpegphoto'][0]), ['type' => 'JPEG', 'encoding' => 'b', 'value' => 'BINARY']);                     
                     }
                     else
                     {
-                        $vcard->add($vcardKey, $data[$ldapKey][0]);                        
+                        $vcard->add($vCardKey, $data[$newLdapKey][0]);                        
                     }                      
-                } 
-                
-            }else{
-
-                if(array_key_exists('multi_allowed', $ldapKey) && $ldapKey['multi_allowed'] == 'true')
-                {
-                    $newLdapKey = strtolower($ldapKey['attr']);
-
-                    if(isset($data[$newLdapKey]))
-                    {
-                        foreach($data[$newLdapKey] as $key => $value)
-                        {
-                            if($key === 'count')
-                            continue;
-
-                            $vcard->add($vcardKey, $value);
-                        }
-                    }
                 }
-                else if(array_key_exists('attr', $ldapKey))
-                {
-                    $elementArr = [];
-                    foreach ($ldapKey['attr'] as $element) {
-                        if(isset($data[strtolower($element)][0]))
-                        {
-                            $elementArr[] = $data[strtolower($element)][0];
-                        }           
-                    }
-                    $vcard->add($vcardKey, $elementArr);
-                }
-
-                if(array_key_exists('type', $ldapKey))
-                {
-                    foreach ($ldapKey['type'] as $vcardIndex => $values) {
-                    foreach ($values as $vcardType => $value) {                   
-                        if( $vcardType!= 'default' && ((is_array($value) && isset($data[strtolower($value['attr'])])) || (!is_array($value) && isset($data[strtolower($value)]))) )
-                            if(is_array($value) && $value['multi_allowed'] == 'true')
-                            {
-                                foreach ($data[strtolower($value['attr'])] as $key => $ldapElement) {
-                                    if($key === 'count')
-                                    continue;
-                                    $vcard->add($vcardKey, $ldapElement, ['type' => [$vcardType, $vcardIndex], 'value' => 'uri']);
-                                }
-                            }
-                            else{
-                                $vcard->add($vcardKey, $data[strtolower($value)][0], ['type' => [$vcardType, $vcardIndex], 'value' => 'uri']);
-                            }  
-                        }
-                    }
-                }
-            }   
+            }
         }
+
         // send the  VCard
         $output = $vcard->serialize();
         return $output;

@@ -54,29 +54,7 @@ $config['card']['addressbook']['ldap']['private'] = [
 	'LDAP_Object_Classes' => ['inetOrgPerson'],
 	'required_fields'     => ['cn', 'sn'],
 	'LDAP_rdn'      			=> 'cn',
-	'fieldmap'      => [
-		// vCard    => LDAP
-    'FN'            => 'cn',
-    'N'							=> ['attr' => [ 0 => 'sn', 1 => 'givenName', 2 => '', 3 => '', 4 => '' ]],
-		'EMAIL'         => ['multi_allowed' => true, 'attr' => 'mail'],
-		'ORG'         	=> ['attr' => [ 0 => 'o', 1 => 'organizationalUnitName']],
-    'TITLE'         => 'title',
-    'NICKNAME'      => 'displayName',
-		'PHOTO'         => 'jpegphoto',
-    'NOTE'        	=> 'description',
-    'TEL'						=> [ 'type' => [
-                                    'voice' => ['home' => 'homePhone',
-                                                'work' => 'telephoneNumber',
-                                                'default' => 'telephoneNumber',
-                                                ], 
-                                    'cell' => [
-                                                'home' => ['multi_allowed' => true, 'attr' => 'mobile'],
-                                                'default' => 'mobile',
-                                                ]
-                                  ]
-                        ],
-	],
-  'fieldmapDemo'      => [
+  'fieldmap'      => [
 		// vCard    => LDAP
     'FN'            => ['parameters' => [], 
                         'backend_attribute' => 'cn',
@@ -88,7 +66,7 @@ $config['card']['addressbook']['ldap']['private'] = [
                         'backend_attribute' => 'mail',
                           'reverse_map_parameter_index' => ''],
 		'ORG'         	=> ['parameters' => [], 
-                        'backend_attribute' => [ 'org_name' => 'o', 'org_unit_name' => 'organizationalUnitName'],
+                        'backend_attribute' => [ 'org_name' => 'o', 'org_unit_name' => 'ou'],
                         'reverse_map_parameter_index' => ''],
     'TITLE'         => ['parameters' => [], 
                         'backend_attribute' => 'title',
@@ -103,7 +81,7 @@ $config['card']['addressbook']['ldap']['private'] = [
                         'backend_attribute' => 'description',
                           'reverse_map_parameter_index' => ''],
     'TEL'						=> [['backend_attribute' => 'homePhone',
-                          'parameters' => [ 'VALUE=text;PREF=1;TYPE="voice,home"',
+                          'parameters' => [ 'TYPE="voice,home";VALUE=uri',
                                             'TYPE=home;VALUE=TEXT',
                                               'TYPE="voice,home"',
                                               'PREF=1',
@@ -111,10 +89,9 @@ $config['card']['addressbook']['ldap']['private'] = [
                                           ],                    
                           'reverse_map_parameter_index' => 0 ],
                           ['backend_attribute' => 'telephoneNumber',
-                          'parameters' => [ 'VALUE=text;PREF=1;TYPE="voice,work"',
+                          'parameters' => [ 'VALUE=uri;TYPE="voice,work"',
                                             'TYPE=work;VALUE=TEXT',
-                                              'TYPE="voice,work"',
-                                              null
+                                              'TYPE="voice,work"'
                                           ],                    
                           'reverse_map_parameter_index' => 0 ],
                         ['backend_attribute' => 'homePhoneUri',
