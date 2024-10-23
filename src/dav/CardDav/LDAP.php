@@ -527,7 +527,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                                 }
                                 if($allParamsValuesMatch == true)
                                 {
-                                    $ldapInfo[$newLdapKey][] = (string)$vcard->$vCardKey;
+                                    $ldapInfo[$newLdapKey] = (string)$vcard->$vCardKey;
                                     $vCardParamListsMatch = true;
                                     break;
                                 }
@@ -544,7 +544,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                                 $newLdapKey = strtolower($ldapKeyInfo['backend_attribute']);
                                 if(in_array(null, $ldapKeyInfo['parameters']))
                                 {
-                                    $ldapInfo[$newLdapKey][] = (string)$vcard->$vCardKey;
+                                    $ldapInfo[$newLdapKey] = (string)$vcard->$vCardKey;
                                     break;
                                 }
                             }
@@ -852,7 +852,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                                 }
                                 if($allParamsValuesMatch == true)
                                 {
-                                    $ldapInfo[$newLdapKey][] = (string)$vcard->$vCardKey;
+                                    $ldapInfo[$newLdapKey] = (string)$vcard->$vCardKey;
                                     $vCardParamListsMatch = true;
                                     break;
                                 }
@@ -869,7 +869,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                                 $newLdapKey = strtolower($ldapKeyInfo['backend_attribute']);
                                 if(in_array(null, $ldapKeyInfo['parameters']))
                                 {
-                                    $ldapInfo[$newLdapKey][] = (string)$vcard->$vCardKey;
+                                    $ldapInfo[$newLdapKey] = (string)$vcard->$vCardKey;
                                     break;
                                 }
                             }
