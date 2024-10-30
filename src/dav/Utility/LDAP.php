@@ -67,8 +67,8 @@ class LDAP {
         return $data;
     }
 
-    public static function replace_placeholders($string, $values = []){
-
+    public static function replace_placeholders($string, $values = [])
+    {
         foreach(self::$allowed_placeholders as $placeholder => $value)
         {
             preg_match('/('.$placeholder.')/', $string, $matches, PREG_OFFSET_CAPTURE);
@@ -86,6 +86,104 @@ class LDAP {
         }
         
         return $string;
+    }
+
+    public static function getVCardAttrParams($vCardKey, $params)
+    {
+        $vCardParamsInfo = [];
+
+        foreach($params as $vCardParam)
+        {
+            if ($param = $vCardKey[$vCardParam]) {
+                foreach($param as $value) {
+                  $vCardParamsInfo[$vCardParam][] = $value;
+                }
+            }
+        }
+
+        return $vCardParamsInfo;
+    }
+
+    public static function isVcardParamsMatch($ldapKey, $vCardParams)
+    {
+        foreach($ldapKey as $ldapKeyInfo)
+        {
+            $newLdapKey = $ldapKeyInfo['backend_attribute'];
+            
+            foreach($ldapKeyInfo['parameters'] as $ParamList)
+            {
+                if($ParamList == null)
+                {
+                    continue;
+                }
+                
+                $ParamsArray = explode(";", $ParamList);
+                $allParamsValuesMatch = true;
+                
+                foreach($ParamsArray as $paramStr)
+                {
+                    $paramStr = str_replace('"', '', $paramStr);
+                    $paramInfo = explode("=", $paramStr);
+                    if(! array_key_exists($paramInfo[0], $vCardParams))
+                    {
+                        $allParamsValuesMatch = false;
+                        break;
+                    }
+                    
+                    $paramValues = explode(',', $paramInfo[1]);
+                    foreach($paramValues as $paramValue)
+                    {
+                        if(! in_array($paramValue, $vCardParams[$paramInfo[0]]))
+                        {
+                            $allParamsValuesMatch = false;
+                        }
+                    }
+                    if($allParamsValuesMatch == false)
+                    {
+                        break;
+                    }
+                    
+                }
+
+                if($allParamsValuesMatch == true)
+                {
+                    return (['status' => true, 'backend_attribute' => $newLdapKey ]);
+                }
+            }
+        }
+
+        return (['status' => false, 'backend_attribute' => '' ]);
+    }
+
+    public static function reverse_map_vCard_params($params, $backendMapIndex)
+    {
+        $vCardParams = [];
+        if($backendMapIndex !== '')
+        {
+            $paramList = $params[$backendMapIndex];
+            $paramsArr = explode(";", $paramList);
+            
+            foreach($paramsArr as $paramStr)
+            {
+                $paramStr = str_replace('"', '', $paramStr);
+                $paramInfo = explode("=", $paramStr);
+                $paramValues = explode(',', $paramInfo[1]);
+                
+                if(! isset($paramValues[1]))
+                {
+                    $vCardParams[strtolower($paramInfo[0])] = $paramValues[0];
+                }
+                else
+                {
+                    foreach($paramValues as $paramValue)
+                    {
+                        $vCardParams[strtolower($paramInfo[0])][] = $paramValue;
+                    }
+                }
+            }
+        }
+
+        return $vCardParams;
     }
 
 }
