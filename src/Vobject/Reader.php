@@ -45,6 +45,10 @@ class Reader extends \Sabre\VObject\Reader{
 
         'TEL' => ['multi_allowed' => true,
                     'composite_attr'=> false,
+                    'parameter' => ['TYPE', 'VALUE']],
+
+        'ADR' => ['multi_allowed' => true,
+                    'composite_attr'=> [ 0 => 'po_box', 1 => 'house_no', 2 => 'street', 3 => 'locality', 4 => 'province', 5 => 'postal_code', 6 => 'country'],
                     'parameter' => ['TYPE', 'VALUE']]
                     
           

@@ -81,7 +81,8 @@ $config['card']['addressbook']['ldap']['private'] = [
                         'backend_attribute' => 'description',
                           'reverse_map_parameter_index' => ''],
     'TEL'						=> [['backend_attribute' => 'homePhone',
-                          'parameters' => [ 'TYPE="voice,home";VALUE=uri',
+                          'parameters' => [ 'VALUE=text;TYPE="voice,home";PREF=1',
+                                            'VALUE=text;PREF=1;TYPE="voice,home"',
                                             'TYPE=home;VALUE=TEXT',
                                               'TYPE="voice,home"',
                                               'PREF=1',
@@ -89,7 +90,8 @@ $config['card']['addressbook']['ldap']['private'] = [
                                           ],                    
                           'reverse_map_parameter_index' => 0 ],
                           ['backend_attribute' => 'telephoneNumber',
-                          'parameters' => [ 'VALUE=uri;TYPE="voice,work"',
+                          'parameters' => [ 'VALUE=text;TYPE="voice,work"',
+                                            'VALUE=text;PREF=1;TYPE="voice,work"',
                                             'TYPE=work;VALUE=TEXT',
                                               'TYPE="voice,work"'
                                           ],                    
@@ -101,6 +103,18 @@ $config['card']['addressbook']['ldap']['private'] = [
                       
                       'reverse_map_parameter_index' => 0
                      ]],
+
+      'ADR' => [['backend_attribute' => ['street' => 'street', 'postal_code' => 'postalCode'],
+                  'parameters' => [ 'VALUE=text;TYPE="home";PREF=1',
+                        'VALUE=text;PREF=1;TYPE="home"',
+                        'TYPE=home;VALUE=TEXT',
+                          'TYPE="home"',
+                          'PREF=1',
+                          null
+                      ],                    
+      'reverse_map_parameter_index' => 0 ]
+
+      ]
                         
 	],
 	'group_LDAP_Object_Classes' => ['groupOfNames'],

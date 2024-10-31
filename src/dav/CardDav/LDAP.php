@@ -996,7 +996,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                     if($compositeAttrStatus['status'])
                     {
                         $isLdapKeyExists = false;
-                        $elementArr = [];
+                        
                         $count = 0;
 
                         foreach($ldapKeyInfo['backend_attribute'] as $backendAttr)
@@ -1016,6 +1016,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                             {
                                 for($i = 0; $i < $count; $i++)
                                 {
+                                    $elementArr = [];
+
                                     foreach($compositeAttrStatus['status'] as $propValue)
                                     {
                                         if(isset($ldapKeyInfo['backend_attribute'][$propValue]))
@@ -1045,6 +1047,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                             }
                             else
                             {
+                                $elementArr = [];
+                                
                                 foreach($compositeAttrStatus['status'] as $propValue)
                                 {
                                     if(isset($ldapKeyInfo['backend_attribute'][$propValue]))
