@@ -1239,6 +1239,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
         if( ($syncToken < $fullSyncTimestamp) &&  ($this->syncToken >= $fullSyncTimestamp))
         {
+            $query = 'DELETE FROM '.$this->deletedCardsTableName.' WHERE addressbook_id = ? and and user_id = ? ';
+            $stmt = $this->pdo->prepare($query);
+            $stmt->execute([$addressBookId, $this->principalUser]);
+            
             return null;
         }    
         
@@ -1390,7 +1394,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $result = [];
         $backendIds = [];
         $cardUris = [];
-        $ts = time();
 
         $filter = '(&'.$config['filter']. '(createtimestamp<=' . gmdate('YmdHis', $this->syncToken) . 'Z))';     
         $attributes = ['*','entryuuid','modifytimestamp'];
@@ -1438,6 +1441,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                     $query = "DELETE FROM `".$this->ldapMapTableName."` WHERE addressbook_id = ? AND backend_id = ? AND user_id = ?"; 
                     $sql = $this->pdo->prepare($query);
                     $sql->execute([$addressBookId, $backendId, $this->principalUser]);
+
+                    $index = array_search($backendId, $backendIds);
+                    $card_uri = $cardUris[$index];
+                    $query = "INSERT INTO `".$this->deletedCardsTableName."` (`addressbook_id`, `card_uri`, `user_id`, `sync_token`) VALUES (?, ?, ?, ?)"; 
+                    $sql = $this->pdo->prepare($query);
+                    $sql->execute([$addressBookId, $card_uri, $this->principalUser, $this->syncToken]);
+
                 }
             }
         }
@@ -1446,6 +1456,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             $query = "DELETE FROM `".$this->ldapMapTableName."` WHERE addressbook_id = ? AND user_id = ?"; 
             $sql = $this->pdo->prepare($query);
             $sql->execute([$addressBookId, $this->principalUser]);
+
+            foreach($cardUris as $cardUri)
+            {
+                $query = "INSERT INTO `".$this->deletedCardsTableName."` (`addressbook_id`, `card_uri`, `user_id`, `sync_token`) VALUES (?, ?, ?, ?)"; 
+                $sql = $this->pdo->prepare($query);
+                $sql->execute([$addressBookId, $cardUri, $this->principalUser, $this->syncToken]);
+            }
         }
 
         return $result;
