@@ -1242,8 +1242,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             $stmt = $this->pdo->prepare($query);
             $stmt->execute([$addressBookId, $this->principalUser]);
            
-            $result['syncToken'] = null;
-            return $result;
+            return null;
         }    
         
 
