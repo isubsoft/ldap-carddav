@@ -1224,7 +1224,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                         $result['added'][] = $cardUri;
                     }
             }
-
             return $result;
         } 
 
@@ -1236,14 +1235,15 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
                 $fullSyncTimestamp = $row['full_sync_ts'];
             }
-
+        
         if( ($syncToken < $fullSyncTimestamp) &&  ($this->syncToken >= $fullSyncTimestamp))
         {
-            $query = 'DELETE FROM '.$this->deletedCardsTableName.' WHERE addressbook_id = ? and and user_id = ? ';
+            $query = 'DELETE FROM '.$this->deletedCardsTableName.' WHERE addressbook_id = ? and user_id = ? ';
             $stmt = $this->pdo->prepare($query);
             $stmt->execute([$addressBookId, $this->principalUser]);
-            
-            return null;
+           
+            $result['syncToken'] = null;
+            return $result;
         }    
         
 
