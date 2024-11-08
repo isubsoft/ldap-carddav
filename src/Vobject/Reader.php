@@ -16,18 +16,18 @@ class Reader extends \Sabre\VObject\Reader{
                     'parameter' => []],
         
         'N' => ['multi_allowed' => false,
-                    'composite_attr'=> [ 0 => 'last_name', 1 => 'first_name', 2 => 'middle_name', 3 => 'prefix', 4 => 'sufix' ],
+                    'composite_attr'=> [ 0 => 'last_name', 1 => 'first_name', 2 => 'middle_name', 3 => 'prefix', 4 => 'suffix' ],
                     'parameter' => []],
 
         'EMAIL' => ['multi_allowed' => true,
                         'composite_attr'=> false,
                         'parameter' => []],
 
-        'ORG' => ['multi_allowed' => false,
+        'ORG' => ['multi_allowed' => true,
                     'composite_attr'=> [ 0 => 'org_name', 1 => 'org_unit_name'],
                     'parameter' => []],
 
-        'TITLE' => ['multi_allowed' => false,
+        'TITLE' => ['multi_allowed' => true,
                         'composite_attr'=> false,
                         'parameter' => []],
 
@@ -35,21 +35,117 @@ class Reader extends \Sabre\VObject\Reader{
                             'composite_attr'=> false,
                             'parameter' => []],
 
-        'PHOTO' => ['multi_allowed' => false,
+        'PHOTO' => ['multi_allowed' => true,
                         'composite_attr'=> false,
                         'parameter' => []],
 
-        'NOTE' => ['multi_allowed' => false,
+        'NOTE' => ['multi_allowed' => true,
                         'composite_attr'=> false,
                         'parameter' => []],
 
         'TEL' => ['multi_allowed' => true,
-                    'composite_attr'=> false,
-                    'parameter' => ['TYPE', 'VALUE']],
+                        'composite_attr'=> false,
+                        'parameter' => ['TYPE', 'VALUE']],
 
         'ADR' => ['multi_allowed' => true,
-                    'composite_attr'=> [ 0 => 'po_box', 1 => 'house_no', 2 => 'street', 3 => 'locality', 4 => 'province', 5 => 'postal_code', 6 => 'country'],
-                    'parameter' => ['TYPE', 'VALUE']]
+                        'composite_attr'=> [ 0 => 'po_box', 1 => 'house_no', 2 => 'street', 3 => 'locality', 4 => 'province', 5 => 'postal_code', 6 => 'country'],
+                        'parameter' => ['TYPE', 'VALUE']],
+
+        'BDAY' => ['multi_allowed' => false,
+                        'composite_attr'=> false,
+                        'parameter' => []],
+
+        'ANNIVERSARY' => ['multi_allowed' => false,
+                                'composite_attr'=> false,
+                                'parameter' => []],
+
+        'GENDER' => ['multi_allowed' => false,
+                            'composite_attr'=> [ 0 => 'sex', '1' => 'gender_identity'],
+                            'parameter' => []],
+
+        'IMPP' => ['multi_allowed' => true,
+                        'composite_attr'=> false,
+                        'parameter' => ['TYPE', 'VALUE']],
+
+        'LANG' => ['multi_allowed' => true,
+                        'composite_attr'=> false,
+                        'parameter' => ['TYPE', 'VALUE']],
+
+        'TZ' => ['multi_allowed' => true,
+                        'composite_attr'=> false,
+                        'parameter' => ['VALUE']],
+
+        'GEO' => ['multi_allowed' => true,
+                        'composite_attr'=> false,
+                        'parameter' => []],
+        
+        'ROLE' => ['multi_allowed' => true,
+                        'composite_attr'=> false,
+                        'parameter' => []],
+
+        'LOGO' => ['multi_allowed' => true,
+                        'composite_attr'=> false,
+                        'parameter' => []],
+
+        'MEMBER' => ['multi_allowed' => true,
+                        'composite_attr'=> false,
+                        'parameter' => []],
+
+        'RELATED' => ['multi_allowed' => true,
+                        'composite_attr'=> false,
+                        'parameter' => ['VALUE']],        
+
+        'BIRTHPLACE' => ['multi_allowed' => false,
+                            'composite_attr'=> false,
+                            'parameter' => ['VALUE', 'LANGUAGE']],
+
+        'DEATHPLACE' => ['multi_allowed' => false,
+                            'composite_attr'=> false,
+                            'parameter' => ['VALUE', 'LANGUAGE']],
+
+        'DEATHDATE' => ['multi_allowed' => false,
+                            'composite_attr'=> false,
+                            'parameter' => ['VALUE', 'CALSCALE', 'LANGUAGE']],
+
+        'EXPERTISE' => ['multi_allowed' => true,
+                        'composite_attr'=> false,
+                        'parameter' => ['LEVEL', 'INDEX']],
+
+        'HOBBY' => ['multi_allowed' => true,
+                        'composite_attr'=> false,
+                        'parameter' => ['LEVEL', 'INDEX']],
+
+        'INTEREST' => ['multi_allowed' => true,
+                            'composite_attr'=> false,
+                            'parameter' => ['LEVEL', 'INDEX']],
+
+        'ORG-DIRECTORY' => ['multi_allowed' => true,
+                                'composite_attr'=> false,
+                                'parameter' => ['PREF', 'INDEX']],
+
+        'CONTACT-URI' => ['multi_allowed' => true,
+                                'composite_attr'=> false,
+                                'parameter' => []],
+
+        'GRAMGENDER' => ['multi_allowed' => true,
+                                'composite_attr'=> false,
+                                'parameter' => ['LANGUAGE']],
+
+        'LANGUAGE' => ['multi_allowed' => false,
+                                'composite_attr'=> false,
+                                'parameter' => []],
+
+        'PRONOUNS' => ['multi_allowed' => true,
+                                'composite_attr'=> false,
+                                'parameter' => ['LANGUAGE', 'PREF', 'TYPE', 'ALTID']],
+
+        'SOCIALPROFILE' => ['multi_allowed' => true,
+                                'composite_attr'=> false,
+                                'parameter' => ['SERVICE-TYPE', 'VALUE']],
+
+        'JSPROP' => ['multi_allowed' => true,
+                                'composite_attr'=> false,
+                                'parameter' => ['JSPTR']]
                     
           
     ];
