@@ -1237,11 +1237,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             }
         
         if( ($syncToken < $fullSyncTimestamp) &&  ($this->syncToken >= $fullSyncTimestamp))
-        {
-            $query = 'DELETE FROM '.$this->deletedCardsTableName.' WHERE addressbook_id = ? and user_id = ? ';
-            $stmt = $this->pdo->prepare($query);
-            $stmt->execute([$addressBookId, $this->principalUser]);
-           
+        {           
             return null;
         }    
         
@@ -1336,6 +1332,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     protected function addChange($addressBookId, $objectUri, $backendId)
     {
+        $this->pdo->beginTransaction();
 
         $query = "DELETE FROM `".$this->ldapMapTableName."` WHERE addressbook_id = ? AND backend_id = ? AND user_id = ?"; 
         $sql = $this->pdo->prepare($query);
@@ -1345,6 +1342,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $query = "INSERT INTO `".$this->deletedCardsTableName."` (`sync_token` ,`addressbook_id` ,`card_uri`, `user_id`) VALUES (?, ?, ?, ?)"; 
         $sql = $this->pdo->prepare($query);
         $sql->execute([time(), $addressBookId, $objectUri, $this->principalUser]);
+
+        $this->pdo->commit();
     }
 
 
@@ -1408,6 +1407,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             $cardUris[] = $row['card_uri'];
         }
 
+        $this->pdo->beginTransaction();
+        
         if( !empty($data) & $data['count'] > 0)
         {
             $uuids = [];
@@ -1463,6 +1464,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                 $sql->execute([$addressBookId, $cardUri, $this->principalUser, $this->syncToken]);
             }
         }
+
+        $this->pdo->commit();
 
         return $result;
     }
