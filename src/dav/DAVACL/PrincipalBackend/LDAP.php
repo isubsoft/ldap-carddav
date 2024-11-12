@@ -124,6 +124,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
     {
         $searchUserId = basename($path);
 <<<<<<< HEAD:src/dav/DAVACL/PrincipalBackend/LDAP.php
+<<<<<<< HEAD:src/dav/DAVACL/PrincipalBackend/LDAP.php
 
         if($this->config['principal']['ldap']['search_bind_dn'] == '' && $this->config['principal']['ldap']['search_bind_pw'] == '')
         {  
@@ -135,6 +136,8 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         $bindPass = $this->config['principal']['ldap']['search_bind_pw'];
         $ldapConn = Utility::LdapBindConnection(['bindDn' => $bindDn, 'bindPass' => $bindPass], $this->config['principal']['ldap']);
 =======
+=======
+>>>>>>> d83ff206afc5e1f9ea5f5681f567b2fcacc12d51:src/DAVACL/PrincipalBackend/LDAP.php
         $ldapConn = $GLOBALS['globalLdapConn'];
 >>>>>>> d83ff20 (Updated - Code optimization):src/DAVACL/PrincipalBackend/LDAP.php
           

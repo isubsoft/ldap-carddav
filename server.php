@@ -16,7 +16,10 @@ $baseUri = '/';
 <<<<<<< HEAD
 =======
 $globalLdapConn = null;
+<<<<<<< HEAD
 >>>>>>> d83ff20 (Updated - Code optimization)
+=======
+>>>>>>> d83ff206afc5e1f9ea5f5681f567b2fcacc12d51
 
 // Autoloader
 require_once 'vendor/autoload.php';
@@ -31,6 +34,7 @@ $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 // Backends
 $authBackend = new isubsoft\dav\Auth\LDAP($config);
 <<<<<<< HEAD
+<<<<<<< HEAD
 $principalBackend = new isubsoft\dav\DAVACL\PrincipalBackend\LDAP($config, $authBackend);
 $carddavBackend = new isubsoft\dav\CardDav\LDAP($config, $pdo, $authBackend);
 
@@ -38,6 +42,10 @@ $carddavBackend = new isubsoft\dav\CardDav\LDAP($config, $pdo, $authBackend);
 $principalBackend = new isubsoft\dav\DAVACL\PrincipalBackend\LDAP($config);
 $carddavBackend = new isubsoft\dav\CardDav\LDAP($config, $pdo);
 >>>>>>> d83ff20 (Updated - Code optimization)
+=======
+$principalBackend = new isubsoft\dav\DAVACL\PrincipalBackend\LDAP($config);
+$carddavBackend = new isubsoft\dav\CardDav\LDAP($config, $pdo);
+>>>>>>> d83ff206afc5e1f9ea5f5681f567b2fcacc12d51
 
 // Setting up the directory tree //
 $nodes = [
