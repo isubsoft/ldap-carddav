@@ -1,2 +1,2 @@
 # ldap-carddav
-Extension of SabreDAV to add LDAP as Authentication and CardDAV backend
+Extension of SabreDAV to add LDAP as Authentication and contacts backend
