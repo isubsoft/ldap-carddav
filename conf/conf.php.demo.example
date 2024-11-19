@@ -120,16 +120,11 @@ $config['card']['addressbook']['ldap']['private'] = [
                                               'PREF=1',
                                               null
                                              ],                    
-                                  'reverse_map_parameter_index' => 0 ]],
-                 
-      'MEMBER'      => [ 'backend_attribute' => 'member',
-                          'parameters' => [],                                  
-                            'reverse_map_parameter_index' => '']
-                        
+                                  'reverse_map_parameter_index' => 0 ]]
 	],
 	'group_LDAP_Object_Classes' => ['groupOfNames'],
 	'group_required_fields'     => ['cn', 'member'],
 	'group_LDAP_rdn'      	    => 'cn',
-	'group_fieldmap'         => [	],
+	'group_member_map'         => [ 'MEMBER'      => [ 'backend_attribute' => 'member' ] ],
 	'scope'         => 'list'   // search mode: sub|base|list
 ];
