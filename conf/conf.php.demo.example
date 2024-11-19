@@ -56,30 +56,38 @@ $config['card']['addressbook']['ldap']['private'] = [
 	'LDAP_rdn'      			=> 'cn',
   'fieldmap'      => [
 		// vCard    => LDAP
-    'FN'            => ['parameters' => [], 
-                        'backend_attribute' => 'cn',
+    'FN'            => ['backend_attribute' => 'cn',
+                          'parameters' => [],
                          'reverse_map_parameter_index' => ''],
-    'N'							=> ['parameters' => [],
-                        'backend_attribute' => [ 'last_name' => 'sn', 'first_name' => 'givenName' ],
+
+    'N'							=> ['backend_attribute' => [ 'last_name' => 'sn', 'first_name' => 'givenName' ],
+                          'parameters' => [],
                           'reverse_map_parameter_index' => ''],
-		'EMAIL'         => ['parameters' => [], 
-                        'backend_attribute' => 'mail',
+
+		'EMAIL'         => ['backend_attribute' => 'mail',
+                          'parameters' => [], 
                           'reverse_map_parameter_index' => ''],
-		'ORG'         	=> ['parameters' => [], 
-                        'backend_attribute' => [ 'org_name' => 'o', 'org_unit_name' => 'ou'],
-                        'reverse_map_parameter_index' => ''],
-    'TITLE'         => ['parameters' => [], 
-                        'backend_attribute' => 'title',
+
+		'ORG'         	=> ['backend_attribute' => [ 'org_name' => 'o', 'org_unit_name' => 'ou'],
+                          'parameters' => [], 
                           'reverse_map_parameter_index' => ''],
-    'NICKNAME'      => ['parameters' => [], 
-                        'backend_attribute' => 'displayName',
-                        'reverse_map_parameter_index' => ''],
-		'PHOTO'         => ['parameters' => [], 
-                        'backend_attribute' => 'jpegphoto',
+
+    'TITLE'         => ['backend_attribute' => 'title',
+                          'parameters' => [], 
                           'reverse_map_parameter_index' => ''],
-    'NOTE'        	=> ['parameters' => [], 
-                        'backend_attribute' => 'description',
+
+    'NICKNAME'      => ['backend_attribute' => 'displayName',
+                          'parameters' => [],  
                           'reverse_map_parameter_index' => ''],
+
+		'PHOTO'         => ['backend_attribute' => 'jpegphoto',
+                          'parameters' => [],
+                          'reverse_map_parameter_index' => ''],
+
+    'NOTE'        	=> ['backend_attribute' => 'description',
+                        'parameters' => [],                     
+                          'reverse_map_parameter_index' => ''],
+
     'TEL'						=> [['backend_attribute' => 'homePhone',
                           'parameters' => [ 'VALUE=text;TYPE="voice,home";PREF=1',
                                             'VALUE=text;PREF=1;TYPE="voice,home"',
@@ -93,7 +101,8 @@ $config['card']['addressbook']['ldap']['private'] = [
                           'parameters' => [ 'VALUE=text;TYPE="voice,work"',
                                             'VALUE=text;PREF=1;TYPE="voice,work"',
                                             'TYPE=work;VALUE=TEXT',
-                                              'TYPE="voice,work"'
+                                              'TYPE="voice,work"',
+                                              'TYPE="work"',
                                           ],                    
                           'reverse_map_parameter_index' => 0 ],
                         ['backend_attribute' => 'homePhoneUri',
@@ -101,27 +110,26 @@ $config['card']['addressbook']['ldap']['private'] = [
                                             'TYPE="voice,home"',
                                       ],
                       
-                      'reverse_map_parameter_index' => 0
-                     ]],
-
-      'ADR' => [['backend_attribute' => ['street' => 'street', 'postal_code' => 'postalCode'],
-                  'parameters' => [ 'VALUE=text;TYPE="home";PREF=1',
-                        'VALUE=text;PREF=1;TYPE="home"',
-                        'TYPE=home;VALUE=TEXT',
-                          'TYPE="home"',
-                          'PREF=1',
-                          null
-                      ],                    
-      'reverse_map_parameter_index' => 0 ]
-
-      ]
+                      'reverse_map_parameter_index' => 0]],
+                     
+      'ADR'         => [['backend_attribute' => ['street' => 'street', 'postal_code' => 'postalCode'],
+                          'parameters' => [ 'VALUE=text;TYPE="home";PREF=1',
+                                            'VALUE=text;PREF=1;TYPE="home"',
+                                            'TYPE=home;VALUE=TEXT',
+                                              'TYPE="home"',
+                                              'PREF=1',
+                                              null
+                                             ],                    
+                                  'reverse_map_parameter_index' => 0 ]],
+                 
+      'MEMBER'      => [ 'backend_attribute' => 'member',
+                          'parameters' => [],                                  
+                            'reverse_map_parameter_index' => '']
                         
 	],
 	'group_LDAP_Object_Classes' => ['groupOfNames'],
 	'group_required_fields'     => ['cn', 'member'],
 	'group_LDAP_rdn'      	    => 'cn',
-	'group_fieldmap'         => [	'FN'            => 'cn',
-					'MEMBER' => 'member'
-				    ],
+	'group_fieldmap'         => [	],
 	'scope'         => 'list'   // search mode: sub|base|list
 ];

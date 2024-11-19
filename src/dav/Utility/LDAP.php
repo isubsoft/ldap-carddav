@@ -96,7 +96,7 @@ class LDAP {
         {
             if ($param = $vCardKey[$vCardParam]) {
                 foreach($param as $value) {
-                  $vCardParamsInfo[$vCardParam][] = $value;
+                  $vCardParamsInfo[$vCardParam][] = strtoupper($value);
                 }
             }
         }
@@ -133,7 +133,7 @@ class LDAP {
                     $paramValues = explode(',', $paramInfo[1]);
                     foreach($paramValues as $paramValue)
                     {
-                        if(! in_array($paramValue, $vCardParams[$paramInfo[0]]))
+                        if(! in_array(strtoupper($paramValue), $vCardParams[$paramInfo[0]]))
                         {
                             $allParamsValuesMatch = false;
                         }
