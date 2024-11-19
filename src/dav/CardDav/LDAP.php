@@ -339,32 +339,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                     $newLdapKey = strtolower($ldapKey['backend_attribute']);
                     foreach($vcard->$vCardKey as $values)
                     {
-                        if($vCardKey == 'MEMBER')
-                        {
-                            $memberUriArr = explode(':', (string)$values);
-                            if(strtolower($memberUriArr[1]) == 'uuid')
-                            {
-                                $memberCardUri = $memberUriArr[2];
-                                $query = 'SELECT backend_id FROM '.$this->ldapMapTableName.' WHERE addressbook_id = ? and card_uri = ? and user_id = ?';
-                                $stmt = $this->pdo->prepare($query);
-                                $stmt->execute([$addressBookId, $memberCardUri, $this->principalUser]);
-                                
-                                while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-                                    $backendId = $row['backend_id'];
-                                }
-                                $filter = '(&'.$addressBookConfig['filter']. '(entryuuid=' .$backendId. '))'; 
-                            
-                                $data = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, [], strtolower($addressBookConfig['scope']));
-                                if( !empty($data) && $data['count'] > 0)
-                                {
-                                    $ldapInfo[$newLdapKey][] = $data[0]['dn'];
-                                }
-                            }                          
-                        }
-                        else
-                        {
-                            $ldapInfo[$newLdapKey][] = (string)$values;
-                        }                           
+                        $ldapInfo[$newLdapKey][] = (string)$values;             
                     }
                 }
                 else if($compositeAttrStatus['status']  && !$parameterStatus['parameter'])  
@@ -533,6 +508,39 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         if( isset($vcard->KIND) && (strtolower((string)$vcard->KIND) === 'group'))
         {
             $ldapInfo['objectclass']  = $addressBookConfig['group_LDAP_Object_Classes'];
+
+            foreach($addressBookConfig['group_member_map'] as $vCardKey => $ldapKey) 
+            {
+                $multiAllowedStatus = Reader::multi_allowed_status($vCardKey);
+                $compositeAttrStatus = Reader::composite_attr_status($vCardKey);
+
+                if(isset($vcard->$vCardKey) && $multiAllowedStatus['status'] && !$compositeAttrStatus['status'] )
+                {
+                    $newLdapKey = strtolower($ldapKey['backend_attribute']);
+                    foreach($vcard->$vCardKey as $values)
+                    {
+                        $memberUriArr = explode(':', (string)$values);
+                        if(strtolower($memberUriArr[1]) == 'uuid')
+                        {
+                            $memberCardUri = $memberUriArr[2];
+                            $query = 'SELECT backend_id FROM '.$this->ldapMapTableName.' WHERE addressbook_id = ? and card_uri = ? and user_id = ?';
+                            $stmt = $this->pdo->prepare($query);
+                            $stmt->execute([$addressBookId, $memberCardUri, $this->principalUser]);
+                            
+                            while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+                                $backendId = $row['backend_id'];
+                            }
+                            $filter = '(&'.$addressBookConfig['filter']. '(entryuuid=' .$backendId. '))'; 
+                        
+                            $data = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, [], strtolower($addressBookConfig['scope']));
+                            if( !empty($data) && $data['count'] > 0)
+                            {
+                                $ldapInfo[$newLdapKey][] = $data[0]['dn'];
+                            }
+                        }             
+                    }
+                }
+            }
 
             foreach ($addressBookConfig['group_required_fields'] as $key) {
                 if(! array_key_exists($key, $ldapInfo))
@@ -645,32 +653,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                     $newLdapKey = strtolower($ldapKey['backend_attribute']);
                     foreach($vcard->$vCardKey as $values)
                     {
-                        if($vCardKey == 'MEMBER')
-                        {
-                            $memberUriArr = explode(':', (string)$values);
-                            if(strtolower($memberUriArr[1]) == 'uuid')
-                            {
-                                $memberCardUri = $memberUriArr[2];
-                                $query = 'SELECT backend_id FROM '.$this->ldapMapTableName.' WHERE addressbook_id = ? and card_uri = ? and user_id = ?';
-                                $stmt = $this->pdo->prepare($query);
-                                $stmt->execute([$addressBookId, $memberCardUri, $this->principalUser]);
-                                
-                                while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-                                    $backendId = $row['backend_id'];
-                                }
-                                $filter = '(&'.$addressBookConfig['filter']. '(entryuuid=' .$backendId. '))'; 
-                            
-                                $data = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, [], strtolower($addressBookConfig['scope']));
-                                if( !empty($data) && $data['count'] > 0)
-                                {
-                                    $ldapInfo[$newLdapKey][] = $data[0]['dn'];
-                                }
-                            }                          
-                        }
-                        else
-                        {
-                            $ldapInfo[$newLdapKey][] = (string)$values;
-                        }
+                        $ldapInfo[$newLdapKey][] = (string)$values;
                     }
                 }
                 else if($compositeAttrStatus['status']  && !$parameterStatus['parameter'])  
@@ -840,6 +823,39 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         if( isset($vcard->KIND) && (strtolower((string)$vcard->KIND) === 'group'))
         {
             $ldapInfo['objectclass']  = $addressBookConfig['group_LDAP_Object_Classes'];
+
+            foreach($addressBookConfig['group_member_map'] as $vCardKey => $ldapKey) 
+            {
+                $multiAllowedStatus = Reader::multi_allowed_status($vCardKey);
+                $compositeAttrStatus = Reader::composite_attr_status($vCardKey);
+
+                if(isset($vcard->$vCardKey) && $multiAllowedStatus['status'] && !$compositeAttrStatus['status'] )
+                {
+                    $newLdapKey = strtolower($ldapKey['backend_attribute']);
+                    foreach($vcard->$vCardKey as $values)
+                    {
+                        $memberUriArr = explode(':', (string)$values);
+                        if(strtolower($memberUriArr[1]) == 'uuid')
+                        {
+                            $memberCardUri = $memberUriArr[2];
+                            $query = 'SELECT backend_id FROM '.$this->ldapMapTableName.' WHERE addressbook_id = ? and card_uri = ? and user_id = ?';
+                            $stmt = $this->pdo->prepare($query);
+                            $stmt->execute([$addressBookId, $memberCardUri, $this->principalUser]);
+                            
+                            while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+                                $backendId = $row['backend_id'];
+                            }
+                            $filter = '(&'.$addressBookConfig['filter']. '(entryuuid=' .$backendId. '))'; 
+                        
+                            $data = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, [], strtolower($addressBookConfig['scope']));
+                            if( !empty($data) && $data['count'] > 0)
+                            {
+                                $ldapInfo[$newLdapKey][] = $data[0]['dn'];
+                            }
+                        }             
+                    }
+                }
+            }
 
             foreach ($addressBookConfig['group_required_fields'] as $key) {
                 if(! array_key_exists($key, $ldapInfo))
@@ -983,6 +999,38 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         if($data['objectclass'][0] === $addressBookConfig['group_LDAP_Object_Classes'][0])
         {
             $vcard->add('KIND', 'group');       
+
+            foreach ($addressBookConfig['group_member_map'] as $vCardKey => $ldapKey) 
+            {
+                $multiAllowedStatus = Reader::multi_allowed_status($vCardKey);
+                $compositeAttrStatus = Reader::composite_attr_status($vCardKey);
+
+                if($multiAllowedStatus['status'] && !$compositeAttrStatus['status'] )
+                {
+                    $newLdapKey = strtolower($ldapKey['backend_attribute']);
+                    if(isset($data[$newLdapKey]))
+                    {
+                        foreach($data[$newLdapKey] as $key => $value)
+                        {
+                            if($key === 'count')
+                            continue;
+
+                            $result = ldap_read($ldapConn, $value, $addressBookConfig['filter'], ['entryuuid']);
+                            $memberData = ldap_get_entries($ldapConn, $result);                       
+                            if(! empty($memberData) && $memberData['count'] > 0)
+                            { 
+                                $query = 'SELECT card_uri FROM '.$this->ldapMapTableName.' WHERE addressbook_id = ? and backend_id = ? and user_id = ?';
+                                $stmt = $this->pdo->prepare($query);
+                                $stmt->execute([$addressBookId, $memberData[0]['entryuuid'][0], $this->principalUser]);
+                                while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+                                    $clientUID = $row['card_uri'];
+                                }
+                                $vcard->add($vCardKey, 'urn:uuid:'.$clientUID);
+                            }
+                        }
+                    }
+                }
+            }
         }
       
 
@@ -1002,37 +1050,15 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                         if($key === 'count')
                         continue;
 
-                        if($newLdapKey == 'member')
-                        {
-                            $result = ldap_read($ldapConn, $value, $addressBookConfig['filter'], ['entryuuid']);
-                            $memberData = ldap_get_entries($ldapConn, $result);                       
-                            
-                            if(! empty($memberData) && $memberData['count'] > 0)
-                            { 
-                                $query = 'SELECT card_uri FROM '.$this->ldapMapTableName.' WHERE addressbook_id = ? and backend_id = ? and user_id = ?';
-                                $stmt = $this->pdo->prepare($query);
-                                $stmt->execute([$addressBookId, $memberData[0]['entryuuid'][0], $this->principalUser]);
-                                
-                                while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-                                    $clientUID = $row['card_uri'];
-                                }
-                                
-                                $vcard->add($vCardKey, 'urn:uuid:'.$clientUID);
-                            }
+                        $vCardParams = Utility::reverse_map_vCard_params($ldapKey['parameters'], $ldapKey['reverse_map_parameter_index']);
+                        if(!empty($vCardParams))
+                        {   
+                            $vcard->add($vCardKey, $value, $vCardParams);
                         }
                         else
                         {
-                            $vCardParams = Utility::reverse_map_vCard_params($ldapKey['parameters'], $ldapKey['reverse_map_parameter_index']);
-                            if(!empty($vCardParams))
-                            {   
-                                $vcard->add($vCardKey, $value, $vCardParams);
-                            }
-                            else
-                            {
-                                $vcard->add($vCardKey, $value); 
-                            }
+                            $vcard->add($vCardKey, $value); 
                         }
-                        
                     }
                 }
             }
