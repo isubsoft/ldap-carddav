@@ -520,7 +520,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                     foreach($vcard->$vCardKey as $values)
                     {
                         $memberUriArr = explode(':', (string)$values);
-                        if(strtolower($memberUriArr[1]) == 'uuid')
+                        if(strtolower($memberUriArr[0]) == 'urn' && strtolower($memberUriArr[1]) == 'uuid')
                         {
                             $memberCardUri = $memberUriArr[2];
                             $query = 'SELECT backend_id FROM '.$this->ldapMapTableName.' WHERE addressbook_id = ? and card_uri = ? and user_id = ?';
@@ -835,7 +835,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                     foreach($vcard->$vCardKey as $values)
                     {
                         $memberUriArr = explode(':', (string)$values);
-                        if(strtolower($memberUriArr[1]) == 'uuid')
+                        if(strtolower($memberUriArr[0]) == 'urn' && strtolower($memberUriArr[1]) == 'uuid')
                         {
                             $memberCardUri = $memberUriArr[2];
                             $query = 'SELECT backend_id FROM '.$this->ldapMapTableName.' WHERE addressbook_id = ? and card_uri = ? and user_id = ?';
