@@ -12,6 +12,7 @@ CREATE TABLE cards_backend_map
 	user_id VARCHAR(255) NOT NULL,
 	addressbook_id  VARCHAR(255) NOT NULL,
 	card_uri VARCHAR(255) NOT NULL UNIQUE,
+	card_uid VARCHAR(255) NOT NULL UNIQUE,
 	backend_id VARCHAR(255) NOT NULL 
 	
 );
