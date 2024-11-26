@@ -3,7 +3,7 @@ CREATE TABLE cards_deleted
 	user_id VARCHAR(255) NOT NULL,
 	addressbook_id  VARCHAR(255) NOT NULL,
 	sync_token BIGINT NOT NULL,
-	card_uri VARCHAR(255) NOT NULL UNIQUE
+	card_uri VARCHAR(255) NOT NULL
 );
 CREATE INDEX idx01 ON cards_deleted (sync_token, addressbook_id);
 
