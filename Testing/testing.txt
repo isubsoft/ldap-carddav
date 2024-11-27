@@ -367,3 +367,272 @@ RESPONSE -
 HTTP/1.1 204 No Content
 
 -----------------------------------------------------------------------------------
+
+11. Get First Sync Token
+
+REQUEST - 
+curl -u <username>:<password> --location --request PROPFIND 'http://10.2.0.151/addressbooks/users/avijit/private' \
+--header 'Content-Type: application/xml' \
+--header 'Accept-Charset: utf-8' \
+--header 'Depth: 0' \
+--data '<d:propfind xmlns:d="DAV:" xmlns:cs="http://calendarserver.org/ns/">
+  <d:prop>
+     <d:displayname />
+     <cs:getctag />
+     <d:sync-token />
+  </d:prop>
+</d:propfind>'
+
+RESPONSE - 
+<?xml version="1.0"?>
+<d:multistatus xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns" xmlns:card="urn:ietf:params:xml:ns:carddav">
+    <d:response>
+        <d:href>/addressbooks/users/avijit/private/</d:href>
+        <d:propstat>
+            <d:prop>
+                <d:displayname>Personal Address Book</d:displayname>
+                <x1:getctag xmlns:x1="http://calendarserver.org/ns/">1710082014</x1:getctag>
+            </d:prop>
+            <d:status>HTTP/1.1 200 OK</d:status>
+        </d:propstat>
+        <d:propstat>
+            <d:prop>
+                <d:sync-token/>
+            </d:prop>
+            <d:status>HTTP/1.1 404 Not Found</d:status>
+        </d:propstat>
+    </d:response>
+</d:multistatus>
+
+--------------------------------------------------------------------------------
+
+12. Get changes for addressbook
+
+REQUEST - 
+curl -u <username>:<password> --location --request REPORT 'http://10.2.0.151/addressbooks/users/dummy/private' \
+--header 'Content-Type: application/xml' \
+--header 'Accept-Charset: utf-8' \
+--header 'Depth: 0' \
+--data '<?xml version="1.0" encoding="utf-8" ?>
+<d:sync-collection xmlns:d="DAV:">
+  <d:sync-token>http://sabre.io/ns/sync/1712902268</d:sync-token>
+  <d:sync-level>1</d:sync-level>
+  <d:prop>
+    <d:getetag/>
+  </d:prop>
+</d:sync-collection>'
+
+RESPONSE - 
+<?xml version="1.0"?>
+<d:multistatus xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns" xmlns:card="urn:ietf:params:xml:ns:carddav">
+    <d:response>
+        <d:href>/addressbooks/users/avijit/private/1cac5d58-40d9-103f-8275-8bd0ecb8cf28.vcf</d:href>
+        <d:propstat>
+            <d:prop>
+                <d:getetag>&quot;3cd7580b51461ba927ce376ca670abf6&quot;</d:getetag>
+            </d:prop>
+            <d:status>HTTP/1.1 200 OK</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:href>/addressbooks/users/avijit/private/0922cb08-40e5-103f-8276-8bd0ecb8cf28.vcf</d:href>
+        <d:propstat>
+            <d:prop>
+                <d:getetag>&quot;ae5dc9ca2ab7529668255f89cc9e9e17&quot;</d:getetag>
+            </d:prop>
+            <d:status>HTTP/1.1 200 OK</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:href>/addressbooks/users/avijit/private/1a0e3ec0-4040-103f-826c-8bd0ecb8cf28.vcf</d:href>
+        <d:propstat>
+            <d:prop>
+                <d:getetag>&quot;983938680a4344abe210c54893f3604a&quot;</d:getetag>
+            </d:prop>
+            <d:status>HTTP/1.1 200 OK</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:href>/addressbooks/users/avijit/private/1a07fd8a-4040-103f-8269-8bd0ecb8cf28.vcf</d:href>
+        <d:propstat>
+            <d:prop>
+                <d:getetag>&quot;7b0598eccec1b9d63f9ce63e9c1dc598&quot;</d:getetag>
+            </d:prop>
+            <d:status>HTTP/1.1 200 OK</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:href>/addressbooks/users/avijit/private/1a0898e4-4040-103f-826a-8bd0ecb8cf28.vcf</d:href>
+        <d:propstat>
+            <d:prop>
+                <d:getetag>&quot;b6ed1a6a5d4c17fea33396a7deb1c91c&quot;</d:getetag>
+            </d:prop>
+            <d:status>HTTP/1.1 200 OK</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:href>/addressbooks/users/avijit/private/1a0958ba-4040-103f-826b-8bd0ecb8cf28.vcf</d:href>
+        <d:propstat>
+            <d:prop>
+                <d:getetag>&quot;3873e20c0847d0bd13ad36fdf2cc1c3a&quot;</d:getetag>
+            </d:prop>
+            <d:status>HTTP/1.1 200 OK</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:href>/addressbooks/users/avijit/private/3e92bece-4040-103f-826d-8bd0ecb8cf28.vcf</d:href>
+        <d:propstat>
+            <d:prop>
+                <d:getetag>&quot;33eb1779d766ff4feed2f3a87ee08f00&quot;</d:getetag>
+            </d:prop>
+            <d:status>HTTP/1.1 200 OK</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:status>HTTP/1.1 404 Not Found</d:status>
+        <d:href>/addressbooks/users/avijit/private/d65c6aba-7a76-4cda-b368-c95f4f63795e.vcf</d:href>
+        <d:propstat>
+            <d:prop/>
+            <d:status>HTTP/1.1 418 I'm a teapot</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:status>HTTP/1.1 404 Not Found</d:status>
+        <d:href>/addressbooks/users/avijit/private/dcd12c39-cbf1-447c-aef5-236ff2962ae2.vcf</d:href>
+        <d:propstat>
+            <d:prop/>
+            <d:status>HTTP/1.1 418 I'm a teapot</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:status>HTTP/1.1 404 Not Found</d:status>
+        <d:href>/addressbooks/users/avijit/private/ac48a66c-6885-4464-ba8b-3b038bb4e399.vcf</d:href>
+        <d:propstat>
+            <d:prop/>
+            <d:status>HTTP/1.1 418 I'm a teapot</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:status>HTTP/1.1 404 Not Found</d:status>
+        <d:href>/addressbooks/users/avijit/private/16de115a-b4b8-4641-96a9-e4b552a2720b.vcf</d:href>
+        <d:propstat>
+            <d:prop/>
+            <d:status>HTTP/1.1 418 I'm a teapot</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:status>HTTP/1.1 404 Not Found</d:status>
+        <d:href>/addressbooks/users/avijit/private/3f8738f8-f45e-40c8-a4eb-6989736cb91a.vcf</d:href>
+        <d:propstat>
+            <d:prop/>
+            <d:status>HTTP/1.1 418 I'm a teapot</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:status>HTTP/1.1 404 Not Found</d:status>
+        <d:href>/addressbooks/users/avijit/private/3e70b882-2a75-103f-819c-8bd0ecb8cf28.vcf</d:href>
+        <d:propstat>
+            <d:prop/>
+            <d:status>HTTP/1.1 418 I'm a teapot</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:status>HTTP/1.1 404 Not Found</d:status>
+        <d:href>/addressbooks/users/avijit/private/1dde12e0-23ea-103f-8197-8bd0ecb8cf28.vcf</d:href>
+        <d:propstat>
+            <d:prop/>
+            <d:status>HTTP/1.1 418 I'm a teapot</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:status>HTTP/1.1 404 Not Found</d:status>
+        <d:href>/addressbooks/users/avijit/private/58ee682d-aa74-47b8-b821-68cd4cea39ab.vcf</d:href>
+        <d:propstat>
+            <d:prop/>
+            <d:status>HTTP/1.1 418 I'm a teapot</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:status>HTTP/1.1 404 Not Found</d:status>
+        <d:href>/addressbooks/users/avijit/private/6fd92204-0e36-4705-a121-18ca2676c4f4.vcf</d:href>
+        <d:propstat>
+            <d:prop/>
+            <d:status>HTTP/1.1 418 I'm a teapot</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:status>HTTP/1.1 404 Not Found</d:status>
+        <d:href>/addressbooks/users/avijit/private/4965c01c-3afb-4540-af38-caf13b8c7287.vcf</d:href>
+        <d:propstat>
+            <d:prop/>
+            <d:status>HTTP/1.1 418 I'm a teapot</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:status>HTTP/1.1 404 Not Found</d:status>
+        <d:href>/addressbooks/users/avijit/private/eff2d9c5-9abb-4735-9cb6-2b95a9656eaf.vcf</d:href>
+        <d:propstat>
+            <d:prop/>
+            <d:status>HTTP/1.1 418 I'm a teapot</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:status>HTTP/1.1 404 Not Found</d:status>
+        <d:href>/addressbooks/users/avijit/private/1cac5d58-40d9-103f-8275-8bd0ecb8cf28.vcf</d:href>
+        <d:propstat>
+            <d:prop/>
+            <d:status>HTTP/1.1 418 I'm a teapot</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:status>HTTP/1.1 404 Not Found</d:status>
+        <d:href>/addressbooks/users/avijit/private/0922cb08-40e5-103f-8276-8bd0ecb8cf28.vcf</d:href>
+        <d:propstat>
+            <d:prop/>
+            <d:status>HTTP/1.1 418 I'm a teapot</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:status>HTTP/1.1 404 Not Found</d:status>
+        <d:href>/addressbooks/users/avijit/private/1a0e3ec0-4040-103f-826c-8bd0ecb8cf28.vcf</d:href>
+        <d:propstat>
+            <d:prop/>
+            <d:status>HTTP/1.1 418 I'm a teapot</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:status>HTTP/1.1 404 Not Found</d:status>
+        <d:href>/addressbooks/users/avijit/private/1a07fd8a-4040-103f-8269-8bd0ecb8cf28.vcf</d:href>
+        <d:propstat>
+            <d:prop/>
+            <d:status>HTTP/1.1 418 I'm a teapot</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:status>HTTP/1.1 404 Not Found</d:status>
+        <d:href>/addressbooks/users/avijit/private/1a0898e4-4040-103f-826a-8bd0ecb8cf28.vcf</d:href>
+        <d:propstat>
+            <d:prop/>
+            <d:status>HTTP/1.1 418 I'm a teapot</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:status>HTTP/1.1 404 Not Found</d:status>
+        <d:href>/addressbooks/users/avijit/private/1a0958ba-4040-103f-826b-8bd0ecb8cf28.vcf</d:href>
+        <d:propstat>
+            <d:prop/>
+            <d:status>HTTP/1.1 418 I'm a teapot</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:status>HTTP/1.1 404 Not Found</d:status>
+        <d:href>/addressbooks/users/avijit/private/3e92bece-4040-103f-826d-8bd0ecb8cf28.vcf</d:href>
+        <d:propstat>
+            <d:prop/>
+            <d:status>HTTP/1.1 418 I'm a teapot</d:status>
+        </d:propstat>
+    </d:response>
+    <d:sync-token>http://sabre.io/ns/sync/1732719190</d:sync-token>
+</d:multistatus>
+
+
