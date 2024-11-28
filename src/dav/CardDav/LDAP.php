@@ -131,7 +131,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                 $this->addressbook[$addressbookId]['config'] = $configParams;
                 $this->addressbook[$addressbookId]['addressbookDn'] = $addressBookDn;
         }
-        
+
         return $addressBooks;
     }
 
@@ -1359,12 +1359,17 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $addressBookConfig = $this->addressbook[$addressBookId]['config'];
         $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
         $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
+        
 
+        if($ldapConn === false)
+        {
+            return false;
+        }
         //Full sync Operation
         if($syncToken == null)
         {
             $data = $this->fullSyncOperation($addressBookId);
-
+            
             if(! empty($data))
             {
                 $query = 'SELECT * FROM '.$this->ldapMapTableName.' WHERE addressbook_id = ? and user_id = ?';
@@ -1396,9 +1401,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
         //ADDED CARDS
         $filter = '(&' .$addressBookConfig['filter']. '(createtimestamp<=' .gmdate('YmdHis', $this->syncToken). 'Z)(!(|(createtimestamp<='.gmdate('YmdHis', $syncToken).'Z)(createtimestamp='.gmdate('YmdHis', $syncToken).'Z))))'; 
+
+        $data = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, ['entryuuid'], strtolower($addressBookConfig['scope']));      
         
-        $data = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, ['entryuuid'], strtolower($addressBookConfig['scope']));
-                    
         if($data['count'] > 0)
         {
             for ($i=0; $i < $data['count']; $i++) {         
@@ -1426,13 +1431,15 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                     $result['added'][] = $cardUri;
                 }       
         }
-
+        
+        
 
         //MODIFIED CARDS
         $filter = '(&' .$addressBookConfig['filter']. '(createtimestamp<=' .gmdate('YmdHis', $this->syncToken). 'Z)(!(|(modifytimestamp<='.gmdate('YmdHis', $syncToken).'Z)(modifytimestamp='.gmdate('YmdHis', $syncToken).'Z))))';
-
+        
         $data = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, ['entryuuid'], strtolower($addressBookConfig['scope']));
-                    
+           
+
         if($data['count'] > 0)
         {
             for ($i=0; $i < $data['count']; $i++) { 
@@ -1463,6 +1470,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                     }
                 } 
         }
+        
 
 
         //DELETED CARDS
@@ -1473,7 +1481,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
                 $result['deleted'][] = $row['card_uri'];
         }
-       
+
         return $result;
     }
 
