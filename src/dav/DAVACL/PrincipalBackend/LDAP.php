@@ -123,7 +123,6 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
     function getPrincipalByPath($path)
     {
         $searchUserId = basename($path);
-<<<<<<< HEAD:src/dav/DAVACL/PrincipalBackend/LDAP.php
 
         if($this->config['principal']['ldap']['search_bind_dn'] == '' && $this->config['principal']['ldap']['search_bind_pw'] == '')
         {  
@@ -134,9 +133,6 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         $bindDn = $this->config['principal']['ldap']['search_bind_dn'];
         $bindPass = $this->config['principal']['ldap']['search_bind_pw'];
         $ldapConn = Utility::LdapBindConnection(['bindDn' => $bindDn, 'bindPass' => $bindPass], $this->config['principal']['ldap']);
-=======
-        $ldapConn = $GLOBALS['globalLdapConn'];
->>>>>>> d83ff20 (Updated - Code optimization):src/DAVACL/PrincipalBackend/LDAP.php
           
         $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
         $filter = Utility::replace_placeholders($this->config['principal']['ldap']['search_filter'], ['%u' => $searchUserId]); // single filter
