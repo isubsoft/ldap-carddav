@@ -13,28 +13,11 @@ CREATE TABLE cards_backend_map
 	addressbook_id  VARCHAR(255) NOT NULL,
 	card_uri VARCHAR(255) NOT NULL,
 	card_uid VARCHAR(255) NOT NULL,
-<<<<<<< HEAD
-<<<<<<< HEAD
 	backend_id VARCHAR(255) NOT NULL,
 	PRIMARY KEY (user_id, addressbook_id, card_uri)
 );
 CREATE UNIQUE INDEX cards_backend_map_uk01 ON cards_backend_map (user_id, addressbook_id, card_uid);
 CREATE UNIQUE INDEX cards_backend_map_uk02 ON cards_backend_map (user_id, addressbook_id, backend_id);
-=======
-	backend_id VARCHAR(255) NOT NULL
-=======
-	backend_id VARCHAR(255) NOT NULL,
-	PRIMARY KEY (user_id, addressbook_id, card_uri)
->>>>>>> 6acfa3a (Updated - Bug fixes)
-);
-CREATE UNIQUE INDEX cards_backend_map_uk01 ON cards_backend_map (user_id, addressbook_id, card_uid);
-<<<<<<< HEAD
-
-CREATE UNIQUE INDEX cards_backend_map_uk01 ON cards_backend_map (user_id, addressbook_id, backend_id);
->>>>>>> a2c9876 (Updated - Added table constraints and indexes)
-=======
-CREATE UNIQUE INDEX cards_backend_map_uk02 ON cards_backend_map (user_id, addressbook_id, backend_id);
->>>>>>> 6acfa3a (Updated - Bug fixes)
 
 CREATE TABLE cards_full_sync
 (
