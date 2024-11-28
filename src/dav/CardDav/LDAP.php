@@ -1420,7 +1420,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
                     if($cardUri == null)
                     {
-                        $cardUri = $data[$i]['entryuuid'][0] . '.vcf';
+                        $cardUri = $this->guidv4();
                         $cardUID = $this->guidv4();
 
                         $query = "INSERT INTO `".$this->ldapMapTableName."` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
@@ -1456,7 +1456,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
                     if($cardUri == null)
                     {
-                        $cardUri = $data[$i]['entryuuid'][0] . '.vcf';
+                        $cardUri = $this->guidv4();
                         $cardUID = $this->guidv4();
 
                         $query = "INSERT INTO `".$this->ldapMapTableName."` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
@@ -1578,7 +1578,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
                 if( !in_array($data[$i]['entryuuid'][0], $backendIds))
                 {
-                    $cardUri = $data[$i]['entryuuid'][0] . '.vcf';
+                    $cardUri = $this->guidv4();
                     $cardUID = $this->guidv4();
 
                     $query = "INSERT INTO `".$this->ldapMapTableName."` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
