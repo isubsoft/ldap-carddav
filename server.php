@@ -27,7 +27,7 @@ require 'conf/conf.php';
 
 
 /* Database */
-$pdo = new PDO('sqlite:'.$config['database']);
+$pdo = new PDO($config['database']);
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 
@@ -38,14 +38,9 @@ $authBackend = new isubsoft\dav\Auth\LDAP($config);
 $principalBackend = new isubsoft\dav\DAVACL\PrincipalBackend\LDAP($config, $authBackend);
 $carddavBackend = new isubsoft\dav\CardDav\LDAP($config, $pdo, $authBackend);
 
-=======
-$principalBackend = new isubsoft\dav\DAVACL\PrincipalBackend\LDAP($config);
-$carddavBackend = new isubsoft\dav\CardDav\LDAP($config, $pdo);
->>>>>>> d83ff20 (Updated - Code optimization)
-=======
-$principalBackend = new isubsoft\dav\DAVACL\PrincipalBackend\LDAP($config);
-$carddavBackend = new isubsoft\dav\CardDav\LDAP($config, $pdo);
->>>>>>> d83ff206afc5e1f9ea5f5681f567b2fcacc12d51
+// We're assuming that the realm name is called 'SabreDAV'.
+$authBackend->setRealm('SabreDAV');
+
 
 // Setting up the directory tree //
 $nodes = [
@@ -63,11 +58,16 @@ $server = new Sabre\DAV\Server($nodes);
 $server->setBaseUri($baseUri);
 
 // Plugins
-$server->addPlugin(new Sabre\DAV\Auth\Plugin($authBackend));
+$authPlugin = new Sabre\DAV\Auth\Plugin($authBackend);
+$server->addPlugin($authPlugin);
+$server->addPlugin(new Sabre\DAVACL\Plugin());
 $server->addPlugin(new Sabre\DAV\Browser\Plugin());
 $server->addPlugin(new isubsoft\dav\CardDav\CardDAVPlugin());
-$server->addPlugin(new Sabre\DAVACL\Plugin());
 $server->addPlugin(new Sabre\DAV\Sync\Plugin());
 
+
+
 // And off we go!
+$authPlugin->autoRequireLogin = true;
+
 $server->exec();
