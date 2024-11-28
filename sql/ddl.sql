@@ -13,13 +13,11 @@ CREATE TABLE cards_backend_map
 	addressbook_id  VARCHAR(255) NOT NULL,
 	card_uri VARCHAR(255) NOT NULL,
 	card_uid VARCHAR(255) NOT NULL,
-	backend_id VARCHAR(255) NOT NULL
+	backend_id VARCHAR(255) NOT NULL,
+	PRIMARY KEY (user_id, addressbook_id, card_uri)
 );
-CREATE PRIMARY KEY cards_backend_map_pk ON cards_backend_map (user_id, addressbook_id, card_uri);
-
 CREATE UNIQUE INDEX cards_backend_map_uk01 ON cards_backend_map (user_id, addressbook_id, card_uid);
-
-CREATE UNIQUE INDEX cards_backend_map_uk01 ON cards_backend_map (user_id, addressbook_id, backend_id);
+CREATE UNIQUE INDEX cards_backend_map_uk02 ON cards_backend_map (user_id, addressbook_id, backend_id);
 
 CREATE TABLE cards_full_sync
 (
