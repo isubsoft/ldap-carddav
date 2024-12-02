@@ -2,11 +2,13 @@
     "name" : "isubsoft/dav",
     "description" : "This is the isubsoft WebDAV server",
     "require" : {
-        "sabre/dav" : "~3.2.0"
+        "sabre/dav" : "~3.2.0",
+        "sabre/vobject" : "~4.1"
     },
     "autoload" : {
         "psr-4" : {
-            "isubsoft\\dav\\" : "src/"
+            "isubsoft\\dav\\" : "src/dav",
+            "isubsoft\\Vobject\\" : "src/Vobject"
         }
     }
 }
