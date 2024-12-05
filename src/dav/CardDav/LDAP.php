@@ -360,7 +360,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                                     $backendId = $row['backend_id'];
                                 }
                             } catch (\Throwable $th) {
-                                error_log("Database query exception on: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+                                error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
                             }
                             
                             if(isset($backendId) && $backendId != null)
@@ -589,7 +589,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                 return false;
             }
         } catch (\Throwable $th) {
-            error_log("LDAP query exception on: ".__METHOD__.", ".$th->getMessage());
+            error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
             throw new ServiceUnavailable($th->getMessage());
         }
 
@@ -600,7 +600,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             $sql = $this->pdo->prepare($query);
             $sql->execute([$cardUri, $UID, $addressBookId, $data[0]['entryuuid'][0], $this->principalUser]);
         } catch (\Throwable $th) {
-            error_log("Database query exception on: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+            error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
         }       
                 
         return null;
@@ -679,7 +679,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                                     $backendId = $row['backend_id'];
                                 }
                             } catch (\Throwable $th) {
-                                error_log("Database query exception on: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+                                error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
                             }
                             
                             if(isset($backendId) && $backendId != null)
@@ -934,7 +934,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                 return false;
             }
         } catch (\Throwable $th) {
-            error_log("LDAP query exception on: ".__METHOD__.", ".$th->getMessage());
+            error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
             throw new ServiceUnavailable($th->getMessage());
         }
         
@@ -960,7 +960,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                     return false;
                 }           
             } catch (\Throwable $th) {
-                error_log("LDAP query exception on: ".__METHOD__.", ".$th->getMessage());
+                error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
                 throw new ServiceUnavailable($th->getMessage());
             }
             
@@ -996,7 +996,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                 return false;
             }
         } catch (\Throwable $th) {
-            error_log("LDAP query exception on: ".__METHOD__.", ".$th->getMessage());
+            error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
             throw new ServiceUnavailable($th->getMessage());
         }
 
@@ -1033,7 +1033,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                 $UID = $row['card_uid'];
             }
         } catch (\Throwable $th) {
-            error_log("Database query exception on: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+            error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
         }
         
         
@@ -1074,7 +1074,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                                         $clientUID = $row['card_uid'];
                                     }
                                 } catch (\Throwable $th) {
-                                    error_log("Database query exception on: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+                                    error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
                                 }
                                 
                                 $vcard->add($vCardKey, 'urn:uuid:'.$clientUID);
@@ -1436,7 +1436,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                         $result['added'][] = $cardUri;
                     }
                 } catch (\Throwable $th) {
-                    error_log("Database query exception on: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+                    error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
                 }   
             }
             return $result;
@@ -1452,7 +1452,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                     $fullSyncTimestamp = $row['full_sync_ts'];
                 }
         } catch (\Throwable $th) {
-            error_log("Database query exception on: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+            error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
         }
          
         if( ($syncToken < $fullSyncTimestamp) &&  ($this->syncToken >= $fullSyncTimestamp))
@@ -1490,7 +1490,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                             $sql->execute([$cardUri, $cardUID, $addressBookId, $data[$i]['entryuuid'][0], $this->principalUser]); 
                         }
                     } catch (\Throwable $th) {
-                        error_log("Database query exception on: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+                        error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
                     }     
 
                     $result['added'][] = $cardUri;
@@ -1533,7 +1533,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                             $result['modified'][] = $cardUri;
                         }
                     } catch (\Throwable $th) {
-                        error_log("Database query exception on: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+                        error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
                     }      
                 } 
         }
@@ -1550,7 +1550,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                     $result['deleted'][] = $row['card_uri'];
             }
         } catch (\Throwable $th) {
-            error_log("Database query exception on: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+            error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
         }       
 
         return $result;
@@ -1579,7 +1579,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
             $this->pdo->commit();
         } catch (\Throwable $th) {
-            error_log("Database query exception on: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+            error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
         }    
     }
 
@@ -1610,7 +1610,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             }
             
         } catch (\Throwable $th) {
-            error_log("Database query exception on: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+            error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
         }
         
   
@@ -1714,7 +1714,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             $this->pdo->commit();
 
         } catch (\Throwable $th) {
-            error_log("Database query exception on: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+            error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
         }
         
 

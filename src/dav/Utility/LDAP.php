@@ -48,7 +48,7 @@ class LDAP {
             }     
 
         } catch (\Throwable $th) {  
-            error_log("LDAP connection exception on: ".__METHOD__.", ".$th->getMessage()); 
+            error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage()); 
             throw new ServiceUnavailable($th->getMessage());
         }        
 
@@ -85,7 +85,7 @@ class LDAP {
             }
 
         } catch (\Throwable $th) {
-            error_log("LDAP query exception on: ".__METHOD__.", ".$th->getMessage());
+            error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
             throw new ServiceUnavailable($th->getMessage());
         }    
 

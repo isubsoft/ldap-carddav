@@ -21,7 +21,7 @@ try {
     $pdo = new PDO($config['database']);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (\Throwable $th) {
-    error_log('Database connection is interrupted - '. $th->getMessage());
+    error_log('Could not create database connection: '. $th->getMessage());
     http_response_code(500);
     exit;
 }

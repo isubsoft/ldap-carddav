@@ -103,7 +103,7 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
                             return false;
                         }
                     } catch (\Throwable $th) {
-                        error_log("LDAP connection exception on: ".__METHOD__.", ".$th->getMessage());
+                        error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
                         throw new ServiceUnavailable($th->getMessage());
                     }
 
