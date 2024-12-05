@@ -2,6 +2,8 @@
 
 namespace isubsoft\dav\Utility;
 
+use \Sabre\DAV\Exception\ServiceUnavailable;
+
 class LDAP {
 
     /**
@@ -19,28 +21,36 @@ class LDAP {
     {
         $ldapConn = null;
 
-        // Connect to ldap server
-        $ldapUri = ($config['use_tls'] ? 'ldaps://' : 'ldap://') . $config['host'] . ':' . $config['port'];
-        $ldapConn = ldap_connect($ldapUri);
+        try {
+            // Connect to ldap server
+            $ldapUri = ($config['use_tls'] ? 'ldaps://' : 'ldap://') . $config['host'] . ':' . $config['port'];
+            $ldapConn = ldap_connect($ldapUri);
 
-        ldap_set_option($ldapConn, LDAP_OPT_PROTOCOL_VERSION, $config['ldap_version']);
-        ldap_set_option($ldapConn, LDAP_OPT_NETWORK_TIMEOUT, $config['network_timeout']);
+            ldap_set_option($ldapConn, LDAP_OPT_PROTOCOL_VERSION, $config['ldap_version']);
+            ldap_set_option($ldapConn, LDAP_OPT_NETWORK_TIMEOUT, $config['network_timeout']);
 
-        // using ldap bind
-        $bindDn  = $credentials['bindDn'];     // ldap rdn or dn
-        $bindPass = $credentials['bindPass'];  // associated password
-        
-        if ($ldapConn) {
+            // using ldap bind
+            $bindDn  = $credentials['bindDn'];     // ldap rdn or dn
+            $bindPass = $credentials['bindPass'];  // associated password
             
+            if (!$ldapConn) 
+            {
+                return false;
+            }
+
             // binding to ldap server
             $ldapBind = ldap_bind($ldapConn, $bindDn, $bindPass);
-
+        
             // verify binding
-            if ($ldapBind) {
-                
-                return $ldapConn;
-            }
-        }
+            if (!$ldapBind) 
+            {
+                return false;
+            }     
+
+        } catch (\Throwable $th) {  
+            error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage()); 
+            throw new ServiceUnavailable($th->getMessage());
+        }        
 
         return $ldapConn;
     }
@@ -48,26 +58,41 @@ class LDAP {
     public static function LdapQuery($ldapConn, $base, $filter, $attributes = [], $scope)
     {
         $data = null;
+        
+        try {
+            if($scope == 'base')
+            {
+                $result = ldap_read($ldapConn, $base, $filter, $attributes);
+            }
+            else if($scope == 'list')
+            {
+                $result = ldap_list($ldapConn, $base, $filter, $attributes);
+            }
+            else
+            {
+                $result = ldap_search($ldapConn, $base, $filter, $attributes);
+            }
 
-        if($scope == 'base')
-        {
-            $result = ldap_read($ldapConn, $base, $filter, $attributes);
-        }
-        else if($scope == 'list')
-        {
-            $result = ldap_list($ldapConn, $base, $filter, $attributes);
-        }
-        else
-        {
-            $result = ldap_search($ldapConn, $base, $filter, $attributes);
-        }
+            if(!$result)
+            {
+                return null; 
+            }
 
-        $data = ldap_get_entries($ldapConn, $result);
+            $data = ldap_get_entries($ldapConn, $result);
+            if(!$data)
+            {
+                return null;
+            }
+
+        } catch (\Throwable $th) {
+            error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
+            throw new ServiceUnavailable($th->getMessage());
+        }    
 
         return $data;
     }
 
-    public static function replace_placeholders($string, $values = [])
+    public static function replacePlaceholders($string, $values = [])
     {
         foreach(self::$allowed_placeholders as $placeholder => $value)
         {
@@ -155,7 +180,7 @@ class LDAP {
         return (['status' => false, 'backend_attribute' => '' ]);
     }
 
-    public static function reverse_map_vCard_params($params, $backendMapIndex)
+    public static function reverseMapVCardParams($params, $backendMapIndex)
     {
         $vCardParams = [];
         if($backendMapIndex !== '')

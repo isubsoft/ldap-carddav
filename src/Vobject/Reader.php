@@ -35,7 +35,7 @@ class Reader extends \Sabre\VObject\Reader{
                             'composite_attr'=> false,
                             'parameter' => []],
 
-        'PHOTO' => ['multi_allowed' => true,
+        'PHOTO' => ['multi_allowed' => false,
                         'composite_attr'=> false,
                         'parameter' => []],
 

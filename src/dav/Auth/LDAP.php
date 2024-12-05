@@ -3,6 +3,7 @@
 namespace isubsoft\dav\Auth;
 
 use isubsoft\dav\Utility\LDAP as Utility;
+use \Sabre\DAV\Exception\ServiceUnavailable;
 
 class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
 
@@ -63,8 +64,8 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
         
         if(($this->config['auth']['ldap']['bind_dn'] != '') && ($this->config['auth']['ldap']['bind_pass'] != ''))
         {
-            $bindDn = Utility::replace_placeholders($this->config['auth']['ldap']['bind_dn'], ['%u' => $username]);
-            $bindPass = Utility::replace_placeholders($this->config['auth']['ldap']['bind_pass'], ['%p' => $password]);
+            $bindDn = Utility::replacePlaceholders($this->config['auth']['ldap']['bind_dn'], ['%u' => $username]);
+            $bindPass = Utility::replacePlaceholders($this->config['auth']['ldap']['bind_pass'], ['%p' => $password]);
 
             // binding to ldap server
             $ldapBindConn = Utility::LdapBindConnection(['bindDn' => $bindDn, 'bindPass' => $bindPass], $this->config['auth']['ldap']);
@@ -82,25 +83,32 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
 
             // binding to ldap server
             $ldapBindConn = Utility::LdapBindConnection(['bindDn' => $bindDn, 'bindPass' => $bindPass], $this->config['auth']['ldap']);
-
+            
             // verify binding
             if ($ldapBindConn) {
             
                 $ldaptree = ($this->config['auth']['ldap']['search_base_dn'] !== '') ? $this->config['auth']['ldap']['search_base_dn'] : $this->config['auth']['ldap']['base_dn'];  
-                $filter = Utility::replace_placeholders($this->config['auth']['ldap']['search_filter'], ['%u' => $username]);
+                $filter = Utility::replacePlaceholders($this->config['auth']['ldap']['search_filter'], ['%u' => $username]);
 
                 $data = Utility::LdapQuery($ldapBindConn, $ldaptree, $filter, [], strtolower($this->config['auth']['ldap']['scope']));
-
+                
                 if($data['count'] == 1)
                 {
                     $ldapDn = $data[0]['dn'];
-                    $ldapUserBind = ldap_bind($ldapBindConn, $ldapDn, $password);  
 
-                    if($ldapUserBind)
-                    {
-                        $this->userLdapConn = $ldapBindConn;
-                        return true;
+                    try {
+                        $ldapUserBind = ldap_bind($ldapBindConn, $ldapDn, $password);
+                        if(!$ldapUserBind)
+                        {
+                            return false;
+                        }
+                    } catch (\Throwable $th) {
+                        error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
+                        throw new ServiceUnavailable($th->getMessage());
                     }
+
+                    $this->userLdapConn = $ldapBindConn;
+                    return true;
                 }      
             }
         }   

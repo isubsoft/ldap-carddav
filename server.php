@@ -14,14 +14,22 @@ This server features CardDAV support
 // This can be for example the root / or a complete path to your server script
 $baseUri = '/';
 
-// Autoloader
-require_once 'vendor/autoload.php';
 require 'conf/conf.php';
 
-
 /* Database */
-$pdo = new PDO($config['database']);
-$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+try {
+    $pdo = new PDO($config['database']);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (\Throwable $th) {
+    error_log('Could not create database connection: '. $th->getMessage());
+    http_response_code(500);
+    exit;
+}
+
+// Autoloader
+require_once 'vendor/autoload.php';
+
+
 
 
 // Backends
