@@ -35,9 +35,9 @@ class Reader extends \Sabre\VObject\Reader{
                             'composite_attr'=> false,
                             'parameter' => []],
 
-        'PHOTO' => ['multi_allowed' => false,
+        'PHOTO' => ['multi_allowed' => true,
                         'composite_attr'=> false,
-                        'parameter' => []],
+                        'parameter' => ['TYPE', 'VALUE', 'MEDIATYPE', 'ENCODING']],
 
         'NOTE' => ['multi_allowed' => true,
                         'composite_attr'=> false,
@@ -178,6 +178,22 @@ class Reader extends \Sabre\VObject\Reader{
         }
 
         return false;
+    }
+
+    function attributeType($attrParams){
+
+        if(array_key_exists('ENCODING', $attrParams) && ( in_array('B', $attrParams['ENCODING']) || in_array('BASE64', $attrParams['ENCODING'])))
+        {
+            return 'MEDIA';
+        }
+        else if(array_key_exists('VALUE', $attrParams) && in_array('URL', $attrParams['VALUE']))
+        {
+            return 'FILE';
+        }
+        else
+        {
+            return 'TEXT';
+        }
     }
 
 }

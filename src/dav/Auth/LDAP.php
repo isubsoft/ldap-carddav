@@ -16,13 +16,6 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
     public $config;
 
     /**
-     * This is the prefix that will be used to generate principal urls.
-     *
-     * @var string
-     */
-    public $principalPrefix = 'principals/users/';
-
-    /**
      * Ldap Connection.
      *
      * @var string

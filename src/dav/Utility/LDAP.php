@@ -196,13 +196,13 @@ class LDAP {
                 
                 if(! isset($paramValues[1]))
                 {
-                    $vCardParams[strtolower($paramInfo[0])] = $paramValues[0];
+                    $vCardParams[strtoupper($paramInfo[0])] = strtoupper($paramValues[0]);
                 }
                 else
                 {
                     foreach($paramValues as $paramValue)
                     {
-                        $vCardParams[strtolower($paramInfo[0])][] = $paramValue;
+                        $vCardParams[strtoupper($paramInfo[0])][] = strtoupper($paramValue);
                     }
                 }
             }
