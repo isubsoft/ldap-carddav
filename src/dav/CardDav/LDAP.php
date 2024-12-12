@@ -453,10 +453,15 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                             $inputParamsInfo = Utility::getVCardAttrParams($values, $parameterStatus['parameter']);                       
                             $vCardParamListsMatch = Utility::isVcardParamsMatch($ldapKey, $inputParamsInfo);
                             $backendAttrValue = '';
+                            $decodeFile = false;
 
                             if($vCardParamListsMatch['status'] === true)
                             {
-                                $backendAttrValue = $vCardParamListsMatch['backend_attribute'];
+                                $backendAttrValue = $vCardParamListsMatch['ldapArrMap']['backend_attribute'];
+                                if(isset($vCardParamListsMatch['ldapArrMap']['decode_file']))
+                                {
+                                    $decodeFile = $vCardParamListsMatch['ldapArrMap']['decode_file'];
+                                }
                             }
                             else
                             {
@@ -465,6 +470,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                                     if(in_array(null, $ldapKeyInfo['parameters']))
                                     {                           
                                         $backendAttrValue = $ldapKeyInfo['backend_attribute'];
+                                        if(isset($ldapKeyInfo['decode_file']))
+                                        {
+                                            $decodeFile = $ldapKeyInfo['decode_file'];
+                                        }
                                         break;
                                     }
                                 }
@@ -492,13 +501,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                                 $attrType = Reader::attributeType($inputParamsInfo);
                                 $newLdapKey = strtolower($backendAttrValue);
 
-                                if($attrType == 'FILE')
+                                if($attrType == 'FILE' && $decodeFile == true)
                                 {
                                     $file = file_get_contents((string)$values);
                                     if ($file !== false)
                                     $ldapInfo[$newLdapKey] = $file;
                                 }
-                                else if($attrType == 'MEDIA' || $attrType == 'TEXT')
+                                else
                                 {
                                     $ldapInfo[$newLdapKey][] = (string)$values;
                                 }
@@ -511,10 +520,15 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                         $inputParamsInfo = Utility::getVCardAttrParams($vcard->$vCardKey, $parameterStatus['parameter']);                        
                         $vCardParamListsMatch = Utility::isVcardParamsMatch($ldapKey, $inputParamsInfo);
                         $backendAttrValue = '';
+                        $decodeFile = false;
 
                         if($vCardParamListsMatch['status'] === true)
                         {
-                            $backendAttrValue = $vCardParamListsMatch['backend_attribute'];
+                            $backendAttrValue = $vCardParamListsMatch['ldapArrMap']['backend_attribute'];
+                            if(isset($vCardParamListsMatch['ldapArrMap']['decode_file']))
+                            {
+                                $decodeFile = $vCardParamListsMatch['ldapArrMap']['decode_file'];
+                            }
                         }
                         else
                         {
@@ -523,6 +537,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                                 if(in_array(null, $ldapKeyInfo['parameters']))
                                 {
                                     $backendAttrValue = $ldapKeyInfo['backend_attribute'];
+                                    if(isset($ldapKeyInfo['decode_file']))
+                                    {
+                                        $decodeFile = $ldapKeyInfo['decode_file'];
+                                    }
                                     break;
                                 }
                             }
@@ -551,13 +569,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                             $attrType = Reader::attributeType($inputParamsInfo);
                             $newLdapKey = strtolower($backendAttrValue);
 
-                            if($attrType == 'FILE')
+                            if($attrType == 'FILE' && $decodeFile == true)
                             {
                                 $file = file_get_contents((string)$vcard->$vCardKey);
                                 if ($file !== false)
                                 $ldapInfo[$newLdapKey] = $file;
                             }
-                            else if($attrType == 'MEDIA' || $attrType == 'TEXT')
+                            else
                             {
                                 $ldapInfo[$newLdapKey][] = (string)$vcard->$vCardKey;
                             }
@@ -773,13 +791,19 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                     {
                         foreach($vcard->$vCardKey as $values) 
                         {
-                            $inputParamsInfo = Utility::getVCardAttrParams($values, $parameterStatus['parameter']);                        
+                            $inputParamsInfo = Utility::getVCardAttrParams($values, $parameterStatus['parameter']);                       
                             $vCardParamListsMatch = Utility::isVcardParamsMatch($ldapKey, $inputParamsInfo);
+                            
                             $backendAttrValue = '';
+                            $decodeFile = false;
 
                             if($vCardParamListsMatch['status'] === true)
                             {
-                                $backendAttrValue = $vCardParamListsMatch['backend_attribute'];
+                                $backendAttrValue = $vCardParamListsMatch['ldapArrMap']['backend_attribute'];
+                                if(isset($vCardParamListsMatch['ldapArrMap']['decode_file']))
+                                {
+                                    $decodeFile = $vCardParamListsMatch['ldapArrMap']['decode_file'];
+                                }
                             }
                             else
                             {
@@ -788,6 +812,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                                     if(in_array(null, $ldapKeyInfo['parameters']))
                                     {                           
                                         $backendAttrValue = $ldapKeyInfo['backend_attribute'];
+                                        if(isset($ldapKeyInfo['decode_file']))
+                                        {
+                                            $decodeFile = $ldapKeyInfo['decode_file'];
+                                        }
                                         break;
                                     }
                                 }
@@ -815,13 +843,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                                 $attrType = Reader::attributeType($inputParamsInfo);
                                 $newLdapKey = strtolower($backendAttrValue);
 
-                                if($attrType == 'FILE')
+                                if($attrType == 'FILE' && $decodeFile == true)
                                 {
                                     $file = file_get_contents((string)$values);
                                     if ($file !== false)
                                     $ldapInfo[$newLdapKey] = $file;
                                 }
-                                else if($attrType == 'MEDIA' || $attrType == 'TEXT')
+                                else
                                 {
                                     $ldapInfo[$newLdapKey][] = (string)$values;
                                 }
@@ -834,10 +862,15 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                         $inputParamsInfo = Utility::getVCardAttrParams($vcard->$vCardKey, $parameterStatus['parameter']);                        
                         $vCardParamListsMatch = Utility::isVcardParamsMatch($ldapKey, $inputParamsInfo);
                         $backendAttrValue = '';
+                        $decodeFile = false;
 
                         if($vCardParamListsMatch['status'] === true)
                         {
-                            $backendAttrValue = $vCardParamListsMatch['backend_attribute'];
+                            $backendAttrValue = $vCardParamListsMatch['ldapArrMap']['backend_attribute'];
+                            if(isset($vCardParamListsMatch['ldapArrMap']['decode_file']))
+                            {
+                                $decodeFile = $vCardParamListsMatch['ldapArrMap']['decode_file'];
+                            }
                         }
                         else
                         {
@@ -846,6 +879,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                                 if(in_array(null, $ldapKeyInfo['parameters']))
                                 {
                                     $backendAttrValue = $ldapKeyInfo['backend_attribute'];
+                                    if(isset($ldapKeyInfo['decode_file']))
+                                    {
+                                        $decodeFile = $ldapKeyInfo['decode_file'];
+                                    }
                                     break;
                                 }
                             }
@@ -874,13 +911,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                             $attrType = Reader::attributeType($inputParamsInfo);
                             $newLdapKey = strtolower($backendAttrValue);
 
-                            if($attrType == 'FILE')
+                            if($attrType == 'FILE' && $decodeFile == true)
                             {
                                 $file = file_get_contents((string)$vcard->$vCardKey);
                                 if ($file !== false)
                                 $ldapInfo[$newLdapKey] = $file;
                             }
-                            else if($attrType == 'MEDIA' || $attrType == 'TEXT')
+                            else
                             {
                                 $ldapInfo[$newLdapKey][] = (string)$vcard->$vCardKey;
                             }
@@ -894,7 +931,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                 }
             }    
         }
-
     
 
         foreach ($requiredFields as $key) {
@@ -1304,12 +1340,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                                     continue;
                                     
                                     $vCardParams = Utility::reverseMapVCardParams($ldapKeyInfo['parameters'], $ldapKeyInfo['reverse_map_parameter_index']);
-                                    $attrType = Reader::attributeType($vCardParams);
                                     
                                     if(!empty($vCardParams))
                                     {
-                                        if($attrType == 'MEDIA')
+                                        if(isset($ldapKeyInfo['decode_file']) && $ldapKeyInfo['decode_file'] == true)
                                         {
+                                            $vCardParams = array_merge($vCardParams, ['value' => 'BINARY']);
                                             $vcard->add($vCardKey, base64_encode($attrValue), $vCardParams);
                                         }
                                         else
@@ -1326,18 +1362,18 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                             else
                             {
                                 $vCardParams = Utility::reverseMapVCardParams($ldapKeyInfo['parameters'], $ldapKeyInfo['reverse_map_parameter_index']);
-                                $attrType = Reader::attributeType($vCardParams);
                                 
                                 if(!empty($vCardParams))
                                 {
-                                    if($attrType == 'MEDIA')
-                                        {
-                                            $vcard->add($vCardKey, base64_encode($data[$newLdapKey][0]), $vCardParams);
-                                        }
-                                        else
-                                        {
-                                            $vcard->add($vCardKey, $data[$newLdapKey][0], $vCardParams);
-                                        } 
+                                    if(isset($ldapKeyInfo['decode_file']) && $ldapKeyInfo['decode_file'] == true)
+                                    {
+                                        $vCardParams = array_merge($vCardParams, ['value' => 'BINARY']);
+                                        $vcard->add($vCardKey, base64_encode($data[$newLdapKey][0]), $vCardParams);
+                                    }
+                                    else
+                                    {
+                                        $vcard->add($vCardKey, $data[$newLdapKey][0], $vCardParams);
+                                    } 
                                 }
                                 else
                                 {

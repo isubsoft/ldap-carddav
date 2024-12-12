@@ -133,7 +133,6 @@ class LDAP {
     {
         foreach($ldapKey as $ldapKeyInfo)
         {
-            $newLdapKey = $ldapKeyInfo['backend_attribute'];
             
             foreach($ldapKeyInfo['parameters'] as $ParamList)
             {
@@ -172,12 +171,12 @@ class LDAP {
 
                 if($allParamsValuesMatch == true)
                 {
-                    return (['status' => true, 'backend_attribute' => $newLdapKey ]);
+                    return (['status' => true, 'ldapArrMap' => $ldapKeyInfo ]);
                 }
             }
         }
 
-        return (['status' => false, 'backend_attribute' => '' ]);
+        return (['status' => false, 'ldapArrMap' => [] ]);
     }
 
     public static function reverseMapVCardParams($params, $backendMapIndex)

@@ -184,9 +184,9 @@ class Reader extends \Sabre\VObject\Reader{
 
         if(array_key_exists('ENCODING', $attrParams) && ( in_array('B', $attrParams['ENCODING']) || in_array('BASE64', $attrParams['ENCODING'])))
         {
-            return 'MEDIA';
+            return 'BINARY';
         }
-        else if(array_key_exists('VALUE', $attrParams) && in_array('URL', $attrParams['VALUE']))
+        else if(array_key_exists('VALUE', $attrParams) && ( in_array('URI', $attrParams['VALUE']) || in_array('URL', $attrParams['VALUE'])))
         {
             return 'FILE';
         }
