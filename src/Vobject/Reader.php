@@ -150,7 +150,7 @@ class Reader extends \Sabre\VObject\Reader{
           
     ];
 
-    function multi_allowed_status($vCard_attr){    
+    function multiAllowedStatus($vCard_attr){    
 
         if(isset(self::$VCard_attr_info[$vCard_attr]))
         {
@@ -160,7 +160,7 @@ class Reader extends \Sabre\VObject\Reader{
         return false;
     }
 
-    function composite_attr_status($vCard_attr){
+    function compositeAttrStatus($vCard_attr){
 
         if(isset(self::$VCard_attr_info[$vCard_attr]))
         {
@@ -170,7 +170,7 @@ class Reader extends \Sabre\VObject\Reader{
         return false;
     }
 
-    function parameter_status($vCard_attr){        
+    function parameterStatus($vCard_attr){        
 
         if(isset(self::$VCard_attr_info[$vCard_attr]))
         {

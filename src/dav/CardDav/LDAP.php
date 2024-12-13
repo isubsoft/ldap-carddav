@@ -337,8 +337,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
             foreach($addressBookConfig['group_member_map'] as $vCardKey => $ldapKey) 
             {
-                $multiAllowedStatus = Reader::multi_allowed_status($vCardKey);
-                $compositeAttrStatus = Reader::composite_attr_status($vCardKey);
+                $multiAllowedStatus = Reader::multiAllowedStatus($vCardKey);
+                $compositeAttrStatus = Reader::compositeAttrStatus($vCardKey);
 
                 if(isset($vcard->$vCardKey) && $multiAllowedStatus['status'] && !$compositeAttrStatus['status'] )
                 {
@@ -392,9 +392,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         {
             if( isset($vcard->$vCardKey))
             {
-                $multiAllowedStatus = Reader::multi_allowed_status($vCardKey);
-                $compositeAttrStatus = Reader::composite_attr_status($vCardKey);
-                $parameterStatus = Reader::parameter_status($vCardKey);
+                $multiAllowedStatus = Reader::multiAllowedStatus($vCardKey);
+                $compositeAttrStatus = Reader::compositeAttrStatus($vCardKey);
+                $parameterStatus = Reader::parameterStatus($vCardKey);
 
                 if($multiAllowedStatus['status'] && !$compositeAttrStatus['status'] && !$parameterStatus['parameter'])
                 {
@@ -677,8 +677,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
             foreach($addressBookConfig['group_member_map'] as $vCardKey => $ldapKey) 
             {
-                $multiAllowedStatus = Reader::multi_allowed_status($vCardKey);
-                $compositeAttrStatus = Reader::composite_attr_status($vCardKey);
+                $multiAllowedStatus = Reader::multiAllowedStatus($vCardKey);
+                $compositeAttrStatus = Reader::compositeAttrStatus($vCardKey);
 
                 if(isset($vcard->$vCardKey) && $multiAllowedStatus['status'] && !$compositeAttrStatus['status'] )
                 {
@@ -733,9 +733,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         {
             if( isset($vcard->$vCardKey))
             {
-                $multiAllowedStatus = Reader::multi_allowed_status($vCardKey);
-                $compositeAttrStatus = Reader::composite_attr_status($vCardKey);
-                $parameterStatus = Reader::parameter_status($vCardKey);
+                $multiAllowedStatus = Reader::multiAllowedStatus($vCardKey);
+                $compositeAttrStatus = Reader::compositeAttrStatus($vCardKey);
+                $parameterStatus = Reader::parameterStatus($vCardKey);
                 
                 if($multiAllowedStatus['status'] && !$compositeAttrStatus['status'] && !$parameterStatus['parameter'])
                 {
@@ -1091,8 +1091,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
             foreach ($addressBookConfig['group_member_map'] as $vCardKey => $ldapKey) 
             {
-                $multiAllowedStatus = Reader::multi_allowed_status($vCardKey);
-                $compositeAttrStatus = Reader::composite_attr_status($vCardKey);
+                $multiAllowedStatus = Reader::multiAllowedStatus($vCardKey);
+                $compositeAttrStatus = Reader::compositeAttrStatus($vCardKey);
 
                 if($multiAllowedStatus['status'] && !$compositeAttrStatus['status'] )
                 {
@@ -1132,9 +1132,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
         foreach ($fieldMap as $vCardKey => $ldapKey) {
             
-            $multiAllowedStatus = Reader::multi_allowed_status($vCardKey);
-            $compositeAttrStatus = Reader::composite_attr_status($vCardKey);
-            $parameterStatus = Reader::parameter_status($vCardKey);
+            $multiAllowedStatus = Reader::multiAllowedStatus($vCardKey);
+            $compositeAttrStatus = Reader::compositeAttrStatus($vCardKey);
+            $parameterStatus = Reader::parameterStatus($vCardKey);
 
             if($multiAllowedStatus['status'] && !$compositeAttrStatus['status'] && !$parameterStatus['parameter'])
             {

@@ -86,19 +86,14 @@ $config['card']['addressbook']['ldap']['private'] = [
                                             'MEDIATYPE=image/jpeg;VALUE=URL',
                                             'ENCODING=BASE64;TYPE=JPEG',
                                             'MEDIATYPE=image/jpeg;VALUE=URI',
-                                            'TYPE=JPEG;VALUE=URI'
-                                          ],
-                            'reverse_map_parameter_index' => '0',
-                            'decode_file' => true],
-                          ['backend_attribute' => 'photo',
-                              'parameters' => [ 'ENCODING=B',
+                                            'TYPE=JPEG;VALUE=URI',
+                                            'ENCODING=B',
                                             'VALUE=URL',
                                             'ENCODING=BASE64',
                                             'VALUE=URI'
                                           ],
                             'reverse_map_parameter_index' => '0',
-                            'decode_file' => true]
-                                      ],
+                            'decode_file' => true]],
 
     'NOTE'        	=> ['backend_attribute' => 'description',
                         'parameters' => [],                     
