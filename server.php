@@ -43,12 +43,8 @@ $authBackend->setRealm('SabreDAV');
 
 // Setting up the directory tree //
 $nodes = [
-    new Sabre\DAV\SimpleCollection('principals', [
-        new Sabre\DAVACL\PrincipalCollection($principalBackend, 'principals/users')
-    ]),
-    new Sabre\DAV\SimpleCollection('addressbooks', [
-        new isubsoft\dav\CardDav\AddressBookRoot($principalBackend, $carddavBackend, 'principals/users')
-    ])
+    new Sabre\DAVACL\PrincipalCollection($principalBackend),
+    new Sabre\CardDAV\AddressBookRoot($principalBackend, $carddavBackend)
 ];
 
 

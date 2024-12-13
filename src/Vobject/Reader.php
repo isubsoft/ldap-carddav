@@ -35,9 +35,9 @@ class Reader extends \Sabre\VObject\Reader{
                             'composite_attr'=> false,
                             'parameter' => []],
 
-        'PHOTO' => ['multi_allowed' => false,
+        'PHOTO' => ['multi_allowed' => true,
                         'composite_attr'=> false,
-                        'parameter' => []],
+                        'parameter' => ['TYPE', 'VALUE', 'MEDIATYPE', 'ENCODING']],
 
         'NOTE' => ['multi_allowed' => true,
                         'composite_attr'=> false,
@@ -150,7 +150,7 @@ class Reader extends \Sabre\VObject\Reader{
           
     ];
 
-    function multi_allowed_status($vCard_attr){    
+    function multiAllowedStatus($vCard_attr){    
 
         if(isset(self::$VCard_attr_info[$vCard_attr]))
         {
@@ -160,7 +160,7 @@ class Reader extends \Sabre\VObject\Reader{
         return false;
     }
 
-    function composite_attr_status($vCard_attr){
+    function compositeAttrStatus($vCard_attr){
 
         if(isset(self::$VCard_attr_info[$vCard_attr]))
         {
@@ -170,7 +170,7 @@ class Reader extends \Sabre\VObject\Reader{
         return false;
     }
 
-    function parameter_status($vCard_attr){        
+    function parameterStatus($vCard_attr){        
 
         if(isset(self::$VCard_attr_info[$vCard_attr]))
         {
@@ -178,6 +178,22 @@ class Reader extends \Sabre\VObject\Reader{
         }
 
         return false;
+    }
+
+    function attributeType($attrParams){
+
+        if(array_key_exists('ENCODING', $attrParams) && ( in_array('B', $attrParams['ENCODING']) || in_array('BASE64', $attrParams['ENCODING'])))
+        {
+            return 'BINARY';
+        }
+        else if(array_key_exists('VALUE', $attrParams) && ( in_array('URI', $attrParams['VALUE']) || in_array('URL', $attrParams['VALUE'])))
+        {
+            return 'FILE';
+        }
+        else
+        {
+            return 'TEXT';
+        }
     }
 
 }

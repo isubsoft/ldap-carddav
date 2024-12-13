@@ -80,9 +80,20 @@ $config['card']['addressbook']['ldap']['private'] = [
                           'parameters' => [],  
                           'reverse_map_parameter_index' => ''],
 
-		'PHOTO'         => ['backend_attribute' => 'jpegphoto',
-                          'parameters' => [],
-                          'reverse_map_parameter_index' => ''],
+		'PHOTO'         => [['backend_attribute' => 'jpegphoto',
+                            'parameters' => [ 'TYPE=JPEG;ENCODING=B',
+                                            'TYPE=JPEG;VALUE=URL',
+                                            'MEDIATYPE=image/jpeg;VALUE=URL',
+                                            'ENCODING=BASE64;TYPE=JPEG',
+                                            'MEDIATYPE=image/jpeg;VALUE=URI',
+                                            'TYPE=JPEG;VALUE=URI',
+                                            'ENCODING=B',
+                                            'VALUE=URL',
+                                            'ENCODING=BASE64',
+                                            'VALUE=URI'
+                                          ],
+                            'reverse_map_parameter_index' => '0',
+                            'decode_file' => true]],
 
     'NOTE'        	=> ['backend_attribute' => 'description',
                         'parameters' => [],                     
