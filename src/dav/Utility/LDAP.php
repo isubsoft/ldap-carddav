@@ -92,6 +92,68 @@ class LDAP {
         return $data;
     }
 
+    public static function __callStatic($funcName, $args)
+    {
+        if($funcName == 'LdapIterativeQuery')
+        {
+            $data = null;
+
+            switch(count($args)){                
+                case 2:       
+                    try {    
+                        $data['entryIns'] = ldap_next_entry($args[0], $args[1]);
+                        if(!$data['entryIns'])
+                        {
+                            return false;
+                        }
+                        $data['data'] = ldap_get_attributes($args[0], $data['entryIns']);
+                       
+                    } catch (\Throwable $th) {
+                        error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
+                        throw new ServiceUnavailable($th->getMessage());
+                    }                
+                    return $data;
+
+                case 5:        
+                    try {
+                        if($args[4] == 'base')
+                        {
+                            $result = ldap_read($args[0], $args[1], $args[2], $args[3]);
+                        }
+                        else if($args[4] == 'list')
+                        {
+                            $result = ldap_list($args[0], $args[1], $args[2], $args[3]);
+                        }
+                        else
+                        {
+                            $result = ldap_search($args[0], $args[1], $args[2], $args[3]);
+                        }
+            
+                        if(!$result)
+                        {
+                            return false;
+                        }
+                        
+                        $data['entryIns'] = ldap_first_entry($args[0], $result);
+                        if(!$data['entryIns'])
+                        {
+                            return false;
+                        }
+                        $data['data'] = ldap_get_attributes($args[0], $data['entryIns']);
+                        
+                    } catch (\Throwable $th) {
+                        error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
+                        throw new ServiceUnavailable($th->getMessage());
+                    }
+                    return $data;
+
+                default:
+                    return false;
+            }              
+        }
+    }
+
+
     public static function replacePlaceholders($string, $values = [])
     {
         foreach(self::$allowed_placeholders as $placeholder => $value)

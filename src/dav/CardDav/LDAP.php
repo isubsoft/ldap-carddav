@@ -213,9 +213,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         {
             for ($i=0; $i < count($data); $i++) { 
                 
-                $row = [    'id' => $data[$i]['entryuuid'][0],
+                $row = [    'id' => $data[$i]['entryUUID'][0],
                             'uri' => $data[$i]['card_uri'],
-                            'lastmodified' => strtotime($data[$i]['modifytimestamp'][0]),
+                            'lastmodified' => strtotime($data[$i]['modifyTimestamp'][0]),
                             ];
 
                 $result[] = $row;
@@ -1467,7 +1467,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $addressBookConfig = $this->addressbook[$addressBookId]['config'];
         $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
         $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
-        
 
         if($ldapConn === false)
         {
@@ -1518,79 +1517,71 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
         //ADDED CARDS
         $filter = '(&' .$addressBookConfig['filter']. '(createtimestamp<=' .gmdate('YmdHis', $this->syncToken). 'Z)(!(|(createtimestamp<='.gmdate('YmdHis', $syncToken).'Z)(createtimestamp='.gmdate('YmdHis', $syncToken).'Z))))'; 
-        $data = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, ['entryuuid'], strtolower($addressBookConfig['scope']));      
+        $data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $filter, ['entryuuid'], strtolower($addressBookConfig['scope']));      
         
-        if($data['count'] > 0)
+        while($data)
         {
-            for ($i=0; $i < $data['count']; $i++) {         
+            $cardUri = null;
+            try {
+                $query = 'SELECT card_uri FROM '.$this->ldapMapTableName.' WHERE addressbook_id = ? and backend_id = ? and user_id = ?';
+                $stmt = $this->pdo->prepare($query);
+                $stmt->execute([$addressBookId, $data['data']['entryUUID'][0], $this->principalUser]);
+                
+                while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+                    $cardUri = $row['card_uri'];
+                }
 
-                    $cardUri = null;
-
-                    try {
-                        $query = 'SELECT card_uri FROM '.$this->ldapMapTableName.' WHERE addressbook_id = ? and backend_id = ? and user_id = ?';
-                        $stmt = $this->pdo->prepare($query);
-                        $stmt->execute([$addressBookId, $data[$i]['entryuuid'][0], $this->principalUser]);
-                        
-                        while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-                            $cardUri = $row['card_uri'];
-                        }
-
-                        if($cardUri == null)
-                        {
-                            $cardUri = $this->guidv4();
-                            $cardUID = $this->guidv4();
-
-                            $query = "INSERT INTO `".$this->ldapMapTableName."` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
-                            $sql = $this->pdo->prepare($query);
-                            $sql->execute([$cardUri, $cardUID, $addressBookId, $data[$i]['entryuuid'][0], $this->principalUser]); 
-                        }
-                    } catch (\Throwable $th) {
-                        error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
-                    }     
-
-                    $result['added'][] = $cardUri;
-                }       
+                if($cardUri == null)
+                {
+                    $cardUri = $this->guidv4();
+                    $cardUID = $this->guidv4();
+                    $query = "INSERT INTO `".$this->ldapMapTableName."` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
+                    $sql = $this->pdo->prepare($query);
+                    $sql->execute([$cardUri, $cardUID, $addressBookId, $data['data']['entryUUID'][0], $this->principalUser]); 
+                }
+            } catch (\Throwable $th) {
+                error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+            }     
+            $result['added'][] = $cardUri;
+       
+            $data = Utility::LdapIterativeQuery($ldapConn, $data['entryIns']);
         }
         
         
 
         //MODIFIED CARDS
         $filter = '(&' .$addressBookConfig['filter']. '(createtimestamp<=' .gmdate('YmdHis', $this->syncToken). 'Z)(!(|(modifytimestamp<='.gmdate('YmdHis', $syncToken).'Z)(modifytimestamp='.gmdate('YmdHis', $syncToken).'Z))))';  
-        $data = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, ['entryuuid'], strtolower($addressBookConfig['scope']));
+        $data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $filter, ['entryuuid'], strtolower($addressBookConfig['scope']));
         
-        if($data['count'] > 0)
+        while($data)
         {
-            for ($i=0; $i < $data['count']; $i++) { 
+            $cardUri = null;
+            try {
+                $query = 'SELECT card_uri FROM '.$this->ldapMapTableName.' WHERE addressbook_id = ? and backend_id = ? and user_id = ?';
+                $stmt = $this->pdo->prepare($query);
+                $stmt->execute([$addressBookId, $data['data']['entryUUID'][0], $this->principalUser]);
+                
+                while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+                    $cardUri = $row['card_uri'];
+                }
 
-                    $cardUri = null;
-
-                    try {
-                        $query = 'SELECT card_uri FROM '.$this->ldapMapTableName.' WHERE addressbook_id = ? and backend_id = ? and user_id = ?';
-                        $stmt = $this->pdo->prepare($query);
-                        $stmt->execute([$addressBookId, $data[$i]['entryuuid'][0], $this->principalUser]);
-                        
-                        while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-                            $cardUri = $row['card_uri'];
-                        }
-
-                        if($cardUri == null)
-                        {
-                            $cardUri = $this->guidv4();
-                            $cardUID = $this->guidv4();
-
-                            $query = "INSERT INTO `".$this->ldapMapTableName."` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
-                            $sql = $this->pdo->prepare($query);
-                            $sql->execute([$cardUri, $cardUID, $addressBookId, $data[$i]['entryuuid'][0], $this->principalUser]);  
-
-                            $result['added'][] = $cardUri;
-                        }
-                        else{
-                            $result['modified'][] = $cardUri;
-                        }
-                    } catch (\Throwable $th) {
-                        error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
-                    }      
-                } 
+                if($cardUri == null)
+                {
+                    $cardUri = $this->guidv4();
+                    $cardUID = $this->guidv4();
+                    $query = "INSERT INTO `".$this->ldapMapTableName."` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
+                    $sql = $this->pdo->prepare($query);
+                    $sql->execute([$cardUri, $cardUID, $addressBookId, $data['data']['entryUUID'][0], $this->principalUser]);  
+                    $result['added'][] = $cardUri;
+                }
+                else{
+                    $result['modified'][] = $cardUri;
+                }
+            } catch (\Throwable $th) {
+                error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+            }   
+            
+            $data = Utility::LdapIterativeQuery($ldapConn, $data['entryIns']);
         }
         
 
@@ -1606,8 +1597,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             }
         } catch (\Throwable $th) {
             error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
-        }       
-
+        }  
+        
         return $result;
     }
 
@@ -1690,11 +1681,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $result = [];
         $backendIds = [];
         $cardUris = [];
+        $uuids = [];
 
         $filter = '(&'.$config['filter']. '(createtimestamp<=' . gmdate('YmdHis', $this->syncToken) . 'Z))';     
-        $attributes = ['*','entryuuid','modifytimestamp'];
-        
-        $data = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, $attributes, strtolower($config['scope']));
+        $attributes = ['entryuuid','modifytimestamp'];
+
+        $data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $filter, $attributes, strtolower($config['scope']));
         
         try {
 
@@ -1709,32 +1701,30 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
             $this->pdo->beginTransaction();
 
-            if( !empty($data) & $data['count'] > 0)
-            {
-                $uuids = [];
-                for ($i=0; $i < $data['count']; $i++) { 
-
-                    if( !in_array($data[$i]['entryuuid'][0], $backendIds))
-                    {
-                        $cardUri = $this->guidv4();
-                        $cardUID = $this->guidv4();
-
-                        $query = "INSERT INTO `".$this->ldapMapTableName."` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
-                        $sql = $this->pdo->prepare($query);
-                        $sql->execute([$cardUri, $cardUID, $addressBookId, $data[$i]['entryuuid'][0], $this->principalUser]);
-
-                        $data[$i]['card_uri'] = $cardUri;
-                    }
-                    else
-                    {
-                        $index = array_search($data[$i]['entryuuid'][0], $backendIds);
-                        $data[$i]['card_uri'] = $cardUris[$index];
-                    }
-
-                    $uuids[] = $data[$i]['entryuuid'][0];
-                    $result[] = $data[$i];
+            while($data)
+            {                           
+                if( !in_array($data['data']['entryUUID'][0], $backendIds))
+                {
+                    $cardUri = $this->guidv4();
+                    $cardUID = $this->guidv4();
+                    $query = "INSERT INTO `".$this->ldapMapTableName."` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
+                    $sql = $this->pdo->prepare($query);
+                    $sql->execute([$cardUri, $cardUID, $addressBookId, $data['data']['entryUUID'][0], $this->principalUser]);
+                    $data['data']['card_uri'] = $cardUri;
                 }
+                else
+                {
+                    $index = array_search($data['data']['entryUUID'][0], $backendIds);
+                    $data['data']['card_uri'] = $cardUris[$index];
+                }               
+                $uuids[] = $data['data']['entryUUID'][0];
+                $result[] = $data['data'];
 
+                $data = Utility::LdapIterativeQuery($ldapConn, $data['entryIns']);
+            }
+            
+            if( !empty($result))
+            {
                 foreach($backendIds as $backendId)
                 {
                     if( !in_array($backendId, $uuids))
