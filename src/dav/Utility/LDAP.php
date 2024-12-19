@@ -153,61 +153,6 @@ class LDAP {
         }
     }
 
-    // public static function LdapIterativeQuery($ldapConn, $base, $filter, $attributes = [], $scope)
-    // {
-    //     $data = null;
-        
-    //     try {
-    //         if($scope == 'base')
-    //         {
-    //             $result = ldap_read($ldapConn, $base, $filter, $attributes);
-    //         }
-    //         else if($scope == 'list')
-    //         {
-    //             $result = ldap_list($ldapConn, $base, $filter, $attributes);
-    //         }
-    //         else
-    //         {
-    //             $result = ldap_search($ldapConn, $base, $filter, $attributes);
-    //         }
-
-    //         if(!$result)
-    //         {
-    //             return null; 
-    //         }
-            
-    //         $data['entryIns'] = ldap_first_entry($ldapConn, $result);
-    //         $data['data'] = ldap_get_attributes($ldapConn, $data['entryIns']);
-
-    //         // while($entry)
-    //         // {  
-    //         //     $data[] = ldap_get_attributes($ldapConn, $entry);
-    //         //     $entry = ldap_next_entry($ldapConn, $entry);
-    //         // }
-           
-    //     } catch (\Throwable $th) {
-    //         error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
-    //         throw new ServiceUnavailable($th->getMessage());
-    //     }    
-
-    //     return $data;
-    // }
-
-    // public static function LdapIterativeQue($ldapConn, $entry)
-    // {
-    //     $data = null;
-        
-    //     try {    
-    //         $data['entryIns'] = ldap_next_entry($ldapConn, $entry);
-    //         $data['data'] = ldap_get_attributes($ldapConn, $data['entryIns']);
-           
-    //     } catch (\Throwable $th) {
-    //         error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
-    //         throw new ServiceUnavailable($th->getMessage());
-    //     }    
-
-    //     return $data;
-    // }
 
     public static function replacePlaceholders($string, $values = [])
     {
