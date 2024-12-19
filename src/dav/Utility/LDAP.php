@@ -92,7 +92,7 @@ class LDAP {
         return $data;
     }
 
-    function __call($funcName, $args)
+    public static function __callStatic($funcName, $args)
     {
         if($funcName == 'LdapIterativeQuery')
         {

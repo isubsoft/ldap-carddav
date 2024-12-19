@@ -1467,7 +1467,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $addressBookConfig = $this->addressbook[$addressBookId]['config'];
         $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
         $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
-        $utils = new Utility();
 
         if($ldapConn === false)
         {
@@ -1518,7 +1517,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
         //ADDED CARDS
         $filter = '(&' .$addressBookConfig['filter']. '(createtimestamp<=' .gmdate('YmdHis', $this->syncToken). 'Z)(!(|(createtimestamp<='.gmdate('YmdHis', $syncToken).'Z)(createtimestamp='.gmdate('YmdHis', $syncToken).'Z))))'; 
-        $data = $utils->LdapIterativeQuery($ldapConn, $addressBookDn, $filter, ['entryuuid'], strtolower($addressBookConfig['scope']));      
+        $data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $filter, ['entryuuid'], strtolower($addressBookConfig['scope']));      
         
         while($data)
         {
@@ -1545,14 +1544,14 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             }     
             $result['added'][] = $cardUri;
        
-            $data = $utils->LdapIterativeQuery($ldapConn, $data['entryIns']);
+            $data = Utility::LdapIterativeQuery($ldapConn, $data['entryIns']);
         }
         
         
 
         //MODIFIED CARDS
         $filter = '(&' .$addressBookConfig['filter']. '(createtimestamp<=' .gmdate('YmdHis', $this->syncToken). 'Z)(!(|(modifytimestamp<='.gmdate('YmdHis', $syncToken).'Z)(modifytimestamp='.gmdate('YmdHis', $syncToken).'Z))))';  
-        $data = $utils->LdapIterativeQuery($ldapConn, $addressBookDn, $filter, ['entryuuid'], strtolower($addressBookConfig['scope']));
+        $data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $filter, ['entryuuid'], strtolower($addressBookConfig['scope']));
         
         while($data)
         {
@@ -1565,7 +1564,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                 while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
                     $cardUri = $row['card_uri'];
                 }
-                
+
                 if($cardUri == null)
                 {
                     $cardUri = $this->guidv4();
@@ -1582,7 +1581,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                 error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
             }   
             
-            $data = $utils->LdapIterativeQuery($ldapConn, $data['entryIns']);
+            $data = Utility::LdapIterativeQuery($ldapConn, $data['entryIns']);
         }
         
 
@@ -1686,8 +1685,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
         $filter = '(&'.$config['filter']. '(createtimestamp<=' . gmdate('YmdHis', $this->syncToken) . 'Z))';     
         $attributes = ['entryuuid','modifytimestamp'];
-        $utils = new Utility();
-        $data = $utils->LdapIterativeQuery($ldapConn, $addressBookDn, $filter, $attributes, strtolower($config['scope']));
+
+        $data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $filter, $attributes, strtolower($config['scope']));
         
         try {
 
@@ -1721,7 +1720,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                 $uuids[] = $data['data']['entryUUID'][0];
                 $result[] = $data['data'];
 
-                $data = $utils->LdapIterativeQuery($ldapConn, $data['entryIns']);
+                $data = Utility::LdapIterativeQuery($ldapConn, $data['entryIns']);
             }
             
             if( !empty($result))
