@@ -1733,13 +1733,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		      {
 		          if( !in_array($mappedBackendId, $backendIds))
 		          {
-		          	$query = "INSERT INTO `".$this->deletedCardsTableName."` (`addressbook_id`, `card_uri`, `user_id`, `sync_token`) SELECT addressbook_id, card_uri, user_id, ? FROM " . $this->ldapMapTableName . " WHERE user_id = ? AND addressbook_id = ? AND card_uri = ?"; 
+		            $query = "INSERT INTO `".$this->deletedCardsTableName."` (`addressbook_id`, `card_uri`, `user_id`, `sync_token`) SELECT addressbook_id, card_uri, user_id, ? FROM " . $this->ldapMapTableName . " WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?"; 
 	              $sql = $this->pdo->prepare($query);
-	              $sql->execute([time(), $this->principalUser, $addressBookId, $card_uri]);
+	              $sql->execute([time(), $this->principalUser, $addressBookId, $mappedBackendId]);
 	              
 	              $query = "DELETE FROM `" . $this->ldapMapTableName . "` WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?"; 
 	              $sql = $this->pdo->prepare($query);
-	              $sql->execute([$this->principalUser, $addressBookId, $backendId]);
+	              $sql->execute([$this->principalUser, $addressBookId, $mappedBackendId]);
 		          }
 		      }
 
