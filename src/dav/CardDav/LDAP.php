@@ -1524,7 +1524,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
                 if($cardUri == null)
                 {
-                    $cardUri = $this->guidv4();
+                    $cardUri = $this->guidv4().'.vcf';
                     $cardUID = $this->guidv4();
                     $query = "INSERT INTO `".$this->ldapMapTableName."` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
                     $sql = $this->pdo->prepare($query);
@@ -1558,7 +1558,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                 
                 if($cardUri == null)
                 {
-                    $cardUri = $this->guidv4();
+                    $cardUri = $this->guidv4().'.vcf';
                     $cardUID = $this->guidv4();
                     $query = "INSERT INTO `".$this->ldapMapTableName."` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
                     $sql = $this->pdo->prepare($query);
@@ -1700,7 +1700,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 	            else
                 {
                 		// Adding contacts present in LDAP with no reference here
-                    $cardUri = $this->guidv4();
+                    $cardUri = $this->guidv4().'.vcf';
                     $cardUID = $this->guidv4();
                     $query = "INSERT INTO `".$this->ldapMapTableName."` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
                     $sql = $this->pdo->prepare($query);
