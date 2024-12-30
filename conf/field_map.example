@@ -1,68 +1,12 @@
-<?php
-
-$config = [];
-
-$config['database'] = 'sqlite:data/sync/pdo/sqlite/deleted_cards.db';
-
-$config['auth']['ldap'] = [
-  'host'         => '<hostname>',
-  'port'          => 389,
-  'use_tls'       => false,
-  'ldap_version'  => 3,       // using LDAPv3
-  'network_timeout' => 10,    // The timeout (in seconds) for connect + bind attempts. This is only supported in PHP >= 5.3.0 with OpenLDAP 2.x
-  'base_dn'       => 'ou=People,dc=example,dc=net',
-  'bind_dn'       => '',
-  'bind_pass'     => '',
-  // It's possible to bind for an individual address book
-  // The login name is used to search for the DN to bind with
-  'search_base_dn' => '',
-  'search_filter'  => '(&(objectclass=inetOrgPerson)(uid=%u))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
-  // DN and password to bind as before searching for bind DN, if anonymous search is not allowed
-  'search_bind_dn' => 'cn=admin,ou=People,dc=example,dc=net',
-  'search_bind_pw' => '<secret>',
-  'scope' => 'list' // search mode: sub|base|list
-];
-
-$config['principal']['ldap'] = [
-  'host'         => '<hostname>',
-  'port'          => 389,
-  'use_tls'       => false,
-  'ldap_version'  => 3,       // using LDAPv3
-  'network_timeout' => 10,    // The timeout (in seconds) for connect + bind attempts. This is only supported in PHP >= 5.3.0 with OpenLDAP 2.x
-  'base_dn'       => 'ou=People,dc=example,dc=net',
-  // It's possible to bind for an individual address book
-  // The login name is used to search for the DN to bind with
-  'search_base_dn' => '',
-  'search_filter'  => '(&(objectclass=inetOrgPerson)(uid=%u))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
-  // DN and password to bind as before searching for bind DN, if anonymous search is not allowed
-  'search_bind_dn' => 'cn=admin,ou=People,dc=example,dc=net',
-  'search_bind_pw' => '<secret>',
-  'scope' => 'list' // search mode: sub|base|list
-];
-
-$config['card']['addressbook']['ldap']['private'] = [
-	'name'          	=> 'Personal Address Book',
-  'description'     => 'New Book',
-	'user_specific' 	=> true,
-	'base_dn'       	=> 'ou=Address Book,uid=%u,ou=People,dc=example,dc=net',
-	'bind_dn'       	=> '',
-	//    'bind_pass'     => '',
-	'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
-	'writable'     	 	=> true,
-	// If writable is true then these fields need to be populated:
-	// LDAP_Object_Classes, required_fields, LDAP_rdn
-	'LDAP_Object_Classes' => ['inetOrgPerson'],
-	'required_fields'     => ['cn', 'sn'],
-	'LDAP_rdn'      			=> 'cn',
-  'fieldmap'      => [
+'fieldmap'      => [
 		// vCard    => LDAP
     'FN'            => ['backend_attribute' => 'cn',
                           'parameters' => [],
                          'reverse_map_parameter_index' => ''],
 
-    'N'							=> ['backend_attribute' => [ 'last_name' => 'sn', 'first_name' => 'givenName'],
+    'N'							=> ['backend_attribute' => [ 'last_name' => 'sn', 'first_name' => 'givenName', 'prefix' => 'personalTitle' ],
                           'parameters' => [],
-                          'reverse_map_parameter_index' => ''],
+                          'reverse_map_parameter_index' => ''],  // personalTitle is outside of inetOrgPerson ldap schema 
 
 		'EMAIL'         => ['backend_attribute' => 'mail',
                           'parameters' => [], 
@@ -163,22 +107,4 @@ $config['card']['addressbook']['ldap']['private'] = [
                                               null
                                              ],                    
                                   'reverse_map_parameter_index' => 0 ]],
-	],
-	
-	'group_LDAP_Object_Classes' => ['groupOfNames'],
-	'group_required_fields'     => ['cn', 'member'],
-	'group_LDAP_rdn'      	    => 'cn',
-	'group_member_map'          => [ 'MEMBER'      => [ 'backend_attribute' => 'member' ] ],
-	'group_fieldmap'            => [     
-																	 'FN'          => [	'backend_attribute' => 'cn',
-																											'parameters'    => [],
-																									 		'reverse_map_parameter_index' => ''
-								                 										],
-								                 	
-																	 'NOTE'        => [	'backend_attribute' => 'description',
-																											'parameters' => [],                     
-																											'reverse_map_parameter_index' => ''
-																										]
-                                 ],
-	'scope'         => 'list'   // search mode: sub|base|list
-];
+	]
