@@ -1177,7 +1177,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
                 if($isLdapKeyExists == true)
                 {
-                    if($multiAllowedStatus['status'] && $count > 1)
+                    if($multiAllowedStatus['status'] && $count > 0)
                     {
                         for($i = 0; $i < $count; $i++)
                         {
@@ -1189,6 +1189,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                                     if(isset($data[$newLdapKey]) && isset($data[$newLdapKey][$i]))
                                     {
                                         $elementArr[] = $data[$newLdapKey][$i];
+                                    }
+                                    else
+                                    {
+                                        $elementArr[] = '';
                                     }
                                 }
                                 else
@@ -1218,6 +1222,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                                 if(isset($data[$newLdapKey]))
                                 {
                                     $elementArr[] = $data[$newLdapKey][0];
+                                }
+                                else
+                                {
+                                    $elementArr[] = '';
                                 }
                             }
                             else
@@ -1261,7 +1269,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                     
                         if($isLdapKeyExists == true)
                         {
-                            if($multiAllowedStatus['status'] && $count > 1)
+                            if($multiAllowedStatus['status'] && $count > 0)
                             {
                                 for($i = 0; $i < $count; $i++)
                                 {
@@ -1276,13 +1284,17 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                                             {
                                                 $elementArr[] = $data[$newLdapKey][$i];
                                             }
+                                            else
+                                            {
+                                                $elementArr[] = '';
+                                            }
                                         }
                                         else
                                         {
                                             $elementArr[] = '';
                                         }
                                     }
-                                
+                                    
                                     $vCardParams = Utility::reverseMapVCardParams($ldapKeyInfo['parameters'], $ldapKeyInfo['reverse_map_parameter_index']);
                                     if(!empty($vCardParams))
                                     {
@@ -1306,6 +1318,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                                         if(isset($data[$newLdapKey]))
                                         {
                                             $elementArr[] = $data[$newLdapKey][0];
+                                        }
+                                        else
+                                        {
+                                            $elementArr[] = '';
                                         }
                                     }
                                     else
