@@ -1,0 +1,232 @@
+{
+	"FN":
+	{
+		"multi_allowed": false,
+		"composite_attr": false,
+		"parameter": []
+	},
+
+	"N":
+	{
+		"multi_allowed": false,
+		"composite_attr": ["last_name", "first_name", "middle_name", "prefix", "suffix"],
+		"parameter": []
+	},
+
+	"EMAIL":
+	{
+		"multi_allowed": true,
+		"composite_attr": false,
+		"parameter": []
+	},
+
+	"ORG":
+	{
+		"multi_allowed": true,
+		"composite_attr": ["org_name", "org_unit_name"],
+		"parameter": []
+	},
+
+	"TITLE":
+	{
+		"multi_allowed": true,
+		"composite_attr": false,
+		"parameter": []
+	},
+
+	"NICKNAME":
+	{
+		"multi_allowed": false,
+		"composite_attr": false,
+		"parameter": []
+	},
+
+	"PHOTO":
+	{
+		"multi_allowed": true,
+		"composite_attr": false,
+		"parameter": ["TYPE", "VALUE", "MEDIATYPE", "ENCODING"]
+	},
+
+	"NOTE":
+	{
+		"multi_allowed": true,
+		"composite_attr": false,
+		"parameter": []
+	},
+
+	"TEL":
+	{
+		"multi_allowed": true,
+		"composite_attr": false,
+		"parameter": ["TYPE", "VALUE"]
+	},
+
+	"ADR":
+	{
+		"multi_allowed": true,
+		"composite_attr": ["po_box", "house_no", "street", "locality", "province", "postal_code", "country"],
+		"parameter": ["TYPE", "VALUE"]
+	},
+
+	"BDAY":
+	{
+		"multi_allowed": false,
+		"composite_attr": false,
+		"parameter": []
+	},
+
+	"ANNIVERSARY":
+	{
+		"multi_allowed": false,
+		"composite_attr": false,
+		"parameter": []
+	},
+
+	"GENDER":
+	{
+		"multi_allowed": false,
+		"composite_attr": ["sex", "gender_identity"],
+		"parameter": []
+	},
+
+	"IMPP":
+	{
+		"multi_allowed": true,
+		"composite_attr": false,
+		"parameter": ["TYPE", "VALUE"]
+	},
+
+	"LANG":
+	{
+		"multi_allowed": true,
+		"composite_attr": false,
+		"parameter": ["TYPE", "VALUE"]
+	},
+
+	"TZ":
+	{
+		"multi_allowed": true,
+		"composite_attr": false,
+		"parameter": ["VALUE"]
+	},
+
+	"GEO":
+	{
+		"multi_allowed": true,
+		"composite_attr": false,
+		"parameter": []
+	},
+
+	"ROLE":
+	{
+		"multi_allowed": true,
+		"composite_attr": false,
+		"parameter": []
+	},
+
+	"LOGO":
+	{
+		"multi_allowed": true,
+		"composite_attr": false,
+		"parameter": []
+	},
+
+	"MEMBER":
+	{
+		"multi_allowed": true,
+		"composite_attr": false,
+		"parameter": []
+	},
+
+	"RELATED":
+	{
+		"multi_allowed": true,
+		"composite_attr": false,
+		"parameter": ["VALUE"]
+	},
+
+	"BIRTHPLACE":
+	{
+		"multi_allowed": false,
+		"composite_attr": false,
+		"parameter": ["VALUE", "LANGUAGE"]
+	},
+
+	"DEATHPLACE":
+	{
+		"multi_allowed": false,
+		"composite_attr": false,
+		"parameter": ["VALUE", "LANGUAGE"]
+	},
+
+	"DEATHDATE":
+	{
+		"multi_allowed": false,
+		"composite_attr": false,
+		"parameter": ["VALUE", "CALSCALE", "LANGUAGE"]
+	},
+
+	"EXPERTISE":
+	{
+		"multi_allowed": true,
+		"composite_attr": false,
+		"parameter": ["LEVEL", "INDEX"]
+	},
+
+	"HOBBY":
+	{
+		"multi_allowed": true,
+		"composite_attr": false,
+		"parameter": ["LEVEL", "INDEX"]
+	},
+
+	"INTEREST":
+	{
+		"multi_allowed": true,
+		"composite_attr": false,
+		"parameter": ["LEVEL", "INDEX"]
+	},
+
+	"ORG-DIRECTORY":
+	{
+		"multi_allowed": true,
+		"composite_attr": false,
+		"parameter": ["PREF", "INDEX"]
+	},
+
+	"CONTACT-URI":
+	{
+		"multi_allowed": true,
+		"composite_attr": false,
+		"parameter": []
+	},
+
+	"GRAMGENDER":
+	{
+		"multi_allowed": true,
+		"composite_attr": false,
+		"parameter": ["LANGUAGE"]
+	},
+
+	"PRONOUNS":
+	{
+		"multi_allowed": true,
+		"composite_attr": false,
+		"parameter": ["LANGUAGE", "PREF", "TYPE", "ALTID"]
+	},
+
+	"SOCIALPROFILE":
+	{
+		"multi_allowed": true,
+		"composite_attr": false,
+		"parameter": ["SERVICE-TYPE", "VALUE"]
+	},
+    
+	"JSPROP":
+	{
+		"multi_allowed": true,
+		"composite_attr": false,
+		"parameter": ["JSPTR"]
+	}
+}
