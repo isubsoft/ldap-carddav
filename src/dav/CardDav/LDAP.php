@@ -1177,7 +1177,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
                 if($isLdapKeyExists == true)
                 {
-                    if($multiAllowedStatus['status'] && $count > 1)
+                    if($multiAllowedStatus['status'] && $count > 0)
                     {
                         for($i = 0; $i < $count; $i++)
                         {
@@ -1189,6 +1189,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                                     if(isset($data[$newLdapKey]) && isset($data[$newLdapKey][$i]))
                                     {
                                         $elementArr[] = $data[$newLdapKey][$i];
+                                    }
+                                    else
+                                    {
+                                        $elementArr[] = '';
                                     }
                                 }
                                 else
@@ -1218,6 +1222,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                                 if(isset($data[$newLdapKey]))
                                 {
                                     $elementArr[] = $data[$newLdapKey][0];
+                                }
+                                else
+                                {
+                                    $elementArr[] = '';
                                 }
                             }
                             else
@@ -1261,7 +1269,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                     
                         if($isLdapKeyExists == true)
                         {
-                            if($multiAllowedStatus['status'] && $count > 1)
+                            if($multiAllowedStatus['status'] && $count > 0)
                             {
                                 for($i = 0; $i < $count; $i++)
                                 {
@@ -1276,13 +1284,17 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                                             {
                                                 $elementArr[] = $data[$newLdapKey][$i];
                                             }
+                                            else
+                                            {
+                                                $elementArr[] = '';
+                                            }
                                         }
                                         else
                                         {
                                             $elementArr[] = '';
                                         }
                                     }
-                                
+                                    
                                     $vCardParams = Utility::reverseMapVCardParams($ldapKeyInfo['parameters'], $ldapKeyInfo['reverse_map_parameter_index']);
                                     if(!empty($vCardParams))
                                     {
@@ -1306,6 +1318,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                                         if(isset($data[$newLdapKey]))
                                         {
                                             $elementArr[] = $data[$newLdapKey][0];
+                                        }
+                                        else
+                                        {
+                                            $elementArr[] = '';
                                         }
                                     }
                                     else
@@ -1524,7 +1540,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
                 if($cardUri == null)
                 {
-                    $cardUri = $this->guidv4();
+                    $cardUri = $this->guidv4().'.vcf';
                     $cardUID = $this->guidv4();
                     $query = "INSERT INTO `".$this->ldapMapTableName."` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
                     $sql = $this->pdo->prepare($query);
@@ -1558,7 +1574,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                 
                 if($cardUri == null)
                 {
-                    $cardUri = $this->guidv4();
+                    $cardUri = $this->guidv4().'.vcf';
                     $cardUID = $this->guidv4();
                     $query = "INSERT INTO `".$this->ldapMapTableName."` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
                     $sql = $this->pdo->prepare($query);
@@ -1680,70 +1696,71 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         
         try 
         {
-					$this->pdo->beginTransaction();
+			$this->pdo->beginTransaction();
            
-          while($data) 
-					{
-	          $contactData = null;
+            while($data) 
+			{
+	            $contactData = null;
 	          
-	          $query = 'SELECT card_uri, card_uid FROM '.$this->ldapMapTableName.' WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?';
-	          $stmt = $this->pdo->prepare($query);
-	          $stmt->execute([$this->principalUser, $addressBookId, $data['data']['entryUUID'][0]]);
-	          $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+	            $query = 'SELECT card_uri, card_uid FROM '.$this->ldapMapTableName.' WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?';
+	            $stmt = $this->pdo->prepare($query);
+	            $stmt->execute([$this->principalUser, $addressBookId, $data['data']['entryUUID'][0]]);
+	            $row = $stmt->fetch(\PDO::FETCH_ASSOC);
 	          
-	          if (!empty($row)) {
-	              $contactData = [	'card_uri' => $row['card_uri'], 
-              													'card_uid' => $row['card_uid']
-	              											];
-	          }
-	          else
-            {
-            		// Adding contacts present in LDAP with no reference here
-                $cardUri = $this->guidv4();
-                $cardUID = $this->guidv4();
-                $query = "INSERT INTO `".$this->ldapMapTableName."` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
-                $sql = $this->pdo->prepare($query);
-                $sql->execute([$cardUri, $cardUID, $addressBookId, $data['data']['entryUUID'][0], $this->principalUser]);
-                
-	              $contactData = [	'card_uri' => $cardUri, 
-              													'card_uid' => $cardUID
-	              												];
-            }
-            
-            $contactData['backend_id'] = $data['data']['entryUUID'][0];
-            $contactData['modified_timestamp'] = strtotime($data['data']['modifyTimestamp'][0]);
-            
-            $mappedContacts[] = $contactData;
-            $backendIds[] = $data['data']['entryUUID'][0];
+	            if (!empty($row)) 
+                {
+	                $contactData = [    'card_uri' => $row['card_uri'], 
+                  						'card_uid' => $row['card_uid']
+	                  				];
+	            }
+	            else
+                {
+                		// Adding contacts present in LDAP with no reference here
+                    $cardUri = $this->guidv4().'.vcf';
+                    $cardUID = $this->guidv4();
+                    $query = "INSERT INTO `".$this->ldapMapTableName."` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
+                    $sql = $this->pdo->prepare($query);
+                    $sql->execute([$cardUri, $cardUID, $addressBookId, $data['data']['entryUUID'][0], $this->principalUser]);
 
-            $data = Utility::LdapIterativeQuery($ldapConn, $data['entryIns']);
-					}
+	                $contactData = [    'card_uri' => $cardUri, 
+                  						'card_uid' => $cardUID
+	                  				];
+                }
+            
+                $contactData['backend_id'] = $data['data']['entryUUID'][0];
+                $contactData['modified_timestamp'] = strtotime($data['data']['modifyTimestamp'][0]);
+            
+                $mappedContacts[] = $contactData;
+                $backendIds[] = $data['data']['entryUUID'][0];
+
+                $data = Utility::LdapIterativeQuery($ldapConn, $data['entryIns']);
+			}
 				
-					// Fetch all mapped backend ids
-		      $query = 'SELECT backend_id FROM '.$this->ldapMapTableName.' WHERE user_id = ? AND addressbook_id = ?';
-		      $stmt = $this->pdo->prepare($query);
-		      $stmt->execute([$this->principalUser, $addressBookId]);
+				// Fetch all mapped backend ids
+		    $query = 'SELECT backend_id FROM '.$this->ldapMapTableName.' WHERE user_id = ? AND addressbook_id = ?';
+		    $stmt = $this->pdo->prepare($query);
+		    $stmt->execute([$this->principalUser, $addressBookId]);
 					
-					while($row = $stmt->fetch(\PDO::FETCH_ASSOC))
-					{
-						$mappedBackendIds[] = $row['backend_id'];
-					}
+		    while($row = $stmt->fetch(\PDO::FETCH_ASSOC))
+			{
+				$mappedBackendIds[] = $row['backend_id'];
+			}
             
-		      foreach($mappedBackendIds as $mappedBackendId)
-		      {
-		          if( !in_array($mappedBackendId, $backendIds))
-		          {
-		            $query = "INSERT INTO `".$this->deletedCardsTableName."` (`addressbook_id`, `card_uri`, `user_id`, `sync_token`) SELECT addressbook_id, card_uri, user_id, ? FROM " . $this->ldapMapTableName . " WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?"; 
-	              $sql = $this->pdo->prepare($query);
-	              $sql->execute([time(), $this->principalUser, $addressBookId, $mappedBackendId]);
-	              
-	              $query = "DELETE FROM `" . $this->ldapMapTableName . "` WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?"; 
-	              $sql = $this->pdo->prepare($query);
-	              $sql->execute([$this->principalUser, $addressBookId, $mappedBackendId]);
-		          }
-		      }
+		    foreach($mappedBackendIds as $mappedBackendId)
+		    {
+		        if( !in_array($mappedBackendId, $backendIds))
+		        {
+		          $query = "INSERT INTO `".$this->deletedCardsTableName."` (`addressbook_id`, `card_uri`, `user_id`, `sync_token`) SELECT addressbook_id, card_uri, user_id, ? FROM " . $this->ldapMapTableName . " WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?"; 
+	            $sql = $this->pdo->prepare($query);
+	            $sql->execute([time(), $this->principalUser, $addressBookId, $mappedBackendId]);
+	            
+	            $query = "DELETE FROM `" . $this->ldapMapTableName . "` WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?"; 
+	            $sql = $this->pdo->prepare($query);
+	            $sql->execute([$this->principalUser, $addressBookId, $mappedBackendId]);
+		        }
+		    }
 
-          $this->pdo->commit();
+            $this->pdo->commit();
 
         } catch (\Throwable $th) {
             error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
