@@ -30,6 +30,11 @@ try {
 require_once 'vendor/autoload.php';
 
 
+//constants
+$GLOBALS['__BASE_DIR__'] = __DIR__;
+$GLOBALS['__DATA_DIR__'] = __DIR__.'/data';
+$GLOBALS['__CONF_DIR__'] = __DIR__.'/conf';
+
 
 
 // Backends
