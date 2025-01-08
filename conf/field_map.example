@@ -1,12 +1,12 @@
-'fieldmap'      => [
-		// vCard    => LDAP
+// Field map for standard vCard properties to LDAP inetOrgPerson object class
+
     'FN'            => ['backend_attribute' => 'cn',
                           'parameters' => [],
                          'reverse_map_parameter_index' => ''],
 
-    'N'							=> ['backend_attribute' => [ 'last_name' => 'sn', 'first_name' => 'givenName', 'prefix' => 'personalTitle' ],
+    'N'							=> ['backend_attribute' => [ 'last_name' => 'sn', 'first_name' => 'givenName'],
                           'parameters' => [],
-                          'reverse_map_parameter_index' => ''],  // personalTitle is outside of inetOrgPerson ldap schema 
+                          'reverse_map_parameter_index' => ''],
 
 		'EMAIL'         => ['backend_attribute' => 'mail',
                           'parameters' => [], 
@@ -89,12 +89,20 @@
                                       ],                      
                       'reverse_map_parameter_index' => 0]],
                      
-      'ADR'         => [['backend_attribute' => ['po_box'=> 'postOfficeBox','house_no' => 'postalAddress','street' => 'street','locality' => 'l','province' => 'stateOrProvinceName', 'postal_code' => 'postalCode'],
+      'ADR'         => [['backend_attribute' => 'homePostalAddress',
                           'parameters' => [ 'VALUE=text;TYPE="home";PREF=1',
                                             'TYPE=home;VALUE=TEXT',
-                                              'TYPE="home"',
-                                              'PREF=1',
-                                              null
+                                            'TYPE="home"',
+                                            'PREF=1',
+                                            null
+                                            ],                    
+                                        'reverse_map_parameter_index' => 0,
+                                        'map_component_separator' => '$' ],
+                          ['backend_attribute' => ['po_box'=> 'postOfficeBox','street' => 'street','locality' => 'l','province' => 'st', 'postal_code' => 'postalCode'],
+                          'parameters' => [ 'VALUE=text;TYPE="work";PREF=1',
+                                            'TYPE=work;VALUE=TEXT',
+                                              'TYPE="work"',
+                                              'PREF=1'
                                              ],                    
                                   'reverse_map_parameter_index' => 0 ]],
 
@@ -106,5 +114,8 @@
                                               'TYPE="work"',
                                               null
                                              ],                    
-                                  'reverse_map_parameter_index' => 0 ]],
-	]
+                                  'reverse_map_parameter_index' => 0 ]]
+
+// Field map alternative to be considered if using an appropriate LDAP object class
+
+    'N'							=> ['backend_attribute' => [ 'last_name' => 'sn', 'first_name' => 'givenName', 'prefix' => 'personalTitle' ]
