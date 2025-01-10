@@ -702,7 +702,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             return false;
         }
         
-        $ldapTree = $rdn. '='. $ldapInfo[$rdn]. ',' .$addressBookDn;
+        $ldapTree = $rdn. '='. ldap_escape($ldapInfo[$rdn], "", LDAP_ESCAPE_DN) . ',' .$addressBookDn;
 
         try {
             $ldapResponse = ldap_add($ldapConn, $ldapTree, $ldapInfo);
@@ -1186,7 +1186,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         }
         
 
-        $newLdapRdn = $rdn. '='. $newLdapRdnValue;    
+        $newLdapRdn = $rdn. '='. ldap_escape($newLdapRdnValue, "", LDAP_ESCAPE_DN);    
         if($parsr[0] == $newLdapRdn)
         {
             return null;
