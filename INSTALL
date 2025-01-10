@@ -1,15 +1,12 @@
 -- Composer
 This project uses composer dependencies. Please install the dependencies by running composer update from root directory.
 
--- Web Server configuration
+-- Web Server and PHP configuration
 Please refer to SabreDav documentation here https://sabre.io/dav/webservers/
 
--- System dependencies (Debian 11, Apache Web Server)
+-- System dependencies (Debian 11 and Apache Web Server is taken as a reference)
 Install the below packages
 
-apache2
-libapache2-mod-php
-ldap-utils
 php-cli
 php-common
 php-curl
@@ -21,13 +18,18 @@ php-msgpack
 php-opcache
 php-readline
 php-xml
+php-sqlite3 (if using SQLite as PDO database)
 composer
-sqlite3
-php-sqlite3
 
--- Database creation (SQLite)
-1. Create a SQLite database at the location specified in conf/conf.php. Make sure the database file is writeable by the web server.
-2. Create objects in the SQLite database as per sql/ddl.sql file.
+apache2
+libapache2-mod-php
+
+sqlite3 (if using SQLite as PDO database)
+ldap-utils (optional)
+
+-- Database creation (PDO)
+1. Create objects in the PDO database as per sql/ddl.sql file and update PDO database connection in conf/conf.php file.
+2. If creating a SQLite database make sure the database file is writeable by the user running PHP.
 
 -- File permissions
 1. Only data directory needs to be writable by user running PHP.
