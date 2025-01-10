@@ -28,3 +28,7 @@ php-sqlite3
 -- Database creation (SQLite)
 1. Create a SQLite database at the location specified in conf/conf.php. Make sure the database file is writeable by the web server.
 2. Create objects in the SQLite database as per sql/ddl.sql file.
+
+-- File permissions
+1. Only data directory needs to be writable by user running PHP.
+2. Conf directory should not be world readable.
