@@ -1,7 +1,7 @@
 # ldap-carddav
 Extension of SabreDAV to add LDAP as authentication and contacts backend
 
--- The following features are available or planned
+-- The following features are available
 1. Multiple address book support
 2. Full read-write support to LDAP with contact renaming
 3. Extensive and customizable configuration option to map vCard properties to LDAP attributes including multi-valued and composite value properties/attributes
