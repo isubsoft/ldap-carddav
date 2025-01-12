@@ -702,7 +702,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             return false;
         }
         
-        $ldapTree = $rdn. '='. ldap_escape($ldapInfo[$rdn], "", LDAP_ESCAPE_DN) . ',' .$addressBookDn;
+        $ldapTree = $rdn. '='. ldap_escape(is_array($ldapInfo[$rdn])?$ldapInfo[$rdn][0]:$ldapInfo[$rdn], "", LDAP_ESCAPE_DN) . ',' .$addressBookDn;
 
         try {
             $ldapResponse = ldap_add($ldapConn, $ldapTree, $ldapInfo);
@@ -1146,37 +1146,52 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             return false;
         }
 
-        $data = $this->fetchContactData($addressBookId, $cardUri);
+        $oldLdapInfo = $this->fetchContactData($addressBookId, $cardUri, ['*']);
+        $oldLdapTree = $oldLdapInfo[0]['dn'];
+        $componentOldLdapTree = ldap_explode_dn($oldLdapTree, 0);
+        
+        if(!$componentOldLdapTree)
+        {
+            return false;
+        }
+        
+        $oldLdapRdnArr = explode('=', $componentOldLdapTree[0]);
+        
+        if( empty($oldLdapRdnArr) || ! (isset($oldLdapRdnArr[0]) && isset($oldLdapRdnArr[1])) )
+        {
+        	return false;
+        }
+        
+        $oldLdapRdnAttr = $oldLdapRdnArr[0];
+        $oldLdapRdnValue = Utility::decodeHexInString($oldLdapRdnArr[1]);
                     
-        $ldapRdnValues = null;
-        foreach($data[0] as $key => $value) { 
-            if(is_array($value) && $key!= 'entryuuid' && $key!= 'modifytimestamp')
+        foreach($oldLdapInfo[0] as $oldLdapAttrName => $oldLdapAttrValue) { 
+            if(is_array($oldLdapAttrValue))
             {
-                if(! isset($ldapInfo[$key]))
-                $ldapInfo[$key] = [];
-
-                if($key == $rdn)
-                {
-                    for ($i=0; $i < $value['count']; $i++) { 
-                        $ldapRdnValues[] = $value[$i];
-                    }
-                    $newLdapRdnValue = $ldapInfo[$key];
-                    $ldapInfo[$key] = $ldapRdnValues;
-                }
+                if(! isset($ldapInfo[$oldLdapAttrName]))
+                	$ldapInfo[$oldLdapAttrName] = [];
             }
         }
         
-        $ldapTree = $data[0]['dn'];
-
+        $ldapDelOldRdnFlag = false;
+        
+  			if(isset($ldapInfo[$oldLdapRdnAttr]))
+				{
+					if(! in_array($oldLdapRdnValue, $ldapInfo[$oldLdapRdnAttr]))
+					{
+						$ldapDelOldRdnFlag = true;
+						$ldapInfo[$oldLdapRdnAttr][] = $oldLdapRdnValue;
+					}
+				}
+				else
+				{
+					$ldapDelOldRdnFlag = true;
+					$ldapInfo[$oldLdapRdnAttr][] = $oldLdapRdnValue;
+				}
+			  
         try {
-            $ldapResponse = ldap_mod_replace($ldapConn, $ldapTree, $ldapInfo);
+            $ldapResponse = ldap_mod_replace($ldapConn, $oldLdapTree, $ldapInfo);
             if(!$ldapResponse)
-            {
-                return false;
-            }
-
-            $parsr = ldap_explode_dn($ldapTree, 0);
-            if(!$parsr)
             {
                 return false;
             }
@@ -1185,35 +1200,21 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             throw new ServiceUnavailable($th->getMessage());
         }
         
+        $newLdapRdnValue = is_array($ldapInfo[$rdn])?$ldapInfo[$rdn][0]:$ldapInfo[$rdn];
+        				
+        $newLdapRdn = $rdn . '=' . ldap_escape($newLdapRdnValue, "", LDAP_ESCAPE_DN);
 
-        $newLdapRdn = $rdn. '='. ldap_escape($newLdapRdnValue, "", LDAP_ESCAPE_DN);    
-        if($parsr[0] == $newLdapRdn)
-        {
-            return null;
-        }
-        else
-        {
-            try {
-                if(in_array($newLdapRdnValue, $ldapRdnValues))
-                {
-                    $ldapRename = ldap_rename($ldapConn, $ldapTree, $newLdapRdn, $addressBookDn, false);
-                }
-                else{
-                    $ldapRename = ldap_rename($ldapConn, $ldapTree, $newLdapRdn, $addressBookDn, true);
-                }
-
-                if(!$ldapRename)
-                {
-                    return false;
-                }           
-            } catch (\Throwable $th) {
-                error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
-                throw new ServiceUnavailable($th->getMessage());
+        try {
+            if(! ldap_rename($ldapConn, $oldLdapTree, $newLdapRdn, $addressBookDn, $ldapDelOldRdnFlag))
+            {
+                return false;
             }
-            
-            return null;
-        } 
+        } catch (\Throwable $th) {
+            error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
+            throw new ServiceUnavailable($th->getMessage());
+        }
 
+			return null;
     }
 
     /**
@@ -1938,7 +1939,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      * @param string  $cardUri
      * @param array $config
      */
-    function fetchContactData($addressBookId, $cardUri)
+    function fetchContactData($addressBookId, $cardUri, $attributes = [])
     {
         $config = $this->addressbook[$addressBookId]['config'];
         $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
@@ -1961,9 +1962,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         
   
         $filter = '(&'.$config['filter']. '(entryuuid=' .$backendId. '))'; 
-        $attributes = ['*', 'entryuuid', 'modifytimestamp'];
         
-        $result = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, $attributes, strtolower($config['scope']));      
+        $result = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, empty($attributes)?['*', 'entryuuid', 'modifytimestamp']:$attributes, strtolower($config['scope']));      
         return $result;
     }
 
