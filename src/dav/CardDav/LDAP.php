@@ -323,7 +323,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         }
 
         $vcard = Reader::read($cardData);
-        $UID = $vcard->UID;
+        $UID = (empty($vcard->UID))?$this->guidv4():$vcard->UID;
          
         $ldapInfo = [];
 
@@ -1834,8 +1834,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
                 if($cardUri == null)
                 {
-                    $cardUri = $this->guidv4().'.vcf';
                     $cardUID = $this->guidv4();
+                    $cardUri = $cardUID .'.vcf';
+                    
                     $query = "INSERT INTO `".$this->ldapMapTableName."` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
                     $sql = $this->pdo->prepare($query);
                     $sql->execute([$cardUri, $cardUID, $addressBookId, $data['data']['entryUUID'][0], $this->principalUser]); 
@@ -1868,8 +1869,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                 
                 if($cardUri == null)
                 {
-                    $cardUri = $this->guidv4().'.vcf';
                     $cardUID = $this->guidv4();
+                    $cardUri = $cardUID .'.vcf';
+                    
                     $query = "INSERT INTO `".$this->ldapMapTableName."` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
                     $sql = $this->pdo->prepare($query);
                     $sql->execute([$cardUri, $cardUID, $addressBookId, $data['data']['entryUUID'][0], $this->principalUser]);  
@@ -2009,8 +2011,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 	            else
                 {
                 		// Adding contacts present in LDAP with no reference here
-                    $cardUri = $this->guidv4().'.vcf';
                     $cardUID = $this->guidv4();
+                    $cardUri = $cardUID .'.vcf';
+                    
                     $query = "INSERT INTO `".$this->ldapMapTableName."` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
                     $sql = $this->pdo->prepare($query);
                     $sql->execute([$cardUri, $cardUID, $addressBookId, $data['data']['entryUUID'][0], $this->principalUser]);
