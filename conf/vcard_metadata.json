@@ -1,7 +1,7 @@
 {
 	"FN":
 	{
-		"multi_allowed": false,
+		"multi_allowed": true,
 		"composite_attr": false,
 		"parameter": []
 	},

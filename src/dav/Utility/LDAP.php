@@ -271,5 +271,16 @@ class LDAP {
 
         return $vCardParams;
     }
-
+    
+    public static function decodeHexInString($string) {
+    return
+        preg_replace_callback(
+            "/\\\\[0-9a-zA-Z]{2}/",
+            function ($matches) {
+                $match = array_shift($matches);
+                return hex2bin(substr($match, 1));
+            },
+            $string
+        );
+		}
 }
