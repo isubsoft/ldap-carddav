@@ -242,7 +242,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     {
         $result = [];
         
-        $data = $this->fetchContactData($addressBookId, $cardUri);
+        $data = $this->fetchContactData($addressBookId, $cardUri, ['*', 'entryUUID', 'modifyTimestamp']);
 
         if( !empty($data) && $data['count'] > 0)
         {           
@@ -1147,6 +1147,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         }
 
         $oldLdapInfo = $this->fetchContactData($addressBookId, $cardUri, ['*']);
+        
+        if(empty($oldLdapInfo))
+        	return null;
+        
         $oldLdapTree = $oldLdapInfo[0]['dn'];
         $componentOldLdapTree = ldap_explode_dn($oldLdapTree, 0);
         
@@ -1171,7 +1175,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $newLdapRdn = $rdn . '=' . ldap_escape(is_array($ldapInfo[$rdn])?$ldapInfo[$rdn][0]:$ldapInfo[$rdn], "", LDAP_ESCAPE_DN);
 
         try {
-            if(! ldap_rename($ldapConn, $oldLdapTree, $newLdapRdn, null, true))
+            if(! ldap_rename($ldapConn, $oldLdapTree, $newLdapRdn, null, false))
             {
                 return null;
             }
@@ -1205,7 +1209,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             return false;
         }
         
-        $data = $this->fetchContactData($addressBookId, $cardUri);
+        $data = $this->fetchContactData($addressBookId, $cardUri, ['dn', 'entryUUID']);
+        
+        if(empty($data))
+        	return false;
+        
         $ldapTree = $data[0]['dn'];
 
         try {
@@ -1929,6 +1937,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                 $backendId = $row['backend_id'];
             }
             
+            if(empty($backendId))
+            	return null;
+            
         } catch (\Throwable $th) {
             error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
         }
@@ -1936,7 +1947,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
   
         $filter = '(&'.$config['filter']. '(entryuuid=' .$backendId. '))'; 
         
-        $result = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, empty($attributes)?['*', 'entryuuid', 'modifytimestamp']:$attributes, strtolower($config['scope']));      
+        $result = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, empty($attributes)?['dn', 'createTimestamp', 'modifyTimestamp']:$attributes, strtolower($config['scope']));      
         return $result;
     }
 
