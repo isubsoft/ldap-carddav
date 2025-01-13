@@ -761,7 +761,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
         if(!$addressBookConfig['writable'])
         {
-            return false;
+            return null;
         }
 
        
@@ -1138,12 +1138,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
         foreach ($requiredFields as $key) {
             if(! array_key_exists($key, $ldapInfo))
-            return false;
+            return null;
         }
 
         if(! array_key_exists($rdn, $ldapInfo))
         {
-            return false;
+            return null;
         }
 
         $oldLdapInfo = $this->fetchContactData($addressBookId, $cardUri, ['*']);
@@ -1152,19 +1152,14 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         
         if(!$componentOldLdapTree)
         {
-            return false;
+            return null;
         }
         
-        $oldLdapRdnArr = explode('=', $componentOldLdapTree[0]);
+        $parentOldLdapTree = "";
         
-        if( empty($oldLdapRdnArr) || ! (isset($oldLdapRdnArr[0]) && isset($oldLdapRdnArr[1])) )
-        {
-        	return false;
-        }
+        for($dnComponentIndex=1; $dnComponentIndex<$componentOldLdapTree['count']; $dnComponentIndex++)
+					$parentOldLdapTree = $parentOldLdapTree . (empty($parentOldLdapTree)?"":",") . $componentOldLdapTree[$dnComponentIndex]; 
         
-        $oldLdapRdnAttr = $oldLdapRdnArr[0];
-        $oldLdapRdnValue = Utility::decodeHexInString($oldLdapRdnArr[1]);
-                    
         foreach($oldLdapInfo[0] as $oldLdapAttrName => $oldLdapAttrValue) { 
             if(is_array($oldLdapAttrValue))
             {
@@ -1173,41 +1168,17 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             }
         }
         
-        $ldapDelOldRdnFlag = false;
-        
-  			if(isset($ldapInfo[$oldLdapRdnAttr]))
-				{
-					if(! in_array($oldLdapRdnValue, $ldapInfo[$oldLdapRdnAttr]))
-					{
-						$ldapDelOldRdnFlag = true;
-						$ldapInfo[$oldLdapRdnAttr][] = $oldLdapRdnValue;
-					}
-				}
-				else
-				{
-					$ldapDelOldRdnFlag = true;
-					$ldapInfo[$oldLdapRdnAttr][] = $oldLdapRdnValue;
-				}
-			  
-        try {
-            $ldapResponse = ldap_mod_replace($ldapConn, $oldLdapTree, $ldapInfo);
-            if(!$ldapResponse)
-            {
-                return false;
-            }
-        } catch (\Throwable $th) {
-            error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
-            throw new ServiceUnavailable($th->getMessage());
-        }
-        
-        $newLdapRdnValue = is_array($ldapInfo[$rdn])?$ldapInfo[$rdn][0]:$ldapInfo[$rdn];
-        				
-        $newLdapRdn = $rdn . '=' . ldap_escape($newLdapRdnValue, "", LDAP_ESCAPE_DN);
+        $newLdapRdn = $rdn . '=' . ldap_escape(is_array($ldapInfo[$rdn])?$ldapInfo[$rdn][0]:$ldapInfo[$rdn], "", LDAP_ESCAPE_DN);
 
         try {
-            if(! ldap_rename($ldapConn, $oldLdapTree, $newLdapRdn, $addressBookDn, $ldapDelOldRdnFlag))
+            if(! ldap_rename($ldapConn, $oldLdapTree, $newLdapRdn, null, true))
             {
-                return false;
+                return null;
+            }
+
+            if(! ldap_mod_replace($ldapConn, $newLdapRdn . ',' . $parentOldLdapTree, $ldapInfo))
+            {
+                return null;
             }
         } catch (\Throwable $th) {
             error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
