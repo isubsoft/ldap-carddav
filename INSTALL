@@ -28,7 +28,7 @@ sqlite3 (if using SQLite as PDO database)
 ldap-utils (optional)
 
 -- Database creation (PDO)
-1. Create objects in the PDO database as per sql/ddl.sql file and update PDO database connection in conf/conf.php file.
+1. Create objects in the PDO database as per sql/<provider>/ddl.sql file and update PDO database connection in conf/conf.php file.
 2. If creating a SQLite database make sure the database file is writeable by the user running PHP.
 
 -- File permissions
