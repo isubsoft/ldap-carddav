@@ -1,4 +1,7 @@
 <?php
+/************************************************************
+* Copyright 2023-2025 ISub Softwares (OPC) Private Limited
+************************************************************/
 
 namespace isubsoft\dav\Utility;
 

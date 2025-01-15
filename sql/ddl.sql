@@ -1,3 +1,7 @@
+/************************************************************
+* Copyright 2023-2025 ISub Softwares (OPC) Private Limited
+************************************************************/
+
 CREATE TABLE cards_deleted 
 (
 	user_id VARCHAR(255) NOT NULL,
