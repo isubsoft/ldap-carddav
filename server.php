@@ -1,4 +1,7 @@
 <?php
+/************************************************************
+* Copyright 2023-2025 ISub Softwares (OPC) Private Limited
+************************************************************/
 
 /*
 
@@ -14,7 +17,12 @@ This server features CardDAV support
 // This can be for example the root / or a complete path to your server script
 $baseUri = '/';
 
-require 'conf/conf.php';
+//constants
+$GLOBALS['__BASE_DIR__'] = __DIR__;
+$GLOBALS['__DATA_DIR__'] = $GLOBALS['__BASE_DIR__'].'/data';
+$GLOBALS['__CONF_DIR__'] = $GLOBALS['__BASE_DIR__'].'/conf';
+
+require $GLOBALS['__CONF_DIR__'].'/conf.php';
 
 /* Database */
 try {
@@ -28,13 +36,6 @@ try {
 
 // Autoloader
 require_once 'vendor/autoload.php';
-
-
-//constants
-$GLOBALS['__BASE_DIR__'] = __DIR__;
-$GLOBALS['__DATA_DIR__'] = __DIR__.'/data';
-$GLOBALS['__CONF_DIR__'] = __DIR__.'/conf';
-
 
 
 // Backends
