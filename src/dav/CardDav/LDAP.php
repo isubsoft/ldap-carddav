@@ -573,14 +573,37 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                             }
                             else if($backendAttrValue !== '')
                             {
-                                $attrType = Reader::attributeType($inputParamsInfo);
+                                $attrType = $values->getValueType();
                                 $newLdapKey = strtolower($backendAttrValue);
 
-                                if($attrType == 'FILE' && $decodeFile == true)
+                                if(strtoupper($attrType) == 'URI')
                                 {
-                                    $file = file_get_contents((string)$values);
-                                    if ($file !== false)
-                                    $ldapInfo[$newLdapKey] = $file;
+                                    $valueComponent = parse_url($values);
+                                    
+                                    if(isset($valueComponent['scheme']))
+                                    {
+                                        if($valueComponent['scheme'] == 'data')
+                                        {
+                                            $ldapInfo[$newLdapKey][] = base64_decode(explode(',', $valueComponent['path'])[1]);
+                                        }
+                                        else if(($valueComponent['scheme'] == 'https') || ($valueComponent['scheme'] == 'http'))
+                                        {
+                                            $file = file_get_contents((string)$values);
+                                            if ($file !== false)
+                                            $ldapInfo[$newLdapKey][] = $file;
+                                        }
+                                        else
+                                        {
+                                            $ldapInfo[$newLdapKey][] = (string)$values;
+                                        }                                     
+                                    }
+                                    else
+                                    {
+                                        $file = file_get_contents((string)$values);
+                                        if ($file !== false)
+                                        $ldapInfo[$newLdapKey][] = $file;
+                                    }
+                                    
                                 }
                                 else
                                 {
@@ -671,19 +694,43 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                         }
                         else if($backendAttrValue !== '')
                         {
-                            $attrType = Reader::attributeType($inputParamsInfo);
-                            $newLdapKey = strtolower($backendAttrValue);
+                            $attrType = $values->getValueType();
+                                $newLdapKey = strtolower($backendAttrValue);
 
-                            if($attrType == 'FILE' && $decodeFile == true)
-                            {
-                                $file = file_get_contents((string)$vcard->$vCardKey);
-                                if ($file !== false)
-                                $ldapInfo[$newLdapKey] = $file;
-                            }
-                            else
-                            {
-                                $ldapInfo[$newLdapKey] = (string)$vcard->$vCardKey;
-                            }
+                                if(strtoupper($attrType) == 'URI')
+                                {
+                                    $valueComponent = parse_url($vcard->$vCardKey);
+
+                                    if(isset($valueComponent['scheme']))
+                                    {
+                                        if($valueComponent['scheme'] == 'data')
+                                        {
+                                            $ldapInfo[$newLdapKey][] = base64_decode(explode(',', $valueComponent['path'])[1]);
+                                        }
+                                        else if(($valueComponent['scheme'] == 'https') || ($valueComponent['scheme'] == 'http'))
+                                        {
+                                            $file = file_get_contents((string)$vcard->$vCardKey);
+                                            if ($file !== false)
+                                            $ldapInfo[$newLdapKey][] = $file;
+                                        }
+                                        else
+                                        {
+                                            $ldapInfo[$newLdapKey][] = (string)$vcard->$vCardKey;
+                                        }
+                                        
+                                    }
+                                    else
+                                    {
+                                        $file = file_get_contents((string)$vcard->$vCardKey);
+                                        if ($file !== false)
+                                        $ldapInfo[$newLdapKey][] = $file;
+                                    }
+                                    
+                                }
+                                else
+                                {
+                                    $ldapInfo[$newLdapKey][] = (string)$vcard->$vCardKey;
+                                }
                         }
                     }
                 }
@@ -1016,14 +1063,37 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                             }
                             else if($backendAttrValue !== '')
                             {
-                                $attrType = Reader::attributeType($inputParamsInfo);
+                                $attrType = $values->getValueType();
                                 $newLdapKey = strtolower($backendAttrValue);
 
-                                if($attrType == 'FILE' && $decodeFile == true)
+                                if(strtoupper($attrType) == 'URI')
                                 {
-                                    $file = file_get_contents((string)$values);
-                                    if ($file !== false)
-                                    $ldapInfo[$newLdapKey] = $file;
+                                    $valueComponent = parse_url($values);
+                                    
+                                    if(isset($valueComponent['scheme']))
+                                    {
+                                        if($valueComponent['scheme'] == 'data')
+                                        {
+                                            $ldapInfo[$newLdapKey][] = base64_decode(explode(',', $valueComponent['path'])[1]);
+                                        }
+                                        else if(($valueComponent['scheme'] == 'https') || ($valueComponent['scheme'] == 'http'))
+                                        {
+                                            $file = file_get_contents((string)$values);
+                                            if ($file !== false)
+                                            $ldapInfo[$newLdapKey][] = $file;
+                                        }
+                                        else
+                                        {
+                                            $ldapInfo[$newLdapKey][] = (string)$values;
+                                        }                                     
+                                    }
+                                    else
+                                    {
+                                        $file = file_get_contents((string)$values);
+                                        if ($file !== false)
+                                        $ldapInfo[$newLdapKey][] = $file;
+                                    }
+                                    
                                 }
                                 else
                                 {
@@ -1114,19 +1184,43 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                         }
                         else if($backendAttrValue !== '')
                         {
-                            $attrType = Reader::attributeType($inputParamsInfo);
-                            $newLdapKey = strtolower($backendAttrValue);
+                            $attrType = $values->getValueType();
+                                $newLdapKey = strtolower($backendAttrValue);
 
-                            if($attrType == 'FILE' && $decodeFile == true)
-                            {
-                                $file = file_get_contents((string)$vcard->$vCardKey);
-                                if ($file !== false)
-                                $ldapInfo[$newLdapKey] = $file;
-                            }
-                            else
-                            {
-                                $ldapInfo[$newLdapKey] = (string)$vcard->$vCardKey;
-                            }
+                                if(strtoupper($attrType) == 'URI')
+                                {
+                                    $valueComponent = parse_url($vcard->$vCardKey);
+
+                                    if(isset($valueComponent['scheme']))
+                                    {
+                                        if($valueComponent['scheme'] == 'data')
+                                        {
+                                            $ldapInfo[$newLdapKey][] = base64_decode(explode(',', $valueComponent['path'])[1]);
+                                        }
+                                        else if(($valueComponent['scheme'] == 'https') || ($valueComponent['scheme'] == 'http'))
+                                        {
+                                            $file = file_get_contents((string)$vcard->$vCardKey);
+                                            if ($file !== false)
+                                            $ldapInfo[$newLdapKey][] = $file;
+                                        }
+                                        else
+                                        {
+                                            $ldapInfo[$newLdapKey][] = (string)$vcard->$vCardKey;
+                                        }
+                                        
+                                    }
+                                    else
+                                    {
+                                        $file = file_get_contents((string)$vcard->$vCardKey);
+                                        if ($file !== false)
+                                        $ldapInfo[$newLdapKey][] = $file;
+                                    }
+                                    
+                                }
+                                else
+                                {
+                                    $ldapInfo[$newLdapKey][] = (string)$vcard->$vCardKey;
+                                }
                         }
                     }
                 }
