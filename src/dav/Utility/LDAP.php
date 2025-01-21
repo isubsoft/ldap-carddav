@@ -178,6 +178,56 @@ class LDAP {
         return $string;
     }
 
+    public static function getParameterStatus($ldapKey)
+    {
+        $iterativeArr = self::isMultidimensional($ldapKey);
+
+        if($iterativeArr)
+        {
+            foreach($ldapKey as $ldapKeyInfo)
+            {
+                if(!empty($ldapKeyInfo['parameters']))
+                {
+                    return (['status' => true]);
+                }
+            }
+        }
+        else
+        {
+            if(!empty($ldapKey['parameters']))
+            {
+                return (['status' => true]);
+            }
+        }
+
+        return (['status' => false]);
+    }
+
+    public static function getmediaTypeStatus($ldapKey)
+    {
+        $iterativeArr = self::isMultidimensional($ldapKey);
+
+        if($iterativeArr)
+        {
+            foreach($ldapKey as $ldapKeyInfo)
+            {
+                if(isset($ldapKeyInfo['backend_data_mediatype']) && !empty($ldapKeyInfo['backend_data_mediatype']))
+                {
+                    return (['status' => true]);
+                }
+            }
+        }
+        else
+        {
+            if(isset($ldapKey['backend_data_mediatype']) && !empty($ldapKey['backend_data_mediatype']))
+            {
+                return (['status' => true]);
+            }
+        }
+
+        return (['status' => false]);
+    }
+
     public static function getVCardAttrParams($vCardKey, $params)
     {
         $vCardParamsInfo = [];
@@ -194,85 +244,131 @@ class LDAP {
         return $vCardParamsInfo;
     }
 
-    public static function isVcardParamsMatch($ldapKey, $vCardParams)
+    public static function isVcardParamsMatch($ldapKey, $inputValue, $allowedParams, $mediaType)
     {
-        foreach($ldapKey as $ldapKeyInfo)
+        $vCardDataFormat = strtoupper($inputValue->getValueType());
+        $iterativeArr = self::isMultidimensional($ldapKey);
+
+        if($mediaType)
         {
+            $mimeType = self::getMimeType((string)$inputValue, $vCardDataFormat);
             
-            foreach($ldapKeyInfo['parameters'] as $ParamList)
+            if($iterativeArr)
             {
-                if($ParamList == null)
+                foreach ($ldapKey as $ldapKeyInfo) 
                 {
-                    continue;
+                    if(in_array($mimeType, $ldapKeyInfo['backend_data_mediatype']))
+                    {
+                        return (['status' => true, 'ldapElementProps' => $ldapKeyInfo ]);
+                    }    
                 }
-                
-                $ParamsArray = explode(";", $ParamList);
-                $allParamsValuesMatch = true;
-                
-                foreach($ParamsArray as $paramStr)
+            }
+            else
+            {
+                if(in_array($mimeType, $ldapKey['backend_data_mediatype']))
                 {
-                    $paramStr = str_replace('"', '', $paramStr);
-                    $paramInfo = explode("=", $paramStr);
-                    if(! array_key_exists($paramInfo[0], $vCardParams))
+                    return (['status' => true, 'ldapElementProps' => $ldapKey ]);
+                }
+            }     
+        }
+        else
+        {
+            $vCardParams = self::getVCardAttrParams($inputValue, $allowedParams);
+
+            if($iterativeArr)
+            {
+                foreach($ldapKey as $ldapKeyInfo)
+                {            
+                    foreach($ldapKeyInfo['parameters'] as $ParamList)
                     {
-                        $allParamsValuesMatch = false;
-                        break;
-                    }
-                    
-                    $paramValues = explode(',', $paramInfo[1]);
-                    foreach($paramValues as $paramValue)
-                    {
-                        if(! in_array(strtoupper($paramValue), $vCardParams[$paramInfo[0]]))
+                        if($ParamList == null)
                         {
-                            $allParamsValuesMatch = false;
+                            continue;
+                        }
+                        
+                        $allParamsValuesMatch = true;
+                        
+                        foreach($ParamList as $paramListKey => $paramListValue)
+                        {
+                            if(! array_key_exists($paramListKey, $vCardParams))
+                            {
+                                $allParamsValuesMatch = false;
+                                break;
+                            }
+                            
+                            $paramValues = explode(',', $paramListValue);
+                            foreach($paramValues as $paramValue)
+                            {
+                                if(! in_array(strtoupper($paramValue), $vCardParams[$paramListKey]))
+                                {
+                                    $allParamsValuesMatch = false;
+                                }
+                            }
+                            if($allParamsValuesMatch == false)
+                            {
+                                break;
+                            }
+                            
+                        }
+        
+                        if($allParamsValuesMatch == true)
+                        {
+                            return (['status' => true, 'ldapElementProps' => $ldapKeyInfo ]);
                         }
                     }
-                    if($allParamsValuesMatch == false)
+                }
+    
+                foreach($ldapKey as $ldapKeyInfo)
+                {
+                    if(in_array(null, $ldapKeyInfo['parameters']))
+                    {                           
+                        return (['status' => true, 'ldapElementProps' => $ldapKeyInfo ]);
+                    }
+                }
+            }
+            else
+            {
+                foreach($ldapKey['parameters'] as $ParamList)
+                {
+                    if($ParamList == null)
                     {
-                        break;
+                        continue;
                     }
                     
-                }
-
-                if($allParamsValuesMatch == true)
-                {
-                    return (['status' => true, 'ldapArrMap' => $ldapKeyInfo ]);
-                }
-            }
-        }
-
-        return (['status' => false, 'ldapArrMap' => [] ]);
-    }
-
-    public static function reverseMapVCardParams($params, $backendMapIndex)
-    {
-        $vCardParams = [];
-        if($backendMapIndex !== '')
-        {
-            $paramList = $params[$backendMapIndex];
-            $paramsArr = explode(";", $paramList);
-            
-            foreach($paramsArr as $paramStr)
-            {
-                $paramStr = str_replace('"', '', $paramStr);
-                $paramInfo = explode("=", $paramStr);
-                $paramValues = explode(',', $paramInfo[1]);
-                
-                if(! isset($paramValues[1]))
-                {
-                    $vCardParams[strtoupper($paramInfo[0])] = strtoupper($paramValues[0]);
-                }
-                else
-                {
-                    foreach($paramValues as $paramValue)
+                    $allParamsValuesMatch = true;
+                    
+                    foreach($ParamList as $paramListKey => $paramListValue)
                     {
-                        $vCardParams[strtoupper($paramInfo[0])][] = strtoupper($paramValue);
+                        if(! array_key_exists($paramListKey, $vCardParams))
+                        {
+                            $allParamsValuesMatch = false;
+                            break;
+                        }
+                        
+                        $paramValues = explode(',', $paramListValue);
+                        foreach($paramValues as $paramValue)
+                        {
+                            if(! in_array(strtoupper($paramValue), $vCardParams[$paramListKey]))
+                            {
+                                $allParamsValuesMatch = false;
+                            }
+                        }
+                        if($allParamsValuesMatch == false)
+                        {
+                            break;
+                        }
+                        
+                    }
+    
+                    if($allParamsValuesMatch == true)
+                    {
+                        return (['status' => true, 'ldapElementProps' => $ldapKeyInfo ]);
                     }
                 }
-            }
-        }
+            }       
+        }      
 
-        return $vCardParams;
+        return (['status' => false, 'ldapElementProps' => [] ]);
     }
     
     public static function decodeHexInString($string) {
@@ -285,5 +381,36 @@ class LDAP {
             },
             $string
         );
-		}
+	}
+
+    public static function getMimeType($data, $dataFormat)
+    {
+        if($dataFormat == 'BINARY')
+        {
+            $mimeType = finfo_buffer(finfo_open(FILEINFO_MIME), ($data));
+        }
+        else if($dataFormat == 'URI')
+        {
+            $mimeType = finfo_buffer(finfo_open(FILEINFO_MIME), file_get_contents($data));
+        }
+        else
+        {
+            $mimeType = finfo_buffer(finfo_open(FILEINFO_MIME), $data);
+        }    
+        
+        if($mimeType)
+        {
+            return explode(';', $mimeType)[0];
+        }
+        return false;
+    }
+
+    public static function isMultidimensional(array $array) {
+        foreach ($array as $value) {
+            if (!is_array($value)) {
+                return false;
+            }
+        }
+        return true;
+    }
 }
