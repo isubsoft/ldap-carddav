@@ -243,8 +243,25 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     function getCard($addressBookId, $cardUri)
     {
-        $result = [];
+		    $result = [];
+				$cardUID = null;
         
+				try 
+				{
+		      $query = 'SELECT card_uid FROM '.$this->ldapMapTableName.' WHERE user_id = ? AND addressbook_id = ? AND card_uri = ?';
+		      $stmt = $this->pdo->prepare($query);
+		      $stmt->execute([$this->principalUser, $addressBookId, $cardUri]);
+		      
+		      while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+		          $cardUID = $row['card_uid'];
+		      }
+		    } catch (\Throwable $th) {
+		          error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+		    }
+
+				if($cardUID == null)
+					return false;
+            
         $data = $this->fetchContactData($addressBookId, $cardUri, ['*', 'entryUUID', 'modifyTimestamp']);
 
         if( !empty($data) && $data['count'] > 0)
@@ -252,7 +269,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             $cardData = $this->generateVcard($data[0], $addressBookId, $cardUri);
              
             $result = [
-                'id'            => $data[0]['entryuuid'][0],
+                'id'            => $cardUID,
                 'carddata'      => $cardData,
                 'uri'           => $cardUri,
                 'lastmodified'  => strtotime($data[0]['modifytimestamp'][0]),
@@ -262,7 +279,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         }
 
         return false;
-        
     }
     
     /**
@@ -1147,7 +1163,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             throw new ServiceUnavailable($th->getMessage());
         }
 
-        $this->addChange($addressBookId, $cardUri, $data[0]['entryuuid'][0]);
+        $this->addChange($addressBookId, $cardUri);
         return true;
     }
 
@@ -1734,29 +1750,37 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
 
     /**
-     * Adds a change record to the addressbookchanges table.
+     * Adds a change record
      *
      * @param mixed  $addressBookId
      * @param string $objectUri
+     * @param string $operation
+     * @return bool
      */
-    protected function addChange($addressBookId, $objectUri, $backendId)
+    protected function addChange($addressBookId, $objectUri, $operation = 'DELETE')
     {
-        try {
-            $this->pdo->beginTransaction();
+        if($operation == 'DELETE')
+        {
+		      try {
+		          $this->pdo->beginTransaction();
 
-            $query = "DELETE FROM `".$this->ldapMapTableName."` WHERE addressbook_id = ? AND backend_id = ? AND user_id = ?"; 
-            $sql = $this->pdo->prepare($query);
-            $sql->execute([$addressBookId, $backendId, $this->principalUser]);
+		          $query = "DELETE FROM `".$this->ldapMapTableName."` WHERE addressbook_id = ? AND card_uri = ? AND user_id = ?"; 
+		          $sql = $this->pdo->prepare($query);
+		          $sql->execute([$addressBookId, $objectUri, $this->principalUser]);
 
 
-            $query = "INSERT INTO `".$this->deletedCardsTableName."` (`sync_token` ,`addressbook_id` ,`card_uri`, `user_id`) VALUES (?, ?, ?, ?)"; 
-            $sql = $this->pdo->prepare($query);
-            $sql->execute([time(), $addressBookId, $objectUri, $this->principalUser]);
+		          $query = "INSERT INTO `".$this->deletedCardsTableName."` (`sync_token` ,`addressbook_id` ,`card_uri`, `user_id`) VALUES (?, ?, ?, ?)"; 
+		          $sql = $this->pdo->prepare($query);
+		          $sql->execute([time(), $addressBookId, $objectUri, $this->principalUser]);
 
-            $this->pdo->commit();
-        } catch (\Throwable $th) {
-            error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
-        }    
+		          $this->pdo->commit();
+		      } catch (\Throwable $th) {
+		          error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+		          return false;
+		      }
+        }
+        
+        return true;
     }
 
 
