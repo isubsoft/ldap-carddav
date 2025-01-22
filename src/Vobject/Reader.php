@@ -160,10 +160,10 @@ class Reader extends \Sabre\VObject\Reader{
         {
             if(self::$encoding_format == 'base64')
             {
-                $cardData = base64_encode($value);
+                $cardData = 'data:' . finfo_buffer(finfo_open(FILEINFO_MIME), $value) . ';' . self::$encoding_format . ',' . base64_encode($value);
             }
             
-            $params = ['value' => 'BINARY', 'mediatype' => finfo_buffer(finfo_open(FILEINFO_MIME), $value), 'encoding' => 'B'];
+            $params = ['value' => 'uri'];
         }
 
         return  ['cardData' => $cardData, 'params' => $params];
@@ -198,7 +198,7 @@ class Reader extends \Sabre\VObject\Reader{
             $schema = $vCardInfo['uri_schemes']['embedded'][0];
             $path = 'uuid:'. $value;
 
-            $memberValue = $schema.$path;
+            $memberValue = $schema . ':' . $path;
         }
         return $memberValue;
     }

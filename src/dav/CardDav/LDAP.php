@@ -326,6 +326,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         }
 
         $vcard = Reader::read($cardData);
+        $vcard = $vcard->convert(\Sabre\VObject\Document::VCARD40);
         $UID = (empty($vcard->UID))?$this->guidv4():$vcard->UID;
         
         $ldapInfo = [];
@@ -1185,8 +1186,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         
         // build the Vcard
         $vcard = new \Sabre\VObject\Component\VCard(['UID' => $UID]);
+        $vcard = $vcard->convert(\Sabre\VObject\Document::VCARD40);
 
-        if($data['objectclass'][0] === $addressBookConfig['group_LDAP_Object_Classes'][0])
+        if($data['objectclass'][0] == $addressBookConfig['group_LDAP_Object_Classes'][0])
         {
             $vcard->add('KIND', 'group');
             $fieldMap = $addressBookConfig['group_fieldmap'];      
