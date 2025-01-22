@@ -251,7 +251,16 @@ class LDAP {
 
         if($mediaType)
         {
-            $mimeType = self::getMimeType((string)$inputValue, $vCardDataFormat);
+            if($vCardDataFormat == 'URI')
+            {
+                $mimeType = finfo_buffer(finfo_open(FILEINFO_MIME), file_get_contents((string)$inputValue));
+            }
+            else if($vCardDataFormat == 'BINARY')
+            {
+                $mimeType = finfo_buffer(finfo_open(FILEINFO_MIME), (string)$inputValue);
+            }
+
+            $mimeType = explode(';', $mimeType)[0];
             
             if($iterativeArr)
             {
@@ -382,28 +391,6 @@ class LDAP {
             $string
         );
 	}
-
-    public static function getMimeType($data, $dataFormat)
-    {
-        if($dataFormat == 'BINARY')
-        {
-            $mimeType = finfo_buffer(finfo_open(FILEINFO_MIME), ($data));
-        }
-        else if($dataFormat == 'URI')
-        {
-            $mimeType = finfo_buffer(finfo_open(FILEINFO_MIME), file_get_contents($data));
-        }
-        else
-        {
-            $mimeType = finfo_buffer(finfo_open(FILEINFO_MIME), $data);
-        }    
-        
-        if($mimeType)
-        {
-            return explode(';', $mimeType)[0];
-        }
-        return false;
-    }
 
     public static function isMultidimensional(array $array) {
         foreach ($array as $value) {

@@ -14,10 +14,7 @@ class Reader extends \Sabre\VObject\Reader{
                                             'remote' => ['http', 'https', 'ftp', 'ftps']
                                         ];
 
-    private static $encoding_format = [
-                                        'method' => 'B',
-                                        'encoding' => 'base64'
-    ];
+    private static $encoding_format = 'base64';
     /**
      * Vcard
      *
@@ -100,9 +97,11 @@ class Reader extends \Sabre\VObject\Reader{
                 {
                     $backendvalue = $valueComponent['path'];
                 }
-                else if(isset($valueComponent['scheme']) && in_array($valueComponent['scheme'], self::$file_uri_schemes['embedded']))
+                else if(isset($valueComponent['scheme']) && (in_array($valueComponent['scheme'], self::$file_uri_schemes['embedded']) || in_array($valueComponent['scheme'], self::$file_uri_schemes['remote'])))
                 {
-                    $mimeType = Utility::getMimeType((string)$value, $vCardDataFormat);
+                    $mimeType = finfo_buffer(finfo_open(FILEINFO_MIME), file_get_contents((string)$value));
+                    $mimeType = explode(';', $mimeType)[0];
+                    
                     if($mimeType == 'text/plain')
                     {
                         $backendvalue = file_get_contents((string)$value);
@@ -112,7 +111,7 @@ class Reader extends \Sabre\VObject\Reader{
             else if($backendDataFormat == 'BINARY')
             {
                 $valueComponent = parse_url($value);             
-                if((in_array($valueComponent['scheme'], self::$file_uri_schemes['embedded'])) || (in_array($valueComponent['scheme'], self::$file_uri_schemes['remote'])))
+                if(isset($valueComponent['scheme']) && (in_array($valueComponent['scheme'], self::$file_uri_schemes['embedded']) || in_array($valueComponent['scheme'], self::$file_uri_schemes['remote'])))
                 {
                     $backendvalue = file_get_contents((string)$value);
                 }
@@ -124,7 +123,7 @@ class Reader extends \Sabre\VObject\Reader{
             else if($backendDataFormat == 'URI')
             {
                 $valueComponent = parse_url($value);
-                if(in_array($valueComponent['scheme'], $uriSchema['remote']))
+                if(isset($valueComponent['scheme']) && in_array($valueComponent['scheme'], $uriSchema['remote']))
                 {
                     $backendvalue = (string)$value;
                 }
@@ -159,12 +158,12 @@ class Reader extends \Sabre\VObject\Reader{
         }
         else if($backendDataFormat == 'BINARY')
         {
-            if(self::$encoding_format['encoding'] == 'base64')
+            if(self::$encoding_format == 'base64')
             {
                 $cardData = base64_encode($value);
             }
-            $mimeType = Utility::getMimeType($value, $backendDataFormat);
-            $params = ['value' => 'BINARY', 'mediatype' => $mimeType, 'encoding' => self::$encoding_format['method']];
+            
+            $params = ['value' => 'BINARY', 'mediatype' => finfo_buffer(finfo_open(FILEINFO_MIME), $value), 'encoding' => 'B'];
         }
 
         return  ['cardData' => $cardData, 'params' => $params];
@@ -184,8 +183,7 @@ class Reader extends \Sabre\VObject\Reader{
             {
                 $memberValue = $pathComponent[1];
             }
-        }
-        
+        } 
         return $memberValue;
     }
 
@@ -202,7 +200,6 @@ class Reader extends \Sabre\VObject\Reader{
 
             $memberValue = $schema.$path;
         }
-
         return $memberValue;
     }
 
