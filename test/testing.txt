@@ -152,7 +152,8 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/users/a
 --data '<card:addressbook-query xmlns:d="DAV:" xmlns:card="urn:ietf:params:xml:ns:carddav">
     <d:prop>
         <d:getetag />
-        <card:address-data />
+        <d:getlastmodified />
+        <d:getcontentlength />
     </d:prop>
 </card:addressbook-query>'
 
@@ -241,7 +242,7 @@ END:VCARD&#13;
 6. Fetch contact data/Vcard - 
 
 REQUEST - 
-curl -u <username>:<password> --location '/addressbooks/users/avijit/private/3e5a72018f75c75e5514e9ec1e7bddd2a5127b36.vcf'
+curl -u <username>:<password> --header 'Accept: text/vcard; version=3.0' --location '/addressbooks/users/avijit/private/3e5a72018f75c75e5514e9ec1e7bddd2a5127b36.vcf'
 
 RESPONSE (plain)-
 BEGIN:VCARD
@@ -265,10 +266,13 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/users/a
 --header 'Content-Type: application/xml' \
 --header 'Depth: 1' \
 --header 'Accept-Charset: utf-8' \
+--header 'Accept: text/vcard; version=3.0' \
 --data '<card:addressbook-multiget xmlns:d="DAV:" xmlns:card="urn:ietf:params:xml:ns:carddav">
     <d:prop>
-        <d:getetag />
         <card:address-data />
+        <d:getetag />
+        <d:getlastmodified />
+        <d:getcontentlength />
     </d:prop>
     <d:href>/addressbooks/users/avijit/private/3e5a72018f75c75e5514e9ec1e7bddd2a5127b36.vcf</d:href>
     <d:href>/addressbooks/users/avijit/private/962f8f7c-d9ee-4ed2-9008-44ab4c6ac982.vcf</d:href>
@@ -418,7 +422,9 @@ curl -u <username>:<password> --location --request REPORT 'http://10.2.0.151/add
   <d:sync-token>http://sabre.io/ns/sync/1712902268</d:sync-token>
   <d:sync-level>1</d:sync-level>
   <d:prop>
-    <d:getetag/>
+    <d:getetag />
+    <d:getlastmodified />
+    <d:getcontentlength />
   </d:prop>
 </d:sync-collection>'
 
