@@ -216,7 +216,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         {
             for ($i=0; $i < count($data); $i++) { 
                 
-                $row = [    'id' => $data[$i]['backend_id'],
+                $row = [    'id' => $data[$i]['card_uid'],
                             'uri' => $data[$i]['card_uri'],
                             'lastmodified' => $data[$i]['modified_timestamp'],
                             ];
@@ -262,7 +262,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				if($cardUID == null)
 					return false;
             
-        $data = $this->fetchContactData($addressBookId, $cardUri, ['*', 'entryUUID', 'modifyTimestamp']);
+        $data = $this->fetchLdapContactData($addressBookId, $cardUri, ['*', 'entryUUID', 'modifyTimestamp']);
 
         if( !empty($data) && $data['count'] > 0)
         {           
@@ -1082,7 +1082,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             return null;
         }
 
-        $oldLdapInfo = $this->fetchContactData($addressBookId, $cardUri, ['*']);
+        $oldLdapInfo = $this->fetchLdapContactData($addressBookId, $cardUri, ['*']);
         
         if(empty($oldLdapInfo))
         	return null;
@@ -1145,7 +1145,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             return false;
         }
         
-        $data = $this->fetchContactData($addressBookId, $cardUri, ['dn', 'entryUUID']);
+        $data = $this->fetchLdapContactData($addressBookId, $cardUri, ['dn', 'entryUUID']);
         
         if(empty($data))
         	return false;
@@ -1792,7 +1792,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      * @param string  $cardUri
      * @param array $config
      */
-    function fetchContactData($addressBookId, $cardUri, $attributes = [])
+    function fetchLdapContactData($addressBookId, $cardUri, $attributes = [])
     {
         $config = $this->addressbook[$addressBookId]['config'];
         $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
