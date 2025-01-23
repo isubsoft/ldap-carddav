@@ -1776,6 +1776,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		          $this->pdo->commit();
 		      } catch (\Throwable $th) {
 		          error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+		          $this->pdo->rollback();
 		          return false;
 		      }
         }
@@ -1914,6 +1915,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
         } catch (\Throwable $th) {
             error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+            $this->pdo->rollback();
+            return [];
         }
 
         return $mappedContacts;
