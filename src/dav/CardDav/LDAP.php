@@ -218,7 +218,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                 
                 $row = [    'id' => $data[$i]['card_uid'],
                             'uri' => $data[$i]['card_uri'],
-                            'lastmodified' => strtotime($data[$i]['modified_timestamp'])
+                            'lastmodified' => $data[$i]['modified_timestamp']
                             ];
 
                 $result[] = $row;
