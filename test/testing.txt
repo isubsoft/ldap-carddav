@@ -203,7 +203,7 @@ END:VCARD
 7. Fetch contacts data with multiget - 
 
 -- REQUEST - 
-curl -u <username>:<password> --location --request REPORT '/addressbooks/users/avijit/private/' \
+curl -u <username>:<password> --location --request REPORT '/addressbooks/PRINCIPAL/private/UUID.vcf' \
 --header 'Content-Type: application/xml' \
 --header 'Depth: 1' \
 --header 'Accept-Charset: utf-8' \
@@ -215,8 +215,8 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/users/a
         <d:getlastmodified />
         <d:getcontentlength />
     </d:prop>
-    <d:href>/addressbooks/users/avijit/private/3e5a72018f75c75e5514e9ec1e7bddd2a5127b36.vcf</d:href>
-    <d:href>/addressbooks/users/avijit/private/962f8f7c-d9ee-4ed2-9008-44ab4c6ac982.vcf</d:href>
+    <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
+    <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
 </card:addressbook-multiget>'
 
 -- RESPONSE (xml)-
@@ -229,7 +229,7 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/users/a
                 <card:address-data>BEGIN:VCARD&#13;
                     VERSION:3.0&#13;
                     PRODID:-//Sabre//Sabre VObject 4.2.2//EN&#13;
-                    UID:6ceb4fa3-e437-461b-9632-d58c429e0f12&#13;
+                    UID:CARDUID&#13;
                     FN:Sr. Contact Test testcontact Example Inc\;IT&#13;
                     NICKNAME:testcontact&#13;
                     EMAIL:testcontact1@example.org&#13;
@@ -255,7 +255,7 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/users/a
                     PRODID:-//Sabre//Sabre VObject 4.2.2//EN&#13;
                     UID:0b906494-feaf-4aae-b991-60b39ed9b380&#13;
                     X-ADDRESSBOOKSERVER-KIND:GROUP&#13;
-                    MEMBER:urn:uuid:6ceb4fa3-e437-461b-9632-d58c429e0f12&#13;
+                    MEMBER:urn:uuid:CARDUID&#13;
                     FN:Test contact group 1&#13;
                     END:VCARD&#13;
                 </card:address-data>
