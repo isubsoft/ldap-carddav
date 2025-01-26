@@ -1,8 +1,12 @@
 <?php
+/************************************************************
+* Copyright 2023-2025 ISub Softwares (OPC) Private Limited
+************************************************************/
 
 namespace isubsoft\dav\Auth;
 
 use isubsoft\dav\Utility\LDAP as Utility;
+use \Sabre\DAV\Exception\ServiceUnavailable;
 
 class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
 
@@ -13,13 +17,6 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
      * @var array
      */
     public $config;
-
-    /**
-     * This is the prefix that will be used to generate principal urls.
-     *
-     * @var string
-     */
-    public $principalPrefix = 'principals/users/';
 
     /**
      * Ldap Connection.
@@ -61,10 +58,46 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
     {      
         $this->username = $username;
         
-        if(($this->config['auth']['ldap']['bind_dn'] != '') && ($this->config['auth']['ldap']['bind_pass'] != ''))
+        if(($this->config['auth']['ldap']['search_bind_dn'] != '') && ($this->config['auth']['ldap']['search_bind_pw'] != ''))
         {
-            $bindDn = Utility::replace_placeholders($this->config['auth']['ldap']['bind_dn'], ['%u' => $username]);
-            $bindPass = Utility::replace_placeholders($this->config['auth']['ldap']['bind_pass'], ['%p' => $password]);
+            $bindDn = $this->config['auth']['ldap']['search_bind_dn'];
+            $bindPass = $this->config['auth']['ldap']['search_bind_pw'];
+
+            // binding to ldap server
+            $ldapBindConn = Utility::LdapBindConnection(['bindDn' => $bindDn, 'bindPass' => $bindPass], $this->config['auth']['ldap']);
+            
+            // verify binding
+            if ($ldapBindConn) {
+            
+                $ldaptree = ($this->config['auth']['ldap']['search_base_dn'] !== '') ? $this->config['auth']['ldap']['search_base_dn'] : $this->config['auth']['ldap']['base_dn'];  
+                $filter = Utility::replacePlaceholders($this->config['auth']['ldap']['search_filter'], ['%u' => $username]);
+
+                $data = Utility::LdapQuery($ldapBindConn, $ldaptree, $filter, [], strtolower($this->config['auth']['ldap']['scope']));
+                
+                if($data['count'] == 1)
+                {
+                    $bindDn = Utility::replacePlaceholders($this->config['auth']['ldap']['bind_dn'], ['%dn' => $data[0]['dn'], '%u' => $username]);
+
+                    try {
+                        $ldapUserBind = ldap_bind($ldapBindConn, $bindDn, $password);
+                        if(!$ldapUserBind)
+                        {
+                            return false;
+                        }
+                    } catch (\Throwable $th) {
+                        error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
+                        throw new ServiceUnavailable($th->getMessage());
+                    }
+
+                    $this->userLdapConn = $ldapBindConn;
+                    return true;
+                }      
+            }
+        }
+        else
+        {
+            $bindDn = Utility::replacePlaceholders($this->config['auth']['ldap']['bind_dn'], ['%u' => $username]);
+            $bindPass = Utility::replacePlaceholders($this->config['auth']['ldap']['bind_pass'], ['%p' => $password]);
 
             // binding to ldap server
             $ldapBindConn = Utility::LdapBindConnection(['bindDn' => $bindDn, 'bindPass' => $bindPass], $this->config['auth']['ldap']);
@@ -75,35 +108,6 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
                 return true;
             }
         }
-        else if(($this->config['auth']['ldap']['search_bind_dn'] != '') && ($this->config['auth']['ldap']['search_bind_pw'] != ''))
-        {
-            $bindDn = $this->config['auth']['ldap']['search_bind_dn'];
-            $bindPass = $this->config['auth']['ldap']['search_bind_pw'];
-
-            // binding to ldap server
-            $ldapBindConn = Utility::LdapBindConnection(['bindDn' => $bindDn, 'bindPass' => $bindPass], $this->config['auth']['ldap']);
-
-            // verify binding
-            if ($ldapBindConn) {
-            
-                $ldaptree = ($this->config['auth']['ldap']['search_base_dn'] !== '') ? $this->config['auth']['ldap']['search_base_dn'] : $this->config['auth']['ldap']['base_dn'];  
-                $filter = Utility::replace_placeholders($this->config['auth']['ldap']['search_filter'], ['%u' => $username]);
-
-                $data = Utility::LdapQuery($ldapBindConn, $ldaptree, $filter, [], strtolower($this->config['auth']['ldap']['scope']));
-
-                if($data['count'] == 1)
-                {
-                    $ldapDn = $data[0]['dn'];
-                    $ldapUserBind = ldap_bind($ldapBindConn, $ldapDn, $password);  
-
-                    if($ldapUserBind)
-                    {
-                        $this->userLdapConn = $ldapBindConn;
-                        return true;
-                    }
-                }      
-            }
-        }   
 
         return false;
     }

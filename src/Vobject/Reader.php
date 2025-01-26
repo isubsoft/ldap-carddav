@@ -1,183 +1,206 @@
 <?php
+/************************************************************
+* Copyright 2023-2025 ISub Softwares (OPC) Private Limited
+************************************************************/
 
 namespace isubsoft\Vobject;
+use isubsoft\dav\Utility\LDAP as Utility;
 
 class Reader extends \Sabre\VObject\Reader{
 
+
+    private static $file_uri_schemes = [
+                                            'embedded' => ['data'],
+                                            'remote' => ['http', 'https', 'ftp', 'ftps']
+                                        ];
+
+    private static $encoding_format = 'base64';
     /**
      * Vcard
      *
      * @var array
      */
-    private static $VCard_attr_info = [
 
-        'FN' => ['multi_allowed' => false,
-                    'composite_attr'=> false,
-                    'parameter' => []],
+    private static function vCardMetaData(){
+
+        $json = file_get_contents($GLOBALS['__CONF_DIR__'].'/vcard_metadata.json'); 
+
+        if ($json === false) {
+            return null;
+        }
+
+        $jsonData = json_decode($json, true); 
+
+        if ($jsonData === null) {
+            return null;
+        }
+
+        return $jsonData;
+    }
+
+    function multiAllowedStatus($vCard_attr){    
+
+        $VCard_attr_info = self::vCardMetaData();
+        if(isset($VCard_attr_info[$vCard_attr]))
+        {
+            return (['status' => $VCard_attr_info[$vCard_attr]['multi_allowed']]);
+        }
+
+        return false;
+    }
+
+    function compositeAttrStatus($vCard_attr){
+
+        $VCard_attr_info = self::vCardMetaData();
+        if(isset($VCard_attr_info[$vCard_attr]))
+        {
+            return (['status' => $VCard_attr_info[$vCard_attr]['composite_attr']]);
+        }
+
+        return false;
+    }
+
+    function getDefaultParams($vCard_attr){        
+
+        $VCard_attr_info = self::vCardMetaData();
+        if(isset($VCard_attr_info[$vCard_attr]))
+        {
+            return ($VCard_attr_info[$vCard_attr]['parameter']);
+        }
+
+        return [];
+    }
+
+    function backendValue($value, $vcardAttr, $backendDataFormat)
+    {
+        $vCardDataFormat = strtoupper($value->getValueType());
+        $backendDataFormat = strtoupper($backendDataFormat);
+        $backendvalue = '';
         
-        'N' => ['multi_allowed' => false,
-                    'composite_attr'=> [ 0 => 'last_name', 1 => 'first_name', 2 => 'middle_name', 3 => 'prefix', 4 => 'suffix' ],
-                    'parameter' => []],
 
-        'EMAIL' => ['multi_allowed' => true,
-                        'composite_attr'=> false,
-                        'parameter' => []],
+        if($vCardDataFormat == 'TEXT')
+        {
+            if($backendDataFormat == 'TEXT' || $backendDataFormat == 'BINARY')
+            {
+                $backendvalue = (string)$value;
+            }
+        }
+        else if($vCardDataFormat == 'URI')
+        {
+            if($backendDataFormat == 'TEXT')
+            {
+                $valueComponent = parse_url($value);
+                $vCardMetaData = self::vCardMetaData();
+                $vCardInfo = $vCardMetaData[$vcardAttr];
 
-        'ORG' => ['multi_allowed' => true,
-                    'composite_attr'=> [ 0 => 'org_name', 1 => 'org_unit_name'],
-                    'parameter' => []],
-
-        'TITLE' => ['multi_allowed' => true,
-                        'composite_attr'=> false,
-                        'parameter' => []],
-
-        'NICKNAME' => ['multi_allowed' => false,
-                            'composite_attr'=> false,
-                            'parameter' => []],
-
-        'PHOTO' => ['multi_allowed' => true,
-                        'composite_attr'=> false,
-                        'parameter' => []],
-
-        'NOTE' => ['multi_allowed' => true,
-                        'composite_attr'=> false,
-                        'parameter' => []],
-
-        'TEL' => ['multi_allowed' => true,
-                        'composite_attr'=> false,
-                        'parameter' => ['TYPE', 'VALUE']],
-
-        'ADR' => ['multi_allowed' => true,
-                        'composite_attr'=> [ 0 => 'po_box', 1 => 'house_no', 2 => 'street', 3 => 'locality', 4 => 'province', 5 => 'postal_code', 6 => 'country'],
-                        'parameter' => ['TYPE', 'VALUE']],
-
-        'BDAY' => ['multi_allowed' => false,
-                        'composite_attr'=> false,
-                        'parameter' => []],
-
-        'ANNIVERSARY' => ['multi_allowed' => false,
-                                'composite_attr'=> false,
-                                'parameter' => []],
-
-        'GENDER' => ['multi_allowed' => false,
-                            'composite_attr'=> [ 0 => 'sex', '1' => 'gender_identity'],
-                            'parameter' => []],
-
-        'IMPP' => ['multi_allowed' => true,
-                        'composite_attr'=> false,
-                        'parameter' => ['TYPE', 'VALUE']],
-
-        'LANG' => ['multi_allowed' => true,
-                        'composite_attr'=> false,
-                        'parameter' => ['TYPE', 'VALUE']],
-
-        'TZ' => ['multi_allowed' => true,
-                        'composite_attr'=> false,
-                        'parameter' => ['VALUE']],
-
-        'GEO' => ['multi_allowed' => true,
-                        'composite_attr'=> false,
-                        'parameter' => []],
-        
-        'ROLE' => ['multi_allowed' => true,
-                        'composite_attr'=> false,
-                        'parameter' => []],
-
-        'LOGO' => ['multi_allowed' => true,
-                        'composite_attr'=> false,
-                        'parameter' => []],
-
-        'MEMBER' => ['multi_allowed' => true,
-                        'composite_attr'=> false,
-                        'parameter' => []],
-
-        'RELATED' => ['multi_allowed' => true,
-                        'composite_attr'=> false,
-                        'parameter' => ['VALUE']],        
-
-        'BIRTHPLACE' => ['multi_allowed' => false,
-                            'composite_attr'=> false,
-                            'parameter' => ['VALUE', 'LANGUAGE']],
-
-        'DEATHPLACE' => ['multi_allowed' => false,
-                            'composite_attr'=> false,
-                            'parameter' => ['VALUE', 'LANGUAGE']],
-
-        'DEATHDATE' => ['multi_allowed' => false,
-                            'composite_attr'=> false,
-                            'parameter' => ['VALUE', 'CALSCALE', 'LANGUAGE']],
-
-        'EXPERTISE' => ['multi_allowed' => true,
-                        'composite_attr'=> false,
-                        'parameter' => ['LEVEL', 'INDEX']],
-
-        'HOBBY' => ['multi_allowed' => true,
-                        'composite_attr'=> false,
-                        'parameter' => ['LEVEL', 'INDEX']],
-
-        'INTEREST' => ['multi_allowed' => true,
-                            'composite_attr'=> false,
-                            'parameter' => ['LEVEL', 'INDEX']],
-
-        'ORG-DIRECTORY' => ['multi_allowed' => true,
-                                'composite_attr'=> false,
-                                'parameter' => ['PREF', 'INDEX']],
-
-        'CONTACT-URI' => ['multi_allowed' => true,
-                                'composite_attr'=> false,
-                                'parameter' => []],
-
-        'GRAMGENDER' => ['multi_allowed' => true,
-                                'composite_attr'=> false,
-                                'parameter' => ['LANGUAGE']],
-
-        'LANGUAGE' => ['multi_allowed' => false,
-                                'composite_attr'=> false,
-                                'parameter' => []],
-
-        'PRONOUNS' => ['multi_allowed' => true,
-                                'composite_attr'=> false,
-                                'parameter' => ['LANGUAGE', 'PREF', 'TYPE', 'ALTID']],
-
-        'SOCIALPROFILE' => ['multi_allowed' => true,
-                                'composite_attr'=> false,
-                                'parameter' => ['SERVICE-TYPE', 'VALUE']],
-
-        'JSPROP' => ['multi_allowed' => true,
-                                'composite_attr'=> false,
-                                'parameter' => ['JSPTR']]
+                if(isset($valueComponent['scheme']) && (isset($vCardInfo['uri_schemes']['embedded'])) && (in_array($valueComponent['scheme'], $vCardInfo['uri_schemes']['embedded'])))
+                {
+                    $backendvalue = $valueComponent['path'];
+                }
+                else if(isset($valueComponent['scheme']) && (in_array($valueComponent['scheme'], self::$file_uri_schemes['embedded']) || in_array($valueComponent['scheme'], self::$file_uri_schemes['remote'])))
+                {
+                    $mimeType = finfo_buffer(finfo_open(FILEINFO_MIME), file_get_contents((string)$value));
+                    $mimeType = explode(';', $mimeType)[0];
                     
-          
-    ];
-
-    function multi_allowed_status($vCard_attr){    
-
-        if(isset(self::$VCard_attr_info[$vCard_attr]))
+                    if($mimeType == 'text/plain')
+                    {
+                        $backendvalue = file_get_contents((string)$value);
+                    }
+                }
+            }
+            else if($backendDataFormat == 'BINARY')
+            {
+                $valueComponent = parse_url($value);             
+                if(isset($valueComponent['scheme']) && (in_array($valueComponent['scheme'], self::$file_uri_schemes['embedded']) || in_array($valueComponent['scheme'], self::$file_uri_schemes['remote'])))
+                {
+                    $backendvalue = file_get_contents((string)$value);
+                }
+                else
+                {
+                    $backendvalue = (string)$value;
+                }
+            }
+            else if($backendDataFormat == 'URI')
+            {
+                $valueComponent = parse_url($value);
+                if(isset($valueComponent['scheme']) && in_array($valueComponent['scheme'], $uriSchema['remote']))
+                {
+                    $backendvalue = (string)$value;
+                }
+            }
+        }
+        else if($vCardDataFormat == 'BINARY')
         {
-            return (['status' => self::$VCard_attr_info[$vCard_attr]['multi_allowed']]);
+            if($backendDataFormat == 'BINARY')
+            {
+                $backendvalue = (string)$value;
+            }
         }
 
-        return false;
+        return  $backendvalue;
     }
 
-    function composite_attr_status($vCard_attr){
+    function backendValueConversion($value, $backendDataFormat)
+    {
+        $backendDataFormat = strtoupper($backendDataFormat);
+        $cardData = '';
+        $params = [];
 
-        if(isset(self::$VCard_attr_info[$vCard_attr]))
+        if($backendDataFormat == 'TEXT')
         {
-            return (['status' => self::$VCard_attr_info[$vCard_attr]['composite_attr']]);
+            $cardData = $value;
+            $params = ['value' => 'text'];
+        }
+        else if($backendDataFormat == 'URI')
+        {
+            $cardData = $value;
+            $params = ['value' => 'uri'];
+        }
+        else if($backendDataFormat == 'BINARY')
+        {
+            if(self::$encoding_format == 'base64')
+            {
+                $cardData = 'data:' . finfo_buffer(finfo_open(FILEINFO_MIME), $value) . ';' . self::$encoding_format . ',' . base64_encode($value);
+            }
+            
+            $params = ['value' => 'uri'];
         }
 
-        return false;
+        return  ['cardData' => $cardData, 'params' => $params];
     }
 
-    function parameter_status($vCard_attr){        
+    function memberValue($value, $vcardAttr)
+    {
+        $valueComponent = parse_url($value);
+        $vCardMetaData = self::vCardMetaData();
+        $vCardInfo = $vCardMetaData[$vcardAttr];
+        $memberValue = '';
 
-        if(isset(self::$VCard_attr_info[$vCard_attr]))
+        if(isset($valueComponent['scheme']) && (isset($vCardInfo['uri_schemes']['embedded'])) && (in_array($valueComponent['scheme'], $vCardInfo['uri_schemes']['embedded'])))
         {
-            return (['parameter' => self::$VCard_attr_info[$vCard_attr]['parameter']]);
-        }
+            $pathComponent = explode(':', $valueComponent['path']);
+            if($pathComponent[0] == 'uuid')
+            {
+                $memberValue = $pathComponent[1];
+            }
+        } 
+        return $memberValue;
+    }
 
-        return false;
+    function memberValueConversion($value, $vcardAttr)
+    {
+        $vCardMetaData = self::vCardMetaData();
+        $vCardInfo = $vCardMetaData[$vcardAttr];
+        $memberValue = '';
+
+        if(isset($vCardInfo['uri_schemes']['embedded']))
+        {
+            $schema = $vCardInfo['uri_schemes']['embedded'][0];
+            $path = 'uuid:'. $value;
+
+            $memberValue = $schema . ':' . $path;
+        }
+        return $memberValue;
     }
 
 }
