@@ -119,7 +119,7 @@ class LDAP {
                     try {    
                         $data['entryIns'] = ldap_next_entry($args[0], $args[1]);
                         
-                        if(!$data['entryIns'] === false)
+                        if($data['entryIns'] === false)
                         {
                             return $data;
                         }
@@ -129,7 +129,8 @@ class LDAP {
                     } catch (\Throwable $th) {
                         error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
                         throw new ServiceUnavailable($th->getMessage());
-                    }                
+                    }
+                    
                     return $data;
 
                 case 5:        
@@ -153,16 +154,19 @@ class LDAP {
                         }
                         
                         $data['entryIns'] = ldap_first_entry($args[0], $result);
+                        
                         if($data['entryIns'] === false)
                         {
                             return $data;
                         }
+                        
                         $data['data'] = ldap_get_attributes($args[0], $data['entryIns']);
                         
                     } catch (\Throwable $th) {
                         error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
                         throw new ServiceUnavailable($th->getMessage());
                     }
+                    
                     return $data;
 
                 default:
