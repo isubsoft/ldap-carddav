@@ -1,4 +1,7 @@
 <?php
+/************************************************************
+* Copyright 2023-2025 ISub Softwares (OPC) Private Limited
+************************************************************/
 
 /*
 
@@ -14,14 +17,25 @@ This server features CardDAV support
 // This can be for example the root / or a complete path to your server script
 $baseUri = '/';
 
-// Autoloader
-require_once 'vendor/autoload.php';
-require 'conf/conf.php';
+//constants
+$GLOBALS['__BASE_DIR__'] = __DIR__;
+$GLOBALS['__DATA_DIR__'] = $GLOBALS['__BASE_DIR__'].'/data';
+$GLOBALS['__CONF_DIR__'] = $GLOBALS['__BASE_DIR__'].'/conf';
 
+require $GLOBALS['__CONF_DIR__'].'/conf.php';
 
 /* Database */
-$pdo = new PDO($config['database']);
-$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+try {
+    $pdo = new PDO($config['database']);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (\Throwable $th) {
+    error_log('Could not create database connection: '. $th->getMessage());
+    http_response_code(500);
+    exit;
+}
+
+// Autoloader
+require_once 'vendor/autoload.php';
 
 
 // Backends
@@ -35,12 +49,8 @@ $authBackend->setRealm('SabreDAV');
 
 // Setting up the directory tree //
 $nodes = [
-    new Sabre\DAV\SimpleCollection('principals', [
-        new Sabre\DAVACL\PrincipalCollection($principalBackend, 'principals/users')
-    ]),
-    new Sabre\DAV\SimpleCollection('addressbooks', [
-        new isubsoft\dav\CardDav\AddressBookRoot($principalBackend, $carddavBackend, 'principals/users')
-    ])
+    new Sabre\DAVACL\PrincipalCollection($principalBackend),
+    new Sabre\CardDAV\AddressBookRoot($principalBackend, $carddavBackend)
 ];
 
 
@@ -49,16 +59,15 @@ $server = new Sabre\DAV\Server($nodes);
 $server->setBaseUri($baseUri);
 
 // Plugins
-$authPlugin = new Sabre\DAV\Auth\Plugin($authBackend);
-$server->addPlugin($authPlugin);
-$server->addPlugin(new Sabre\DAVACL\Plugin());
+$aclPlugin = new Sabre\DAVACL\Plugin();
+$aclPlugin->allowUnauthenticatedAccess = false;
+
+$server->addPlugin(new Sabre\DAV\Auth\Plugin($authBackend));
+$server->addPlugin($aclPlugin);
 $server->addPlugin(new Sabre\DAV\Browser\Plugin());
 $server->addPlugin(new isubsoft\dav\CardDav\CardDAVPlugin());
 $server->addPlugin(new Sabre\DAV\Sync\Plugin());
 
 
-
 // And off we go!
-$authPlugin->autoRequireLogin = true;
-
 $server->exec();
