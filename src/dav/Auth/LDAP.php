@@ -56,6 +56,9 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
      */
     function validateUserPass($username, $password)
     {      
+        if($username == '' || $password == null)
+        	return false;
+        
         $this->username = $username;
         
         if(($this->config['auth']['ldap']['search_bind_dn'] != '') && ($this->config['auth']['ldap']['search_bind_pw'] != ''))
