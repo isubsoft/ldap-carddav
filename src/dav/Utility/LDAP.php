@@ -118,10 +118,12 @@ class LDAP {
                 case 2:       
                     try {    
                         $data['entryIns'] = ldap_next_entry($args[0], $args[1]);
-                        if(!$data['entryIns'])
+                        
+                        if(!$data['entryIns'] === false)
                         {
-                            return false;
+                            return $data;
                         }
+                        
                         $data['data'] = ldap_get_attributes($args[0], $data['entryIns']);
                        
                     } catch (\Throwable $th) {
@@ -145,15 +147,15 @@ class LDAP {
                             $result = ldap_search($args[0], $args[1], $args[2], $args[3]);
                         }
             
-                        if(!$result)
+                        if($result === false)
                         {
                             return false;
                         }
                         
                         $data['entryIns'] = ldap_first_entry($args[0], $result);
-                        if(!$data['entryIns'])
+                        if($data['entryIns'] === false)
                         {
-                            return false;
+                            return $data;
                         }
                         $data['data'] = ldap_get_attributes($args[0], $data['entryIns']);
                         

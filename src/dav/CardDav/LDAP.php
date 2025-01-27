@@ -345,8 +345,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             return false;
         }
 
-        $vcard = Reader::read($cardData);
-        $vcard = $vcard->convert(\Sabre\VObject\Document::VCARD40);
+        $vcard = (Reader::read($cardData))->convert(\Sabre\VObject\Document::VCARD40);
         $UID = (empty($vcard->UID))?$this->guidv4():$vcard->UID;
         
         $ldapInfo = [];
@@ -746,7 +745,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             return null;
         }
        
-        $vcard = Reader::read($cardData);
+        $vcard = (Reader::read($cardData))->convert(\Sabre\VObject\Document::VCARD40);
         
         $ldapInfo = [];
         
@@ -1717,12 +1716,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $filter = '(&' .$addressBookConfig['filter']. '(createtimestamp<=' .gmdate('YmdHis', $this->syncToken). 'Z)(!(|(createtimestamp<='.gmdate('YmdHis', $syncToken).'Z)(createtimestamp='.gmdate('YmdHis', $syncToken).'Z))))'; 
         $data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $filter, ['entryuuid'], strtolower($addressBookConfig['scope']));
         
-        if(!$data)
+        if($data === false)
         {
 					return $resultTmpError;
         }
         
-        while($data)
+        while($data['entryIns'])
         {
             $cardUri = null;
             try {
@@ -1758,12 +1757,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $filter = '(&' .$addressBookConfig['filter']. '(createtimestamp<=' .gmdate('YmdHis', $this->syncToken). 'Z)(!(|(modifytimestamp<='.gmdate('YmdHis', $syncToken).'Z)(modifytimestamp='.gmdate('YmdHis', $syncToken).'Z))))';  
         $data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $filter, ['entryuuid'], strtolower($addressBookConfig['scope']));
         
-        if(!$data)
+        if($data === false)
         {
 					return $resultTmpError;
         }
         
-        while($data)
+        while($data['entryIns'])
         {
             $cardUri = null;
             try {
