@@ -112,7 +112,6 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         }
                     
         return $principals;
-        
     }
 
     /**
@@ -158,7 +157,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
             return $principal;
         }
 
-        return ;
+        return [];
     }
 
     /**
@@ -179,7 +178,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      */
     function updatePrincipal($path, \Sabre\DAV\PropPatch $propPatch)
     {
-        return false;
+        return null;
     }
 
     /**
@@ -213,7 +212,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      */
     function searchPrincipals($prefixPath, array $searchProperties, $test = 'allof')
     {
-        return false;
+        return [];
     }
 
     /**
@@ -235,7 +234,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      */
     function findByUri($uri, $principalPrefix)
     {
-        return false;
+        return '';
     }
 
     /**
@@ -246,7 +245,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      */
     function getGroupMemberSet($principal)
     {
-        return false;
+        return [];
     }
 
     /**
@@ -257,7 +256,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      */
     function getGroupMembership($principal)
     {
-        return false;
+        return [];
     }
 
     /**
@@ -271,7 +270,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      */
     function setGroupMemberSet($principal, array $members)
     {
-        return false;
+        return null;
     }
 }
 ?>
