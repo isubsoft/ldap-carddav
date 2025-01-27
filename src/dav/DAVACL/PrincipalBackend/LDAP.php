@@ -80,7 +80,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
     {      
         if($this->config['principal']['ldap']['search_bind_dn'] == '' && $this->config['principal']['ldap']['search_bind_pw'] == '')
         {  
-            $principal = [ 'uri' => $prefixPath. '/' . $this->authBackend->username];
+            $principal = [ 'uri' => $prefixPath. '/' . $this->authBackend->username ];
             return $principal;
         }
 
@@ -89,7 +89,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         $ldapConn = Utility::LdapBindConnection(['bindDn' => $bindDn, 'bindPass' => $bindPass], $this->config['principal']['ldap']);
   
         $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
-        $filter = Utility::replacePlaceholders($this->config['principal']['ldap']['search_filter'], ['%u' => '*']);
+        $filter = Utility::replacePlaceholders($this->config['principal']['ldap']['search_filter'], ['%u' => $this->authBackend->username]);
         $attributes = ['displayName','mail'];
 
         $data = Utility::LdapQuery($ldapConn, $ldaptree, $filter, $attributes, strtolower($this->config['principal']['ldap']['scope']));
@@ -137,7 +137,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         $ldapConn = Utility::LdapBindConnection(['bindDn' => $bindDn, 'bindPass' => $bindPass], $this->config['principal']['ldap']);
           
         $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
-        $filter = Utility::replacePlaceholders($this->config['principal']['ldap']['search_filter'], ['%u' => $searchUserId]); // single filter
+        $filter = Utility::replacePlaceholders($this->config['principal']['ldap']['principal_filter'], ['%u' => $searchUserId]); // single filter
         $attributes = ['displayName','mail'];
 
         $data = Utility::LdapQuery($ldapConn, $ldaptree, $filter, $attributes, strtolower($this->config['principal']['ldap']['scope']));

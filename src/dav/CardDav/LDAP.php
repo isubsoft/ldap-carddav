@@ -1910,11 +1910,16 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         
         $data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $filter, $attributes, strtolower($config['scope']));
         
+        if($data === false)
+        {
+					return [];
+        }
+        
         try 
         {
 			$this->pdo->beginTransaction();
            
-            while($data) 
+            while($data['entryIns']) 
 			{
 	            $contactData = null;
 	          
