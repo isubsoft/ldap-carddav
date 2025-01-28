@@ -23,7 +23,6 @@ class LDAP {
     public static function mapVcardProperty($vCardAttr, $mappLdapConfig, $vObj)
     {
         $compositeAttrStatus = Reader::compositeAttrStatus($vCardAttr);
-        $valueComponent = parse_url($vObj);
 
         $iterativeArr = Utility::isMultidimensional($mappLdapConfig);
         $vCardParams = Utility::getVCardAttrParams($vObj, Reader::getDefaultParams($vCardAttr));
@@ -204,6 +203,7 @@ class LDAP {
     {
         $vCardDataFormat = strtoupper($vObj->getValueType());
         $backendDataFormat = strtoupper($mappLdapConfig['backend_data_format']);
+        $valueComponent = parse_url($vObj);
         $ldapBackendMap = [];
 
         if($vCardDataFormat == 'TEXT')
@@ -242,7 +242,7 @@ class LDAP {
 
                     if($mimeType == 'text/plain')
                     {
-                        $backendvalue = file_get_contents((string)$value);
+                        $backendvalue = file_get_contents((string)$vObj);
                         $ldapBackendMap = [$newLdapKey => $backendvalue];
                     }
                 }
@@ -254,9 +254,9 @@ class LDAP {
                     $isMapp = false;
                     if(isset($mappLdapConfig['backend_data_mediatype']) && !empty($mappLdapConfig['backend_data_mediatype']))
                     {
-                        $mimeType = finfo_buffer(finfo_open(FILEINFO_MIME), file_get_contents($vObj));
+                        $mimeType = finfo_buffer(finfo_open(FILEINFO_MIME), file_get_contents((string)$vObj));
                         $mimeType = explode(';', $mimeType)[0];
-
+                        
                         if(in_array($mimeType, $mappLdapConfig['backend_data_mediatype']))
                         {
                             $isMapp = true;
@@ -269,6 +269,7 @@ class LDAP {
 
                     if($isMapp === true)
                     {
+                        $newLdapKey = strtolower($mappLdapConfig['backend_attribute']);
                         $backendvalue = file_get_contents((string)$vObj);
                         $ldapBackendMap = [$newLdapKey => $backendvalue];
                     }                        
