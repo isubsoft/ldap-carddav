@@ -8,12 +8,6 @@ use isubsoft\dav\Utility\LDAP as Utility;
 
 class Reader extends \Sabre\VObject\Reader{
 
-
-    private static $file_uri_schemes = [
-                                            'embedded' => ['data'],
-                                            'remote' => ['http', 'https', 'ftp', 'ftps']
-                                        ];
-
     private static $encoding_format = 'base64';
     /**
      * Vcard
@@ -21,7 +15,7 @@ class Reader extends \Sabre\VObject\Reader{
      * @var array
      */
 
-    private static function vCardMetaData(){
+    public static function vCardMetaData(){
 
         $json = file_get_contents($GLOBALS['__CONF_DIR__'].'/vcard_metadata.json'); 
 
@@ -71,74 +65,6 @@ class Reader extends \Sabre\VObject\Reader{
         return [];
     }
 
-    function backendValue($value, $vcardAttr, $backendDataFormat)
-    {
-        $vCardDataFormat = strtoupper($value->getValueType());
-        $backendDataFormat = strtoupper($backendDataFormat);
-        $backendvalue = '';
-        
-
-        if($vCardDataFormat == 'TEXT')
-        {
-            if($backendDataFormat == 'TEXT' || $backendDataFormat == 'BINARY')
-            {
-                $backendvalue = (string)$value;
-            }
-        }
-        else if($vCardDataFormat == 'URI')
-        {
-            if($backendDataFormat == 'TEXT')
-            {
-                $valueComponent = parse_url($value);
-                $vCardMetaData = self::vCardMetaData();
-                $vCardInfo = $vCardMetaData[$vcardAttr];
-
-                if(isset($valueComponent['scheme']) && (isset($vCardInfo['uri_schemes']['embedded'])) && (in_array($valueComponent['scheme'], $vCardInfo['uri_schemes']['embedded'])))
-                {
-                    $backendvalue = $valueComponent['path'];
-                }
-                else if(isset($valueComponent['scheme']) && (in_array($valueComponent['scheme'], self::$file_uri_schemes['embedded']) || in_array($valueComponent['scheme'], self::$file_uri_schemes['remote'])))
-                {
-                    $mimeType = finfo_buffer(finfo_open(FILEINFO_MIME), file_get_contents((string)$value));
-                    $mimeType = explode(';', $mimeType)[0];
-                    
-                    if($mimeType == 'text/plain')
-                    {
-                        $backendvalue = file_get_contents((string)$value);
-                    }
-                }
-            }
-            else if($backendDataFormat == 'BINARY')
-            {
-                $valueComponent = parse_url($value);             
-                if(isset($valueComponent['scheme']) && (in_array($valueComponent['scheme'], self::$file_uri_schemes['embedded']) || in_array($valueComponent['scheme'], self::$file_uri_schemes['remote'])))
-                {
-                    $backendvalue = file_get_contents((string)$value);
-                }
-                else
-                {
-                    $backendvalue = (string)$value;
-                }
-            }
-            else if($backendDataFormat == 'URI')
-            {
-                $valueComponent = parse_url($value);
-                if(isset($valueComponent['scheme']) && in_array($valueComponent['scheme'], $uriSchema['remote']))
-                {
-                    $backendvalue = (string)$value;
-                }
-            }
-        }
-        else if($vCardDataFormat == 'BINARY')
-        {
-            if($backendDataFormat == 'BINARY')
-            {
-                $backendvalue = (string)$value;
-            }
-        }
-
-        return  $backendvalue;
-    }
 
     function backendValueConversion($value, $backendDataFormat)
     {
