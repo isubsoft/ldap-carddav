@@ -432,7 +432,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                     $ldapBackendInfo = Rules::mapVcardProperty($vCardKey, $ldapKey, $vcard->$vCardKey);
                     if($ldapBackendInfo)
                     {
-                        $ldapInfo = array_merge($ldapInfo, $ldapBackendInfo);
+                        foreach ($ldapBackendInfo as $ldapAttr => $ldapBackendValue) {
+                            $ldapInfo[$ldapAttr] = $ldapBackendValue;
+                        }
                     }
                 }
             }    
@@ -599,7 +601,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                     $ldapBackendInfo = Rules::mapVcardProperty($vCardKey, $ldapKey, $vcard->$vCardKey);
                     if($ldapBackendInfo)
                     {
-                        $ldapInfo = array_merge($ldapInfo, $ldapBackendInfo);
+                        foreach ($ldapBackendInfo as $ldapAttr => $ldapBackendValue) {
+                            $ldapInfo[$ldapAttr] = $ldapBackendValue;
+                        }
                     }
                 }
             }    
