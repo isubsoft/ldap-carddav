@@ -106,12 +106,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
         $this->principalUser = basename($principalUri);
        
-        foreach ($this->config['card']['addressbook']['ldap'] as $addressbookId => $configParams) {
+        foreach ($this->config['card']['addressbook']['ldap'] as $addressBookId => $configParams) {
             $addressBookDn = $configParams['base_dn'];
                
             $addressBooks[] = [
-                'id'                                                          => $addressbookId,
-                'uri'                                                         => $addressbookId,
+                'id'                                                          => $addressBookId,
+                'uri'                                                         => $addressBookId,
                 'principaluri'                                                => $principalUri,
                 '{DAV:}displayname'                                           => isset($configParams['name']) ? $configParams['name'] : '',
                 '{' . \Sabre\CardDAV\Plugin::NS_CARDDAV . '}addressbook-description'  => isset($configParams['description']) ? $configParams['description'] : '',
@@ -123,11 +123,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             {
             	if(isset($configParams['bind_pass']) && $configParams['bind_pass'] != '')
 		          {
-		              $this->addressbook[$addressbookId]['LdapConnection'] = Utility::LdapBindConnection(['bindDn' => $configParams['bind_dn'], 'bindPass' => $configParams['bind_pass']], $configParams);
+		              $this->addressbook[$addressBookId]['LdapConnection'] = Utility::LdapBindConnection(['bindDn' => $configParams['bind_dn'], 'bindPass' => $configParams['bind_pass']], $configParams);
 		          }
 		          else
 		          {
-		              $this->addressbook[$addressbookId]['LdapConnection'] = Utility::LdapBindConnection(['bindDn' => $configParams['bind_dn'], 'bindPass' => null], $configParams);
+		              $this->addressbook[$addressBookId]['LdapConnection'] = Utility::LdapBindConnection(['bindDn' => $configParams['bind_dn'], 'bindPass' => null], $configParams);
 		          }
             }
             else
@@ -135,11 +135,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             	if($configParams['user_specific'] == true)
             		$addressBookDn = Utility::replacePlaceholders($configParams['base_dn'], ['%u' => $this->principalUser ]);
             		
-              $this->addressbook[$addressbookId]['LdapConnection'] = $this->authBackend->userLdapConn;
+              $this->addressbook[$addressBookId]['LdapConnection'] = $this->authBackend->userLdapConn;
             }
 
-            $this->addressbook[$addressbookId]['config'] = $configParams;
-            $this->addressbook[$addressbookId]['addressbookDn'] = $addressBookDn;
+            $this->addressbook[$addressBookId]['config'] = $configParams;
+            $this->addressbook[$addressBookId]['addressbookDn'] = $addressBookDn;
         }
 
         return $addressBooks;
