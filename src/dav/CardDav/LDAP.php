@@ -114,8 +114,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                 'uri'                                                         => $addressbookId,
                 'principaluri'                                                => $principalUri,
                 '{DAV:}displayname'                                           => isset($configParams['name']) ? $configParams['name'] : '',
-                '{' . CardDAVPlugin::NS_CARDDAV . '}addressbook-description'  => isset($configParams['description']) ? $configParams['description'] : '',
-                '{http://sabredav.org/ns}sync-token'                          => isset($this->syncToken) ? $this->syncToken : 0,
+                '{' . \Sabre\CardDAV\Plugin::NS_CARDDAV . '}addressbook-description'  => isset($configParams['description']) ? $configParams['description'] : '',
+                '{http://calendarserver.org/ns/}getctag' 											=> (!$this->syncToken == null) ? $this->syncToken : time(),
+                '{http://sabredav.org/ns}sync-token'                          => (!$this->syncToken == null) ? $this->syncToken : 0
             ];
             
 						if(isset($configParams['bind_dn']) && $configParams['bind_dn'] != '')
