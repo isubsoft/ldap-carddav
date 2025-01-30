@@ -59,16 +59,25 @@ $config['card']['addressbook']['ldap']['public'] = [
   'ldap_version'  => 3,       // For address books only LDAP version 3 or above is supported
   'network_timeout' => 10,    // The timeout (in seconds) for connect + bind attempts. This is only supported in PHP >= 5.3.0 with OpenLDAP 2.x
   
-	'user_specific' 	=> false, // If this is true placeholders can be used as described below
+	// -- 'user_specific' and 'writable' values are used as initialization parameters for the sync database. Once the sync database has been initialized changing the values here to any conflicting values will lead to server not processing requests for this address book.
+	'user_specific' 	=> false, // If this is true username placeholder can be used in applicable places
+	'writable'     	 	=> false,
 	
   // -- The following placeholders are available to be used in search_filter
   // %u  - Username sent by client for authentication
   
 	'base_dn'       	=> 'ou=People,dc=example,dc=org',
+	
+	// -- If 'bind_dn' and 'bind_pass' are not provided below then LDAP connection using parameters provided in $config['auth']['ldap'] is used to obtain backend data. The bind user must have read access to entryUUID and modifyTimestamp operational attributes of all contacts in the address book additionally.
 	'bind_dn'       	=> 'cn=admin,ou=People,dc=example,dc=org',
 	'bind_pass'     	=> '<secret>',
+	
+	// -- Sync LDAP bind user can be used if there are size limits on 'bind_dn' in LDAP. 'sync_bind_dn' should have liberal or no size limits and must have read access to entryUUID attribute of all contacts in the address book
+	// 'sync_bind_dn'       	=> 'cn=carddavsync,ou=People,dc=example,dc=org',
+	// 'sync_bind_pass'     	=> '<secret>',
+	
 	'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
-	'writable'     	 	=> false,
+	
 	// If writable is true then these fields need to be populated:
 	// LDAP_Object_Classes, required_fields, LDAP_rdn
 	'LDAP_Object_Classes' => ['inetOrgPerson'],
@@ -78,11 +87,12 @@ $config['card']['addressbook']['ldap']['public'] = [
 																						// merge (default)  - Would only replace backend contact attibutes present in field map here and 
 																						//                    leave others intact.
 																					 	// replace          - Would replace whole backend contact with attibutes present in 
-																					 	//                    field map here. WARNING: This option may lead to loss of data 
+																					 	//                    field map here. WARNING: This option may lead to loss of contact attributes 
 																					 	//                    in the backend which are not present in field map here.
 																					 	
+
+	// vCard    => LDAP field map
   'fieldmap'      => [
-		// vCard    => LDAP
     'FN'            => ['backend_attribute' => 'cn',
                         'backend_data_format' => 'text',
                           'parameters' => [],
@@ -223,18 +233,24 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	'name'          	=> 'Personal Address Book',
   'description'     => 'Personal Address Book',
   
-	'user_specific' 	=> true, // If this is true placeholders can be used as described below
+	// -- 'user_specific' and 'writable' values are used as initialization parameters for the sync database. Once the sync database has been initialized changing the values here to any conflicting values will lead to server not processing requests for this address book.
+	'user_specific' 	=> true, // If this is true username placeholder can be used in applicable places
+	'writable'     	 	=> true,
 	
   // -- The following placeholders are available to be used in base_dn
   // %u  - Username sent by client for authentication
   
 	'base_dn'       	=> 'ou=Address Book,uid=%u,ou=People,dc=example,dc=org',
 	
-	// -- If bind_dn and bind_pass are not provided then LDAP connection using $config['auth']['ldap'] is used to obtain backend data.
+	// -- If 'bind_dn' and 'bind_pass' are not provided below then LDAP connection using parameters provided in $config['auth']['ldap'] is used to obtain backend data. The bind user must have read access to entryUUID and modifyTimestamp operational attributes of all contacts in the address book additionally.
 	// 'bind_dn'       	=> '',
 	// 'bind_pass'     => '',
+	
+	// -- Sync LDAP bind user can be used if there are size limits on 'bind_dn' user in LDAP. 'sync_bind_dn' should have liberal or no size limits and must have read access to entryUUID operational attribute of all contacts in the address book
+	// 'sync_bind_dn'       	=> 'cn=carddavsync,ou=People,dc=example,dc=org',
+	// 'sync_bind_pass'     	=> '<secret>',
+	
 	'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
-	'writable'     	 	=> true,
 	// If writable is true then these fields need to be populated:
 	// LDAP_Object_Classes, required_fields, LDAP_rdn.
 	'LDAP_Object_Classes' => ['inetOrgPerson'], //First objectClass must be the structural objectClass.
@@ -244,10 +260,11 @@ $config['card']['addressbook']['ldap']['personal'] = [
 																						// merge (default)  - Would only replace backend contact attibutes present in field map here and 
 																						//                    leave others intact.
 																					 	// replace          - Would replace whole backend contact with attibutes present in 
-																					 	//                    field map here. WARNING: This option may lead to loss of data 
+																					 	//                    field map here. WARNING: This option may lead to loss of contact attributes 
 																					 	//                    in the backend which are not present in field map here.
+
+	// vCard    => LDAP field map
   'fieldmap'      => [
-		// vCard    => LDAP
     'FN'            => ['backend_attribute' => 'cn',
                         'backend_data_format' => 'text',
                           'parameters' => [],
