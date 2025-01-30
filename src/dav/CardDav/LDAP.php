@@ -1437,17 +1437,17 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     function fullSyncOperation($addressBookId)
     {
-        $config = $this->addressbook[$addressBookId]['config'];
+        $addressBookConfig = $this->addressbook[$addressBookId]['config'];
         $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
         $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
         $mappedContacts = [];
         $backendIds = [];
         $mappedBackendIds = [];
 
-        $filter = '(&'.$config['filter']. '(createtimestamp<=' . gmdate('YmdHis', $this->syncToken) . 'Z))';     
+        $filter = '(&'.$addressBookConfig['filter']. '(createtimestamp<=' . gmdate('YmdHis', $this->syncToken) . 'Z))';     
         $attributes = ['entryuuid','modifytimestamp'];
         
-        $data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $filter, $attributes, strtolower($config['scope']));
+        $data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $filter, $attributes, strtolower($addressBookConfig['scope']));
         
         if($data === false)
         {
