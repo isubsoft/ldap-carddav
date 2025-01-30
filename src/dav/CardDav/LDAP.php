@@ -106,39 +106,39 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
         $this->principalUser = basename($principalUri);
        
-        foreach ($this->config['card']['addressbook']['ldap'] as $addressBookId => $configParams) {
-            $addressBookDn = $configParams['base_dn'];
+        foreach ($this->config['card']['addressbook']['ldap'] as $addressBookId => $addressBookConfig) {
+            $addressBookDn = $addressBookConfig['base_dn'];
                
             $addressBooks[] = [
                 'id'                                                          => $addressBookId,
                 'uri'                                                         => $addressBookId,
                 'principaluri'                                                => $principalUri,
-                '{DAV:}displayname'                                           => isset($configParams['name']) ? $configParams['name'] : '',
-                '{' . \Sabre\CardDAV\Plugin::NS_CARDDAV . '}addressbook-description'  => isset($configParams['description']) ? $configParams['description'] : '',
+                '{DAV:}displayname'                                           => isset($addressBookConfig['name']) ? $addressBookConfig['name'] : '',
+                '{' . \Sabre\CardDAV\Plugin::NS_CARDDAV . '}addressbook-description'  => isset($addressBookConfig['description']) ? $addressBookConfig['description'] : '',
                 '{http://calendarserver.org/ns/}getctag' 											=> (!$this->syncToken == null) ? $this->syncToken : time(),
                 '{http://sabredav.org/ns}sync-token'                          => (!$this->syncToken == null) ? $this->syncToken : 0
             ];
             
-						if(isset($configParams['bind_dn']) && $configParams['bind_dn'] != '')
+						if(isset($addressBookConfig['bind_dn']) && $addressBookConfig['bind_dn'] != '')
             {
-            	if(isset($configParams['bind_pass']) && $configParams['bind_pass'] != '')
+            	if(isset($addressBookConfig['bind_pass']) && $addressBookConfig['bind_pass'] != '')
 		          {
-		              $this->addressbook[$addressBookId]['LdapConnection'] = Utility::LdapBindConnection(['bindDn' => $configParams['bind_dn'], 'bindPass' => $configParams['bind_pass']], $configParams);
+		              $this->addressbook[$addressBookId]['LdapConnection'] = Utility::LdapBindConnection(['bindDn' => $addressBookConfig['bind_dn'], 'bindPass' => $addressBookConfig['bind_pass']], $addressBookConfig);
 		          }
 		          else
 		          {
-		              $this->addressbook[$addressBookId]['LdapConnection'] = Utility::LdapBindConnection(['bindDn' => $configParams['bind_dn'], 'bindPass' => null], $configParams);
+		              $this->addressbook[$addressBookId]['LdapConnection'] = Utility::LdapBindConnection(['bindDn' => $addressBookConfig['bind_dn'], 'bindPass' => null], $addressBookConfig);
 		          }
             }
             else
             {
-            	if($configParams['user_specific'] == true)
-            		$addressBookDn = Utility::replacePlaceholders($configParams['base_dn'], ['%u' => $this->principalUser ]);
+            	if($addressBookConfig['user_specific'] == true)
+            		$addressBookDn = Utility::replacePlaceholders($addressBookConfig['base_dn'], ['%u' => $this->principalUser ]);
             		
               $this->addressbook[$addressBookId]['LdapConnection'] = $this->authBackend->userLdapConn;
             }
 
-            $this->addressbook[$addressBookId]['config'] = $configParams;
+            $this->addressbook[$addressBookId]['config'] = $addressBookConfig;
             $this->addressbook[$addressBookId]['addressbookDn'] = $addressBookDn;
         }
 
