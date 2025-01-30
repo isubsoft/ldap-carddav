@@ -1209,6 +1209,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $addressBookConfig = $this->addressbook[$addressBookId]['config'];
         $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
         $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
+        
+        if(isset($addressBookConfig['sync_bind_dn']) && $addressBookConfig['sync_bind_dn'] != '')
+        {
+        	$syncBindDn = $addressBookConfig['sync_bind_dn'];
+        	$syncBindPass = (!isset($addressBookConfig['sync_bind_pass']))?null:$addressBookConfig['sync_bind_pass'];
+        	$ldapConn = Utility::LdapBindConnection(['bindDn' => $syncBindDn, 'bindPass' => $syncBindPass], $addressBookConfig);
+        }
 
         if($ldapConn === false)
         {
@@ -1441,6 +1448,19 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $addressBookConfig = $this->addressbook[$addressBookId]['config'];
         $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
         $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
+        
+        if(isset($addressBookConfig['sync_bind_dn']) && $addressBookConfig['sync_bind_dn'] != '')
+        {
+        	$syncBindDn = $addressBookConfig['sync_bind_dn'];
+        	$syncBindPass = (!isset($addressBookConfig['sync_bind_pass']))?null:$addressBookConfig['sync_bind_pass'];
+        	$ldapConn = Utility::LdapBindConnection(['bindDn' => $syncBindDn, 'bindPass' => $syncBindPass], $addressBookConfig);
+        }
+        
+        if($ldapConn === false)
+        {
+					return [];
+        }
+        
         $mappedContacts = [];
         $backendIds = [];
         $mappedBackendIds = [];
