@@ -1393,14 +1393,14 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     /**
      * Get contact using cards backend map table and ldap directory database.
      *
-     * @param string  $addressBookDn
      * @param string  $addressBookId
      * @param string  $cardUri
-     * @param array $config
+     * @param array 	$attributes
+     * @return array
      */
     function fetchLdapContactData($addressBookId, $cardUri, $attributes = [])
     {
-        $config = $this->addressbook[$addressBookId]['config'];
+        $addressBookConfig = $this->addressbook[$addressBookId]['config'];
         $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
         $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
         $result = null;
@@ -1423,9 +1423,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         }
         
   
-        $filter = '(&'.$config['filter']. '(entryuuid=' .$backendId. '))'; 
+        $filter = '(&'.$addressBookConfig['filter']. '(entryuuid=' .$backendId. '))'; 
         
-        $result = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, empty($attributes)?['dn', 'createTimestamp', 'modifyTimestamp']:$attributes, strtolower($config['scope']));      
+        $result = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, empty($attributes)?['dn', 'createTimestamp', 'modifyTimestamp']:$attributes, strtolower($addressBookConfig['scope']));      
         return $result;
     }
 
@@ -1434,6 +1434,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      * Full synchronize operation using Ldap database and cards backend map table.
      *
      * @param string  $addressBookId
+     * @return array
      */
     function fullSyncOperation($addressBookId)
     {
