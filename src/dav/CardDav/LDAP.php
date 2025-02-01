@@ -38,13 +38,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     private $fullSyncTable = 'cards_full_sync';
 
     /**
-     * sync Token.
-     *
-     * @var string
-     */
-    private $syncToken = null;
-
-    /**
      * Auth Backend Object class.
      *
      * @var string
@@ -102,12 +95,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     function getAddressBooksForUser($principalUri)
     {      
-        $this->syncToken = time();
-
         $this->principalUser = basename($principalUri);
        
         foreach ($this->config['card']['addressbook']['ldap'] as $addressBookId => $addressBookConfig) {
             $addressBookDn = $addressBookConfig['base_dn'];
+            $addressBookSyncToken = time();
                
             $addressBooks[] = [
                 'id'                                                          => $addressBookId,
@@ -115,8 +107,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                 'principaluri'                                                => $principalUri,
                 '{DAV:}displayname'                                           => isset($addressBookConfig['name']) ? $addressBookConfig['name'] : '',
                 '{' . \Sabre\CardDAV\Plugin::NS_CARDDAV . '}addressbook-description'  => isset($addressBookConfig['description']) ? $addressBookConfig['description'] : '',
-                '{http://calendarserver.org/ns/}getctag' 											=> (!$this->syncToken == null) ? $this->syncToken : time(),
-                '{http://sabredav.org/ns}sync-token'                          => (!$this->syncToken == null) ? $this->syncToken : 0
+                '{http://calendarserver.org/ns/}getctag' 											=> (!$addressBookSyncToken == null) ? $addressBookSyncToken : time(),
+                '{http://sabredav.org/ns}sync-token'                          => (!$addressBookSyncToken == null) ? $addressBookSyncToken : 0
             ];
             
 						if(isset($addressBookConfig['bind_dn']) && $addressBookConfig['bind_dn'] != '')
@@ -140,6 +132,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
             $this->addressbook[$addressBookId]['config'] = $addressBookConfig;
             $this->addressbook[$addressBookId]['addressbookDn'] = $addressBookDn;
+            $this->addressbook[$addressBookId]['syncToken'] = $addressBookSyncToken;
         }
 
         return $addressBooks;
@@ -1192,6 +1185,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     function getChangesForAddressBook($addressBookId, $syncToken, $syncLevel, $limit = null)
     {     
+        $addressBookConfig = $this->addressbook[$addressBookId]['config'];
+        $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
+        $addressBookSyncToken = $this->addressbook[$addressBookId]['syncToken'];
+        $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
+        
         $resultTmpError = [
             'syncToken' => $syncToken,
             'added'     => [],
@@ -1200,15 +1198,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         ];
         
         $result = [
-            'syncToken' => $this->syncToken,
+            'syncToken' => $addressBookSyncToken,
             'added'     => [],
             'modified'  => [],
             'deleted'   => [],
         ];
-
-        $addressBookConfig = $this->addressbook[$addressBookId]['config'];
-        $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
-        $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
         
         if(isset($addressBookConfig['sync_bind_dn']) && $addressBookConfig['sync_bind_dn'] != '')
         {
@@ -1252,14 +1246,14 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
         }
          
-        if( ($syncToken < $fullSyncTimestamp) &&  ($this->syncToken >= $fullSyncTimestamp))
+        if( ($fullSyncTimestamp > $syncToken) &&  ($fullSyncTimestamp <= $addressBookSyncToken))
         {           
 					return null;
         }    
         
 
         //ADDED CARDS
-        $filter = '(&' .$addressBookConfig['filter']. '(createtimestamp<=' .gmdate('YmdHis', $this->syncToken). 'Z)(!(|(createtimestamp<='.gmdate('YmdHis', $syncToken).'Z)(createtimestamp='.gmdate('YmdHis', $syncToken).'Z))))'; 
+        $filter = '(&' .$addressBookConfig['filter']. '(createtimestamp<=' .gmdate('YmdHis', $addressBookSyncToken). 'Z)(!(|(createtimestamp<='.gmdate('YmdHis', $syncToken).'Z)(createtimestamp='.gmdate('YmdHis', $syncToken).'Z))))'; 
         $data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $filter, ['entryuuid'], strtolower($addressBookConfig['scope']));
         
         if($data === false)
@@ -1300,7 +1294,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         
 
         //MODIFIED CARDS
-        $filter = '(&' .$addressBookConfig['filter']. '(createtimestamp<=' .gmdate('YmdHis', $this->syncToken). 'Z)(!(|(modifytimestamp<='.gmdate('YmdHis', $syncToken).'Z)(modifytimestamp='.gmdate('YmdHis', $syncToken).'Z))))';  
+        $filter = '(&' .$addressBookConfig['filter']. '(createtimestamp<=' .gmdate('YmdHis', $addressBookSyncToken). 'Z)(!(|(modifytimestamp<='.gmdate('YmdHis', $syncToken).'Z)(modifytimestamp='.gmdate('YmdHis', $syncToken).'Z))))';  
         $data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $filter, ['entryuuid'], strtolower($addressBookConfig['scope']));
         
         if($data === false)
@@ -1347,7 +1341,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         try {
             $query = 'SELECT card_uri FROM '.$this->deletedCardsTableName.' WHERE addressbook_id = ? and ( sync_token <= ? ) and ( sync_token > ? ) and user_id = ? ';
             $stmt = $this->pdo->prepare($query);
-            $stmt->execute([$addressBookId, $this->syncToken, $syncToken, $this->principalUser]);
+            $stmt->execute([$addressBookId, $addressBookSyncToken, $syncToken, $this->principalUser]);
             
             while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
                     $result['deleted'][] = $row['card_uri'];
@@ -1447,6 +1441,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     {
         $addressBookConfig = $this->addressbook[$addressBookId]['config'];
         $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
+        $addressBookSyncToken = $this->addressbook[$addressBookId]['syncToken'];
         $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
         
         if(isset($addressBookConfig['sync_bind_dn']) && $addressBookConfig['sync_bind_dn'] != '')
@@ -1465,7 +1460,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $backendIds = [];
         $mappedBackendIds = [];
 
-        $filter = '(&'.$addressBookConfig['filter']. '(createtimestamp<=' . gmdate('YmdHis', $this->syncToken) . 'Z))';     
+        $filter = '(&'.$addressBookConfig['filter']. '(createtimestamp<=' . gmdate('YmdHis', $addressBookSyncToken) . 'Z))';     
         $attributes = ['entryuuid','modifytimestamp'];
         
         $data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $filter, $attributes, strtolower($addressBookConfig['scope']));
