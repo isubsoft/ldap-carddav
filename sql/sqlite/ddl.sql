@@ -62,7 +62,7 @@ CREATE TABLE cards_full_sync
 /**************** Triggers ******************/
 
 DROP TRIGGER IF EXISTS cards_addressbook_before;
-CREATE TRIGGER cards_addressbook_before BEFORE INSERT ON cards_addressbook FOR EACH ROW WHEN NOT NEW.user_specific AND NOT EXISTS (SELECT 1 FROM cards_user WHERE user_id = '__SYS_USER')
+CREATE TRIGGER cards_addressbook_before BEFORE INSERT ON cards_addressbook FOR EACH ROW WHEN NOT NEW.user_specific AND NOT EXISTS (SELECT 1 FROM cards_user WHERE user_id = '__SYS_USER') AND NOT EXISTS (SELECT 1 FROM cards_system_user)
 BEGIN
 	INSERT INTO cards_user (user_id) VALUES ('__SYS_USER');
 	INSERT INTO cards_system_user (user_id) VALUES ('__SYS_USER');
@@ -73,4 +73,3 @@ CREATE TRIGGER cards_backend_map_before BEFORE INSERT ON cards_backend_map FOR E
 BEGIN
 	INSERT INTO cards_user (user_id) VALUES (NEW.user_id);
 END;
-
