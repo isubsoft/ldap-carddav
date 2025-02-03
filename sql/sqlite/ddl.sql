@@ -50,14 +50,6 @@ CREATE TABLE cards_deleted
 );
 CREATE INDEX cards_deleted_idx01 ON cards_deleted (user_id, addressbook_id, sync_token);
 
-CREATE TABLE cards_full_sync
-(
-	addressbook_id VARCHAR(255) NOT NULL,
-	full_sync_ts BIGINT NOT NULL,
-	PRIMARY KEY (addressbook_id),
-	FOREIGN KEY(addressbook_id) REFERENCES cards_addressbook(addressbook_id) ON DELETE CASCADE ON UPDATE CASCADE
-);
-
 
 /**************** Triggers ******************/
 

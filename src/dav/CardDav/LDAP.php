@@ -39,8 +39,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     
     private $deletedCardsTableName = 'cards_deleted';
 
-    private $fullSyncTable = 'cards_full_sync';
-
     /**
      * Auth Backend Object class.
      *
