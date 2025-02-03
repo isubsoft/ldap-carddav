@@ -1301,34 +1301,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				return null;
 			}
 
-			$fullSyncTimestamp = null;
-
-			try {
-				$query = 'SELECT full_sync_ts FROM '.$this->fullSyncTable.' WHERE addressbook_id = ?';
-				$stmt = $this->pdo->prepare($query);
-				$stmt->execute([$addressBookId]);
-
-				$row = $stmt->fetch(\PDO::FETCH_ASSOC);
-				
-				if($row !== false)
-				{
-					$fullSyncTimestamp = $row['full_sync_ts'];
-							
-					if($fullSyncTimestamp > $syncToken && $fullSyncTimestamp <= $addressBookSyncToken)
-					{           
-						if(!empty($this->fullSyncOperation($addressBookId)))
-						{
-							$query = 'DELETE FROM '.$this->fullSyncTable.' WHERE addressbook_id = ?';
-							$stmt = $this->pdo->prepare($query);
-							$stmt->execute([$addressBookId]);
-						}
-					}
-				}
-			} catch (\Throwable $th) {
-					error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
-					return $resultTmpError;
-			}
-
 			$filter = $addressBookConfig['filter']; 
 			$data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $filter, ['entryuuid', 'createtimestamp', 'modifytimestamp'], strtolower($addressBookConfig['scope']));
 
@@ -1341,7 +1313,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 			{
 				if(!isset($data['data']['modifyTimestamp'][0]) || !isset($data['data']['createTimestamp'][0]) || !isset($data['data']['entryUUID'][0]))
 				{
-					error_log("Read access to required operational attributes in LDAP not present. Cannot continue. Quitting.".__METHOD__." at line no ".__LINE__);
+					error_log("Read access to required operational attributes in LDAP not present. Cannot continue. Quitting. ".__METHOD__." at line no ".__LINE__);
 					return $resultTmpError;
 				}
 				//$filter = '(&' .$addressBookConfig['filter']. '(createtimestamp<=' .gmdate('YmdHis', $addressBookSyncToken). 'Z)(!(|(createtimestamp<='.gmdate('YmdHis', $syncToken).'Z)(createtimestamp='.gmdate('YmdHis', $syncToken).'Z))))';
@@ -1370,7 +1342,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					} catch (\Throwable $th) {
 							error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
 							return $resultTmpError;
-					}     
+					}
+					
 					$result['added'][] = $cardUri;
 				}
 				//$filter = '(&' .$addressBookConfig['filter']. '(createtimestamp<=' .gmdate('YmdHis', $addressBookSyncToken). 'Z)(!(|(modifytimestamp<='.gmdate('YmdHis', $syncToken).'Z)(modifytimestamp='.gmdate('YmdHis', $syncToken).'Z))))';
