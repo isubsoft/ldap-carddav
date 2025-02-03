@@ -313,7 +313,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         if(empty($data))
         	return [];
 
-        if(! $data['count'] > 0)
+        if(!$data['count'] > 0)
         	return false;
 
         $cardData = $this->generateVcard($data[0], $addressBookId, $cardUri);
@@ -516,7 +516,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
         $data = Utility::LdapQuery($ldapConn, $ldapTree, $addressBookConfig['filter'], ['entryuuid'], 'base');
         
-        if( !empty($data) && $data['count'] > 0)
+        if(!empty($data) && $data['count'] > 0)
         {
 		      try {
 		          $query = "INSERT INTO `".$this->ldapMapTableName."` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
@@ -611,7 +611,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                                 $filter = '(&'.$addressBookConfig['filter']. '(entryuuid=' .$backendId. '))'; 
                         
                                 $data = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, [], strtolower($addressBookConfig['scope']));
-                                if( !empty($data) && $data['count'] > 0)
+                                if(!empty($data) && $data['count'] > 0)
                                 {
                                     $ldapInfo[$newLdapKey][] = $data[0]['dn'];
                                 }
@@ -788,6 +788,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
         try {
             $ldapDelete = ldap_delete($ldapConn, $ldapTree);
+            
             if(!$ldapDelete)
             {
                 return false;
@@ -1381,7 +1382,20 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 			}
 
 			//DELETED CARDS
+			$cardUri = null;
+			
 			try {
+				// Fetch contacts from deleted table
+				$query = 'SELECT card_uri FROM '.$this->deletedCardsTableName.' WHERE user_id = ? AND addressbook_id = ? AND sync_token > ? AND sync_token <= ?';
+				$stmt = $this->pdo->prepare($query);
+				$stmt->execute([$dbUser, $addressBookId, $syncToken, $addressBookSyncToken]);
+					
+				while($row = $stmt->fetch(\PDO::FETCH_ASSOC))
+				{
+					$cardUri = $row['card_uri'];
+					$result['deleted'][] = $cardUri;
+				}
+				
 				// Fetch all mapped contacts
 				$query = 'SELECT card_uri, backend_id FROM '.$this->ldapMapTableName.' WHERE user_id = ? AND addressbook_id = ?';
 				$stmt = $this->pdo->prepare($query);
