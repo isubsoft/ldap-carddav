@@ -35,7 +35,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     
     private $systemUsersTableName = 'cards_system_user';
     
-    private $ldapMapTableName = 'cards_backend_map';
+    private $backendMapTableName = 'cards_backend_map';
     
     private $deletedCardsTableName = 'cards_deleted';
 
@@ -294,7 +294,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         
 				try 
 				{
-		      $query = 'SELECT card_uid FROM '.$this->ldapMapTableName.' WHERE user_id = ? AND addressbook_id = ? AND card_uri = ?';
+		      $query = 'SELECT card_uid FROM '.$this->backendMapTableName.' WHERE user_id = ? AND addressbook_id = ? AND card_uri = ?';
 		      $stmt = $this->pdo->prepare($query);
 		      $stmt->execute([$dbUser, $addressBookId, $cardUri]);
 		      
@@ -422,7 +422,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                             $backendId = null;
 
                             try {
-                                $query = 'SELECT backend_id FROM '.$this->ldapMapTableName.' WHERE addressbook_id = ? and card_uid = ? and user_id = ?';
+                                $query = 'SELECT backend_id FROM '.$this->backendMapTableName.' WHERE addressbook_id = ? and card_uid = ? and user_id = ?';
                                 $stmt = $this->pdo->prepare($query);
                                 $stmt->execute([$addressBookId, $memberCardUID, $dbUser]);
                                 
@@ -519,7 +519,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         if(!empty($data) && $data['count'] > 0)
         {
 		      try {
-		          $query = "INSERT INTO `".$this->ldapMapTableName."` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
+		          $query = "INSERT INTO `".$this->backendMapTableName."` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
 		          $sql = $this->pdo->prepare($query);
 		          $sql->execute([$cardUri, $UID, $addressBookId, $data[0]['entryuuid'][0], $dbUser]);
 		      } catch (\Throwable $th) {
@@ -595,7 +595,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                             $backendId = null;
 
                             try {
-                                $query = 'SELECT backend_id FROM '.$this->ldapMapTableName.' WHERE addressbook_id = ? and card_uid = ? and user_id = ?';
+                                $query = 'SELECT backend_id FROM '.$this->backendMapTableName.' WHERE addressbook_id = ? and card_uid = ? and user_id = ?';
                                 $stmt = $this->pdo->prepare($query);
                                 $stmt->execute([$addressBookId, $memberCardUID, $dbUser]);
                                 
@@ -824,7 +824,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $UID = null;
 
         try {
-            $query = 'SELECT card_uid FROM '.$this->ldapMapTableName.' WHERE addressbook_id = ? and card_uri = ? and user_id = ?';
+            $query = 'SELECT card_uid FROM '.$this->backendMapTableName.' WHERE addressbook_id = ? and card_uri = ? and user_id = ?';
             $stmt = $this->pdo->prepare($query);
             $stmt->execute([$addressBookId, $cardUri, $dbUser]);
             
@@ -867,7 +867,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                                 $clientUID = null;
 
                                 try {
-                                    $query = 'SELECT card_uid FROM '.$this->ldapMapTableName.' WHERE addressbook_id = ? and backend_id = ? and user_id = ?';
+                                    $query = 'SELECT card_uid FROM '.$this->backendMapTableName.' WHERE addressbook_id = ? and backend_id = ? and user_id = ?';
                                     $stmt = $this->pdo->prepare($query);
                                     $stmt->execute([$addressBookId, $memberData[0]['entryuuid'][0], $dbUser]);
                                     while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
@@ -1321,7 +1321,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					$cardUri = null;
 					
 					try {
-							$query = 'SELECT card_uri FROM '.$this->ldapMapTableName.' WHERE addressbook_id = ? and backend_id = ? and user_id = ?';
+							$query = 'SELECT card_uri FROM '.$this->backendMapTableName.' WHERE addressbook_id = ? and backend_id = ? and user_id = ?';
 							$stmt = $this->pdo->prepare($query);
 							$stmt->execute([$addressBookId, $data['data']['entryUUID'][0], $dbUser]);
 							
@@ -1334,7 +1334,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 									$cardUID = $this->guidv4();
 									$cardUri = $cardUID .'.vcf';
 									
-									$query = "INSERT INTO `".$this->ldapMapTableName."` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
+									$query = "INSERT INTO `".$this->backendMapTableName."` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
 									$sql = $this->pdo->prepare($query);
 									$sql->execute([$cardUri, $cardUID, $addressBookId, $data['data']['entryUUID'][0], $dbUser]); 
 							}
@@ -1351,7 +1351,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					$cardUri = null;
 					
 					try {
-							$query = 'SELECT card_uri FROM '.$this->ldapMapTableName.' WHERE addressbook_id = ? and backend_id = ? and user_id = ?';
+							$query = 'SELECT card_uri FROM '.$this->backendMapTableName.' WHERE addressbook_id = ? and backend_id = ? and user_id = ?';
 							$stmt = $this->pdo->prepare($query);
 							$stmt->execute([$addressBookId, $data['data']['entryUUID'][0], $dbUser]);
 							
@@ -1364,7 +1364,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 									$cardUID = $this->guidv4();
 									$cardUri = $cardUID .'.vcf';
 									
-									$query = "INSERT INTO `".$this->ldapMapTableName."` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
+									$query = "INSERT INTO `".$this->backendMapTableName."` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
 									$sql = $this->pdo->prepare($query);
 									$sql->execute([$cardUri, $cardUID, $addressBookId, $data['data']['entryUUID'][0], $dbUser]);  
 									$result['added'][] = $cardUri;
@@ -1397,7 +1397,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				}
 				
 				// Fetch all mapped contacts
-				$query = 'SELECT card_uri, backend_id FROM '.$this->ldapMapTableName.' WHERE user_id = ? AND addressbook_id = ?';
+				$query = 'SELECT card_uri, backend_id FROM '.$this->backendMapTableName.' WHERE user_id = ? AND addressbook_id = ?';
 				$stmt = $this->pdo->prepare($query);
 				$stmt->execute([$dbUser, $addressBookId]);
 					
@@ -1443,7 +1443,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		      try {
 		          $this->pdo->beginTransaction();
 
-		          $query = "DELETE FROM `".$this->ldapMapTableName."` WHERE addressbook_id = ? AND card_uri = ? AND user_id = ?"; 
+		          $query = "DELETE FROM `".$this->backendMapTableName."` WHERE addressbook_id = ? AND card_uri = ? AND user_id = ?"; 
 		          $sql = $this->pdo->prepare($query);
 		          $sql->execute([$addressBookId, $objectUri, $dbUser]);
 
@@ -1487,7 +1487,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         }
         
         try {
-            $query = 'SELECT backend_id FROM '.$this->ldapMapTableName.' WHERE addressbook_id = ? and card_uri = ? and user_id = ?';
+            $query = 'SELECT backend_id FROM '.$this->backendMapTableName.' WHERE addressbook_id = ? and card_uri = ? and user_id = ?';
             $stmt = $this->pdo->prepare($query);
             $stmt->execute([$addressBookId, $cardUri, $dbUser]);
             
@@ -1554,7 +1554,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					{
             $contactData = null;
           
-            $query = 'SELECT card_uri, card_uid FROM '.$this->ldapMapTableName.' WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?';
+            $query = 'SELECT card_uri, card_uid FROM '.$this->backendMapTableName.' WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?';
             $stmt = $this->pdo->prepare($query);
             $stmt->execute([$dbUser, $addressBookId, $data['data']['entryUUID'][0]]);
             $row = $stmt->fetch(\PDO::FETCH_ASSOC);
@@ -1571,7 +1571,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
               $cardUID = $this->guidv4();
               $cardUri = $cardUID .'.vcf';
               
-              $query = "INSERT INTO `".$this->ldapMapTableName."` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
+              $query = "INSERT INTO `".$this->backendMapTableName."` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
               $sql = $this->pdo->prepare($query);
               $sql->execute([$cardUri, $cardUID, $addressBookId, $data['data']['entryUUID'][0], $dbUser]);
 
@@ -1588,7 +1588,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					}
 			
 					// Fetch all mapped contacts
-					$query = 'SELECT card_uri, backend_id FROM '.$this->ldapMapTableName.' WHERE user_id = ? AND addressbook_id = ?';
+					$query = 'SELECT card_uri, backend_id FROM '.$this->backendMapTableName.' WHERE user_id = ? AND addressbook_id = ?';
 					$stmt = $this->pdo->prepare($query);
 					$stmt->execute([$dbUser, $addressBookId]);
 						
