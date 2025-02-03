@@ -1429,6 +1429,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     protected function addChange($addressBookId, $objectUri, $operation = 'DELETE')
     {
         $addressBookConfig = $this->addressbook[$addressBookId]['config'];
+        $addressBookSyncToken = $this->addressbook[$addressBookId]['syncToken'];
      		$dbUser = ($addressBookConfig['user_specific'])?$this->principalUser:$this->systemUser;
             
         if($operation == 'DELETE')
@@ -1443,7 +1444,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
 		          $query = "INSERT INTO `".$this->deletedCardsTableName."` (`sync_token` ,`addressbook_id` ,`card_uri`, `user_id`) VALUES (?, ?, ?, ?)"; 
 		          $sql = $this->pdo->prepare($query);
-		          $sql->execute([time(), $addressBookId, $objectUri, $dbUser]);
+		          $sql->execute([$addressBookSyncToken, $addressBookId, $objectUri, $dbUser]);
 
 		          $this->pdo->commit();
 		      } catch (\Throwable $th) {
