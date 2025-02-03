@@ -1245,177 +1245,198 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      * @param int $limit
      * @return array
      */
-    function getChangesForAddressBook($addressBookId, $syncToken, $syncLevel, $limit = null)
-    {     
-        $addressBookConfig = $this->addressbook[$addressBookId]['config'];
-        $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
-        $addressBookSyncToken = $this->addressbook[$addressBookId]['syncToken'];
-        $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
-        $dbUser = ($addressBookConfig['user_specific'])?$this->principalUser:$this->systemUser;
-        
-        $resultTmpError = [
-            'syncToken' => $syncToken,
-            'added'     => [],
-            'modified'  => [],
-            'deleted'   => [],
-        ];
-        
-        $result = [
-            'syncToken' => $addressBookSyncToken,
-            'added'     => [],
-            'modified'  => [],
-            'deleted'   => [],
-        ];
-        
-        if(isset($addressBookConfig['sync_bind_dn']) && $addressBookConfig['sync_bind_dn'] != '')
-        {
-        	$syncBindDn = $addressBookConfig['sync_bind_dn'];
-        	$syncBindPass = (!isset($addressBookConfig['sync_bind_pass']))?null:$addressBookConfig['sync_bind_pass'];
-        	$ldapConn = Utility::LdapBindConnection(['bindDn' => $syncBindDn, 'bindPass' => $syncBindPass], $addressBookConfig);
-        }
+		function getChangesForAddressBook($addressBookId, $syncToken, $syncLevel, $limit = null)
+		{     
+			$addressBookConfig = $this->addressbook[$addressBookId]['config'];
+			$addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
+			$addressBookSyncToken = $this->addressbook[$addressBookId]['syncToken'];
+			$ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
+			$dbUser = ($addressBookConfig['user_specific'])?$this->principalUser:$this->systemUser;
 
-        if($ldapConn === false)
-        {
+			$resultTmpError = [
+					'syncToken' => $syncToken,
+					'added'     => [],
+					'modified'  => [],
+					'deleted'   => [],
+			];
+
+			$result = [
+					'syncToken' => $addressBookSyncToken,
+					'added'     => [],
+					'modified'  => [],
+					'deleted'   => [],
+			];
+
+			if($syncToken >= $addressBookSyncToken)
+			{
+				return $result;
+			}
+
+			if(isset($addressBookConfig['sync_bind_dn']) && $addressBookConfig['sync_bind_dn'] != '')
+			{
+				$syncBindDn = $addressBookConfig['sync_bind_dn'];
+				$syncBindPass = (!isset($addressBookConfig['sync_bind_pass']))?null:$addressBookConfig['sync_bind_pass'];
+				$ldapConn = Utility::LdapBindConnection(['bindDn' => $syncBindDn, 'bindPass' => $syncBindPass], $addressBookConfig);
+			}
+
+			if($ldapConn === false)
+			{
+				return $resultTmpError;
+			}
+
+			// Perform initial sync
+			if($syncToken == null)
+			{
+				$data = $this->fullSyncOperation($addressBookId);
+				
+				if(! empty($data))
+				{
+					for ($i=0; $i < count($data); $i++) {
+							$result['added'][] = $data[$i]['card_uri'];
+					}
+
+					return $result;
+				}
+				
+				return null;
+			}
+
+			$fullSyncTimestamp = null;
+
+			try {
+				$query = 'SELECT full_sync_ts FROM '.$this->fullSyncTable.' WHERE addressbook_id = ?';
+				$stmt = $this->pdo->prepare($query);
+				$stmt->execute([$addressBookId]);
+
+				$row = $stmt->fetch(\PDO::FETCH_ASSOC);
+				
+				if($row !== false)
+				{
+					$fullSyncTimestamp = $row['full_sync_ts'];
+							
+					if($fullSyncTimestamp > $syncToken && $fullSyncTimestamp <= $addressBookSyncToken)
+					{           
+						if(!empty($this->fullSyncOperation($addressBookId)))
+						{
+							$query = 'DELETE FROM '.$this->fullSyncTable.' WHERE addressbook_id = ?';
+							$stmt = $this->pdo->prepare($query);
+							$stmt->execute([$addressBookId]);
+						}
+					}
+				}
+			} catch (\Throwable $th) {
+					error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
 					return $resultTmpError;
-        }
+			}
 
-        //Full sync Operation
-        if($syncToken == null)
-        {
-            $data = $this->fullSyncOperation($addressBookId);
-            
-            if(! empty($data))
-            {
-		          for ($i=0; $i < count($data); $i++) {
-		              $result['added'][] = $data[$i]['card_uri'];
-		          }
+			$filter = $addressBookConfig['filter']; 
+			$data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $filter, ['entryuuid', 'createtimestamp', 'modifytimestamp'], strtolower($addressBookConfig['scope']));
 
-            	return $result;
-            }
-            
-            return null;
-        }
+			if($data === false)
+			{
+				return $resultTmpError;
+			}
 
-        $fullSyncTimestamp = null;
-        try {
-            $query = 'SELECT full_sync_ts FROM '.$this->fullSyncTable.' WHERE addressbook_id = ? ';
-            $stmt = $this->pdo->prepare($query);
-            $stmt->execute([$addressBookId]);
-
-            while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-                    $fullSyncTimestamp = $row['full_sync_ts'];
-                }
-        } catch (\Throwable $th) {
-            error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
-        }
-         
-        if( ($fullSyncTimestamp > $syncToken) &&  ($fullSyncTimestamp <= $addressBookSyncToken))
-        {           
-					return null;
-        }    
-        
-
-        //ADDED CARDS
-        $filter = '(&' .$addressBookConfig['filter']. '(createtimestamp<=' .gmdate('YmdHis', $addressBookSyncToken). 'Z)(!(|(createtimestamp<='.gmdate('YmdHis', $syncToken).'Z)(createtimestamp='.gmdate('YmdHis', $syncToken).'Z))))'; 
-        $data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $filter, ['entryuuid'], strtolower($addressBookConfig['scope']));
-        
-        if($data === false)
-        {
+			while($data['entryIns'])
+			{
+				if(!isset($data['data']['modifyTimestamp'][0]) || !isset($data['data']['createTimestamp'][0]) || !isset($data['data']['entryUUID'][0]))
+				{
+					error_log("Read access to required operational attributes in LDAP not present. Cannot continue. Quitting.".__METHOD__." at line no ".__LINE__);
 					return $resultTmpError;
-        }
-        
-        while($data['entryIns'])
-        {
-            $cardUri = null;
-            try {
-                $query = 'SELECT card_uri FROM '.$this->ldapMapTableName.' WHERE addressbook_id = ? and backend_id = ? and user_id = ?';
-                $stmt = $this->pdo->prepare($query);
-                $stmt->execute([$addressBookId, $data['data']['entryUUID'][0], $dbUser]);
-                
-                while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-                    $cardUri = $row['card_uri'];
-                }
+				}
+				//$filter = '(&' .$addressBookConfig['filter']. '(createtimestamp<=' .gmdate('YmdHis', $addressBookSyncToken). 'Z)(!(|(createtimestamp<='.gmdate('YmdHis', $syncToken).'Z)(createtimestamp='.gmdate('YmdHis', $syncToken).'Z))))';
+				if(strtotime($data['data']['createTimestamp'][0]) > $syncToken && strtotime($data['data']['createTimestamp'][0]) <= $addressBookSyncToken)
+				{ //ADDED CARDS
+					$cardUri = null;
+					
+					try {
+							$query = 'SELECT card_uri FROM '.$this->ldapMapTableName.' WHERE addressbook_id = ? and backend_id = ? and user_id = ?';
+							$stmt = $this->pdo->prepare($query);
+							$stmt->execute([$addressBookId, $data['data']['entryUUID'][0], $dbUser]);
+							
+							while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+									$cardUri = $row['card_uri'];
+							}
 
-                if($cardUri == null)
-                {
-                    $cardUID = $this->guidv4();
-                    $cardUri = $cardUID .'.vcf';
-                    
-                    $query = "INSERT INTO `".$this->ldapMapTableName."` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
-                    $sql = $this->pdo->prepare($query);
-                    $sql->execute([$cardUri, $cardUID, $addressBookId, $data['data']['entryUUID'][0], $dbUser]); 
-                }
-            } catch (\Throwable $th) {
-                error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
-                return $resultTmpError;
-            }     
-            $result['added'][] = $cardUri;
-       
-            $data = Utility::LdapIterativeQuery($ldapConn, $data['entryIns']);
-        }
-        
-        
+							if($cardUri == null)
+							{
+									$cardUID = $this->guidv4();
+									$cardUri = $cardUID .'.vcf';
+									
+									$query = "INSERT INTO `".$this->ldapMapTableName."` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
+									$sql = $this->pdo->prepare($query);
+									$sql->execute([$cardUri, $cardUID, $addressBookId, $data['data']['entryUUID'][0], $dbUser]); 
+							}
+					} catch (\Throwable $th) {
+							error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+							return $resultTmpError;
+					}     
+					$result['added'][] = $cardUri;
+				}
+				//$filter = '(&' .$addressBookConfig['filter']. '(createtimestamp<=' .gmdate('YmdHis', $addressBookSyncToken). 'Z)(!(|(modifytimestamp<='.gmdate('YmdHis', $syncToken).'Z)(modifytimestamp='.gmdate('YmdHis', $syncToken).'Z))))';
+				else if(strtotime($data['data']['modifyTimestamp'][0]) > $syncToken && strtotime($data['data']['modifyTimestamp'][0]) <= $addressBookSyncToken)
+				{ //MODIFIED CARDS
+					$cardUri = null;
+					
+					try {
+							$query = 'SELECT card_uri FROM '.$this->ldapMapTableName.' WHERE addressbook_id = ? and backend_id = ? and user_id = ?';
+							$stmt = $this->pdo->prepare($query);
+							$stmt->execute([$addressBookId, $data['data']['entryUUID'][0], $dbUser]);
+							
+							while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+									$cardUri = $row['card_uri'];
+							}
+							
+							if($cardUri == null)
+							{
+									$cardUID = $this->guidv4();
+									$cardUri = $cardUID .'.vcf';
+									
+									$query = "INSERT INTO `".$this->ldapMapTableName."` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
+									$sql = $this->pdo->prepare($query);
+									$sql->execute([$cardUri, $cardUID, $addressBookId, $data['data']['entryUUID'][0], $dbUser]);  
+									$result['added'][] = $cardUri;
+							}
+							else {
+									$result['modified'][] = $cardUri;
+							}
+					} catch (\Throwable $th) {
+							error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+							return $resultTmpError;
+					}
+				}
 
-        //MODIFIED CARDS
-        $filter = '(&' .$addressBookConfig['filter']. '(createtimestamp<=' .gmdate('YmdHis', $addressBookSyncToken). 'Z)(!(|(modifytimestamp<='.gmdate('YmdHis', $syncToken).'Z)(modifytimestamp='.gmdate('YmdHis', $syncToken).'Z))))';  
-        $data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $filter, ['entryuuid'], strtolower($addressBookConfig['scope']));
-        
-        if($data === false)
-        {
+				$data = Utility::LdapIterativeQuery($ldapConn, $data['entryIns']);
+			}
+
+			//DELETED CARDS
+			try {
+				// Fetch all mapped contacts
+				$query = 'SELECT card_uri, backend_id FROM '.$this->ldapMapTableName.' WHERE user_id = ? AND addressbook_id = ?';
+				$stmt = $this->pdo->prepare($query);
+				$stmt->execute([$dbUser, $addressBookId]);
+					
+				while($row = $stmt->fetch(\PDO::FETCH_ASSOC))
+				{
+					$cardUri = $row['card_uri'];
+					$data = $this->fetchLdapContactData($addressBookId, $cardUri, ['entryUUID']);
+					
+					if(empty($data))
+						return $resultTmpError;
+						
+					if(!$data['count'] > 0)
+					{
+						$result['deleted'][] = $cardUri;
+						$this->addChange($addressBookId, $cardUri);
+					}
+				}
+			} catch (\Throwable $th) {
+					error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
 					return $resultTmpError;
-        }
-        
-        while($data['entryIns'])
-        {
-            $cardUri = null;
-            try {
-                $query = 'SELECT card_uri FROM '.$this->ldapMapTableName.' WHERE addressbook_id = ? and backend_id = ? and user_id = ?';
-                $stmt = $this->pdo->prepare($query);
-                $stmt->execute([$addressBookId, $data['data']['entryUUID'][0], $dbUser]);
-                
-                while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-                    $cardUri = $row['card_uri'];
-                }
-                
-                if($cardUri == null)
-                {
-                    $cardUID = $this->guidv4();
-                    $cardUri = $cardUID .'.vcf';
-                    
-                    $query = "INSERT INTO `".$this->ldapMapTableName."` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
-                    $sql = $this->pdo->prepare($query);
-                    $sql->execute([$cardUri, $cardUID, $addressBookId, $data['data']['entryUUID'][0], $dbUser]);  
-                    $result['added'][] = $cardUri;
-                }
-                else{
-                    $result['modified'][] = $cardUri;
-                }
-            } catch (\Throwable $th) {
-                error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
-                return $resultTmpError;
-            }   
-            
-            $data = Utility::LdapIterativeQuery($ldapConn, $data['entryIns']);
-        }
-        
+			}
 
-
-        //DELETED CARDS
-        try {
-            $query = 'SELECT card_uri FROM '.$this->deletedCardsTableName.' WHERE addressbook_id = ? and ( sync_token <= ? ) and ( sync_token > ? ) and user_id = ? ';
-            $stmt = $this->pdo->prepare($query);
-            $stmt->execute([$addressBookId, $addressBookSyncToken, $syncToken, $dbUser]);
-            
-            while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-                    $result['deleted'][] = $row['card_uri'];
-            }
-        } catch (\Throwable $th) {
-            error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
-		        return $resultTmpError;
-        }  
-        
-        return $result;
-    }
+			return $result;
+		}
 
 
     /**
