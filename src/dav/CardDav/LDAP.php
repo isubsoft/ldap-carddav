@@ -1467,6 +1467,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $result = null;
         $backendId = null;
         
+        if($ldapConn === false)
+        {
+					return null;
+        }
+        
         try {
             $query = 'SELECT backend_id FROM '.$this->ldapMapTableName.' WHERE addressbook_id = ? and card_uri = ? and user_id = ?';
             $stmt = $this->pdo->prepare($query);
@@ -1581,7 +1586,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				    if(empty($data))
 				    	return [];
 				    	
-				    if(! $data['count'] > 0)
+				    if(!$data['count'] > 0)
 				    {
 							$this->addChange($addressBookId, $cardUri);
 				    }
