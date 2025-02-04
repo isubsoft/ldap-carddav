@@ -386,7 +386,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         
         if(!$addressBookConfig['writable'])
         {
-            return false;
+            return null;
         }
         
         $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
@@ -493,12 +493,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
          
         foreach ($requiredFields as $key) {
             if(! array_key_exists($key, $ldapInfo))
-            return false;
+            return null;
         }
 
         if(! array_key_exists($rdn, $ldapInfo))
         {
-            return false;
+            return null;
         }
         
         $ldapTree = $rdn. '='. ldap_escape(is_array($ldapInfo[$rdn])?$ldapInfo[$rdn][0]:$ldapInfo[$rdn], "", LDAP_ESCAPE_DN) . ',' .$addressBookDn;
@@ -507,7 +507,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             $ldapResponse = ldap_add($ldapConn, $ldapTree, $ldapInfo);
             if(!$ldapResponse)
             {
-                return false;
+                return null;
             }
         } catch (\Throwable $th) {
             error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
@@ -1316,7 +1316,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					return $resultTmpError;
 				}
 				//$filter = '(&' .$addressBookConfig['filter']. '(createtimestamp<=' .gmdate('YmdHis', $addressBookSyncToken). 'Z)(!(|(createtimestamp<='.gmdate('YmdHis', $syncToken).'Z)(createtimestamp='.gmdate('YmdHis', $syncToken).'Z))))';
-				if(strtotime($data['data']['createTimestamp'][0]) > $syncToken && strtotime($data['data']['createTimestamp'][0]) <= $addressBookSyncToken)
+				if(strtotime($data['data']['createTimestamp'][0]) >= $syncToken && strtotime($data['data']['createTimestamp'][0]) < $addressBookSyncToken)
 				{ //ADDED CARDS
 					$cardUri = null;
 					
@@ -1346,7 +1346,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					$result['added'][] = $cardUri;
 				}
 				//$filter = '(&' .$addressBookConfig['filter']. '(createtimestamp<=' .gmdate('YmdHis', $addressBookSyncToken). 'Z)(!(|(modifytimestamp<='.gmdate('YmdHis', $syncToken).'Z)(modifytimestamp='.gmdate('YmdHis', $syncToken).'Z))))';
-				else if(strtotime($data['data']['modifyTimestamp'][0]) > $syncToken && strtotime($data['data']['modifyTimestamp'][0]) <= $addressBookSyncToken)
+				else if(strtotime($data['data']['modifyTimestamp'][0]) >= $syncToken && strtotime($data['data']['modifyTimestamp'][0]) < $addressBookSyncToken)
 				{ //MODIFIED CARDS
 					$cardUri = null;
 					
@@ -1386,7 +1386,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 			
 			try {
 				// Fetch contacts from deleted table
-				$query = 'SELECT card_uri FROM '.$this->deletedCardsTableName.' WHERE user_id = ? AND addressbook_id = ? AND sync_token > ? AND sync_token <= ?';
+				$query = 'SELECT card_uri FROM '.$this->deletedCardsTableName.' WHERE user_id = ? AND addressbook_id = ? AND sync_token >= ? AND sync_token < ?';
 				$stmt = $this->pdo->prepare($query);
 				$stmt->execute([$dbUser, $addressBookId, $syncToken, $addressBookSyncToken]);
 					
@@ -1538,8 +1538,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         
         $backendContacts = [];
 
-        $filter = '(&'.$addressBookConfig['filter']. '(createtimestamp<=' . gmdate('YmdHis', $addressBookSyncToken) . 'Z))';     
-        $attributes = ['entryuuid','modifytimestamp'];
+        // $filter = '(&'.$addressBookConfig['filter']. '(createtimestamp<=' . gmdate('YmdHis', $addressBookSyncToken) . 'Z))';     
+        $filter = $addressBookConfig['filter'];
+        $attributes = ['entryuuid','createtimestamp','modifytimestamp'];
         
         $data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $filter, $attributes, strtolower($addressBookConfig['scope']));
         
@@ -1552,6 +1553,17 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         {
           while($data['entryIns']) 
 					{
+						if(!isset($data['data']['entryUUID'][0]) || !isset($data['data']['createTimestamp'][0]) || !isset($data['data']['modifyTimestamp'][0]))
+						{
+							error_log("Read access to required operational attributes in LDAP not present. Cannot continue. Quitting. ".__METHOD__." at line no ".__LINE__);
+							return [];
+						}
+						
+						if(strtotime($data['data']['createTimestamp'][0]) >= $addressBookSyncToken)
+						{
+							continue;
+						}
+						
             $contactData = null;
           
             $query = 'SELECT card_uri, card_uid FROM '.$this->backendMapTableName.' WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?';
