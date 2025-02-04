@@ -8,7 +8,7 @@ namespace isubsoft\dav\CardDav;
 use isubsoft\dav\Utility\LDAP as Utility;
 use isubsoft\dav\Rules\LDAP as Rules;
 use isubsoft\Vobject\Reader as Reader;
-use \Sabre\DAV\Exception\ServiceUnavailable;
+use \Sabre\DAV\Exception as SabreDAVException;
 
 class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\CardDAV\Backend\SyncSupport {
 
@@ -385,9 +385,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $addressBookConfig = $this->addressbook[$addressBookId]['config'];
         
         if(!$addressBookConfig['writable'])
-        {
-            return null;
-        }
+					throw new SabreDAVException\Forbidden("Not allowed");
         
         $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
         $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];        
@@ -493,26 +491,16 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
          
         foreach ($requiredFields as $key) {
             if(! array_key_exists($key, $ldapInfo))
-            return null;
+							throw new SabreDAVException\BadRequest("Required fields not present");
         }
 
         if(! array_key_exists($rdn, $ldapInfo))
-        {
-            return null;
-        }
+					throw new SabreDAVException\BadRequest("Identity field not present");
         
         $ldapTree = $rdn. '='. ldap_escape(is_array($ldapInfo[$rdn])?$ldapInfo[$rdn][0]:$ldapInfo[$rdn], "", LDAP_ESCAPE_DN) . ',' .$addressBookDn;
 
-        try {
-            $ldapResponse = ldap_add($ldapConn, $ldapTree, $ldapInfo);
-            if(!$ldapResponse)
-            {
-                return null;
-            }
-        } catch (\Throwable $th) {
-            error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
-            throw new ServiceUnavailable($th->getMessage());
-        }
+        if(!ldap_add($ldapConn, $ldapTree, $ldapInfo))
+					throw new SabreDAVException\BadRequest();
 
         $data = Utility::LdapQuery($ldapConn, $ldapTree, $addressBookConfig['filter'], ['entryuuid'], 'base');
         
@@ -560,9 +548,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $addressBookConfig = $this->addressbook[$addressBookId]['config'];
         
         if(!$addressBookConfig['writable'])
-        {
-            return null;
-        }
+					throw new SabreDAVException\Forbidden("Not allowed");
         
         $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
         $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
@@ -667,25 +653,24 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
         foreach ($requiredFields as $key) {
             if(! array_key_exists($key, $ldapInfo))
-            return null;
+							throw new SabreDAVException\BadRequest("Required fields not present");
         }
 
         if(! array_key_exists($rdn, $ldapInfo))
-        {
-            return null;
-        }
+					throw new SabreDAVException\BadRequest("Identity field not present");
 
         $oldLdapInfo = $this->fetchLdapContactData($addressBookId, $cardUri, ['*']);
         
         if(empty($oldLdapInfo))
-        	return null;
+					throw new SabreDAVException\Conflict();
         
         $oldLdapTree = $oldLdapInfo[0]['dn'];
         $componentOldLdapTree = ldap_explode_dn($oldLdapTree, 0);
         
         if(!$componentOldLdapTree)
         {
-            return null;
+          error_log("Unknown error in " . __METHOD__ . " at line " . __LINE__);
+					throw new SabreDAVException\ServiceUnavailable();
         }
         
         $parentOldLdapTree = "";
@@ -744,20 +729,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         
         $newLdapRdn = $rdn . '=' . ldap_escape(is_array($ldapInfo[$rdn])?$ldapInfo[$rdn][0]:$ldapInfo[$rdn], "", LDAP_ESCAPE_DN);
 
-        try {
             if(! ldap_rename($ldapConn, $oldLdapTree, $newLdapRdn, null, false))
-            {
-                return null;
-            }
+							throw new SabreDAVException\Conflict();
 
             if(! ldap_mod_replace($ldapConn, $newLdapRdn . ',' . $parentOldLdapTree, $ldapInfo))
-            {
-                return null;
-            }
-        } catch (\Throwable $th) {
-            error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
-            throw new ServiceUnavailable($th->getMessage());
-        }
+							throw new SabreDAVException\BadRequest();
 
 			return null;
     }
@@ -795,7 +771,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             }
         } catch (\Throwable $th) {
             error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
-            throw new ServiceUnavailable($th->getMessage());
+            throw new SabreDAVException\ServiceUnavailable();
         }
 
         $this->addChange($addressBookId, $cardUri);
