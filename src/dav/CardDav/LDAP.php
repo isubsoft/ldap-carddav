@@ -730,7 +730,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $newLdapRdn = $rdn . '=' . ldap_escape(is_array($ldapInfo[$rdn])?$ldapInfo[$rdn][0]:$ldapInfo[$rdn], "", LDAP_ESCAPE_DN);
 
             if(! ldap_rename($ldapConn, $oldLdapTree, $newLdapRdn, null, false))
-							throw new SabreDAVException\Conflict();
+							throw new SabreDAVException\BadRequest();
 
             if(! ldap_mod_replace($ldapConn, $newLdapRdn . ',' . $parentOldLdapTree, $ldapInfo))
 							throw new SabreDAVException\BadRequest();
