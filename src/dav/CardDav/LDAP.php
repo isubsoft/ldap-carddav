@@ -355,32 +355,14 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         return $result;
     }
 
-    /**
-     * Creates a new card.
-     *
-     * The addressbook id will be passed as the first argument. This is the
-     * same id as it is returned from the getAddressBooksForUser method.
-     *
-     * The cardUri is a base uri, and doesn't include the full path. The
-     * cardData argument is the vcard body, and is passed as a string.
-     *
-     * It is possible to return an ETag from this method. This ETag is for the
-     * newly created resource, and must be enclosed with double quotes (that
-     * is, the string itself must contain the double quotes).
-     *
-     * You should only return the ETag if you store the carddata as-is. If a
-     * subsequent GET request on the same card does not have the same body,
-     * byte-by-byte and you did return an ETag here, clients tend to get
-     * confused.
-     *
-     * If you don't return an ETag, you can just return null.
-     *
+		 /*
      * @param mixed $addressBookId
      * @param string $cardUri
      * @param string $cardData
+     * @param string $operation
      * @return string|null
      */
-    function createCard($addressBookId, $cardUri, $cardData)
+    private function createUpdateCard($addressBookId, $cardUri, $cardData, $operation = 'CREATE')
     {
         $addressBookConfig = $this->addressbook[$addressBookId]['config'];
         
@@ -390,12 +372,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
         $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];        
 				$dbUser = ($addressBookConfig['user_specific'])?$this->principalUser:$this->systemUser;
-
-        $vcard = (Reader::read($cardData))->convert(\Sabre\VObject\Document::VCARD40);
-        $UID = (empty($vcard->UID))?$this->guidv4():$vcard->UID;
-        
+				$vcard = (Reader::read($cardData))->convert(\Sabre\VObject\Document::VCARD40);
         $ldapInfo = [];
-
 
         if( isset($vcard->KIND) && (strtolower((string)$vcard->KIND) === 'group'))
         {
@@ -496,26 +474,138 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
         if(! array_key_exists($rdn, $ldapInfo))
 					throw new SabreDAVException\BadRequest("Identity field not present");
-        
-        $ldapTree = $rdn. '='. ldap_escape(is_array($ldapInfo[$rdn])?$ldapInfo[$rdn][0]:$ldapInfo[$rdn], "", LDAP_ESCAPE_DN) . ',' .$addressBookDn;
+					
+				if($operation == 'UPDATE')
+				{
+					$oldLdapInfo = $this->fetchLdapContactData($addressBookId, $cardUri, ['*']);
 
-        if(!ldap_add($ldapConn, $ldapTree, $ldapInfo))
-					throw new SabreDAVException\BadRequest();
+					if(empty($oldLdapInfo))
+						throw new SabreDAVException\Conflict();
 
-        $data = Utility::LdapQuery($ldapConn, $ldapTree, $addressBookConfig['filter'], ['entryuuid'], 'base');
-        
-        if(!empty($data) && $data['count'] > 0)
-        {
-		      try {
-		          $query = "INSERT INTO `".$this->backendMapTableName."` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
-		          $sql = $this->pdo->prepare($query);
-		          $sql->execute([$cardUri, $UID, $addressBookId, $data[0]['entryuuid'][0], $dbUser]);
-		      } catch (\Throwable $th) {
-		          error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
-		      }
-        }
-                
-        return null;
+					$oldLdapTree = $oldLdapInfo[0]['dn'];
+					$componentOldLdapTree = ldap_explode_dn($oldLdapTree, 0);
+
+					if(!$componentOldLdapTree)
+					{
+						error_log("Unknown error in " . __METHOD__ . " at line " . __LINE__);
+						throw new SabreDAVException\ServiceUnavailable();
+					}
+
+					$parentOldLdapTree = "";
+
+					for($dnComponentIndex=1; $dnComponentIndex<$componentOldLdapTree['count']; $dnComponentIndex++)
+						$parentOldLdapTree = $parentOldLdapTree . (empty($parentOldLdapTree)?"":",") . $componentOldLdapTree[$dnComponentIndex];
+						
+					$mappedBackendAttributes = [];
+
+					foreach($fieldMap as $vCardKey => $backendMapArr)
+					{
+						if(! isset($backendMapArr['backend_attribute']))
+						{
+							foreach($backendMapArr as $backendMap)
+							{
+								if(isset($backendMap['backend_attribute']) && is_array($backendMap['backend_attribute']))
+								{
+									foreach($backendMap['backend_attribute'] as $compositeBackendMapKey => $compositeBackendMapValue)
+									{
+										$mappedBackendAttributes[] = strtolower($compositeBackendMapValue);
+									}
+								}
+								else
+									$mappedBackendAttributes[] = strtolower($backendMap['backend_attribute']);
+							}
+						}
+						else
+						{
+							if(is_array($backendMapArr['backend_attribute']))
+								foreach($backendMapArr['backend_attribute'] as $compositeBackendMapKey => $compositeBackendMapValue)
+									$mappedBackendAttributes[] = strtolower($compositeBackendMapValue);
+							else
+								 $mappedBackendAttributes[] = strtolower($backendMapArr['backend_attribute']);
+						}
+					}
+
+					foreach($oldLdapInfo[0] as $oldLdapAttrName => $oldLdapAttrValue) 
+					{ 
+						if(isset($addressBookConfig['backend_data_update_policy']) && $addressBookConfig['backend_data_update_policy'] == 'replace')
+						{
+							if(! isset($ldapInfo[$oldLdapAttrName]))
+							{
+								if(is_array($oldLdapAttrValue))
+									$ldapInfo[$oldLdapAttrName] = [];
+							}
+						}
+						else
+						{
+							if(! isset($ldapInfo[$oldLdapAttrName]))
+							{
+								if(is_array($oldLdapAttrValue) && in_array($oldLdapAttrName, $mappedBackendAttributes))
+									$ldapInfo[$oldLdapAttrName] = [];
+							}
+						}
+					}
+
+					$newLdapRdn = $rdn . '=' . ldap_escape(is_array($ldapInfo[$rdn])?$ldapInfo[$rdn][0]:$ldapInfo[$rdn], "", LDAP_ESCAPE_DN);
+
+							if(! ldap_rename($ldapConn, $oldLdapTree, $newLdapRdn, null, false))
+								throw new SabreDAVException\BadRequest();
+
+							if(! ldap_mod_replace($ldapConn, $newLdapRdn . ',' . $parentOldLdapTree, $ldapInfo))
+								throw new SabreDAVException\BadRequest();				
+				}
+				else
+				{
+	        $UID = (empty($vcard->UID))?$this->guidv4():$vcard->UID;
+		      $ldapTree = $rdn. '='. ldap_escape(is_array($ldapInfo[$rdn])?$ldapInfo[$rdn][0]:$ldapInfo[$rdn], "", LDAP_ESCAPE_DN) . ',' .$addressBookDn;
+
+		      if(!ldap_add($ldapConn, $ldapTree, $ldapInfo))
+						throw new SabreDAVException\BadRequest();
+
+		      $data = Utility::LdapQuery($ldapConn, $ldapTree, $addressBookConfig['filter'], ['entryuuid'], 'base');
+		      
+		      if(!empty($data) && $data['count'] > 0)
+		      {
+				    try {
+				        $query = "INSERT INTO `".$this->backendMapTableName."` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
+				        $sql = $this->pdo->prepare($query);
+				        $sql->execute([$cardUri, $UID, $addressBookId, $data[0]['entryuuid'][0], $dbUser]);
+				    } catch (\Throwable $th) {
+				        error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+				    }
+		      }						
+				}
+			
+			return null;
+    }
+
+    /**
+     * Creates a new card.
+     *
+     * The addressbook id will be passed as the first argument. This is the
+     * same id as it is returned from the getAddressBooksForUser method.
+     *
+     * The cardUri is a base uri, and doesn't include the full path. The
+     * cardData argument is the vcard body, and is passed as a string.
+     *
+     * It is possible to return an ETag from this method. This ETag is for the
+     * newly created resource, and must be enclosed with double quotes (that
+     * is, the string itself must contain the double quotes).
+     *
+     * You should only return the ETag if you store the carddata as-is. If a
+     * subsequent GET request on the same card does not have the same body,
+     * byte-by-byte and you did return an ETag here, clients tend to get
+     * confused.
+     *
+     * If you don't return an ETag, you can just return null.
+     *
+     * @param mixed $addressBookId
+     * @param string $cardUri
+     * @param string $cardData
+     * @return string|null
+     */
+    function createCard($addressBookId, $cardUri, $cardData)
+    {
+			return $this->createUpdateCard($addressBookId, $cardUri, $cardData);
     }
 
     /**
@@ -545,197 +635,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     function updateCard($addressBookId, $cardUri, $cardData)
     {
-        $addressBookConfig = $this->addressbook[$addressBookId]['config'];
-        
-        if(!$addressBookConfig['writable'])
-					throw new SabreDAVException\Forbidden("Not allowed");
-        
-        $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
-        $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
-				$dbUser = ($addressBookConfig['user_specific'])?$this->principalUser:$this->systemUser;
-       
-        $vcard = (Reader::read($cardData))->convert(\Sabre\VObject\Document::VCARD40);
-        
-        $ldapInfo = [];
-        
-        if( isset($vcard->KIND) && (strtolower((string)$vcard->KIND) === 'group'))
-        {
-            $ldapInfo['objectclass'] = $addressBookConfig['group_LDAP_Object_Classes'];
-            $fieldMap = $addressBookConfig['group_fieldmap'];
-            $requiredFields = $addressBookConfig['group_required_fields'];
-            $rdn = $addressBookConfig['group_LDAP_rdn'];
-
-            foreach($addressBookConfig['group_member_map'] as $vCardKey => $ldapKey) 
-            {
-                $multiAllowedStatus = Reader::multiAllowedStatus($vCardKey);
-                $compositeAttrStatus = Reader::compositeAttrStatus($vCardKey);
-
-                if(isset($vcard->$vCardKey) && $multiAllowedStatus['status'] && !$compositeAttrStatus['status'] )
-                {
-                    $newLdapKey = strtolower($ldapKey['backend_attribute']);
-                    foreach($vcard->$vCardKey as $values)
-                    {
-                        $memberCardUID = Reader::memberValue($values, $vCardKey);
-                        if($memberCardUID != '')
-                        {
-                            $backendId = null;
-
-                            try {
-                                $query = 'SELECT backend_id FROM '.$this->backendMapTableName.' WHERE addressbook_id = ? and card_uid = ? and user_id = ?';
-                                $stmt = $this->pdo->prepare($query);
-                                $stmt->execute([$addressBookId, $memberCardUID, $dbUser]);
-                                
-                                while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-                                    $backendId = $row['backend_id'];
-                                }
-                            } catch (\Throwable $th) {
-                                error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
-                            }
-                            
-                            if(isset($backendId) && $backendId != null)
-                            {
-                                $filter = '(&'.$addressBookConfig['filter']. '(entryuuid=' .$backendId. '))'; 
-                        
-                                $data = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, [], strtolower($addressBookConfig['scope']));
-                                if(!empty($data) && $data['count'] > 0)
-                                {
-                                    $ldapInfo[$newLdapKey][] = $data[0]['dn'];
-                                }
-                            }
-                        }             
-                    }
-                }
-            }
-
-        }
-        else
-        {
-            $ldapInfo['objectclass'] = $addressBookConfig['LDAP_Object_Classes'];
-            $fieldMap = $addressBookConfig['fieldmap'];
-            $requiredFields = $addressBookConfig['required_fields'];
-            $rdn = $addressBookConfig['LDAP_rdn'];
-        }
-
-        
-        //Fetch from VCard associative array with respect to vcard to ldap field map 
-        foreach($fieldMap as $vCardKey => $ldapKey)
-        {
-            if( isset($vcard->$vCardKey))
-            {
-                $multiAllowedStatus = Reader::multiAllowedStatus($vCardKey);
-
-                if($multiAllowedStatus['status'])
-                {
-                    foreach ($vcard->$vCardKey as $values) 
-                    {
-                        $ldapBackendInfo = Rules::mapVcardProperty($vCardKey, $ldapKey, $values);
-                        if(!empty($ldapBackendInfo))
-                        {
-                            foreach ($ldapBackendInfo as $ldapAttr => $ldapBackendValue) {
-                                $ldapInfo[$ldapAttr][] = $ldapBackendValue;
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    $ldapBackendInfo = Rules::mapVcardProperty($vCardKey, $ldapKey, $vcard->$vCardKey);
-                    if($ldapBackendInfo)
-                    {
-                        foreach ($ldapBackendInfo as $ldapAttr => $ldapBackendValue) {
-                            $ldapInfo[$ldapAttr] = $ldapBackendValue;
-                        }
-                    }
-                }
-            }    
-        }
-    
-
-        foreach ($requiredFields as $key) {
-            if(! array_key_exists($key, $ldapInfo))
-							throw new SabreDAVException\BadRequest("Required fields not present");
-        }
-
-        if(! array_key_exists($rdn, $ldapInfo))
-					throw new SabreDAVException\BadRequest("Identity field not present");
-
-        $oldLdapInfo = $this->fetchLdapContactData($addressBookId, $cardUri, ['*']);
-        
-        if(empty($oldLdapInfo))
-					throw new SabreDAVException\Conflict();
-        
-        $oldLdapTree = $oldLdapInfo[0]['dn'];
-        $componentOldLdapTree = ldap_explode_dn($oldLdapTree, 0);
-        
-        if(!$componentOldLdapTree)
-        {
-          error_log("Unknown error in " . __METHOD__ . " at line " . __LINE__);
-					throw new SabreDAVException\ServiceUnavailable();
-        }
-        
-        $parentOldLdapTree = "";
-        
-        for($dnComponentIndex=1; $dnComponentIndex<$componentOldLdapTree['count']; $dnComponentIndex++)
-					$parentOldLdapTree = $parentOldLdapTree . (empty($parentOldLdapTree)?"":",") . $componentOldLdapTree[$dnComponentIndex];
-					
-      	$mappedBackendAttributes = [];
-      	
-      	foreach($fieldMap as $vCardKey => $backendMapArr)
-      	{
-      		if(! isset($backendMapArr['backend_attribute']))
-      		{
-      			foreach($backendMapArr as $backendMap)
-      			{
-      				if(isset($backendMap['backend_attribute']) && is_array($backendMap['backend_attribute']))
-      				{
-      					foreach($backendMap['backend_attribute'] as $compositeBackendMapKey => $compositeBackendMapValue)
-      					{
-      						$mappedBackendAttributes[] = strtolower($compositeBackendMapValue);
-      					}
-      				}
-      				else
-      					$mappedBackendAttributes[] = strtolower($backendMap['backend_attribute']);
-      			}
-      		}
-      		else
-      		{
-      			if(is_array($backendMapArr['backend_attribute']))
-      				foreach($backendMapArr['backend_attribute'] as $compositeBackendMapKey => $compositeBackendMapValue)
-      					$mappedBackendAttributes[] = strtolower($compositeBackendMapValue);
-      			else
-      				 $mappedBackendAttributes[] = strtolower($backendMapArr['backend_attribute']);
-      		}
-      	}
-        
-        foreach($oldLdapInfo[0] as $oldLdapAttrName => $oldLdapAttrValue) 
-        { 
-		      if(isset($addressBookConfig['backend_data_update_policy']) && $addressBookConfig['backend_data_update_policy'] == 'replace')
-		      {
-		        if(! isset($ldapInfo[$oldLdapAttrName]))
-		        {
-		        	if(is_array($oldLdapAttrValue))
-		        		$ldapInfo[$oldLdapAttrName] = [];
-		        }
-		      }
-		      else
-		      {
-		  	    if(! isset($ldapInfo[$oldLdapAttrName]))
-		    		{
-		        	if(is_array($oldLdapAttrValue) && in_array($oldLdapAttrName, $mappedBackendAttributes))
-		        		$ldapInfo[$oldLdapAttrName] = [];
-		        }
-		      }
-        }
-        
-        $newLdapRdn = $rdn . '=' . ldap_escape(is_array($ldapInfo[$rdn])?$ldapInfo[$rdn][0]:$ldapInfo[$rdn], "", LDAP_ESCAPE_DN);
-
-            if(! ldap_rename($ldapConn, $oldLdapTree, $newLdapRdn, null, false))
-							throw new SabreDAVException\BadRequest();
-
-            if(! ldap_mod_replace($ldapConn, $newLdapRdn . ',' . $parentOldLdapTree, $ldapInfo))
-							throw new SabreDAVException\BadRequest();
-
-			return null;
+	    return $this->createUpdateCard($addressBookId, $cardUri, $cardData, 'UPDATE');
     }
 
     /**
