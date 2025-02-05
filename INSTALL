@@ -1,0 +1,43 @@
+-- System dependencies (Debian 11)
+[core packages]
+php-cli
+php-common
+php-curl
+php-igbinary
+php-json
+php-ldap
+php-mbstring
+php-msgpack
+php-opcache
+php-readline
+php-xml
+composer
+
+[packages if using sqlite as pdo database]
+php-sqlite3
+sqlite3
+
+[packages if using mysql as pdo database]
+php-mysql
+
+[packages if using apache as web server]
+apache2
+libapache2-mod-php
+
+[optional packages]
+ldap-utils
+default-mysql-client
+
+-- Composer
+This project uses composer dependencies. Please install the dependencies by running composer update from web document root directory. This project is compatible with SabreDav 3.2 (PHP 5.5) till SabreDav 4.0.3 (PHP 7.0.0). VObject 4.5 (PHP 7.1) is required for some vCard v3.0 interoperability with vCard v4.0. You may adjust composer.json according to your need/environment.
+
+-- Web server and PHP configuration
+Please refer to SabreDav documentation here https://sabre.io/dav/webservers/
+
+-- Database creation
+1. Create objects, user (if required) and issue appropriate grants in the PDO database as per sql/<provider>/ddl.sql file and update PDO DSN in conf/conf.php file.
+2. If creating a SQLite database make sure the database file is writeable by the user running PHP.
+
+-- File permissions
+1. Only data and it's sub directories need to be writable by user running PHP.
+2. conf/conf.protected.php file must not be world readable.
