@@ -1176,8 +1176,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				return null;
 			}
 
-			$filter = $addressBookConfig['filter']; 
-			$data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $filter, ['entryuuid', 'createtimestamp', 'modifytimestamp'], strtolower($addressBookConfig['scope']));
+			$data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $addressBookConfig['filter'], ['entryuuid', 'createtimestamp', 'modifytimestamp'], strtolower($addressBookConfig['scope']));
 
 			if($data === false)
 			{
@@ -1413,12 +1412,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         }
         
         $backendContacts = [];
-
         // $filter = '(&'.$addressBookConfig['filter']. '(createtimestamp<=' . gmdate('YmdHis', $addressBookSyncToken) . 'Z))';     
-        $filter = $addressBookConfig['filter'];
-        $attributes = ['entryuuid','createtimestamp','modifytimestamp'];
-        
-        $data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $filter, $attributes, strtolower($addressBookConfig['scope']));
+        $data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $addressBookConfig['filter'], ['entryuuid','createtimestamp','modifytimestamp'], strtolower($addressBookConfig['scope']));
         
         if($data === false)
         {
