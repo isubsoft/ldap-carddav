@@ -17,24 +17,9 @@ This server features CardDAV support
 // This can be for example the root / or a complete path to your server script
 $baseUri = '/';
 
-//constants
-$GLOBALS['__BASE_DIR__'] = __DIR__;
-$GLOBALS['__DATA_DIR__'] = $GLOBALS['__BASE_DIR__'].'/data';
-$GLOBALS['__CONF_DIR__'] = $GLOBALS['__BASE_DIR__'].'/conf';
-
-require $GLOBALS['__CONF_DIR__'].'/conf.php';
-
-/* Database */
-try {
-    $pdo = new PDO($config['database']);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (\Throwable $th) {
-    error_log('Could not create database connection: '. $th->getMessage());
-    http_response_code(500);
-    exit;
-}
 
 // Autoloader
+require_once __DIR__.'/src/app/Bootstrap.php';
 require_once 'vendor/autoload.php';
 
 
@@ -59,16 +44,15 @@ $server = new Sabre\DAV\Server($nodes);
 $server->setBaseUri($baseUri);
 
 // Plugins
-$authPlugin = new Sabre\DAV\Auth\Plugin($authBackend);
-$server->addPlugin($authPlugin);
-$server->addPlugin(new Sabre\DAVACL\Plugin());
+$aclPlugin = new Sabre\DAVACL\Plugin();
+$aclPlugin->allowUnauthenticatedAccess = false;
+
+$server->addPlugin(new Sabre\DAV\Auth\Plugin($authBackend));
+$server->addPlugin($aclPlugin);
 $server->addPlugin(new Sabre\DAV\Browser\Plugin());
 $server->addPlugin(new isubsoft\dav\CardDav\CardDAVPlugin());
 $server->addPlugin(new Sabre\DAV\Sync\Plugin());
 
 
-
 // And off we go!
-$authPlugin->autoRequireLogin = true;
-
 $server->exec();
