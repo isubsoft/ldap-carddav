@@ -61,6 +61,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      * @var string
      */    
     public $systemUser = null;
+    
+    /**
+     * Database user
+     *
+     * @var string
+     */    
+    public $dbUser = null;
 
     /**
      * Ldap Connection.
