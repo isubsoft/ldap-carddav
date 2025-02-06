@@ -311,7 +311,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $data = $this->fetchLdapContactData($addressBookId, $cardUri, ['*', 'entryUUID', 'modifyTimestamp']);
         
         if(empty($data))
-        	return [];
+					throw new SabreDAVException\ServiceUnavailable();
 
         if(!$data['count'] > 0)
         	return false;
