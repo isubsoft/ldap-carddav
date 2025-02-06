@@ -74,7 +74,7 @@ require_once 'vendor/autoload.php';
 
 
 // Backends
-$authBackend = new isubsoft\dav\Auth\LDAP($config);
+$authBackend = new isubsoft\dav\Auth\LDAP($config, $pdo);
 $principalBackend = new isubsoft\dav\DAVACL\PrincipalBackend\LDAP($config, $authBackend);
 $carddavBackend = new isubsoft\dav\CardDav\LDAP($config, $pdo, $authBackend);
 

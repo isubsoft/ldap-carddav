@@ -19,6 +19,15 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
     public $config;
 
     /**
+     * Store PDO resource
+     *
+     * @var array
+     */
+    public $pdo;
+    
+    private $systemUsersTableName = 'cards_system_user';
+
+    /**
      * Ldap Connection.
      *
      * @var string
@@ -39,8 +48,9 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
      * @param array $config
      * @return void
      */
-    function __construct(array $config) {
+    function __construct(array $config, $pdo) {
         $this->config = $config;
+        $this->pdo = $pdo;
     }
 
 
@@ -58,6 +68,26 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
     {      
         if($username == '' || $password == null)
         	return false;
+        	
+				try 
+				{
+			    $query = 'SELECT user_id FROM '. $this->systemUsersTableName;
+			    $stmt = $this->pdo->prepare($query);
+			    $stmt->execute([]);
+			    
+		      while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+		          if(strtolower($username) == strtolower($row['user_id']))
+							{
+								error_log("A reserved username was used to authenticate. Rejected.");
+								return false;
+							}
+
+							continue;
+		      }
+			    
+			  } catch (\Throwable $th) {
+			        error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+			  }
         
         $this->username = $username;
         
