@@ -18,9 +18,22 @@ This server features CardDAV support
 $baseUri = '/';
 
 
+
+//constants
+$GLOBALS['__BASE_DIR__'] = __DIR__;
+$GLOBALS['__DATA_DIR__'] = $GLOBALS['__BASE_DIR__'].'/data';
+$GLOBALS['__CONF_DIR__'] = $GLOBALS['__BASE_DIR__'].'/conf';
+
+
+
 // Autoloader
-require_once __DIR__.'/src/app/Bootstrap.php';
 require_once 'vendor/autoload.php';
+require $GLOBALS['__CONF_DIR__'].'/conf.php';
+
+/* Database */ 
+$database = new isubsoft\App\Bootstrap();
+$pdo = $database->init($config);
+
 
 
 // Backends
