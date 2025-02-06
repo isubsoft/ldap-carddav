@@ -355,7 +355,26 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         return $result;
     }
 
-		 /*
+    /**
+     * Creates a new card or updates an existing one.
+     *
+     * The addressbook id will be passed as the first argument. This is the
+     * same id as it is returned from the getAddressBooksForUser method.
+     *
+     * The cardUri is a base uri, and doesn't include the full path. The
+     * cardData argument is the vcard body, and is passed as a string.
+     *
+     * It is possible to return an ETag from this method. This ETag is for the
+     * created/updated resource, and must be enclosed with double quotes (that
+     * is, the string itself must contain the double quotes).
+     *
+     * You should only return the ETag if you store the carddata as-is. If a
+     * subsequent GET request on the same card does not have the same body,
+     * byte-by-byte and you did return an ETag here, clients tend to get
+     * confused.
+     *
+     * If you don't return an ETag, you can just return null.
+     *
      * @param mixed $addressBookId
      * @param string $cardUri
      * @param string $cardData
