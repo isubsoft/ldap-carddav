@@ -1,7 +1,7 @@
 
-1. Current User Principal - 
+---- Get current principal 
 
-REQUEST -
+-- REQUEST
 curl -u <username>:<password>  --location --request PROPFIND '/' \
 --header 'Content-Type: application/xml' \
 --header 'Accept-Charset: utf-8' \
@@ -12,7 +12,7 @@ curl -u <username>:<password>  --location --request PROPFIND '/' \
   </d:prop>
 </d:propfind>'
 
-RESPONSE (xml)- 
+-- RESPONSE
 <?xml version="1.0"?>
 <d:multistatus xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns" xmlns:card="urn:ietf:params:xml:ns:carddav">
     <d:response>
@@ -20,7 +20,7 @@ RESPONSE (xml)-
         <d:propstat>
             <d:prop>
                 <d:current-user-principal>
-                    <d:href>/principals/users/avijit/</d:href>
+                    <d:href>/principals/users/PRINCIPAL/</d:href>
                 </d:current-user-principal>
             </d:prop>
             <d:status>HTTP/1.1 200 OK</d:status>
@@ -29,10 +29,11 @@ RESPONSE (xml)-
 </d:multistatus>
 
 ----------------------------------------------------------------------------------
-2. Get addressbook set - 
 
-REQUEST - 
-curl -u <username>:<password> --location --request PROPFIND '/principals/users/avijit' \
+---- Get addressbook home of a principal - 
+
+-- REQUEST
+curl -u <username>:<password> --location --request PROPFIND '/principals/users/PRINCIPAL' \
 --header 'Content-Type: application/xml' \
 --header 'Accept-Charset: utf-8' \
 --header 'Depth: 0' \
@@ -42,15 +43,15 @@ curl -u <username>:<password> --location --request PROPFIND '/principals/users/a
   </d:prop>
 </d:propfind>'
 
-RESPONSE (xml)-
+-- RESPONSE
 <?xml version="1.0"?>
 <d:multistatus xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns" xmlns:card="urn:ietf:params:xml:ns:carddav">
     <d:response>
-        <d:href>/principals/users/avijit/</d:href>
+        <d:href>/principals/users/PRINCIPAL/</d:href>
         <d:propstat>
             <d:prop>
                 <card:addressbook-home-set>
-                    <d:href>/addressbooks/users/avijit/</d:href>
+                    <d:href>/addressbooks/PRINCIPAL/</d:href>
                 </card:addressbook-home-set>
             </d:prop>
             <d:status>HTTP/1.1 200 OK</d:status>
@@ -59,26 +60,27 @@ RESPONSE (xml)-
 </d:multistatus>
 
 -------------------------------------------------------------------------------
-3. Get addressbook List -
 
-REQUEST -
-curl -u <username>:<password> --location --request PROPFIND '/addressbooks/users/avijit' \
+---- Get list of addressbooks of a principal
+
+-- REQUEST
+curl -u <username>:<password> --location --request PROPFIND '/addressbooks/PRINCIPAL' \
 --header 'Content-Type: application/xml' \
 --header 'Accept-Charset: utf-8' \
 --header 'Depth: 1' \
---data '<d:propfind xmlns:d="DAV:" xmlns:cs="http://calendarserver.org/ns/">
-  <d:prop>
-     <d:resourcetype />
-     <d:displayname />
-     <cs:getctag />
-  </d:prop>
+--data '<d:propfind xmlns:d="DAV:" xmlns:cs="http://calendarserver.org/ns/"> 
+  <d:prop> 
+     <d:resourcetype /> 
+     <d:displayname /> 
+     <cs:getctag /> 
+  </d:prop> 
 </d:propfind>'
 
-RESPONSE (xml)-
+-- RESPONSE
 <?xml version="1.0"?>
 <d:multistatus xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns" xmlns:card="urn:ietf:params:xml:ns:carddav">
     <d:response>
-        <d:href>/addressbooks/users/avijit/</d:href>
+        <d:href>/addressbooks/PRINCIPAL/</d:href>
         <d:propstat>
             <d:prop>
                 <d:resourcetype>
@@ -96,7 +98,7 @@ RESPONSE (xml)-
         </d:propstat>
     </d:response>
     <d:response>
-        <d:href>/addressbooks/users/avijit/private/</d:href>
+        <d:href>/addressbooks/PRINCIPAL/private/</d:href>
         <d:propstat>
             <d:prop>
                 <d:resourcetype>
@@ -112,25 +114,29 @@ RESPONSE (xml)-
 </d:multistatus>
 
 ---------------------------------------------------------------------------------
-4. Retrieve addressbook information -
 
-REQUEST - 
-curl -u <username>:<password> --location --request PROPFIND '/addressbooks/users/avijit/private/' \
+---- Retrieve addressbook information -
+
+-- REQUEST
+curl -u <username>:<password> --location --request PROPFIND '/addressbooks/PRINCIPAL/private/' \
 --header 'Content-Type: application/xml' \
 --header 'Depth: 0' \
 --header 'Accept-Charset: utf-8' \
---data '<d:propfind xmlns:d="DAV:" xmlns:cs="http://calendarserver.org/ns/">
-  <d:prop>
-     <d:displayname />
-     <cs:getctag />
-  </d:prop>
+--data '<d:propfind xmlns:d="DAV:" xmlns:cs="http://calendarserver.org/ns/" xmlns:card="urn:ietf:params:xml:ns:carddav" xmlns:sabre="http://sabredav.org/ns"> 
+  <d:prop> 
+     <d:resourcetype /> 
+     <d:displayname /> 
+     <card:addressbook-description /> 
+     <cs:getctag /> 
+     <sabre:sync-token /> 
+  </d:prop> 
 </d:propfind>'
 
-RESPONSE (xml)- 
+-- RESPONSE
 <?xml version="1.0"?>
 <d:multistatus xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns" xmlns:card="urn:ietf:params:xml:ns:carddav">
     <d:response>
-        <d:href>/addressbooks/users/avijit/private/</d:href>
+        <d:href>/addressbooks/PRINCIPAL/private/</d:href>
         <d:propstat>
             <d:prop>
                 <d:displayname>Personal Address Book</d:displayname>
@@ -142,95 +148,38 @@ RESPONSE (xml)-
 </d:multistatus>
 
 --------------------------------------------------------------------------------
-5. Download/View Contacts of addressbook - 
 
-REQUEST - 
-curl -u <username>:<password> --location --request REPORT '/addressbooks/users/avijit/private/' \
+---- List contacts of an addressbook
+
+-- REQUEST
+curl -u <username>:<password> --location --request REPORT '/addressbooks/PRINCIPAL/private/' \
 --header 'Content-Type: application/xml' \
 --header 'Depth: 1' \
 --header 'Accept-Charset: utf-8' \
 --data '<card:addressbook-query xmlns:d="DAV:" xmlns:card="urn:ietf:params:xml:ns:carddav">
     <d:prop>
         <d:getetag />
-        <card:address-data />
+        <d:getlastmodified />
+        <d:getcontentlength />
     </d:prop>
 </card:addressbook-query>'
 
-RESPONSE (xml)-
-<?xml version="1.0"?>
+-- RESPONSE (xml)-
 <d:multistatus xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns" xmlns:card="urn:ietf:params:xml:ns:carddav">
     <d:response>
-        <d:href>/addressbooks/users/avijit/private/962f8f7c-d9ee-4ed2-9008-44ab4c6ac982.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
         <d:propstat>
             <d:prop>
-                <d:getetag>&quot;8bafa124498e09aea06e6f46c8addb39&quot;</d:getetag>
-                <card:address-data>BEGIN:VCARD&#13;
-VERSION:3.0&#13;
-PRODID:-//Sabre//Sabre VObject 4.2.2//EN&#13;
-UID:962f8f7c-d9ee-4ed2-9008-44ab4c6ac982.vcf&#13;
-FN:test7 test7&#13;
-N:test7;test7;;;&#13;
-END:VCARD&#13;
-</card:address-data>
+                <d:getetag>ETAG</d:getetag><d:getlastmodified>TIMESTAMP</d:getlastmodified><d:getcontentlength>21421</d:getcontentlength>
             </d:prop>
             <d:status>HTTP/1.1 200 OK</d:status>
         </d:propstat>
     </d:response>
     <d:response>
-        <d:href>/addressbooks/users/avijit/private/3e5a72018f75c75e5514e9ec1e7bddd2a5127b36.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
         <d:propstat>
             <d:prop>
-                <d:getetag>&quot;5c08277fbec21b0c075233aa1d9c5c2e&quot;</d:getetag>
-                <card:address-data>BEGIN:VCARD&#13;
-VERSION:3.0&#13;
-PRODID:-//Sabre//Sabre VObject 4.2.2//EN&#13;
-UID:3e5a72018f75c75e5514e9ec1e7bddd2a5127b36.vcf&#13;
-FN:test2 test2&#13;
-N:test2;test2;;;&#13;
-EMAIL:test2@test2.com&#13;
-EMAIL:a1@b.c&#13;
-NICKNAME:test2 displayname&#13;
-TEL;TYPE=home,voice;VALUE=URI:0000000012&#13;
-TEL;TYPE=work,voice;VALUE=URI:9991812722&#13;
-END:VCARD&#13;
-</card:address-data>
-            </d:prop>
-            <d:status>HTTP/1.1 200 OK</d:status>
-        </d:propstat>
-    </d:response>
-    <d:response>
-        <d:href>/addressbooks/users/avijit/private/c0404eed06d6e6731767a49cf731ce23a823ad2d.vcf</d:href>
-        <d:propstat>
-            <d:prop>
-                <d:getetag>&quot;2387468ca8a5cc6bf701263879c5fd76&quot;</d:getetag>
-                <card:address-data>BEGIN:VCARD&#13;
-VERSION:3.0&#13;
-PRODID:-//Sabre//Sabre VObject 4.2.2//EN&#13;
-UID:c0404eed06d6e6731767a49cf731ce23a823ad2d.vcf&#13;
-FN:test6 test6&#13;
-N:test6;test6;;;&#13;
-EMAIL:exp@abc.com&#13;
-END:VCARD&#13;
-</card:address-data>
-            </d:prop>
-            <d:status>HTTP/1.1 200 OK</d:status>
-        </d:propstat>
-    </d:response>
-    <d:response>
-        <d:href>/addressbooks/users/avijit/private/ec9057fe753b8d68026e27ea82e0fddc91359f28.vcf</d:href>
-        <d:propstat>
-            <d:prop>
-                <d:getetag>&quot;d87292fc3ad51d8fd86c75556a3a6de9&quot;</d:getetag>
-                <card:address-data>BEGIN:VCARD&#13;
-VERSION:3.0&#13;
-PRODID:-//Sabre//Sabre VObject 4.2.2//EN&#13;
-UID:ec9057fe753b8d68026e27ea82e0fddc91359f28.vcf&#13;
-FN:test3 test3&#13;
-N:test3;test3;;;&#13;
-EMAIL:test3.test3@abc.xyz&#13;
-TEL;TYPE=work,voice;VALUE=URI:7777777777&#13;
-END:VCARD&#13;
-</card:address-data>
+                <d:getetag>ETAG</d:getetag><d:getlastmodified>TIMESTAMP</d:getlastmodified><d:getcontentlength>223</d:getcontentlength>
             </d:prop>
             <d:status>HTTP/1.1 200 OK</d:status>
         </d:propstat>
@@ -238,16 +187,17 @@ END:VCARD&#13;
 </d:multistatus>
 
 ----------------------------------------------------------------------------------
-6. Fetch contact data/Vcard - 
 
-REQUEST - 
-curl -u <username>:<password> --location '/addressbooks/users/avijit/private/3e5a72018f75c75e5514e9ec1e7bddd2a5127b36.vcf'
+---- Fetch contact data in vcard format
 
-RESPONSE (plain)-
+-- REQUEST
+curl -u <username>:<password> --header 'Accept: text/vcard; version=3.0' --location '/addressbooks/PRINCIPAL/private/UUID.vcf'
+
+-- RESPONSE
 BEGIN:VCARD
 VERSION:3.0
 PRODID:-//Sabre//Sabre VObject 4.2.2//EN
-UID:3e5a72018f75c75e5514e9ec1e7bddd2a5127b36.vcf
+UID:UUID
 FN:test2 test2
 N:test2;test2;;;
 EMAIL:test2@test2.com
@@ -258,60 +208,68 @@ TEL;TYPE=work,voice;VALUE=URI:9991812722
 END:VCARD
 
 ----------------------------------------------------------------------------------
-7. Fetch contacts data with multiget - 
 
-REQUEST - 
-curl -u <username>:<password> --location --request REPORT '/addressbooks/users/avijit/private/' \
+---- Fetch contacts data with multiget
+
+-- REQUEST
+curl -u <username>:<password> --location --request REPORT '/addressbooks/PRINCIPAL/private/UUID.vcf' \
 --header 'Content-Type: application/xml' \
 --header 'Depth: 1' \
 --header 'Accept-Charset: utf-8' \
+--header 'Accept: text/vcard; version=3.0' \
 --data '<card:addressbook-multiget xmlns:d="DAV:" xmlns:card="urn:ietf:params:xml:ns:carddav">
     <d:prop>
-        <d:getetag />
         <card:address-data />
+        <d:getetag />
+        <d:getlastmodified />
+        <d:getcontentlength />
     </d:prop>
-    <d:href>/addressbooks/users/avijit/private/3e5a72018f75c75e5514e9ec1e7bddd2a5127b36.vcf</d:href>
-    <d:href>/addressbooks/users/avijit/private/962f8f7c-d9ee-4ed2-9008-44ab4c6ac982.vcf</d:href>
+    <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
+    <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
 </card:addressbook-multiget>'
 
-RESPONSE (xml)-
+-- RESPONSE (xml)-
 <?xml version="1.0"?>
 <d:multistatus xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns" xmlns:card="urn:ietf:params:xml:ns:carddav">
     <d:response>
-        <d:href>/addressbooks/users/avijit/private/3e5a72018f75c75e5514e9ec1e7bddd2a5127b36.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
         <d:propstat>
             <d:prop>
-                <d:getetag>&quot;5c08277fbec21b0c075233aa1d9c5c2e&quot;</d:getetag>
                 <card:address-data>BEGIN:VCARD&#13;
-VERSION:3.0&#13;
-PRODID:-//Sabre//Sabre VObject 4.2.2//EN&#13;
-UID:3e5a72018f75c75e5514e9ec1e7bddd2a5127b36.vcf&#13;
-FN:test2 test2&#13;
-N:test2;test2;;;&#13;
-EMAIL:test2@test2.com&#13;
-EMAIL:a1@b.c&#13;
-NICKNAME:test2 displayname&#13;
-TEL;TYPE=home,voice;VALUE=URI:0000000012&#13;
-TEL;TYPE=work,voice;VALUE=URI:9991812722&#13;
-END:VCARD&#13;
-</card:address-data>
+                    VERSION:3.0&#13;
+                    PRODID:-//Sabre//Sabre VObject 4.2.2//EN&#13;
+                    UID:CARDUID&#13;
+                    FN:Sr. Contact Test testcontact Example Inc\;IT&#13;
+                    NICKNAME:testcontact&#13;
+                    EMAIL:testcontact1@example.org&#13;
+                    EMAIL:testcontact2@example.org&#13;
+                    TEL;TYPE=&quot;voice,home&quot;,PREF=1:+91-033-1234561&#13;
+                    TEL;TYPE=&quot;voice,home&quot;:+91-1122334455&#13;
+                    TEL;TYPE=&quot;voice,work&quot;:+91-033-1234560&#13;
+                    ADR;TYPE=work:;;1A\, Some Street;Some Locality;Some State;100001;&#13;
+                    END:VCARD&#13;
+                </card:address-data>
+                <d:getetag>ETAG</d:getetag><d:getlastmodified>TIMESTAMP</d:getlastmodified>
+                <d:getcontentlength>21421</d:getcontentlength>
             </d:prop>
             <d:status>HTTP/1.1 200 OK</d:status>
         </d:propstat>
     </d:response>
     <d:response>
-        <d:href>/addressbooks/users/avijit/private/962f8f7c-d9ee-4ed2-9008-44ab4c6ac982.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
         <d:propstat>
             <d:prop>
-                <d:getetag>&quot;8bafa124498e09aea06e6f46c8addb39&quot;</d:getetag>
                 <card:address-data>BEGIN:VCARD&#13;
-VERSION:3.0&#13;
-PRODID:-//Sabre//Sabre VObject 4.2.2//EN&#13;
-UID:962f8f7c-d9ee-4ed2-9008-44ab4c6ac982.vcf&#13;
-FN:test7 test7&#13;
-N:test7;test7;;;&#13;
-END:VCARD&#13;
-</card:address-data>
+                    VERSION:3.0&#13;
+                    PRODID:-//Sabre//Sabre VObject 4.2.2//EN&#13;
+                    UID:0b906494-feaf-4aae-b991-60b39ed9b380&#13;
+                    X-ADDRESSBOOKSERVER-KIND:GROUP&#13;
+                    MEMBER:urn:uuid:CARDUID&#13;
+                    FN:Test contact group 1&#13;
+                    END:VCARD&#13;
+                </card:address-data>
+                <d:getetag>ETAG</d:getetag><d:getlastmodified>TIMESTAMP</d:getlastmodified>
+                <d:getcontentlength>223</d:getcontentlength>
             </d:prop>
             <d:status>HTTP/1.1 200 OK</d:status>
         </d:propstat>
@@ -319,10 +277,11 @@ END:VCARD&#13;
 </d:multistatus>
 
 ----------------------------------------------------------------------------------
-8. Update Contact/Vcard - 
 
-REQUEST - 
-curl -u <username>:<password> --location --request PUT '/addressbooks/users/avijit/private/3e5a72018f75c75e5514e9ec1e7bddd2a5127b36.vcf' \
+---- Update contact
+
+-- REQUEST
+curl -u <username>:<password> --location --request PUT '/addressbooks/PRINCIPAL/private/UUID.vcf' \
 --header 'Content-Type: text/vcard' \
 --header 'Accept-Charset: utf-8' \
 --data-raw 'BEGIN:VCARD
@@ -334,60 +293,62 @@ N:test2;test2;;;
 EMAIL:test2@test2.com
 EMAIL:abc@b.c
 NICKNAME:test2 displayname
-TEL;TYPE=home,voice;VALUE=URI:0000000012
+TEL;TYPE=home,voice;VALUE=URI:1000000012
 TEL;TYPE=work,voice;VALUE=URI:9991812722
 END:VCARD'
 
-RESPONSE - 
+-- RESPONSE
 HTTP/1.1 204 No Content
 
 -----------------------------------------------------------------------------
-9. Create Contact/Vcard - 
 
-REQUEST - 
-curl -u <username>:<password> --location --request PUT '/addressbooks/users/avijit/private/random.vcf' \
+---- Create a contact
+
+-- REQUEST
+curl -u <username>:<password> --location --request PUT '/addressbooks/PRINCIPAL/private/UUID.vcf' \
 --header 'Content-Type: text/vcard' \
 --header 'Accept-Charset: utf-8' \
 --data 'BEGIN:VCARD
 VERSION:3.0
-PHOTO;VALUE=uri:https://upload.wikimedia.org/wikipedia/commons/2/25/Intel_logo_%282006-2020%29.jpg
+PHOTO;VALUE=uri:<url>
 N:Raven;Test;;;
 END:VCARD'
 
-RESPONSE - 
+-- RESPONSE
 HTTP/1.1 204 No Content
 
 --------------------------------------------------------------------------------
-10. Delete Contact/Vcard - 
 
-REQUEST - 
-curl -u <username>:<password> --location --request DELETE '/addressbooks/users/avijit/private/random.vcf'
+10. Delete contact
 
-RESPONSE - 
+-- REQUEST
+curl -u <username>:<password> --location --request DELETE '/addressbooks/PRINCIPAL/private/UUID.vcf'
+
+-- RESPONSE
 HTTP/1.1 204 No Content
 
 -----------------------------------------------------------------------------------
 
-11. Get First Sync Token
+---- Get First Sync Token
 
-REQUEST - 
-curl -u <username>:<password> --location --request PROPFIND 'http://10.2.0.151/addressbooks/users/avijit/private' \
+-- REQUEST
+curl -u <username>:<password> --location --request PROPFIND '/addressbooks/PRINCIPAL/private' \
 --header 'Content-Type: application/xml' \
 --header 'Accept-Charset: utf-8' \
 --header 'Depth: 0' \
---data '<d:propfind xmlns:d="DAV:" xmlns:cs="http://calendarserver.org/ns/">
+--data '<d:propfind xmlns:d="DAV:" xmlns:cs="http://calendarserver.org/ns/" xmlns:sabre="http://sabredav.org/ns">
   <d:prop>
      <d:displayname />
      <cs:getctag />
-     <d:sync-token />
+     <sabre:sync-token />
   </d:prop>
 </d:propfind>'
 
-RESPONSE - 
+-- RESPONSE
 <?xml version="1.0"?>
 <d:multistatus xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns" xmlns:card="urn:ietf:params:xml:ns:carddav">
     <d:response>
-        <d:href>/addressbooks/users/avijit/private/</d:href>
+        <d:href>/addressbooks/PRINCIPAL/private/</d:href>
         <d:propstat>
             <d:prop>
                 <d:displayname>Personal Address Book</d:displayname>
@@ -409,24 +370,26 @@ RESPONSE -
 12. Get changes for addressbook
 
 REQUEST - 
-curl -u <username>:<password> --location --request REPORT 'http://10.2.0.151/addressbooks/users/dummy/private' \
+curl -u <username>:<password> --location --request REPORT '/addressbooks/users/dummy/private' \
 --header 'Content-Type: application/xml' \
 --header 'Accept-Charset: utf-8' \
 --header 'Depth: 0' \
 --data '<?xml version="1.0" encoding="utf-8" ?>
 <d:sync-collection xmlns:d="DAV:">
-  <d:sync-token>http://sabre.io/ns/sync/1712902268</d:sync-token>
+  <d:sync-token>http://sabre.io/ns/sync/SYNC_TOKEN</d:sync-token>
   <d:sync-level>1</d:sync-level>
   <d:prop>
-    <d:getetag/>
+    <d:getetag />
+    <d:getlastmodified />
+    <d:getcontentlength />
   </d:prop>
 </d:sync-collection>'
 
-RESPONSE - 
+-- RESPONSE
 <?xml version="1.0"?>
 <d:multistatus xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns" xmlns:card="urn:ietf:params:xml:ns:carddav">
     <d:response>
-        <d:href>/addressbooks/users/avijit/private/1cac5d58-40d9-103f-8275-8bd0ecb8cf28.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
         <d:propstat>
             <d:prop>
                 <d:getetag>&quot;3cd7580b51461ba927ce376ca670abf6&quot;</d:getetag>
@@ -435,7 +398,7 @@ RESPONSE -
         </d:propstat>
     </d:response>
     <d:response>
-        <d:href>/addressbooks/users/avijit/private/0922cb08-40e5-103f-8276-8bd0ecb8cf28.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
         <d:propstat>
             <d:prop>
                 <d:getetag>&quot;ae5dc9ca2ab7529668255f89cc9e9e17&quot;</d:getetag>
@@ -444,7 +407,7 @@ RESPONSE -
         </d:propstat>
     </d:response>
     <d:response>
-        <d:href>/addressbooks/users/avijit/private/1a0e3ec0-4040-103f-826c-8bd0ecb8cf28.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
         <d:propstat>
             <d:prop>
                 <d:getetag>&quot;983938680a4344abe210c54893f3604a&quot;</d:getetag>
@@ -453,7 +416,7 @@ RESPONSE -
         </d:propstat>
     </d:response>
     <d:response>
-        <d:href>/addressbooks/users/avijit/private/1a07fd8a-4040-103f-8269-8bd0ecb8cf28.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
         <d:propstat>
             <d:prop>
                 <d:getetag>&quot;7b0598eccec1b9d63f9ce63e9c1dc598&quot;</d:getetag>
@@ -462,7 +425,7 @@ RESPONSE -
         </d:propstat>
     </d:response>
     <d:response>
-        <d:href>/addressbooks/users/avijit/private/1a0898e4-4040-103f-826a-8bd0ecb8cf28.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
         <d:propstat>
             <d:prop>
                 <d:getetag>&quot;b6ed1a6a5d4c17fea33396a7deb1c91c&quot;</d:getetag>
@@ -471,7 +434,7 @@ RESPONSE -
         </d:propstat>
     </d:response>
     <d:response>
-        <d:href>/addressbooks/users/avijit/private/1a0958ba-4040-103f-826b-8bd0ecb8cf28.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
         <d:propstat>
             <d:prop>
                 <d:getetag>&quot;3873e20c0847d0bd13ad36fdf2cc1c3a&quot;</d:getetag>
@@ -480,7 +443,7 @@ RESPONSE -
         </d:propstat>
     </d:response>
     <d:response>
-        <d:href>/addressbooks/users/avijit/private/3e92bece-4040-103f-826d-8bd0ecb8cf28.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
         <d:propstat>
             <d:prop>
                 <d:getetag>&quot;33eb1779d766ff4feed2f3a87ee08f00&quot;</d:getetag>
@@ -490,7 +453,7 @@ RESPONSE -
     </d:response>
     <d:response>
         <d:status>HTTP/1.1 404 Not Found</d:status>
-        <d:href>/addressbooks/users/avijit/private/d65c6aba-7a76-4cda-b368-c95f4f63795e.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
         <d:propstat>
             <d:prop/>
             <d:status>HTTP/1.1 418 I'm a teapot</d:status>
@@ -498,7 +461,7 @@ RESPONSE -
     </d:response>
     <d:response>
         <d:status>HTTP/1.1 404 Not Found</d:status>
-        <d:href>/addressbooks/users/avijit/private/dcd12c39-cbf1-447c-aef5-236ff2962ae2.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
         <d:propstat>
             <d:prop/>
             <d:status>HTTP/1.1 418 I'm a teapot</d:status>
@@ -506,7 +469,7 @@ RESPONSE -
     </d:response>
     <d:response>
         <d:status>HTTP/1.1 404 Not Found</d:status>
-        <d:href>/addressbooks/users/avijit/private/ac48a66c-6885-4464-ba8b-3b038bb4e399.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
         <d:propstat>
             <d:prop/>
             <d:status>HTTP/1.1 418 I'm a teapot</d:status>
@@ -514,7 +477,7 @@ RESPONSE -
     </d:response>
     <d:response>
         <d:status>HTTP/1.1 404 Not Found</d:status>
-        <d:href>/addressbooks/users/avijit/private/16de115a-b4b8-4641-96a9-e4b552a2720b.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
         <d:propstat>
             <d:prop/>
             <d:status>HTTP/1.1 418 I'm a teapot</d:status>
@@ -522,7 +485,7 @@ RESPONSE -
     </d:response>
     <d:response>
         <d:status>HTTP/1.1 404 Not Found</d:status>
-        <d:href>/addressbooks/users/avijit/private/3f8738f8-f45e-40c8-a4eb-6989736cb91a.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
         <d:propstat>
             <d:prop/>
             <d:status>HTTP/1.1 418 I'm a teapot</d:status>
@@ -530,7 +493,7 @@ RESPONSE -
     </d:response>
     <d:response>
         <d:status>HTTP/1.1 404 Not Found</d:status>
-        <d:href>/addressbooks/users/avijit/private/3e70b882-2a75-103f-819c-8bd0ecb8cf28.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
         <d:propstat>
             <d:prop/>
             <d:status>HTTP/1.1 418 I'm a teapot</d:status>
@@ -538,7 +501,7 @@ RESPONSE -
     </d:response>
     <d:response>
         <d:status>HTTP/1.1 404 Not Found</d:status>
-        <d:href>/addressbooks/users/avijit/private/1dde12e0-23ea-103f-8197-8bd0ecb8cf28.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
         <d:propstat>
             <d:prop/>
             <d:status>HTTP/1.1 418 I'm a teapot</d:status>
@@ -546,7 +509,7 @@ RESPONSE -
     </d:response>
     <d:response>
         <d:status>HTTP/1.1 404 Not Found</d:status>
-        <d:href>/addressbooks/users/avijit/private/58ee682d-aa74-47b8-b821-68cd4cea39ab.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
         <d:propstat>
             <d:prop/>
             <d:status>HTTP/1.1 418 I'm a teapot</d:status>
@@ -554,7 +517,7 @@ RESPONSE -
     </d:response>
     <d:response>
         <d:status>HTTP/1.1 404 Not Found</d:status>
-        <d:href>/addressbooks/users/avijit/private/6fd92204-0e36-4705-a121-18ca2676c4f4.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
         <d:propstat>
             <d:prop/>
             <d:status>HTTP/1.1 418 I'm a teapot</d:status>
@@ -562,7 +525,7 @@ RESPONSE -
     </d:response>
     <d:response>
         <d:status>HTTP/1.1 404 Not Found</d:status>
-        <d:href>/addressbooks/users/avijit/private/4965c01c-3afb-4540-af38-caf13b8c7287.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
         <d:propstat>
             <d:prop/>
             <d:status>HTTP/1.1 418 I'm a teapot</d:status>
@@ -570,7 +533,7 @@ RESPONSE -
     </d:response>
     <d:response>
         <d:status>HTTP/1.1 404 Not Found</d:status>
-        <d:href>/addressbooks/users/avijit/private/eff2d9c5-9abb-4735-9cb6-2b95a9656eaf.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
         <d:propstat>
             <d:prop/>
             <d:status>HTTP/1.1 418 I'm a teapot</d:status>
@@ -578,7 +541,7 @@ RESPONSE -
     </d:response>
     <d:response>
         <d:status>HTTP/1.1 404 Not Found</d:status>
-        <d:href>/addressbooks/users/avijit/private/1cac5d58-40d9-103f-8275-8bd0ecb8cf28.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
         <d:propstat>
             <d:prop/>
             <d:status>HTTP/1.1 418 I'm a teapot</d:status>
@@ -586,7 +549,7 @@ RESPONSE -
     </d:response>
     <d:response>
         <d:status>HTTP/1.1 404 Not Found</d:status>
-        <d:href>/addressbooks/users/avijit/private/0922cb08-40e5-103f-8276-8bd0ecb8cf28.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
         <d:propstat>
             <d:prop/>
             <d:status>HTTP/1.1 418 I'm a teapot</d:status>
@@ -594,7 +557,7 @@ RESPONSE -
     </d:response>
     <d:response>
         <d:status>HTTP/1.1 404 Not Found</d:status>
-        <d:href>/addressbooks/users/avijit/private/1a0e3ec0-4040-103f-826c-8bd0ecb8cf28.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
         <d:propstat>
             <d:prop/>
             <d:status>HTTP/1.1 418 I'm a teapot</d:status>
@@ -602,7 +565,7 @@ RESPONSE -
     </d:response>
     <d:response>
         <d:status>HTTP/1.1 404 Not Found</d:status>
-        <d:href>/addressbooks/users/avijit/private/1a07fd8a-4040-103f-8269-8bd0ecb8cf28.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
         <d:propstat>
             <d:prop/>
             <d:status>HTTP/1.1 418 I'm a teapot</d:status>
@@ -610,7 +573,7 @@ RESPONSE -
     </d:response>
     <d:response>
         <d:status>HTTP/1.1 404 Not Found</d:status>
-        <d:href>/addressbooks/users/avijit/private/1a0898e4-4040-103f-826a-8bd0ecb8cf28.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
         <d:propstat>
             <d:prop/>
             <d:status>HTTP/1.1 418 I'm a teapot</d:status>
@@ -618,7 +581,7 @@ RESPONSE -
     </d:response>
     <d:response>
         <d:status>HTTP/1.1 404 Not Found</d:status>
-        <d:href>/addressbooks/users/avijit/private/1a0958ba-4040-103f-826b-8bd0ecb8cf28.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
         <d:propstat>
             <d:prop/>
             <d:status>HTTP/1.1 418 I'm a teapot</d:status>
@@ -626,13 +589,13 @@ RESPONSE -
     </d:response>
     <d:response>
         <d:status>HTTP/1.1 404 Not Found</d:status>
-        <d:href>/addressbooks/users/avijit/private/3e92bece-4040-103f-826d-8bd0ecb8cf28.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
         <d:propstat>
             <d:prop/>
             <d:status>HTTP/1.1 418 I'm a teapot</d:status>
         </d:propstat>
     </d:response>
-    <d:sync-token>http://sabre.io/ns/sync/1732719190</d:sync-token>
+    <d:sync-token>http://sabre.io/ns/sync/SYNC_TOKEN</d:sync-token>
 </d:multistatus>
 
 

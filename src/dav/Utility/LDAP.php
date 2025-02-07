@@ -25,21 +25,34 @@ class LDAP {
         $ldapConn = null;
 
         try {
-            // Connect to ldap server
-            $ldapUri = ($config['use_tls'] ? 'ldaps://' : 'ldap://') . $config['host'] . ':' . $config['port'];
-            $ldapConn = ldap_connect($ldapUri);
-
-            ldap_set_option($ldapConn, LDAP_OPT_PROTOCOL_VERSION, $config['ldap_version']);
-            ldap_set_option($ldapConn, LDAP_OPT_NETWORK_TIMEOUT, $config['network_timeout']);
-
-            // using ldap bind
-            $bindDn  = $credentials['bindDn'];     // ldap rdn or dn
-            $bindPass = $credentials['bindPass'];  // associated password
+            if(isset($config['use_tls']) && isset($config['host']) && isset($config['port']))
+            {
+		          // Connect to ldap server
+		          $ldapUri = ($config['use_tls'] ? 'ldaps://' : 'ldap://') . $config['host'] . ':' . $config['port'];
+		          $ldapConn = ldap_connect($ldapUri);
+            }
             
             if (!$ldapConn) 
             {
                 return false;
             }
+
+						if(isset($config['ldap_version']) && $config['ldap_version'] >= 3)
+						{
+            	ldap_set_option($ldapConn, LDAP_OPT_PROTOCOL_VERSION, $config['ldap_version']);
+						}
+
+						if(isset($config['network_timeout']))
+						{
+            	ldap_set_option($ldapConn, LDAP_OPT_NETWORK_TIMEOUT, $config['network_timeout']);
+						}
+
+						if(isset($credentials['bindDn']) && $credentials['bindDn'] != '' && isset($credentials['bindPass']))
+						{
+		          // using ldap bind
+		          $bindDn  = $credentials['bindDn'];     // ldap rdn or dn
+		          $bindPass = $credentials['bindPass'];  // associated password
+						}
 
             // binding to ldap server
             $ldapBind = ldap_bind($ldapConn, $bindDn, $bindPass);
@@ -105,16 +118,19 @@ class LDAP {
                 case 2:       
                     try {    
                         $data['entryIns'] = ldap_next_entry($args[0], $args[1]);
-                        if(!$data['entryIns'])
+                        
+                        if($data['entryIns'] === false)
                         {
-                            return false;
+                            return $data;
                         }
+                        
                         $data['data'] = ldap_get_attributes($args[0], $data['entryIns']);
                        
                     } catch (\Throwable $th) {
                         error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
                         throw new ServiceUnavailable($th->getMessage());
-                    }                
+                    }
+                    
                     return $data;
 
                 case 5:        
@@ -132,22 +148,25 @@ class LDAP {
                             $result = ldap_search($args[0], $args[1], $args[2], $args[3]);
                         }
             
-                        if(!$result)
+                        if($result === false)
                         {
                             return false;
                         }
                         
                         $data['entryIns'] = ldap_first_entry($args[0], $result);
-                        if(!$data['entryIns'])
+                        
+                        if($data['entryIns'] === false)
                         {
-                            return false;
+                            return $data;
                         }
+                        
                         $data['data'] = ldap_get_attributes($args[0], $data['entryIns']);
                         
                     } catch (\Throwable $th) {
                         error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
                         throw new ServiceUnavailable($th->getMessage());
                     }
+                    
                     return $data;
 
                 default:
@@ -194,87 +213,6 @@ class LDAP {
         return $vCardParamsInfo;
     }
 
-    public static function isVcardParamsMatch($ldapKey, $vCardParams)
-    {
-        foreach($ldapKey as $ldapKeyInfo)
-        {
-            
-            foreach($ldapKeyInfo['parameters'] as $ParamList)
-            {
-                if($ParamList == null)
-                {
-                    continue;
-                }
-                
-                $ParamsArray = explode(";", $ParamList);
-                $allParamsValuesMatch = true;
-                
-                foreach($ParamsArray as $paramStr)
-                {
-                    $paramStr = str_replace('"', '', $paramStr);
-                    $paramInfo = explode("=", $paramStr);
-                    if(! array_key_exists($paramInfo[0], $vCardParams))
-                    {
-                        $allParamsValuesMatch = false;
-                        break;
-                    }
-                    
-                    $paramValues = explode(',', $paramInfo[1]);
-                    foreach($paramValues as $paramValue)
-                    {
-                        if(! in_array(strtoupper($paramValue), $vCardParams[$paramInfo[0]]))
-                        {
-                            $allParamsValuesMatch = false;
-                        }
-                    }
-                    if($allParamsValuesMatch == false)
-                    {
-                        break;
-                    }
-                    
-                }
-
-                if($allParamsValuesMatch == true)
-                {
-                    return (['status' => true, 'ldapArrMap' => $ldapKeyInfo ]);
-                }
-            }
-        }
-
-        return (['status' => false, 'ldapArrMap' => [] ]);
-    }
-
-    public static function reverseMapVCardParams($params, $backendMapIndex)
-    {
-        $vCardParams = [];
-        if($backendMapIndex !== '')
-        {
-            $paramList = $params[$backendMapIndex];
-            $paramsArr = explode(";", $paramList);
-            
-            foreach($paramsArr as $paramStr)
-            {
-                $paramStr = str_replace('"', '', $paramStr);
-                $paramInfo = explode("=", $paramStr);
-                $paramValues = explode(',', $paramInfo[1]);
-                
-                if(! isset($paramValues[1]))
-                {
-                    $vCardParams[strtoupper($paramInfo[0])] = strtoupper($paramValues[0]);
-                }
-                else
-                {
-                    foreach($paramValues as $paramValue)
-                    {
-                        $vCardParams[strtoupper($paramInfo[0])][] = strtoupper($paramValue);
-                    }
-                }
-            }
-        }
-
-        return $vCardParams;
-    }
-    
     public static function decodeHexInString($string) {
     return
         preg_replace_callback(
@@ -285,5 +223,14 @@ class LDAP {
             },
             $string
         );
-		}
+	}
+
+    public static function isMultidimensional(array $array) {
+        foreach ($array as $value) {
+            if (!is_array($value)) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

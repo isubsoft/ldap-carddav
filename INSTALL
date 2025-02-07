@@ -1,12 +1,5 @@
--- Composer
-This project uses composer dependencies. Please install the dependencies by running composer update from root directory.
-
--- Web Server and PHP configuration
-Please refer to SabreDav documentation here https://sabre.io/dav/webservers/
-
--- System dependencies (Debian 11 and Apache Web Server is taken as a reference)
-Install the below packages
-
+-- System dependencies (Debian 11)
+[core packages]
 php-cli
 php-common
 php-curl
@@ -18,19 +11,33 @@ php-msgpack
 php-opcache
 php-readline
 php-xml
-php-sqlite3 (if using SQLite as PDO database)
 composer
 
+[packages if using sqlite as pdo database]
+php-sqlite3
+sqlite3
+
+[packages if using mysql as pdo database]
+php-mysql
+
+[packages if using apache as web server]
 apache2
 libapache2-mod-php
 
-sqlite3 (if using SQLite as PDO database)
-ldap-utils (optional)
+-- Composer
+This project uses composer dependencies. Please install the dependencies by running composer update from web document root directory. This project is compatible with SabreDav 3.2 (PHP 5.5) till SabreDav 4.0.3 (PHP 7.0.0). VObject 4.5 (PHP 7.1) is required for some vCard v3.0 interoperability with vCard v4.0 for contact groups. You may adjust composer.json according to your need/environment.
 
--- Database creation (PDO)
-1. Create objects in the PDO database as per sql/<provider>/ddl.sql file and update PDO database connection in conf/conf.php file.
+-- Web server and PHP configuration
+Please refer to SabreDav documentation here https://sabre.io/dav/webservers/
+
+-- Database creation
+1. Create objects as per sql/<provider>/ddl.sql file, any user (as required) and issue appropriate grants to the user in the PDO database and update PDO DSN in conf/conf.php file.
 2. If creating a SQLite database make sure the database file is writeable by the user running PHP.
 
 -- File permissions
-1. Only data directory needs to be writable by user running PHP.
-2. Conf directory should not be world readable.
+1. conf/conf.php must not be world readable.
+2. Only data directory and it's sub directories need to be writable by user running PHP.
+
+-- LDAP server
+1. Operational attributes entryUUID, modifyTimestamp and createTimestamp need to be indexed for all contacts.
+2. Bind user used for reading/writing contacts in an address book as per conf file need to have read privileges on entryUUID, modifyTimestamp and createTimestamp operational attributes additionally and must have appropriate size limit and time limit. It is recommended to create a separate user for syncing contacts having only read privileges on entryUUID, modifyTimestamp and createTimestamp of the contacts and liberal or no size limit and time limit. This sync user can be mentioned in 'sync_bind_user' and 'sync_bind_pw' of the conf file.

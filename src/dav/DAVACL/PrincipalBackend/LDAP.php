@@ -77,11 +77,13 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      * @return array
      */
     function getPrincipalsByPrefix($prefixPath)
-    {      
+    {
+    		$principals = [];
+    		
         if($this->config['principal']['ldap']['search_bind_dn'] == '' && $this->config['principal']['ldap']['search_bind_pw'] == '')
         {  
-            $principal = [ 'uri' => $prefixPath. '/' . $this->authBackend->username];
-            return $principal;
+            $principals[] = ['uri' => $prefixPath. '/' . $this->authBackend->username];
+            return $principals;
         }
 
         $bindDn = $this->config['principal']['ldap']['search_bind_dn'];
@@ -89,30 +91,35 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         $ldapConn = Utility::LdapBindConnection(['bindDn' => $bindDn, 'bindPass' => $bindPass], $this->config['principal']['ldap']);
   
         $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
-        $filter = Utility::replacePlaceholders($this->config['principal']['ldap']['search_filter'], ['%u' => '*']);
-        $attributes = ['displayName','mail'];
+        $filter = Utility::replacePlaceholders($this->config['principal']['ldap']['search_filter'], ['%u' => $this->authBackend->username]);
+        
+        foreach($this->config['principal']['ldap']['fieldMap'] as $key => $value)
+        {
+					$attributes[] = $value;
+        }
 
         $data = Utility::LdapQuery($ldapConn, $ldaptree, $filter, $attributes, strtolower($this->config['principal']['ldap']['scope']));
                     
         if($data['count'] > 0)
         {
-            for ($i=0; $i < $data['count']; $i++) { 
-                
+            for ($i=0; $i < $data['count']; $i++) {
+            		$principalId = $data[$i][$this->config['principal']['ldap']['fieldMap']['id']][0];
+            		
                 $principal = [
-                    'uri' => $prefixPath. '/' . str_replace('uid=', '',explode(',',$data[$i]['dn'])[0]),
+                    'uri' => $prefixPath. '/' . $principalId
                 ];
+                
                 foreach ($this->fieldMap as $key => $value) {
                     if ( isset($data[$i][$value['dbField']])) {
                         $principal[$key] = $data[$i][$value['dbField']][0];
                     }
                 }
+                
                 $principals[] = $principal;
             }
-        
         }
                     
         return $principals;
-        
     }
 
     /**
@@ -125,11 +132,11 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      */
     function getPrincipalByPath($path)
     {
-        $searchUserId = basename($path);
+        $principalId = basename($path);
 
         if($this->config['principal']['ldap']['search_bind_dn'] == '' && $this->config['principal']['ldap']['search_bind_pw'] == '')
         {  
-            $principal = [ 'id'=> $searchUserId, 'uri' => $path];
+            $principal = [ 'id'=> $principalId, 'uri' => $path];
             return $principal;
         }
 
@@ -138,7 +145,9 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         $ldapConn = Utility::LdapBindConnection(['bindDn' => $bindDn, 'bindPass' => $bindPass], $this->config['principal']['ldap']);
           
         $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
-        $filter = Utility::replacePlaceholders($this->config['principal']['ldap']['search_filter'], ['%u' => $searchUserId]); // single filter
+        $filter = Utility::replacePlaceholders($this->config['principal']['ldap']['search_filter'], ['%u' => $principalId]); // single filter
+        $principalIdAttribute = $this->config['principal']['ldap']['fieldMap']['id'];
+        $filter = '(&' . $filter . '(' . $principalIdAttribute . '=' . $principalId . '))';
         $attributes = ['displayName','mail'];
 
         $data = Utility::LdapQuery($ldapConn, $ldaptree, $filter, $attributes, strtolower($this->config['principal']['ldap']['scope']));
@@ -146,7 +155,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         if($data['count'] == 1)
         { 
             $principal = [
-                'id'  => $searchUserId,
+                'id'  => $principalId,
                 'uri' => $path
             ];
 
@@ -155,10 +164,11 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
                     $principal[$key] = $data[0][$value['dbField']][0];
                 }
             }
+            
             return $principal;
         }
 
-        return ;
+        return [];
     }
 
     /**
@@ -179,7 +189,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      */
     function updatePrincipal($path, \Sabre\DAV\PropPatch $propPatch)
     {
-        return false;
+        return null;
     }
 
     /**
@@ -213,7 +223,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      */
     function searchPrincipals($prefixPath, array $searchProperties, $test = 'allof')
     {
-        return false;
+        return [];
     }
 
     /**
@@ -235,7 +245,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      */
     function findByUri($uri, $principalPrefix)
     {
-        return false;
+        return '';
     }
 
     /**
@@ -246,7 +256,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      */
     function getGroupMemberSet($principal)
     {
-        return false;
+        return [];
     }
 
     /**
@@ -257,7 +267,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      */
     function getGroupMembership($principal)
     {
-        return false;
+        return [];
     }
 
     /**
@@ -271,7 +281,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      */
     function setGroupMemberSet($principal, array $members)
     {
-        return false;
+        return null;
     }
 }
 ?>

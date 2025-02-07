@@ -4,30 +4,32 @@
 ************************************************************/
 
 namespace isubsoft\Vobject;
+use isubsoft\dav\Utility\LDAP as Utility;
 
 class Reader extends \Sabre\VObject\Reader{
 
+    private static $encoding_format = 'base64';
     /**
      * Vcard
      *
      * @var array
      */
 
-    private static function vCardMetaData(){
+    public static function vCardMetaData(){
 
-        $json = file_get_contents($GLOBALS['__CONF_DIR__'].'/vcard_metadata.json'); 
+        $json = file_get_contents(__CONF_DIR__ . '/vcard_metadata.json'); 
 
         if ($json === false) {
             return null;
         }
 
-        $json_data = json_decode($json, true); 
+        $jsonData = json_decode($json, true); 
 
-        if ($json_data === null) {
+        if ($jsonData === null) {
             return null;
         }
 
-        return $json_data;
+        return $jsonData;
     }
 
     function multiAllowedStatus($vCard_attr){    
@@ -52,31 +54,79 @@ class Reader extends \Sabre\VObject\Reader{
         return false;
     }
 
-    function parameterStatus($vCard_attr){        
+    function getDefaultParams($vCard_attr){        
 
         $VCard_attr_info = self::vCardMetaData();
         if(isset($VCard_attr_info[$vCard_attr]))
         {
-            return (['parameter' => $VCard_attr_info[$vCard_attr]['parameter']]);
+            return ($VCard_attr_info[$vCard_attr]['parameter']);
         }
 
-        return false;
+        return [];
     }
 
-    function attributeType($attrParams){
 
-        if(array_key_exists('ENCODING', $attrParams) && ( in_array('B', $attrParams['ENCODING']) || in_array('BASE64', $attrParams['ENCODING'])))
+    function backendValueConversion($value, $backendDataFormat)
+    {
+        $backendDataFormat = strtoupper($backendDataFormat);
+        $cardData = '';
+        $params = [];
+
+        if($backendDataFormat == 'TEXT')
         {
-            return 'BINARY';
+            $cardData = $value;
+            $params = ['value' => 'text'];
         }
-        else if(array_key_exists('VALUE', $attrParams) && ( in_array('URI', $attrParams['VALUE']) || in_array('URL', $attrParams['VALUE'])))
+        else if($backendDataFormat == 'URI')
         {
-            return 'FILE';
+            $cardData = $value;
+            $params = ['value' => 'uri'];
         }
-        else
+        else if($backendDataFormat == 'BINARY')
         {
-            return 'TEXT';
+            if(self::$encoding_format == 'base64')
+            {
+                $cardData = 'data:' . finfo_buffer(finfo_open(FILEINFO_MIME), $value) . ';' . self::$encoding_format . ',' . base64_encode($value);
+            }
+            
+            $params = ['value' => 'uri'];
         }
+
+        return  ['cardData' => $cardData, 'params' => $params];
+    }
+
+    function memberValue($value, $vcardAttr)
+    {
+        $valueComponent = parse_url($value);
+        $vCardMetaData = self::vCardMetaData();
+        $vCardInfo = $vCardMetaData[$vcardAttr];
+        $memberValue = '';
+
+        if(isset($valueComponent['scheme']) && (isset($vCardInfo['uri_schemes']['embedded'])) && (in_array($valueComponent['scheme'], $vCardInfo['uri_schemes']['embedded'])))
+        {
+            $pathComponent = explode(':', $valueComponent['path']);
+            if($pathComponent[0] == 'uuid')
+            {
+                $memberValue = $pathComponent[1];
+            }
+        } 
+        return $memberValue;
+    }
+
+    function memberValueConversion($value, $vcardAttr)
+    {
+        $vCardMetaData = self::vCardMetaData();
+        $vCardInfo = $vCardMetaData[$vcardAttr];
+        $memberValue = '';
+
+        if(isset($vCardInfo['uri_schemes']['embedded']))
+        {
+            $schema = $vCardInfo['uri_schemes']['embedded'][0];
+            $path = 'uuid:'. $value;
+
+            $memberValue = $schema . ':' . $path;
+        }
+        return $memberValue;
     }
 
 }

@@ -2,7 +2,7 @@
 
 $config = [];
 
-$config['database'] = 'sqlite:'.$GLOBALS['__DATA_DIR__'].'/sync/pdo/sqlite/cards.db';
+$config['sync_database'] = 'sqlite:' . __DATA_DIR__ . '/sync/pdo/sqlite/cards.db';
 
 $config['auth']['ldap'] = [
   'host'         => '<hostname>',
@@ -10,15 +10,21 @@ $config['auth']['ldap'] = [
   'use_tls'       => false,
   'ldap_version'  => 3,       // using LDAPv3
   'network_timeout' => 10,    // The timeout (in seconds) for connect + bind attempts. This is only supported in PHP >= 5.3.0 with OpenLDAP 2.x
-  'base_dn'       => 'ou=People,dc=example,dc=net',
-  'bind_dn'       => '',
-  'bind_pass'     => '',
+  
+  // -- The following placeholders are available to be used in bind_dn, bind_pass and search_filter
+  // %u  - Username sent by client for authentication
+  // %p  - Password sent by client for authentication
+  // %dn - DN as returned by LDAP search for bind authentication
+  
+  'base_dn'       => 'ou=People,dc=example,dc=org',
+  'bind_dn'       => '%dn',
+  'bind_pass'     => '%p',
   // It's possible to bind for an individual address book
   // The login name is used to search for the DN to bind with
   'search_base_dn' => '',
   'search_filter'  => '(&(objectclass=inetOrgPerson)(uid=%u))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
   // DN and password to bind as before searching for bind DN, if anonymous search is not allowed
-  'search_bind_dn' => 'cn=admin,ou=People,dc=example,dc=net',
+  'search_bind_dn' => 'cn=admin,ou=People,dc=example,dc=org',
   'search_bind_pw' => '<secret>',
   'scope' => 'list' // search mode: sub|base|list
 ];
@@ -29,132 +35,183 @@ $config['principal']['ldap'] = [
   'use_tls'       => false,
   'ldap_version'  => 3,       // using LDAPv3
   'network_timeout' => 10,    // The timeout (in seconds) for connect + bind attempts. This is only supported in PHP >= 5.3.0 with OpenLDAP 2.x
-  'base_dn'       => 'ou=People,dc=example,dc=net',
+  
+  // -- The following placeholders are available to be used in principal_filter
+  // %u  - Username sent by client for authentication
+  
+  'base_dn'       => 'ou=People,dc=example,dc=org',
   // It's possible to bind for an individual address book
   // The login name is used to search for the DN to bind with
   'search_base_dn' => '',
-  'search_filter'  => '(&(objectclass=inetOrgPerson)(uid=%u))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
+  'search_filter'  => '(&(objectclass=inetOrgPerson)(uid=*))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))' - Used to search for all valid principals
   // DN and password to bind as before searching for bind DN, if anonymous search is not allowed
-  'search_bind_dn' => 'cn=admin,ou=People,dc=example,dc=net',
+  'search_bind_dn' => 'cn=admin,ou=People,dc=example,dc=org',
   'search_bind_pw' => '<secret>',
-  'scope' => 'list' // search mode: sub|base|list
+  'scope' => 'list', // search mode: sub|base|list
+
+	// Principal properties => LDAP user field map
+  'fieldMap' => ['id' => 'uid', 'displayname' => 'cn', 'mail' => 'mail']
 ];
 
-$config['card']['addressbook']['ldap']['public'] = [
-	'name'          	=> 'Public Address Book',
-  'description'     => 'Public Address Book',
-	'user_specific' 	=> true,
-	'base_dn'       	=> 'ou=People,dc=example,dc=net',
-	'bind_dn'       	=> '',
-	//    'bind_pass'     => '',
-	'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
+$config['card']['addressbook']['ldap']['global'] = [
+	'name'          	=> 'Global Address Book',
+  'description'     => 'Global address book',
+  'host'         => '<hostname>',
+  'port'          => 389,
+  'use_tls'       => false,
+  'ldap_version'  => 3,       // For address books only LDAP version 3 or above is supported
+  'network_timeout' => 10,    // The timeout (in seconds) for connect + bind attempts. This is only supported in PHP >= 5.3.0 with OpenLDAP 2.x
+  
+	// -- 'user_specific' and 'writable' values are used as initialization parameters for the sync database. Once the sync database has been initialized changing the values here to any conflicting values will lead to server not processing requests for this address book.
+	'user_specific' 	=> false, // If this is true username placeholder can be used in applicable places
 	'writable'     	 	=> false,
+	
+  // -- The following placeholders are available to be used in 'base_dn' and 'search_filter'
+  // %u  - Username sent by client for authentication
+  
+	// -- Base DN to be used to search for contacts
+	'base_dn'       	=> 'ou=People,dc=example,dc=org',
+	
+	// LDAP filter to be used to search for contacts
+	'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
+	
+	// -- Bind user to search/read/write contacts. If 'bind_dn' and 'bind_pass' are not provided below 
+	// then LDAP connection using parameters provided in $config['auth']['ldap'] is used to obtain backend data. 
+	// The bind user must have read access to entryUUID, createTimestamp and modifyTimestamp operational attributes 
+	// of all contacts in the address book additionally.
+	'bind_dn'       	=> 'cn=admin,ou=People,dc=example,dc=org',
+	'bind_pass'     	=> '<secret>',
+	
+	// -- Sync LDAP bind user can be used if there are size limits on 'bind_dn' in LDAP. 'sync_bind_dn' should have 
+	// liberal or no size limits and must have read access to entryUUID, createTimestamp and modifyTimestamp 
+	// attribute of all contacts in the address book
+	// 'sync_bind_dn'       => 'cn=carddavsync,ou=People,dc=example,dc=org',
+	// 'sync_bind_pw'     	=> '<secret>',
+	
+	'scope'         => 'list',   // search mode: sub|base|list
+	
 	// If writable is true then these fields need to be populated:
 	// LDAP_Object_Classes, required_fields, LDAP_rdn
 	'LDAP_Object_Classes' => ['inetOrgPerson'],
 	'required_fields'     => ['cn', 'sn'],
 	'LDAP_rdn'      			=> 'cn',
+	'backend_data_update_policy' => 'merge', 	// Backend data update policy. Valid options are below.
+																						// merge (default)  - Would only replace backend contact attibutes present in field map here and 
+																						//                    leave others intact.
+																					 	// replace          - Would replace whole backend contact with attibutes present in 
+																					 	//                    field map here. WARNING: This option may lead to loss of contact attributes 
+																					 	//                    in the backend which are not present in field map here.
+																					 	
+
+	// vCard    => LDAP contact field map
   'fieldmap'      => [
-		// vCard    => LDAP
     'FN'            => ['backend_attribute' => 'cn',
+                        'backend_data_format' => 'text',
                           'parameters' => [],
                          'reverse_map_parameter_index' => ''],
 
     'N'							=> ['backend_attribute' => [ 'last_name' => 'sn', 'first_name' => 'givenName'],
+                        'backend_data_format' => 'text',
                           'parameters' => [],
                           'reverse_map_parameter_index' => ''],
 
 		'EMAIL'         => ['backend_attribute' => 'mail',
+                        'backend_data_format' => 'text',
                           'parameters' => [], 
                           'reverse_map_parameter_index' => ''],
 
 		'ORG'         	=> ['backend_attribute' => [ 'org_name' => 'o', 'org_unit_name' => 'ou'],
+                        'backend_data_format' => 'text',
                           'parameters' => [], 
                           'reverse_map_parameter_index' => ''],
 
     'TITLE'         => ['backend_attribute' => 'title',
+                        'backend_data_format' => 'text',
                           'parameters' => [], 
                           'reverse_map_parameter_index' => ''],
     
     'ROLE'        => ['backend_attribute' => 'employeeType',
+                      'backend_data_format' => 'text',
                           'parameters' => [], 
                           'reverse_map_parameter_index' => ''],  
 
     'NICKNAME'      => ['backend_attribute' => 'displayName',
+                        'backend_data_format' => 'text',
                           'parameters' => [],  
                           'reverse_map_parameter_index' => ''],
 
-		'PHOTO'         => [['backend_attribute' => 'jpegphoto',
-                            'parameters' => [ 'TYPE=JPEG;ENCODING=B',
-                                            'TYPE=JPEG;VALUE=URL',
-                                            'MEDIATYPE=image/jpeg;VALUE=URL',
-                                            'ENCODING=BASE64;TYPE=JPEG',
-                                            'MEDIATYPE=image/jpeg;VALUE=URI',
-                                            'TYPE=JPEG;VALUE=URI',
-                                            'ENCODING=B',
-                                            'VALUE=URL',
-                                            'ENCODING=BASE64',
-                                            'VALUE=URI'
-                                          ],
-                            'reverse_map_parameter_index' => '0',
-                            'decode_file' => true]],
+		'PHOTO'         => [['backend_attribute' => 'jpegPhoto',
+                        'backend_data_format' => 'binary',
+                        'backend_data_mediatype' => ['image/jpeg'],
+                            'parameters' => [ ],
+                            'reverse_map_parameter_index' => '0']],
 
     'NOTE'        	=> ['backend_attribute' => 'description',
+                        'backend_data_format' => 'text',
                         'parameters' => [],                     
                           'reverse_map_parameter_index' => ''],
 
     'TEL'						=> [['backend_attribute' => 'homePhone',
-                          'parameters' => [ 'VALUE=text;TYPE="voice,home";PREF=1',
-                                            'VALUE=text;TYPE="voice,home"',
-                                            'TYPE=home;VALUE=TEXT',
-                                              'TYPE="voice,home"',
-                                              'PREF=1',
+                          'backend_data_format' => 'text',
+                          'parameters' => [ ['TYPE' => "voice,home", 'PREF' => '1'],
+                                            ['TYPE' => "voice,home"],
+                                            ['TYPE' => "home"],
                                               null
                                           ],                    
                           'reverse_map_parameter_index' => 0 ],
                           ['backend_attribute' => 'telephoneNumber',
-                          'parameters' => [ 'VALUE=text;TYPE="voice,work"',
-                                            'VALUE=text;PREF=1;TYPE="voice,work"',
-                                            'TYPE=work;VALUE=TEXT',
-                                              'TYPE="voice,work"',
-                                              'TYPE="work"',
+                          'backend_data_format' => 'text',
+                          'parameters' => [ 
+                          									['TYPE' => "voice,work"],
+                                            ['TYPE' => "voice,work", 'PREF' => '1'],
+                                            ['TYPE' => "work"]
                                           ],                    
                           'reverse_map_parameter_index' => 0 ],
                         ['backend_attribute' => 'fax',
-                          'parameters' => [ 'VALUE=text;TYPE="voice,fax"',
-                                            'VALUE=text;PREF=1;TYPE="voice,fax"',
-                                            'VALUE=text;TYPE="fax"',
-                                            'TYPE="voice,fax"',
-                                            'TYPE="fax"'
-                                      ],                      
+                        'backend_data_format' => 'text',
+                          'parameters' => [ 
+                          									['TYPE' => "voice,fax"],
+                                            ['TYPE' => "voice,fax", 'PREF' => '1'],
+                                            ['TYPE' => "fax"]
+                                      	],                      
                       'reverse_map_parameter_index' => 0],
                       ['backend_attribute' => 'pager',
-                          'parameters' => [ 'VALUE=text;TYPE="voice,pager"',
-                                            'VALUE=text;PREF=1;TYPE="voice,pager"',
-                                            'VALUE=text;TYPE="pager"',
-                                            'TYPE="voice,pager"',
-                                            'TYPE="pager"'
+                      'backend_data_format' => 'text',
+                          'parameters' => [ 
+                          									['TYPE' => "voice,pager"],
+                                            ['TYPE' => "voice,pager", 'PREF' => '1'],
+                                            ['TYPE' => "pager"]
                                       ],                      
                       'reverse_map_parameter_index' => 0],
                       ['backend_attribute' => 'mobile',
-                          'parameters' => [ 'VALUE=text;TYPE="voice,cell"',
-                                            'VALUE=text;PREF=1;TYPE="voice,cell"',
-                                            'VALUE=text;TYPE="cell"',
-                                            'TYPE="voice,cell"',
-                                            'TYPE="cell"'
+                      'backend_data_format' => 'text',
+                          'parameters' => [ 
+                          									['TYPE' => "voice,cell"],
+                          									['TYPE' => "voice,cell", 'PREF' => '1'],
+                                            ['TYPE' => "cell"]
                                       ],                      
                       'reverse_map_parameter_index' => 0]],
                      
-      'ADR'         => [['backend_attribute' => ['po_box'=> 'postOfficeBox','house_no' => 'postalAddress','street' => 'street','locality' => 'l','province' => 'stateOrProvinceName', 'postal_code' => 'postalCode'],
-                          'parameters' => [ 'VALUE=text;TYPE="home";PREF=1',
-                                            'TYPE=home;VALUE=TEXT',
-                                              'TYPE="home"',
-                                              'PREF=1',
+      'ADR'         => [['backend_attribute' => 'homePostalAddress',
+                          'backend_data_format' => 'text',
+                          'parameters' => [ ['TYPE' => "home", 'PREF' => '1'],
+                                            ['TYPE' => "home"],
+                                            ['PREF' => '1'],
                                               null
+                                            ],                    
+                                        'reverse_map_parameter_index' => 0,
+                                        'map_component_separator' => '$' ],
+                          ['backend_attribute' => ['po_box'=> 'postOfficeBox','street' => 'street','locality' => 'l','province' => 'st', 'postal_code' => 'postalCode'],
+                          'backend_data_format' => 'text',
+                          'parameters' => [ 
+                          									['TYPE' => "work"],
+                                            ['TYPE' => "work", 'PREF' => '1'],
+                                            ['PREF' => '1']
                                              ],                    
                                   'reverse_map_parameter_index' => 0 ]],
 
       'LANG'        => [['backend_attribute' => 'preferredLanguage',
+                          'backend_data_format' => 'text',
                           'parameters' => [ 'VALUE=language-tag;TYPE="home";PREF=1',
                                             'VALUE=language-tag;TYPE="home"',
                                             'VALUE=language-tag;TYPE="work"',
@@ -171,133 +228,181 @@ $config['card']['addressbook']['ldap']['public'] = [
 	'group_member_map'          => [ 'MEMBER'      => [ 'backend_attribute' => 'member' ] ],
 	'group_fieldmap'            => [     
 																	 'FN'          => [	'backend_attribute' => 'cn',
+                                                      'backend_data_format' => 'text',
 																											'parameters'    => [],
 																									 		'reverse_map_parameter_index' => ''
 								                 										],
 								                 	
 																	 'NOTE'        => [	'backend_attribute' => 'description',
+                                                      'backend_data_format' => 'text',
 																											'parameters' => [],                     
 																											'reverse_map_parameter_index' => ''
 																										]
-                                 ],
-	'scope'         => 'list'   // search mode: sub|base|list
+                                 ]
 ];
 
-$config['card']['addressbook']['ldap']['private'] = [
+$config['card']['addressbook']['ldap']['personal'] = [
 	'name'          	=> 'Personal Address Book',
-  'description'     => 'New Book',
-	'user_specific' 	=> true,
-	'base_dn'       	=> 'ou=Address Book,uid=%u,ou=People,dc=example,dc=net',
-	'bind_dn'       	=> '',
-	//    'bind_pass'     => '',
-	'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
+  'description'     => 'Personal address book of the user',
+  
+	// -- LDAP connection parameters if using bind_dn or search_bind_dn below
+  // 'host'         => '<hostname>',
+  // 'port'          => 389,
+  // 'use_tls'       => false,
+  // 'ldap_version'  => 3,       // For address books only LDAP version 3 or above is supported
+  // 'network_timeout' => 10,    // The timeout (in seconds) for connect + bind attempts. This is only supported in PHP >= 5.3.0 with OpenLDAP 2.x
+  
+	// -- 'user_specific' and 'writable' values are used as initialization parameters for the sync database. Once the sync database has been initialized changing the values here to any conflicting values will lead to server not processing requests for this address book.
+	'user_specific' 	=> true, // If this is true username placeholder can be used in applicable places
 	'writable'     	 	=> true,
+	
+  // -- The following placeholders are available to be used in 'base_dn' and 'search_filter' below
+  // %u  - Username sent by client for authentication
+  // %dn - DN as returned by address book search below
+  
+	// -- Base DN to be used to search for contacts
+	// 'base_dn'       	=> 'ou=Address Book,%dn',
+	'base_dn'       	=> 'ou=Address Book,uid=%u,ou=People,dc=example,dc=org',
+	
+	// LDAP filter to be used to search for contacts	
+	'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
+	
+	// -- Bind user to search/read/write contacts. If 'bind_dn' and 'bind_pass' are not provided below 
+	// then LDAP connection using parameters provided in $config['auth']['ldap'] is used to obtain backend data. 
+	// The bind user must have read access to entryUUID, createTimestamp and modifyTimestamp operational attributes 
+	// of all contacts in the address book additionally.
+	// 'bind_dn'       	=> '',
+	// 'bind_pass'     => '',
+	
+	// -- Sync LDAP bind user can be used if there are size limits on 'bind_dn' in LDAP. 'sync_bind_dn' should have 
+	// liberal or no size limits and must have read access to entryUUID, createTimestamp and modifyTimestamp 
+	// attribute of all contacts in the address book
+	// 'sync_bind_dn'       	=> 'cn=carddavsync,ou=People,dc=example,dc=org',
+	// 'sync_bind_pw'     	=> '<secret>',
+	
+	'scope'         => 'list',   // search mode: sub|base|list
+
 	// If writable is true then these fields need to be populated:
-	// LDAP_Object_Classes, required_fields, LDAP_rdn
-	'LDAP_Object_Classes' => ['inetOrgPerson'],
+	// LDAP_Object_Classes, required_fields, LDAP_rdn.
+	'LDAP_Object_Classes' => ['inetOrgPerson'], //First objectClass must be the structural objectClass.
 	'required_fields'     => ['cn', 'sn'],
 	'LDAP_rdn'      			=> 'cn',
+	'backend_data_update_policy' => 'merge', 	// Backend data update policy. Valid options are below.
+																						// merge (default)  - Would only replace backend contact attibutes present in field map here and 
+																						//                    leave others intact.
+																					 	// replace          - Would replace whole backend contact with attibutes present in 
+																					 	//                    field map here. WARNING: This option may lead to loss of contact attributes 
+																					 	//                    in the backend which are not present in field map here.
+
+	// vCard    => LDAP field map
   'fieldmap'      => [
-		// vCard    => LDAP
     'FN'            => ['backend_attribute' => 'cn',
+                        'backend_data_format' => 'text',
                           'parameters' => [],
                          'reverse_map_parameter_index' => ''],
 
     'N'							=> ['backend_attribute' => [ 'last_name' => 'sn', 'first_name' => 'givenName'],
+                        'backend_data_format' => 'text',
                           'parameters' => [],
                           'reverse_map_parameter_index' => ''],
 
 		'EMAIL'         => ['backend_attribute' => 'mail',
+                        'backend_data_format' => 'text',
                           'parameters' => [], 
                           'reverse_map_parameter_index' => ''],
 
 		'ORG'         	=> ['backend_attribute' => [ 'org_name' => 'o', 'org_unit_name' => 'ou'],
+                        'backend_data_format' => 'text',
                           'parameters' => [], 
                           'reverse_map_parameter_index' => ''],
 
     'TITLE'         => ['backend_attribute' => 'title',
+                        'backend_data_format' => 'text',
                           'parameters' => [], 
                           'reverse_map_parameter_index' => ''],
     
     'ROLE'        => ['backend_attribute' => 'employeeType',
+                      'backend_data_format' => 'text',
                           'parameters' => [], 
                           'reverse_map_parameter_index' => ''],  
 
     'NICKNAME'      => ['backend_attribute' => 'displayName',
+                        'backend_data_format' => 'text',
                           'parameters' => [],  
                           'reverse_map_parameter_index' => ''],
 
-		'PHOTO'         => [['backend_attribute' => 'jpegphoto',
-                            'parameters' => [ 'TYPE=JPEG;ENCODING=B',
-                                            'TYPE=JPEG;VALUE=URL',
-                                            'MEDIATYPE=image/jpeg;VALUE=URL',
-                                            'ENCODING=BASE64;TYPE=JPEG',
-                                            'MEDIATYPE=image/jpeg;VALUE=URI',
-                                            'TYPE=JPEG;VALUE=URI',
-                                            'ENCODING=B',
-                                            'VALUE=URL',
-                                            'ENCODING=BASE64',
-                                            'VALUE=URI'
-                                          ],
-                            'reverse_map_parameter_index' => '0',
-                            'decode_file' => true]],
+		'PHOTO'         => [['backend_attribute' => 'jpegPhoto',
+                        'backend_data_format' => 'binary',
+                        'backend_data_mediatype' => ['image/jpeg'],
+                            'parameters' => [ ],
+                            'reverse_map_parameter_index' => '0']],
 
     'NOTE'        	=> ['backend_attribute' => 'description',
+                        'backend_data_format' => 'text',
                         'parameters' => [],                     
                           'reverse_map_parameter_index' => ''],
 
     'TEL'						=> [['backend_attribute' => 'homePhone',
-                          'parameters' => [ 'VALUE=text;TYPE="voice,home";PREF=1',
-                                            'VALUE=text;TYPE="voice,home"',
-                                            'TYPE=home;VALUE=TEXT',
-                                              'TYPE="voice,home"',
-                                              'PREF=1',
+                          'backend_data_format' => 'text',
+                          'parameters' => [ ['TYPE' => "voice,home", 'PREF' => '1'],
+                                            ['TYPE' => "voice,home"],
+                                            ['TYPE' => "home"],
                                               null
                                           ],                    
                           'reverse_map_parameter_index' => 0 ],
                           ['backend_attribute' => 'telephoneNumber',
-                          'parameters' => [ 'VALUE=text;TYPE="voice,work"',
-                                            'VALUE=text;PREF=1;TYPE="voice,work"',
-                                            'TYPE=work;VALUE=TEXT',
-                                              'TYPE="voice,work"',
-                                              'TYPE="work"',
+                          'backend_data_format' => 'text',
+                          'parameters' => [ 
+                          									['TYPE' => "voice,work"],
+                                            ['TYPE' => "voice,work", 'PREF' => '1'],
+                                            ['TYPE' => "work"]
                                           ],                    
                           'reverse_map_parameter_index' => 0 ],
                         ['backend_attribute' => 'fax',
-                          'parameters' => [ 'VALUE=text;TYPE="voice,fax"',
-                                            'VALUE=text;PREF=1;TYPE="voice,fax"',
-                                            'VALUE=text;TYPE="fax"',
-                                            'TYPE="voice,fax"',
-                                            'TYPE="fax"'
-                                      ],                      
+                        'backend_data_format' => 'text',
+                          'parameters' => [ 
+                          									['TYPE' => "voice,fax"],
+                                            ['TYPE' => "voice,fax", 'PREF' => '1'],
+                                            ['TYPE' => "fax"]
+                                      	],                      
                       'reverse_map_parameter_index' => 0],
                       ['backend_attribute' => 'pager',
-                          'parameters' => [ 'VALUE=text;TYPE="voice,pager"',
-                                            'VALUE=text;PREF=1;TYPE="voice,pager"',
-                                            'VALUE=text;TYPE="pager"',
-                                            'TYPE="voice,pager"',
-                                            'TYPE="pager"'
+                      'backend_data_format' => 'text',
+                          'parameters' => [ 
+                          									['TYPE' => "voice,pager"],
+                                            ['TYPE' => "voice,pager", 'PREF' => '1'],
+                                            ['TYPE' => "pager"]
                                       ],                      
                       'reverse_map_parameter_index' => 0],
                       ['backend_attribute' => 'mobile',
-                          'parameters' => [ 'VALUE=text;TYPE="voice,cell"',
-                                            'VALUE=text;PREF=1;TYPE="voice,cell"',
-                                            'VALUE=text;TYPE="cell"',
-                                            'TYPE="voice,cell"',
-                                            'TYPE="cell"'
+                      'backend_data_format' => 'text',
+                          'parameters' => [ 
+                          									['TYPE' => "voice,cell"],
+                          									['TYPE' => "voice,cell", 'PREF' => '1'],
+                                            ['TYPE' => "cell"]
                                       ],                      
                       'reverse_map_parameter_index' => 0]],
                      
-      'ADR'         => [['backend_attribute' => ['po_box'=> 'postOfficeBox','house_no' => 'postalAddress','street' => 'street','locality' => 'l','province' => 'stateOrProvinceName', 'postal_code' => 'postalCode'],
-                          'parameters' => [ 'VALUE=text;TYPE="home";PREF=1',
-                                            'TYPE=home;VALUE=TEXT',
-                                              'TYPE="home"',
-                                              'PREF=1',
+      'ADR'         => [['backend_attribute' => 'homePostalAddress',
+                          'backend_data_format' => 'text',
+                          'parameters' => [ ['TYPE' => "home", 'PREF' => '1'],
+                                            ['TYPE' => "home"],
+                                            ['PREF' => '1'],
                                               null
+                                            ],                    
+                                        'reverse_map_parameter_index' => 0,
+                                        'map_component_separator' => '$' ],
+                          ['backend_attribute' => ['po_box'=> 'postOfficeBox','street' => 'street','locality' => 'l','province' => 'st', 'postal_code' => 'postalCode'],
+                          'backend_data_format' => 'text',
+                          'parameters' => [ 
+                          									['TYPE' => "work"],
+                                            ['TYPE' => "work", 'PREF' => '1'],
+                                            ['PREF' => '1']
                                              ],                    
                                   'reverse_map_parameter_index' => 0 ]],
 
       'LANG'        => [['backend_attribute' => 'preferredLanguage',
+                          'backend_data_format' => 'text',
                           'parameters' => [ 'VALUE=language-tag;TYPE="home";PREF=1',
                                             'VALUE=language-tag;TYPE="home"',
                                             'VALUE=language-tag;TYPE="work"',
@@ -314,14 +419,15 @@ $config['card']['addressbook']['ldap']['private'] = [
 	'group_member_map'          => [ 'MEMBER'      => [ 'backend_attribute' => 'member' ] ],
 	'group_fieldmap'            => [     
 																	 'FN'          => [	'backend_attribute' => 'cn',
+                                                      'backend_data_format' => 'text',
 																											'parameters'    => [],
 																									 		'reverse_map_parameter_index' => ''
 								                 										],
 								                 	
 																	 'NOTE'        => [	'backend_attribute' => 'description',
+                                                      'backend_data_format' => 'text',
 																											'parameters' => [],                     
 																											'reverse_map_parameter_index' => ''
 																										]
-                                 ],
-	'scope'         => 'list'   // search mode: sub|base|list
+                                 ]
 ];
