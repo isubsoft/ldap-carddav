@@ -2,7 +2,7 @@
 
 $config = [];
 
-$config['database'] = 'sqlite:'.$GLOBALS['__DATA_DIR__'].'/sync/pdo/sqlite/cards.db';
+$config['sync_database'] = 'sqlite:' . __DATA_DIR__ . '/sync/pdo/sqlite/cards.db';
 
 $config['auth']['ldap'] = [
   'host'         => '<hostname>',

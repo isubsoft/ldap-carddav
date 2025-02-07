@@ -5,9 +5,9 @@
 
 /*
 
-Addressbook/CardDAV server example
+Addressbook/CardDAV server
 
-This server features CardDAV support
+This server features CardDAV support for LDAP as contacts backend
 
 */
 

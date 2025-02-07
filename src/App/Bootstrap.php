@@ -6,19 +6,19 @@
 
 
 //constants
-$GLOBALS['__BASE_DIR__'] = __DIR__.'/../..';
-$GLOBALS['__DATA_DIR__'] = $GLOBALS['__BASE_DIR__'].'/data';
-$GLOBALS['__CONF_DIR__'] = $GLOBALS['__BASE_DIR__'].'/conf';
+define('__BASE_DIR__', __DIR__ . '/../..');
+define('__DATA_DIR__', __BASE_DIR__ . '/data');
+define('__CONF_DIR__', __BASE_DIR__ . '/conf');
 
-require $GLOBALS['__CONF_DIR__'].'/conf.php';
+require __CONF_DIR__ . '/conf.php';
 
 /* Database */
 
 try {
     $pdo_foreign_keys_enabled = false;
-    $pdo_scheme = parse_url($config['database'])['scheme'];
+    $pdo_scheme = parse_url($config['sync_database'])['scheme'];
     
-    $pdo = new PDO($config['database']);
+    $pdo = new PDO($config['sync_database']);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
     if($pdo_scheme == 'sqlite')

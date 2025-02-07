@@ -17,7 +17,7 @@ class Reader extends \Sabre\VObject\Reader{
 
     public static function vCardMetaData(){
 
-        $json = file_get_contents($GLOBALS['__CONF_DIR__'].'/vcard_metadata.json'); 
+        $json = file_get_contents(__CONF_DIR__ . '/vcard_metadata.json'); 
 
         if ($json === false) {
             return null;
