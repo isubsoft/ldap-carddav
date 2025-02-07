@@ -102,10 +102,11 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
                     
         if($data['count'] > 0)
         {
-            for ($i=0; $i < $data['count']; $i++) { 
-                
+            for ($i=0; $i < $data['count']; $i++) {
+            		$principalId = $data[$i][$this->config['principal']['ldap']['fieldMap']['id']][0];
+            		
                 $principal = [
-                    'uri' => $prefixPath. '/' . $data[$i][$this->config['principal']['ldap']['fieldMap']['id']][0]
+                    'uri' => $prefixPath. '/' . $principalId
                 ];
                 
                 foreach ($this->fieldMap as $key => $value) {
@@ -144,7 +145,9 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         $ldapConn = Utility::LdapBindConnection(['bindDn' => $bindDn, 'bindPass' => $bindPass], $this->config['principal']['ldap']);
           
         $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
-        $filter = Utility::replacePlaceholders($this->config['principal']['ldap']['principal_filter'], ['%u' => $principalId]); // single filter
+        $filter = Utility::replacePlaceholders($this->config['principal']['ldap']['search_filter'], ['%u' => $principalId]); // single filter
+        $principalIdAttribute = $this->config['principal']['ldap']['fieldMap']['id'];
+        $filter = '(&' . $filter . '(' . $principalIdAttribute . '=' . $principalId . '))';
         $attributes = ['displayName','mail'];
 
         $data = Utility::LdapQuery($ldapConn, $ldaptree, $filter, $attributes, strtolower($this->config['principal']['ldap']['scope']));
@@ -161,6 +164,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
                     $principal[$key] = $data[0][$value['dbField']][0];
                 }
             }
+            
             return $principal;
         }
 

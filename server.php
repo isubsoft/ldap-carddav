@@ -44,6 +44,7 @@ $server->setBaseUri($baseUri);
 // Plugins
 $aclPlugin = new Sabre\DAVACL\Plugin();
 $aclPlugin->allowUnauthenticatedAccess = false;
+$aclPlugin->hideNodesFromListings = true;
 
 $server->addPlugin(new Sabre\DAV\Auth\Plugin($authBackend));
 $server->addPlugin($aclPlugin);

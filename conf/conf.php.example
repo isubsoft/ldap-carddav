@@ -44,7 +44,6 @@ $config['principal']['ldap'] = [
   // The login name is used to search for the DN to bind with
   'search_base_dn' => '',
   'search_filter'  => '(&(objectclass=inetOrgPerson)(uid=*))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))' - Used to search for all valid principals
-  'principal_filter' => '(&(objectclass=inetOrgPerson)(uid=%u))', // e.g. '(&(objectClass=posixAccount)(uid=%u))' - Used to verify existence of a particular principal
   // DN and password to bind as before searching for bind DN, if anonymous search is not allowed
   'search_bind_dn' => 'cn=admin,ou=People,dc=example,dc=org',
   'search_bind_pw' => '<secret>',
