@@ -88,7 +88,7 @@ $config['card']['addressbook']['ldap']['global'] = [
 	// 'sync_bind_dn'       => 'cn=carddavsync,ou=People,dc=example,dc=org',
 	// 'sync_bind_pw'     	=> '<secret>',
 	
-	'scope'         => 'list'   // search mode: sub|base|list
+	'scope'         => 'list',   // search mode: sub|base|list
 	
 	// If writable is true then these fields need to be populated:
 	// LDAP_Object_Classes, required_fields, LDAP_rdn
@@ -280,7 +280,7 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	// 'sync_bind_dn'       	=> 'cn=carddavsync,ou=People,dc=example,dc=org',
 	// 'sync_bind_pw'     	=> '<secret>',
 	
-	'scope'         => 'list'   // search mode: sub|base|list
+	'scope'         => 'list',   // search mode: sub|base|list
 
 	// If writable is true then these fields need to be populated:
 	// LDAP_Object_Classes, required_fields, LDAP_rdn.
