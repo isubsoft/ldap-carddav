@@ -308,14 +308,19 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				if($cardUID == null)
 					return false;
             
-        $data = $this->fetchLdapContactData($addressBookId, $cardUri, ['*', 'entryUUID', 'modifyTimestamp']);
+        $data = $this->fetchLdapContactData($addressBookId, $cardUri, ['*', 'modifyTimestamp']);
         
         if(empty($data))
 					throw new SabreDAVException\ServiceUnavailable();
 
         if(!$data['count'] > 0)
         	return false;
-
+        	
+        if(!isset($data[0]['modifytimestamp'][0]))
+        {
+					error_log("Read access to some operational attributes in LDAP not present. ".__METHOD__." at line no ".__LINE__);
+        }
+        	
         $cardData = $this->generateVcard($data[0], $addressBookId, $cardUri);
         
         if($cardData == null || $cardData == '')
@@ -732,8 +737,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         
         
         // build the Vcard
-        $vcard = new \Sabre\VObject\Component\VCard(['UID' => $UID]);
-        $vcard = $vcard->convert(\Sabre\VObject\Document::VCARD40);
+        $vcard = (new \Sabre\VObject\Component\VCard(['UID' => $UID]))->convert(\Sabre\VObject\Document::VCARD40);
 
         if($data['objectclass'][0] == $addressBookConfig['group_LDAP_Object_Classes'][0])
         {
