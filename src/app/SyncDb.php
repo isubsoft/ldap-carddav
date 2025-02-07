@@ -3,34 +3,54 @@
 * Copyright 2023-2025 ISub Softwares (OPC) Private Limited
 ************************************************************/
 
-//constants
-$GLOBALS['__BASE_DIR__'] = __DIR__.'/../..';
-$GLOBALS['__DATA_DIR__'] = $GLOBALS['__BASE_DIR__'].'/data';
-$GLOBALS['__CONF_DIR__'] = $GLOBALS['__BASE_DIR__'].'/conf';
+/*import database connection*/
+require_once 'Bootstrap.php';
 
-
-
-// Autoloader
-require_once $GLOBALS['__BASE_DIR__'].'/vendor/autoload.php';
-require_once $GLOBALS['__CONF_DIR__'].'/conf.php';
-
-
-/* Database */ 
-$database = new \isubsoft\App\Bootstrap();
-$pdo = $database->init($config);
-
-
-
-
-
-
+/*database Tables*/
 $addressBooksTableName = 'cards_addressbook';
 $userTableName = 'cards_user';
 
-$validOps = ['1', '2'];
+
+
+if(isset($argv[1]) && $argv[1] == 'init')
+{
+    try {
+        $query = 'SELECT * FROM '. $addressBooksTableName .' LIMIT 1' ;
+	    $stmt = $pdo->prepare($query);
+	    $stmt->execute([]);
+
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        
+        if(!empty($row))
+        {
+            echo "Addressbooks are already imported to database. \n";
+            exit(1);   
+        }
+
+        if(isset($config['card']['addressbook']['ldap']))
+        {
+            foreach($config['card']['addressbook']['ldap'] as $addressBooksName => $values)
+            {
+                $query = 'INSERT INTO '. $addressBooksTableName .' (`addressbook_id`, `user_specific`, `writable`) VALUES (?, ?, ?)';
+                $stmt = $pdo->prepare($query);
+                $stmt->execute([$addressBooksName, isset($values['user_specific']) ? $values['user_specific'] : false, isset($values['writable']) ? $values['writable'] : false]);
+            }
+        }
+        echo "Addressbooks has been successfully imported to database. \n";
+
+    } catch (\Throwable $th) {
+        error_log("Some unexpected error occurred in database - ".$th->getMessage());
+        exit(1);
+    }
+}
+
+
+
+
+
 $entity = readline("Please enter in which entity to perform operation. Enter 1 for Addressbook or enter 2 for User. \n");
 
-if(!in_array($entity, $validOps))
+if($entity !== '1' && $entity !== '2')
 {
     echo "Please try again and enter correct option. \n";
     exit;
@@ -38,7 +58,7 @@ if(!in_array($entity, $validOps))
 
 $operation = readline("Enter the operation to perform. Enter 1 for Update or enter 2 for Delete. \n");
 
-if(!in_array($operation, $validOps))
+if($operation !== '1' && $operation !== '2')
 {
     echo 'Please enter correct option. \n';
     exit;
