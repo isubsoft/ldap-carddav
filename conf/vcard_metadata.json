@@ -1,7 +1,7 @@
 {
 	"FN":
 	{
-		"multi_allowed": true,
+		"multi_allowed": false,
 		"composite_attr": false,
 		"parameter": []
 	},
@@ -17,7 +17,8 @@
 	{
 		"multi_allowed": true,
 		"composite_attr": false,
-		"parameter": []
+		"parameter": [],
+		"uri_schemes": {"embedded" :  ["mailto"]}
 	},
 
 	"ORG":
@@ -45,7 +46,7 @@
 	{
 		"multi_allowed": true,
 		"composite_attr": false,
-		"parameter": ["TYPE", "VALUE", "MEDIATYPE", "ENCODING"]
+		"parameter": []
 	},
 
 	"NOTE":
@@ -59,7 +60,8 @@
 	{
 		"multi_allowed": true,
 		"composite_attr": false,
-		"parameter": ["TYPE", "VALUE"]
+		"parameter": ["TYPE", "VALUE"],
+		"uri_schemes": {"embedded" :  ["tel"]}
 	},
 
 	"ADR":
@@ -136,7 +138,8 @@
 	{
 		"multi_allowed": true,
 		"composite_attr": false,
-		"parameter": []
+		"parameter": [],
+		"uri_schemes": {"embedded" :  ["urn"]}
 	},
 
 	"RELATED":
