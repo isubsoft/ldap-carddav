@@ -48,8 +48,12 @@ $config['principal']['ldap'] = [
   // DN and password to bind as before searching for bind DN, if anonymous search is not allowed
   'search_bind_dn' => 'cn=admin,ou=People,dc=example,dc=org',
   'search_bind_pw' => '<secret>',
-  'scope' => 'list' // search mode: sub|base|list
+  'scope' => 'list', // search mode: sub|base|list
+
+	// Principal properties => LDAP user field map
+  'fieldMap' => ['id' => 'uid', 'displayname' => 'cn', 'mail' => 'mail']
 ];
+
 $config['card']['addressbook']['ldap']['global'] = [
 	'name'          	=> 'Global Address Book',
   'description'     => 'Global address book',
@@ -91,7 +95,7 @@ $config['card']['addressbook']['ldap']['global'] = [
 																					 	//                    in the backend which are not present in field map here.
 																					 	
 
-	// vCard    => LDAP field map
+	// vCard    => LDAP contact field map
   'fieldmap'      => [
     'FN'            => ['backend_attribute' => 'cn',
                         'backend_data_format' => 'text',
@@ -229,9 +233,17 @@ $config['card']['addressbook']['ldap']['global'] = [
                                  ],
 	'scope'         => 'list'   // search mode: sub|base|list
 ];
+
 $config['card']['addressbook']['ldap']['personal'] = [
 	'name'          	=> 'Personal Address Book',
   'description'     => 'Personal address book of the user',
+  
+	// -- LDAP connection parameters if using 'bind_dn'
+  // 'host'         => '<hostname>',
+  // 'port'          => 389,
+  // 'use_tls'       => false,
+  // 'ldap_version'  => 3,       // For address books only LDAP version 3 or above is supported
+  // 'network_timeout' => 10,    // The timeout (in seconds) for connect + bind attempts. This is only supported in PHP >= 5.3.0 with OpenLDAP 2.x
   
 	// -- 'user_specific' and 'writable' values are used as initialization parameters for the sync database. Once the sync database has been initialized changing the values here to any conflicting values will lead to server not processing requests for this address book.
 	'user_specific' 	=> true, // If this is true username placeholder can be used in applicable places
@@ -246,7 +258,7 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	// 'bind_dn'       	=> '',
 	// 'bind_pass'     => '',
 	
-	// -- Sync LDAP bind user can be used if there are size limits on 'bind_dn' user in LDAP. 'sync_bind_dn' should have liberal or no size limits and must have read access to entryUUID operational attribute of all contacts in the address book
+	// -- Sync LDAP bind user can be used if there are size limits on 'bind_dn' user in LDAP. 'sync_bind_dn' should have liberal or no size limits or time limits and must have read access to entryUUID operational attribute of all contacts in the address book
 	// 'sync_bind_dn'       	=> 'cn=carddavsync,ou=People,dc=example,dc=org',
 	// 'sync_bind_pass'     	=> '<secret>',
 	
