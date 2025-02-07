@@ -66,20 +66,29 @@ $config['card']['addressbook']['ldap']['global'] = [
 	'user_specific' 	=> false, // If this is true username placeholder can be used in applicable places
 	'writable'     	 	=> false,
 	
-  // -- The following placeholders are available to be used in search_filter
+  // -- The following placeholders are available to be used in 'base_dn' and 'search_filter'
   // %u  - Username sent by client for authentication
   
+	// -- Base DN to be used to search for contacts
 	'base_dn'       	=> 'ou=People,dc=example,dc=org',
 	
-	// -- If 'bind_dn' and 'bind_pass' are not provided below then LDAP connection using parameters provided in $config['auth']['ldap'] is used to obtain backend data. The bind user must have read access to entryUUID and modifyTimestamp operational attributes of all contacts in the address book additionally.
+	// LDAP filter to be used to search for contacts
+	'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
+	
+	// -- Bind user to search/read/write contacts. If 'bind_dn' and 'bind_pass' are not provided below 
+	// then LDAP connection using parameters provided in $config['auth']['ldap'] is used to obtain backend data. 
+	// The bind user must have read access to entryUUID, createTimestamp and modifyTimestamp operational attributes 
+	// of all contacts in the address book additionally.
 	'bind_dn'       	=> 'cn=admin,ou=People,dc=example,dc=org',
 	'bind_pass'     	=> '<secret>',
 	
-	// -- Sync LDAP bind user can be used if there are size limits on 'bind_dn' in LDAP. 'sync_bind_dn' should have liberal or no size limits and must have read access to entryUUID attribute of all contacts in the address book
-	// 'sync_bind_dn'       	=> 'cn=carddavsync,ou=People,dc=example,dc=org',
-	// 'sync_bind_pass'     	=> '<secret>',
+	// -- Sync LDAP bind user can be used if there are size limits on 'bind_dn' in LDAP. 'sync_bind_dn' should have 
+	// liberal or no size limits and must have read access to entryUUID, createTimestamp and modifyTimestamp 
+	// attribute of all contacts in the address book
+	// 'sync_bind_dn'       => 'cn=carddavsync,ou=People,dc=example,dc=org',
+	// 'sync_bind_pw'     	=> '<secret>',
 	
-	'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
+	'scope'         => 'list'   // search mode: sub|base|list
 	
 	// If writable is true then these fields need to be populated:
 	// LDAP_Object_Classes, required_fields, LDAP_rdn
@@ -229,15 +238,14 @@ $config['card']['addressbook']['ldap']['global'] = [
 																											'parameters' => [],                     
 																											'reverse_map_parameter_index' => ''
 																										]
-                                 ],
-	'scope'         => 'list'   // search mode: sub|base|list
+                                 ]
 ];
 
 $config['card']['addressbook']['ldap']['personal'] = [
 	'name'          	=> 'Personal Address Book',
   'description'     => 'Personal address book of the user',
   
-	// -- LDAP connection parameters if using 'bind_dn'
+	// -- LDAP connection parameters if using bind_dn or search_bind_dn below
   // 'host'         => '<hostname>',
   // 'port'          => 389,
   // 'use_tls'       => false,
@@ -248,20 +256,32 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	'user_specific' 	=> true, // If this is true username placeholder can be used in applicable places
 	'writable'     	 	=> true,
 	
-  // -- The following placeholders are available to be used in base_dn
+  // -- The following placeholders are available to be used in 'base_dn' and 'search_filter' below
   // %u  - Username sent by client for authentication
+  // %dn - DN as returned by address book search below
   
+	// -- Base DN to be used to search for contacts
+	// 'base_dn'       	=> 'ou=Address Book,%dn',
 	'base_dn'       	=> 'ou=Address Book,uid=%u,ou=People,dc=example,dc=org',
 	
-	// -- If 'bind_dn' and 'bind_pass' are not provided below then LDAP connection using parameters provided in $config['auth']['ldap'] is used to obtain backend data. The bind user must have read access to entryUUID and modifyTimestamp operational attributes of all contacts in the address book additionally.
+	// LDAP filter to be used to search for contacts	
+	'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
+	
+	// -- Bind user to search/read/write contacts. If 'bind_dn' and 'bind_pass' are not provided below 
+	// then LDAP connection using parameters provided in $config['auth']['ldap'] is used to obtain backend data. 
+	// The bind user must have read access to entryUUID, createTimestamp and modifyTimestamp operational attributes 
+	// of all contacts in the address book additionally.
 	// 'bind_dn'       	=> '',
 	// 'bind_pass'     => '',
 	
-	// -- Sync LDAP bind user can be used if there are size limits on 'bind_dn' user in LDAP. 'sync_bind_dn' should have liberal or no size limits or time limits and must have read access to entryUUID operational attribute of all contacts in the address book
+	// -- Sync LDAP bind user can be used if there are size limits on 'bind_dn' in LDAP. 'sync_bind_dn' should have 
+	// liberal or no size limits and must have read access to entryUUID, createTimestamp and modifyTimestamp 
+	// attribute of all contacts in the address book
 	// 'sync_bind_dn'       	=> 'cn=carddavsync,ou=People,dc=example,dc=org',
-	// 'sync_bind_pass'     	=> '<secret>',
+	// 'sync_bind_pw'     	=> '<secret>',
 	
-	'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
+	'scope'         => 'list'   // search mode: sub|base|list
+
 	// If writable is true then these fields need to be populated:
 	// LDAP_Object_Classes, required_fields, LDAP_rdn.
 	'LDAP_Object_Classes' => ['inetOrgPerson'], //First objectClass must be the structural objectClass.
@@ -409,6 +429,5 @@ $config['card']['addressbook']['ldap']['personal'] = [
 																											'parameters' => [],                     
 																											'reverse_map_parameter_index' => ''
 																										]
-                                 ],
-	'scope'         => 'list'   // search mode: sub|base|list
+                                 ]
 ];
