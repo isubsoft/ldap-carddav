@@ -29,7 +29,6 @@ $carddavBackend = new isubsoft\dav\CardDav\LDAP($config, $pdo, $authBackend);
 // We're assuming that the realm name is called 'SabreDAV'.
 $authBackend->setRealm('SabreDAV');
 
-
 // Setting up the directory tree //
 $nodes = [
     new Sabre\DAVACL\PrincipalCollection($principalBackend),
@@ -49,7 +48,7 @@ $aclPlugin->hideNodesFromListings = true;
 $server->addPlugin(new Sabre\DAV\Auth\Plugin($authBackend));
 $server->addPlugin($aclPlugin);
 $server->addPlugin(new Sabre\DAV\Browser\Plugin());
-$server->addPlugin(new isubsoft\dav\CardDav\CardDAVPlugin());
+$server->addPlugin(new Sabre\CardDAV\Plugin());
 $server->addPlugin(new Sabre\DAV\Sync\Plugin());
 
 

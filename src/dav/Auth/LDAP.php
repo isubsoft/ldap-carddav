@@ -35,6 +35,7 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
     public $userLdapConn = null;
 
     public $username = null;
+    public $userBackendId = null;
 
 
 
@@ -69,26 +70,6 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
         if($username == '' || $password == null)
         	return false;
         	
-				try 
-				{
-			    $query = 'SELECT user_id FROM '. $this->systemUsersTableName;
-			    $stmt = $this->pdo->prepare($query);
-			    $stmt->execute([]);
-			    
-		      while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-		          if(strtolower($username) == strtolower($row['user_id']))
-							{
-								error_log("A reserved username was used to authenticate. Rejected.");
-								return false;
-							}
-
-							continue;
-		      }
-			    
-			  } catch (\Throwable $th) {
-			        error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
-			  }
-        
         $this->username = $username;
         
         if(($this->config['auth']['ldap']['search_bind_dn'] != '') && ($this->config['auth']['ldap']['search_bind_pw'] != ''))
@@ -104,22 +85,51 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
                 $ldaptree = ($this->config['auth']['ldap']['search_base_dn'] !== '') ? $this->config['auth']['ldap']['search_base_dn'] : Utility::replacePlaceholders($this->config['auth']['ldap']['base_dn'], ['%u' => $username]);
                 $filter = Utility::replacePlaceholders($this->config['auth']['ldap']['search_filter'], ['%u' => $username]);
 
-                $data = Utility::LdapQuery($ldapBindConn, $ldaptree, $filter, [], strtolower($this->config['auth']['ldap']['scope']));
+                $data = Utility::LdapQuery($ldapBindConn, $ldaptree, $filter, ['entryuuid'], strtolower($this->config['auth']['ldap']['scope']));
+
+                if(empty($data))
+                {
+                	error_log("Could not execute backend search: ".__METHOD__.", ".$th->getMessage());
+                	throw new ServiceUnavailable();
+                }
                 
                 if($data['count'] == 1)
                 {
+		 							if(isset($data[0]['entryuuid'][0]))
+		       					$this->userBackendId = $data[0]['entryuuid'][0];
+                		
                     $bindDn = Utility::replacePlaceholders($this->config['auth']['ldap']['bind_dn'], ['%dn' => $data[0]['dn'], '%u' => $username]);
 
                     try {
                         $ldapUserBind = ldap_bind($ldapBindConn, $bindDn, $password);
+                        
                         if(!$ldapUserBind)
-                        {
-                            return false;
-                        }
+                        	return false;
                     } catch (\Throwable $th) {
                         error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
-                        throw new ServiceUnavailable($th->getMessage());
+                        throw new ServiceUnavailable();
                     }
+                    
+										try 
+										{
+											$query = 'SELECT user_id FROM '. $this->systemUsersTableName;
+											$stmt = $this->pdo->prepare($query);
+											$stmt->execute([]);
+											
+											while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+													if(strtolower($this->userBackendId) == strtolower($row['user_id']))
+													{
+														error_log("A reserved username was used to authenticate. Rejected.");
+														return false;
+													}
+
+													continue;
+											}
+											
+										} catch (\Throwable $th) {
+												error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+												throw new ServiceUnavailable();
+										}
 
                     $this->userLdapConn = $ldapBindConn;
                     return true;
@@ -136,6 +146,38 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
 
             if($ldapBindConn)
             {
+                $data = Utility::LdapQuery($ldapBindConn, $bindDn, null, ['entryuuid'], 'base');
+                
+                if(empty($data))
+                {
+                	error_log("Could not execute backend search: ".__METHOD__.", ".$th->getMessage());
+                	throw new ServiceUnavailable();
+                }
+	 							
+	 							if(isset($data[0]['entryuuid'][0]))
+         					$this->userBackendId = $data[0]['entryuuid'][0];
+         					
+								try 
+								{
+									$query = 'SELECT user_id FROM '. $this->systemUsersTableName;
+									$stmt = $this->pdo->prepare($query);
+									$stmt->execute([]);
+									
+									while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+											if(strtolower($this->userBackendId) == strtolower($row['user_id']))
+											{
+												error_log("A reserved username was used to authenticate. Rejected.");
+												return false;
+											}
+
+											continue;
+									}
+									
+								} catch (\Throwable $th) {
+										error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+										throw new ServiceUnavailable();
+								}
+	 								
                 $this->userLdapConn = $ldapBindConn;
                 return true;
             }
