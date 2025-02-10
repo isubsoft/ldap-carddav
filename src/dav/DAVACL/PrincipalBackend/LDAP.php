@@ -80,7 +80,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
     {
     		$principals = [];
     		
-        if($this->config['principal']['ldap']['search_bind_dn'] == '' && $this->config['principal']['ldap']['search_bind_pw'] == '')
+        if(!isset($this->config['principal']['ldap']['search_bind_dn']) || $this->config['principal']['ldap']['search_bind_dn'] == '')
         {  
             $principals[] = ['uri' => $prefixPath. '/' . $this->authBackend->username];
             return $principals;
@@ -135,7 +135,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         $principalId = basename($path);
         $principal = [];
 
-        if($this->config['principal']['ldap']['search_bind_dn'] == '' && $this->config['principal']['ldap']['search_bind_pw'] == '')
+        if(!isset($this->config['principal']['ldap']['search_bind_dn']) || $this->config['principal']['ldap']['search_bind_dn'] == '')
         {  
             if(strtolower($principalId) == strtolower($this->authBackend->username))
             	$principal = [ 'id'=> $principalId, 'uri' => $path];
