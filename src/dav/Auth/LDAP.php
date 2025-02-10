@@ -97,6 +97,8 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
                 {
 		 							if(isset($data[0]['entryuuid'][0]))
 		       					$this->userBackendId = $data[0]['entryuuid'][0];
+		       				else
+										error_log("Could not read required operational attributes in " . __METHOD__ . " at line " . __LINE__);
                 		
                     $bindDn = Utility::replacePlaceholders($this->config['auth']['ldap']['bind_dn'], ['%dn' => $data[0]['dn'], '%u' => $username]);
 
@@ -156,6 +158,8 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
 	 							
 	 							if(isset($data[0]['entryuuid'][0]))
          					$this->userBackendId = $data[0]['entryuuid'][0];
+         				else
+									error_log("Could not read required operational attributes in " . __METHOD__ . " at line " . __LINE__);
          					
 								try 
 								{
