@@ -19,7 +19,7 @@ $config['auth']['ldap'] = [
   'base_dn'       => 'ou=People,dc=example,dc=org',
   'bind_dn'       => '%dn',
   'bind_pass'     => '%p',
-  // It's possible to bind for an individual address book
+  // It's possible to bind to a DN from a search result
   // The login name is used to search for the DN to bind with
   'search_base_dn' => '',
   'search_filter'  => '(&(objectclass=inetOrgPerson)(uid=%u))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
@@ -36,15 +36,15 @@ $config['principal']['ldap'] = [
   'ldap_version'  => 3,       // using LDAPv3
   'network_timeout' => 10,    // The timeout (in seconds) for connect + bind attempts. This is only supported in PHP >= 5.3.0 with OpenLDAP 2.x
   
-  // -- The following placeholders are available to be used in principal_filter
+  // -- The following placeholders are available to be used in 'search_filter'
   // %u  - Username sent by client for authentication
   
   'base_dn'       => 'ou=People,dc=example,dc=org',
-  // It's possible to bind for an individual address book
+  // It's possible to search for principal DN(s)
   // The login name is used to search for the DN to bind with
   'search_base_dn' => '',
   'search_filter'  => '(&(objectclass=inetOrgPerson)(uid=*))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))' - Used to search for all valid principals
-  // DN and password to bind as before searching for bind DN, if anonymous search is not allowed
+  // DN and password to bind as before searching for pricipal DN(s), if anonymous search is not allowed
   'search_bind_dn' => 'cn=admin,ou=People,dc=example,dc=org',
   'search_bind_pw' => '<secret>',
   'scope' => 'list', // search mode: sub|base|list

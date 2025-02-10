@@ -80,14 +80,14 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
     {
     		$principals = [];
     		
-        if($this->config['principal']['ldap']['search_bind_dn'] == '' && $this->config['principal']['ldap']['search_bind_pw'] == '')
+        if(!isset($this->config['principal']['ldap']['search_bind_dn']) || $this->config['principal']['ldap']['search_bind_dn'] == '')
         {  
             $principals[] = ['uri' => $prefixPath. '/' . $this->authBackend->username];
             return $principals;
         }
 
         $bindDn = $this->config['principal']['ldap']['search_bind_dn'];
-        $bindPass = $this->config['principal']['ldap']['search_bind_pw'];
+        $bindPass = (isset($this->config['principal']['ldap']['search_bind_pw']))?$this->config['principal']['ldap']['search_bind_pw']:null;
         $ldapConn = Utility::LdapBindConnection(['bindDn' => $bindDn, 'bindPass' => $bindPass], $this->config['principal']['ldap']);
   
         $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
@@ -133,15 +133,18 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
     function getPrincipalByPath($path)
     {
         $principalId = basename($path);
+        $principal = [];
 
-        if($this->config['principal']['ldap']['search_bind_dn'] == '' && $this->config['principal']['ldap']['search_bind_pw'] == '')
+        if(!isset($this->config['principal']['ldap']['search_bind_dn']) || $this->config['principal']['ldap']['search_bind_dn'] == '')
         {  
-            $principal = [ 'id'=> $principalId, 'uri' => $path];
+            if(strtolower($principalId) == strtolower($this->authBackend->username))
+            	$principal = [ 'id'=> $principalId, 'uri' => $path];
+            	
             return $principal;
         }
 
         $bindDn = $this->config['principal']['ldap']['search_bind_dn'];
-        $bindPass = $this->config['principal']['ldap']['search_bind_pw'];
+        $bindPass = (isset($this->config['principal']['ldap']['search_bind_pw']))?$this->config['principal']['ldap']['search_bind_pw']:null;
         $ldapConn = Utility::LdapBindConnection(['bindDn' => $bindDn, 'bindPass' => $bindPass], $this->config['principal']['ldap']);
           
         $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
