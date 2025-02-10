@@ -35,7 +35,6 @@ $nodes = [
     new Sabre\CardDAV\AddressBookRoot($principalBackend, $carddavBackend)
 ];
 
-
 // The object tree needs in turn to be passed to the server class
 $server = new Sabre\DAV\Server($nodes);
 $server->setBaseUri($baseUri);
@@ -50,7 +49,6 @@ $server->addPlugin($aclPlugin);
 $server->addPlugin(new Sabre\DAV\Browser\Plugin());
 $server->addPlugin(new Sabre\CardDAV\Plugin());
 $server->addPlugin(new Sabre\DAV\Sync\Plugin());
-
 
 // And off we go!
 $server->exec();
