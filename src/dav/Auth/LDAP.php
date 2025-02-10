@@ -72,10 +72,10 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
         	
         $this->username = $username;
         
-        if(($this->config['auth']['ldap']['search_bind_dn'] != '') && ($this->config['auth']['ldap']['search_bind_pw'] != ''))
+        if(isset($this->config['auth']['ldap']['search_bind_dn']) && $this->config['auth']['ldap']['search_bind_dn'] != '')
         {
             $bindDn = $this->config['auth']['ldap']['search_bind_dn'];
-            $bindPass = $this->config['auth']['ldap']['search_bind_pw'];
+            $bindPass = (isset($this->config['auth']['ldap']['search_bind_pw']))?$this->config['auth']['ldap']['search_bind_pw']:null;
 
             // binding to ldap server
             $ldapBindConn = Utility::LdapBindConnection(['bindDn' => $bindDn, 'bindPass' => $bindPass], $this->config['auth']['ldap']);
