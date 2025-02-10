@@ -133,10 +133,13 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
     function getPrincipalByPath($path)
     {
         $principalId = basename($path);
+        $principal = [];
 
         if($this->config['principal']['ldap']['search_bind_dn'] == '' && $this->config['principal']['ldap']['search_bind_pw'] == '')
         {  
-            $principal = [ 'id'=> $principalId, 'uri' => $path];
+            if(strtolower($principalId) == strtolower($this->authBackend->username))
+            	$principal = [ 'id'=> $principalId, 'uri' => $path];
+            	
             return $principal;
         }
 
