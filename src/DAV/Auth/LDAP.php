@@ -3,9 +3,9 @@
 * Copyright 2023-2025 ISub Softwares (OPC) Private Limited
 ************************************************************/
 
-namespace isubsoft\dav\Auth;
+namespace ISubsoft\DAV\Auth;
 
-use isubsoft\dav\Utility\LDAP as Utility;
+use ISubsoft\DAV\Utility\LDAP as Utility;
 use \Sabre\DAV\Exception\ServiceUnavailable;
 
 class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
@@ -82,7 +82,7 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
             
             // verify binding
             if ($ldapBindConn) {
-                $ldaptree = ($this->config['auth']['ldap']['search_base_dn'] !== '') ? $this->config['auth']['ldap']['search_base_dn'] : Utility::replacePlaceholders($this->config['auth']['ldap']['base_dn'], ['%u' => $username]);
+                $ldaptree = (isset($this->config['auth']['ldap']['search_base_dn']) && $this->config['auth']['ldap']['search_base_dn'] !== '')?$this->config['auth']['ldap']['search_base_dn']:$this->config['auth']['ldap']['base_dn'];
                 $filter = Utility::replacePlaceholders($this->config['auth']['ldap']['search_filter'], ['%u' => $username]);
 
                 $data = Utility::LdapQuery($ldapBindConn, $ldaptree, $filter, ['entryuuid'], strtolower($this->config['auth']['ldap']['scope']));

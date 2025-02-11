@@ -3,8 +3,8 @@
 * Copyright 2023-2025 ISub Softwares (OPC) Private Limited
 ************************************************************/
 
-namespace isubsoft\Vobject;
-use isubsoft\dav\Utility\LDAP as Utility;
+namespace ISubsoft\VObject;
+use ISubsoft\DAV\Utility\LDAP as Utility;
 
 class Reader extends \Sabre\VObject\Reader{
 

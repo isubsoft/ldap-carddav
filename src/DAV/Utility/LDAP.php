@@ -3,7 +3,7 @@
 * Copyright 2023-2025 ISub Softwares (OPC) Private Limited
 ************************************************************/
 
-namespace isubsoft\dav\Utility;
+namespace ISubsoft\DAV\Utility;
 
 use \Sabre\DAV\Exception\ServiceUnavailable;
 

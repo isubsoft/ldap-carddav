@@ -3,10 +3,10 @@
 * Copyright 2023-2025 ISub Softwares (OPC) Private Limited
 ************************************************************/
 
-namespace isubsoft\dav\Rules;
+namespace ISubsoft\DAV\Rules;
 
-use isubsoft\Vobject\Reader as Reader;
-use isubsoft\dav\Utility\LDAP as Utility;
+use ISubsoft\VObject\Reader as Reader;
+use ISubsoft\DAV\Utility\LDAP as Utility;
 
 class LDAP {
 
