@@ -49,7 +49,7 @@ $config['principal']['ldap'] = [
   'search_bind_pw' => '<secret>',
   'scope' => 'list', // search mode: sub|base|list
 
-	// Principal properties => LDAP user field map
+	// Principal property => LDAP user attribute field map
   'fieldMap' => ['id' => 'uid', 'displayname' => 'cn', 'mail' => 'mail']
 ];
 
