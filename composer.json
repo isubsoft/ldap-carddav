@@ -1,14 +1,14 @@
 { 
     "name" : "isubsoft/dav",
-    "description" : "This is the ISubsoft WebDAV server",
+    "description" : "This is a ISubsoft WebDAV server",
     "require" : {
         "sabre/dav" : "~4.0.3",
         "sabre/vobject" : "~4.5"
     },
     "autoload" : {
         "psr-4" : {
-            "isubsoft\\dav\\" : "src/dav",
-            "isubsoft\\Vobject\\" : "src/Vobject"
+            "ISubsoft\\DAV\\" : "src/DAV",
+            "ISubsoft\\VObject\\" : "src/VObject"
         }
     }
 }

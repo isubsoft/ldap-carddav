@@ -22,9 +22,9 @@ require_once 'src/App/Bootstrap.php';
 require_once 'vendor/autoload.php';
 
 // Backends
-$authBackend = new isubsoft\dav\Auth\LDAP($config, $pdo);
-$principalBackend = new isubsoft\dav\DAVACL\PrincipalBackend\LDAP($config, $authBackend);
-$carddavBackend = new isubsoft\dav\CardDav\LDAP($config, $pdo, $authBackend);
+$authBackend = new ISubsoft\DAV\Auth\LDAP($config, $pdo);
+$principalBackend = new ISubsoft\DAV\DAVACL\PrincipalBackend\LDAP($config, $authBackend);
+$carddavBackend = new ISubsoft\DAV\CardDAV\LDAP($config, $pdo, $authBackend);
 
 // We're assuming that the realm name is called 'SabreDAV'.
 $authBackend->setRealm('SabreDAV');
@@ -32,7 +32,7 @@ $authBackend->setRealm('SabreDAV');
 // Setting up the directory tree //
 $nodes = [
     new Sabre\DAVACL\PrincipalCollection($principalBackend),
-    new Sabre\CardDAV\AddressBookRoot($principalBackend, $carddavBackend)
+    new ISubsoft\DAV\CardDAV\AddressBookRoot($principalBackend, $carddavBackend)
 ];
 
 // The object tree needs in turn to be passed to the server class

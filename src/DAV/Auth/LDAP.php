@@ -3,9 +3,9 @@
 * Copyright 2023-2025 ISub Softwares (OPC) Private Limited
 ************************************************************/
 
-namespace isubsoft\dav\Auth;
+namespace ISubsoft\DAV\Auth;
 
-use isubsoft\dav\Utility\LDAP as Utility;
+use ISubsoft\DAV\Utility\LDAP as Utility;
 use \Sabre\DAV\Exception\ServiceUnavailable;
 
 class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {

@@ -3,11 +3,11 @@
 * Copyright 2023-2025 ISub Softwares (OPC) Private Limited
 ************************************************************/
 
-namespace isubsoft\dav\CardDav;
+namespace ISubsoft\DAV\CardDAV;
 
-use isubsoft\dav\Utility\LDAP as Utility;
-use isubsoft\dav\Rules\LDAP as Rules;
-use isubsoft\Vobject\Reader as Reader;
+use ISubsoft\DAV\Utility\LDAP as Utility;
+use ISubsoft\DAV\Rules\LDAP as Rules;
+use ISubsoft\VObject\Reader as Reader;
 use \Sabre\DAV\Exception as SabreDAVException;
 
 class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\CardDAV\Backend\SyncSupport {

@@ -3,9 +3,9 @@
 * Copyright 2023-2025 ISub Softwares (OPC) Private Limited
 ************************************************************/
 
-namespace isubsoft\dav\DAVACL\PrincipalBackend;
+namespace ISubsoft\DAV\DAVACL\PrincipalBackend;
 
-use isubsoft\dav\Utility\LDAP as Utility;
+use ISubsoft\DAV\Utility\LDAP as Utility;
 
 class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
 
