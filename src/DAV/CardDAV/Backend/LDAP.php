@@ -98,6 +98,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     function getAddressBooksForUser($principalUri)
     {
     		$principalId = basename($principalUri);
+    		
+    		if(strtolower($principalId) != strtolower($this->authBackend->username))
+    			throw new SabreDAVException\Forbidden("Not allowed");
+          			
         $addressBooks = [];
         
 				try 
@@ -162,9 +166,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
               
           	if($addressBookConfig['user_specific'] == true)
           	{
-          		if(strtolower($principalId) != strtolower($this->authBackend->username))
-          			throw new SabreDAVException\Forbidden("Not allowed");
-							
 		          if(isset($addressBookConfig['search_base_dn']) && $addressBookConfig['search_base_dn'] != '' && isset($addressBookConfig['search_filter']) && $addressBookConfig['search_filter'] != '')
 		          {
 		          	$filter = Utility::replacePlaceholders($addressBookConfig['search_filter'], ['%u' => $principalId]);
