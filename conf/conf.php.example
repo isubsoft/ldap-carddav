@@ -88,10 +88,6 @@ $config['card']['addressbook']['ldap']['global'] = [
 	'bind_dn'       	=> 'cn=admin,ou=People,dc=example,dc=org',
 	'bind_pass'     	=> '<secret>',
 	
-  // It's possible to find the base of an address book DN from a search result. Useful only if the address book is user specific.
-  'search_base_dn' => '',
-  'search_filter'  => '(&(objectclass=inetOrgPerson)(uid=%u))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
-	
 	// -- Sync LDAP bind user can be used if there are size limits on 'bind_dn' in LDAP. 'sync_bind_dn' should have 
 	// liberal or no size limits and must have read access to entryUUID, createTimestamp and modifyTimestamp 
 	// attribute of all contacts in the address book
@@ -99,6 +95,11 @@ $config['card']['addressbook']['ldap']['global'] = [
 	// 'sync_bind_pw'     	=> '<secret>',
 	
 	'scope'         => 'list',   // search mode: sub|base|list
+	
+  // It's possible to find the base of an address book DN from a search result. Useful only if the address book is user specific.
+  'search_base_dn' => 'ou=People,dc=example,dc=org',
+  'search_filter'  => '(&(objectclass=inetOrgPerson)(uid=%u))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
+	'search_scope'   => 'list',   // search mode: sub|base|list
 	
 	// If writable is true then these fields need to be populated:
 	// LDAP_Object_Classes, required_fields, LDAP_rdn
@@ -282,10 +283,6 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	// 'bind_dn'       	=> '',
 	// 'bind_pass'     => '',
 	
-  // It's possible to find the base of an address book DN from a search result. Useful only if the address book is user specific.
-  'search_base_dn' => 'ou=People,dc=example,dc=org',
-  'search_filter'  => '(&(objectclass=inetOrgPerson)(uid=%u))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
-	
 	// -- Sync LDAP bind user can be used if there are size limits on 'bind_dn' in LDAP. 'sync_bind_dn' should have 
 	// liberal or no size limits and must have read access to entryUUID, createTimestamp and modifyTimestamp 
 	// attribute of all contacts in the address book
@@ -293,6 +290,11 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	// 'sync_bind_pw'     	=> '<secret>',
 	
 	'scope'         => 'list',   // search mode: sub|base|list
+	
+  // It's possible to find the base of an address book DN from a search result. Useful only if the address book is user specific.
+  'search_base_dn' => 'ou=People,dc=example,dc=org',
+  'search_filter'  => '(&(objectclass=inetOrgPerson)(uid=%u))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
+	'search_scope'   => 'list',   // search mode: sub|base|list
 
 	// If writable is true then these fields need to be populated:
 	// LDAP_Object_Classes, required_fields, LDAP_rdn.

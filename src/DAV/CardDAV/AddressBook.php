@@ -17,4 +17,15 @@ class AddressBook extends \Sabre\CardDAV\AddressBook
 				
 			return parent::getACL();
 	}
+	
+  public function getChildACL()
+  {
+      return [
+          [
+              'privilege' => '{DAV:}all',
+				      'principal' => '{DAV:}owner',
+              'protected' => true,
+          ],
+      ];
+  }
 }

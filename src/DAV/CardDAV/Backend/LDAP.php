@@ -46,14 +46,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     public $authBackend = null;
 
-    /**
-     * Principal user
-     *
-     * @var string
-     */    
-    public $principalUser = null;
-    
-    private $addressbook = null;
+    private $addressbook = [];
     
     /**
      * System user
@@ -103,8 +96,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      * @return array
      */
     function getAddressBooksForUser($principalUri)
-    {      
-        $this->principalUser = basename($principalUri);
+    {
+    		$principalId = basename($principalUri);
         $addressBooks = [];
         
 				try 
@@ -141,8 +134,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				        error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
 				        return [];
 				  }
-		    
-            $addressBookDn = Utility::replacePlaceholders($addressBookConfig['base_dn'], ['%u' => $this->authBackend->username ]);
+
+          	$addressBookDn = $addressBookConfig['base_dn'];
             $addressBookSyncToken = time();
                
             $addressBooks[] = [
@@ -157,23 +150,40 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             
 						if(isset($addressBookConfig['bind_dn']) && $addressBookConfig['bind_dn'] != '')
             {
-            	if(isset($addressBookConfig['bind_pass']) && $addressBookConfig['bind_pass'] != '')
-		          {
-		              $this->addressbook[$addressBookId]['LdapConnection'] = Utility::LdapBindConnection(['bindDn' => $addressBookConfig['bind_dn'], 'bindPass' => $addressBookConfig['bind_pass']], $addressBookConfig);
-		          }
-		          else
-		          {
-		              $this->addressbook[$addressBookId]['LdapConnection'] = Utility::LdapBindConnection(['bindDn' => $addressBookConfig['bind_dn'], 'bindPass' => null], $addressBookConfig);
-		          }
+		        	$this->addressbook[$addressBookId]['LdapConnection'] = Utility::LdapBindConnection(['bindDn' => $addressBookConfig['bind_dn'], 'bindPass' => isset($addressBookConfig['bind_pass'])?$addressBookConfig['bind_pass']:null], $addressBookConfig);
             }
+            else if($addressBookConfig['user_specific'] == true)
+              $this->addressbook[$addressBookId]['LdapConnection'] = $this->authBackend->userLdapConn;
             else
             {
-            	if($addressBookConfig['user_specific'] == true)
-            		$addressBookDn = Utility::replacePlaceholders($addressBookConfig['base_dn'], ['%u' => $this->authBackend->username ]);
-            		
-              $this->addressbook[$addressBookId]['LdapConnection'] = $this->authBackend->userLdapConn;
+				      error_log("No available connections to backend for address book - '" . $addressBookId . "'." . __METHOD__ . " at line no " . __LINE__ );
+				      continue;
             }
-
+              
+          	if($addressBookConfig['user_specific'] == true)
+          	{
+          		if(strtolower($principalId) != strtolower($this->authBackend->username))
+          			throw new SabreDAVException\Forbidden("Not allowed");
+							
+		          if(isset($addressBookConfig['search_base_dn']) && $addressBookConfig['search_base_dn'] != '' && isset($addressBookConfig['search_filter']) && $addressBookConfig['search_filter'] != '')
+		          {
+		          	$filter = Utility::replacePlaceholders($addressBookConfig['search_filter'], ['%u' => $principalId]);
+		           	$data = Utility::LdapQuery($this->addressbook[$addressBookId]['LdapConnection'], $addressBookConfig['search_base_dn'], $filter, ['dn'], strtolower($addressBookConfig['search_scope']));
+		          	
+                if(!empty($data) && $data['count'] === 1)
+                {
+                  $addressBookDn = Utility::replacePlaceholders($addressBookConfig['base_dn'], ['%u' => $principalId, '%dn' => $data[0]['dn']]);
+                }
+                else
+                {
+						      error_log("Address book search returned no result or more than one result " . __METHOD__ . " at line no " . __LINE__ . " for address book id - " . $addressBookId);
+						      continue;
+                }
+		          }
+		          else
+		          	$addressBookDn = Utility::replacePlaceholders($addressBookConfig['base_dn'], ['%u' => $principalId]);
+          	}
+          	
             $this->addressbook[$addressBookId]['config'] = $addressBookConfig;
             $this->addressbook[$addressBookId]['addressbookDn'] = $addressBookDn;
             $this->addressbook[$addressBookId]['syncToken'] = $addressBookSyncToken;
@@ -437,7 +447,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                             {
                                 $filter = '(&'.$addressBookConfig['filter']. '(entryuuid=' .$backendId. '))'; 
                         
-                                $data = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, [], strtolower($addressBookConfig['scope']));
+                                $data = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, ['dn'], strtolower($addressBookConfig['scope']));
                                 
                                 if( !empty($data) && $data['count'] > 0)
                                 {
