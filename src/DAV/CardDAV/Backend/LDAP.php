@@ -3,7 +3,7 @@
 * Copyright 2023-2025 ISub Softwares (OPC) Private Limited
 ************************************************************/
 
-namespace ISubsoft\DAV\CardDAV;
+namespace ISubsoft\DAV\CardDAV\Backend;
 
 use ISubsoft\DAV\Utility\LDAP as Utility;
 use ISubsoft\DAV\Rules\LDAP as Rules;

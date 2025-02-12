@@ -22,9 +22,9 @@ require_once 'src/App/Bootstrap.php';
 require_once 'vendor/autoload.php';
 
 // Backends
-$authBackend = new ISubsoft\DAV\Auth\LDAP($config, $pdo);
+$authBackend = new ISubsoft\DAV\Auth\Backend\LDAP($config, $pdo);
 $principalBackend = new ISubsoft\DAV\DAVACL\PrincipalBackend\LDAP($config, $authBackend);
-$carddavBackend = new ISubsoft\DAV\CardDAV\LDAP($config, $pdo, $authBackend);
+$carddavBackend = new ISubsoft\DAV\CardDAV\Backend\LDAP($config, $pdo, $authBackend);
 
 // We're assuming that the realm name is called 'SabreDAV'.
 $authBackend->setRealm('SabreDAV');
