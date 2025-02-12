@@ -11,17 +11,17 @@ $config['auth']['ldap'] = [
   'ldap_version'  => 3,       // using LDAPv3
   'network_timeout' => 10,    // The timeout (in seconds) for connect + bind attempts. This is only supported in PHP >= 5.3.0 with OpenLDAP 2.x
   
-  // -- The following placeholders are available to be used in bind_dn, bind_pass and search_filter
+  // -- The following placeholders are available to be used in bind_dn, bind_pass and search_filter as applicable
   // %u  - Username sent by client for authentication
   // %p  - Password sent by client for authentication
   // %dn - DN as returned by LDAP search for bind authentication
   
-  'base_dn'       => 'ou=People,dc=example,dc=org',
+  'base_dn'       => 'ou=People,dc=example,dc=org', // Default base DN for searches
   'bind_dn'       => '%dn',
   'bind_pass'     => '%p',
+  
   // It's possible to bind to a DN from a search result
-  // The login name is used to search for the DN to bind with
-  'search_base_dn' => '',
+  'search_base_dn' => '', // Provide a separate base DN for search if different from 'base_dn' above else leave blank.
   'search_filter'  => '(&(objectclass=inetOrgPerson)(uid=%u))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
   // DN and password to bind as before searching for bind DN, if anonymous search is not allowed
   'search_bind_dn' => 'cn=admin,ou=People,dc=example,dc=org',
@@ -39,18 +39,24 @@ $config['principal']['ldap'] = [
   // -- The following placeholders are available to be used in 'search_filter'
   // %u  - Username sent by client for authentication
   
-  'base_dn'       => 'ou=People,dc=example,dc=org',
+  'base_dn'       => 'ou=People,dc=example,dc=org', // Default base DN for searches
+  
   // It's possible to search for principal DN(s)
-  // The login name is used to search for the DN to bind with
-  'search_base_dn' => '',
-  'search_filter'  => '(&(objectclass=inetOrgPerson)(uid=*))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))' - Used to search for all valid principals
+  'search_base_dn' => '', // Provide a separate base DN for search if different from 'base_dn' above else leave blank.
+  'search_filter'  => '(&(objectclass=inetOrgPerson)(uid=*))',   // Filter criteria for valid principals.
+  
   // DN and password to bind as before searching for pricipal DN(s), if anonymous search is not allowed
   'search_bind_dn' => 'cn=admin,ou=People,dc=example,dc=org',
   'search_bind_pw' => '<secret>',
   'scope' => 'list', // search mode: sub|base|list
 
 	// Principal property => LDAP user attribute field map
-  'fieldMap' => ['id' => 'uid', 'displayname' => 'cn', 'mail' => 'mail']
+  'fieldMap' => [	'id' => 'uid', 					// 'id' is the username which is used by the principal (client) to authenticate.
+  															 					// Make sure it is mapped to an appropriate user attribute in LDAP which 
+  															 					// is unique to the user as per the search criteria above.
+  								'displayname' => 'cn', 	// 'displayname' is a commonly used name of the principal.
+  								'mail' => 'mail' 				// 'mail' is an email id of the principal.
+  							]
 ];
 
 $config['card']['addressbook']['ldap']['global'] = [
@@ -66,18 +72,18 @@ $config['card']['addressbook']['ldap']['global'] = [
 	'user_specific' 	=> false, // If this is true username placeholder can be used in applicable places
 	'writable'     	 	=> false,
 	
-  // -- The following placeholders are available to be used in 'base_dn' and 'search_filter'
+  // -- The following placeholders are available to be used in 'base_dn' and 'search_filter' below as applicable
   // %u  - Username sent by client for authentication
+  // %dn - DN as returned by LDAP search for address book DN
   
-	// -- Base DN to be used to search for contacts
-	'base_dn'       	=> 'ou=People,dc=example,dc=org',
+	'base_dn'       	=> 'ou=People,dc=example,dc=org', // Base DN for contact search
 	
 	// LDAP filter to be used to search for contacts
 	'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
 	
-	// -- Bind user to search/read/write contacts. If 'bind_dn' and 'bind_pass' are not provided below 
+	// -- Bind user for search/read/write contacts. If 'bind_dn' and 'bind_pass' are not provided below 
 	// then LDAP connection using parameters provided in $config['auth']['ldap'] is used to obtain backend data. 
-	// The bind user must have read access to entryUUID, createTimestamp and modifyTimestamp operational attributes 
+	// This bind user must have read access to entryUUID, createTimestamp and modifyTimestamp operational attributes 
 	// of all contacts in the address book additionally.
 	'bind_dn'       	=> 'cn=admin,ou=People,dc=example,dc=org',
 	'bind_pass'     	=> '<secret>',
@@ -89,6 +95,11 @@ $config['card']['addressbook']['ldap']['global'] = [
 	// 'sync_bind_pw'     	=> '<secret>',
 	
 	'scope'         => 'list',   // search mode: sub|base|list
+	
+  // It's possible to find the base of an address book DN from a search result. Useful only if the address book is user specific.
+  'search_base_dn' => 'ou=People,dc=example,dc=org',
+  'search_filter'  => '(&(objectclass=inetOrgPerson)(uid=%u))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
+	'search_scope'   => 'list',   // search mode: sub|base|list
 	
 	// If writable is true then these fields need to be populated:
 	// LDAP_Object_Classes, required_fields, LDAP_rdn
@@ -256,20 +267,18 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	'user_specific' 	=> true, // If this is true username placeholder can be used in applicable places
 	'writable'     	 	=> true,
 	
-  // -- The following placeholders are available to be used in 'base_dn' and 'search_filter' below
+  // -- The following placeholders are available to be used in 'base_dn' and 'search_filter' below as applicable
   // %u  - Username sent by client for authentication
-  // %dn - DN as returned by address book search below
+  // %dn - DN as returned by LDAP search for address book DN
   
-	// -- Base DN to be used to search for contacts
-	// 'base_dn'       	=> 'ou=Address Book,%dn',
-	'base_dn'       	=> 'ou=Address Book,uid=%u,ou=People,dc=example,dc=org',
+	'base_dn'       	=> 'ou=Address Book,%dn', // Base DN for contact search
 	
 	// LDAP filter to be used to search for contacts	
 	'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
 	
-	// -- Bind user to search/read/write contacts. If 'bind_dn' and 'bind_pass' are not provided below 
+	// -- Bind user for search/read/write contacts. If 'bind_dn' and 'bind_pass' are not provided below 
 	// then LDAP connection using parameters provided in $config['auth']['ldap'] is used to obtain backend data. 
-	// The bind user must have read access to entryUUID, createTimestamp and modifyTimestamp operational attributes 
+	// This bind user must have read access to entryUUID, createTimestamp and modifyTimestamp operational attributes 
 	// of all contacts in the address book additionally.
 	// 'bind_dn'       	=> '',
 	// 'bind_pass'     => '',
@@ -281,6 +290,11 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	// 'sync_bind_pw'     	=> '<secret>',
 	
 	'scope'         => 'list',   // search mode: sub|base|list
+	
+  // It's possible to find the base of an address book DN from a search result. Useful only if the address book is user specific.
+  'search_base_dn' => 'ou=People,dc=example,dc=org',
+  'search_filter'  => '(&(objectclass=inetOrgPerson)(uid=%u))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
+	'search_scope'   => 'list',   // search mode: sub|base|list
 
 	// If writable is true then these fields need to be populated:
 	// LDAP_Object_Classes, required_fields, LDAP_rdn.

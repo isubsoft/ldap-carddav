@@ -3,28 +3,22 @@
 * Copyright 2023-2025 ISub Softwares (OPC) Private Limited
 ************************************************************/
 
-/*
+/********************************************************************************
+*
+* WebDAV server
+*
+* Provides CardDAV support for contacts stored in LDAP
+*
+*********************************************************************************/
 
-Addressbook/CardDAV server
-
-This server features CardDAV support for LDAP as contacts backend
-
-*/
-
-// settings
-
-// Make sure this setting is turned on and reflect the root url for your WebDAV server.
-// This can be for example the root / or a complete path to your server script
-$baseUri = '/';
-
-// Autoloader
+// Loader
 require_once 'src/App/Bootstrap.php';
 require_once 'vendor/autoload.php';
 
 // Backends
-$authBackend = new ISubsoft\DAV\Auth\LDAP($config, $pdo);
+$authBackend = new ISubsoft\DAV\Auth\Backend\LDAP($config, $pdo);
 $principalBackend = new ISubsoft\DAV\DAVACL\PrincipalBackend\LDAP($config, $authBackend);
-$carddavBackend = new ISubsoft\DAV\CardDAV\LDAP($config, $pdo, $authBackend);
+$carddavBackend = new ISubsoft\DAV\CardDAV\Backend\LDAP($config, $pdo, $authBackend);
 
 // We're assuming that the realm name is called 'SabreDAV'.
 $authBackend->setRealm('SabreDAV');
@@ -34,6 +28,12 @@ $nodes = [
     new Sabre\DAVACL\PrincipalCollection($principalBackend),
     new ISubsoft\DAV\CardDAV\AddressBookRoot($principalBackend, $carddavBackend)
 ];
+
+// settings
+
+// Make sure this setting is turned on and reflect the root url for your WebDAV server.
+// This can be for example the root / or a complete path to your server script
+$baseUri = '/';
 
 // The object tree needs in turn to be passed to the server class
 $server = new Sabre\DAV\Server($nodes);

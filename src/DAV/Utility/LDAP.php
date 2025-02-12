@@ -47,12 +47,9 @@ class LDAP {
             	ldap_set_option($ldapConn, LDAP_OPT_NETWORK_TIMEOUT, $config['network_timeout']);
 						}
 
-						if(isset($credentials['bindDn']) && $credentials['bindDn'] != '' && isset($credentials['bindPass']))
-						{
-		          // using ldap bind
-		          $bindDn  = $credentials['bindDn'];     // ldap rdn or dn
-		          $bindPass = $credentials['bindPass'];  // associated password
-						}
+	          // using ldap bind
+	          $bindDn = (isset($credentials['bindDn']) && $credentials['bindDn'] != '')?$credentials['bindDn']:null;     // ldap rdn or dn
+          	$bindPass = (isset($bindDn) && $bindDn != '' && isset($credentials['bindPass']) && $credentials['bindPass'] != '')?$credentials['bindPass']:null;  // associated password
 
             // binding to ldap server
             $ldapBind = ldap_bind($ldapConn, $bindDn, $bindPass);
