@@ -53,13 +53,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */    
     public $principalUser = null;
     
-    /**
-     * Principal user backend id
-     *
-     * @var string
-     */    
-    public $principalUserBackendId = null;
-
     private $addressbook = null;
     
     /**
@@ -112,7 +105,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     function getAddressBooksForUser($principalUri)
     {      
         $this->principalUser = basename($principalUri);
-        $this->principalUserBackendId = $this->authBackend->userBackendId;
         $addressBooks = [];
         
 				try 
@@ -150,7 +142,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				        return [];
 				  }
 		    
-            $addressBookDn = $addressBookConfig['base_dn'];
+            $addressBookDn = Utility::replacePlaceholders($addressBookConfig['base_dn'], ['%u' => $this->authBackend->username ]);
             $addressBookSyncToken = time();
                
             $addressBooks[] = [
@@ -177,7 +169,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             else
             {
             	if($addressBookConfig['user_specific'] == true)
-            		$addressBookDn = Utility::replacePlaceholders($addressBookConfig['base_dn'], ['%u' => $this->principalUser ]);
+            		$addressBookDn = Utility::replacePlaceholders($addressBookConfig['base_dn'], ['%u' => $this->authBackend->username ]);
             		
               $this->addressbook[$addressBookId]['LdapConnection'] = $this->authBackend->userLdapConn;
             }
@@ -298,7 +290,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				$cardUID = null;
 				
 				$addressBookConfig = $this->addressbook[$addressBookId]['config'];
-				$dbUser = ($addressBookConfig['user_specific'])?$this->principalUserBackendId:$this->systemUser;
+				$dbUser = ($addressBookConfig['user_specific'])?$this->authBackend->userBackendId:$this->systemUser;
         
 				try 
 				{
@@ -403,7 +395,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         
         $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
         $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];        
-				$dbUser = ($addressBookConfig['user_specific'])?$this->principalUserBackendId:$this->systemUser;
+				$dbUser = ($addressBookConfig['user_specific'])?$this->authBackend->userBackendId:$this->systemUser;
 				$vcard = (Reader::read($cardData))->convert(\Sabre\VObject\Document::VCARD40);
         $ldapInfo = [];
 
@@ -728,7 +720,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
         $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
         $fieldMap = $addressBookConfig['fieldmap'];
-				$dbUser = ($addressBookConfig['user_specific'])?$this->principalUserBackendId:$this->systemUser;
+				$dbUser = ($addressBookConfig['user_specific'])?$this->authBackend->userBackendId:$this->systemUser;
         $UID = null;
 
         try {
@@ -1157,7 +1149,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 			$addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
 			$addressBookSyncToken = $this->addressbook[$addressBookId]['syncToken'];
 			$ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
-			$dbUser = ($addressBookConfig['user_specific'])?$this->principalUserBackendId:$this->systemUser;
+			$dbUser = ($addressBookConfig['user_specific'])?$this->authBackend->userBackendId:$this->systemUser;
 
 			$resultTmpError = [
 					'syncToken' => $syncToken,
@@ -1336,7 +1328,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     protected function addChange($addressBookId, $objectUri, $operation = 'DELETE')
     {
         $addressBookConfig = $this->addressbook[$addressBookId]['config'];
-     		$dbUser = ($addressBookConfig['user_specific'])?$this->principalUserBackendId:$this->systemUser;
+     		$dbUser = ($addressBookConfig['user_specific'])?$this->authBackend->userBackendId:$this->systemUser;
             
         if($operation == 'DELETE')
         {
@@ -1377,7 +1369,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $addressBookConfig = $this->addressbook[$addressBookId]['config'];
         $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
         $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
-				$dbUser = ($addressBookConfig['user_specific'])?$this->principalUserBackendId:$this->systemUser;
+				$dbUser = ($addressBookConfig['user_specific'])?$this->authBackend->userBackendId:$this->systemUser;
         $result = null;
         $backendId = null;
         
@@ -1422,7 +1414,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
         $addressBookSyncToken = $this->addressbook[$addressBookId]['syncToken'];
         $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
-        $dbUser = ($addressBookConfig['user_specific'])?$this->principalUserBackendId:$this->systemUser;
+        $dbUser = ($addressBookConfig['user_specific'])?$this->authBackend->userBackendId:$this->systemUser;
         
         if(isset($addressBookConfig['sync_bind_dn']) && $addressBookConfig['sync_bind_dn'] != '')
         {
