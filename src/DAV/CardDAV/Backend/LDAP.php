@@ -332,10 +332,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					error_log("Read access to some operational attributes in LDAP not present. ".__METHOD__." at line no ".__LINE__);
         }
         	
-        $cardData = $this->generateVcard($data[0], $addressBookId, $cardUri);
+        $cardData = $this->generateVcard($data[0], $addressBookId, $cardUID);
         
-        if($cardData == null || $cardData == '')
-        	return [];
+        if(empty($cardData))
+					throw new SabreDAVException\ServiceUnavailable();
          
         $result = [
             'id'            => $cardUID,
@@ -397,7 +397,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      * @param string $operation
      * @return string|null
      */
-    private function createUpdateCard($addressBookId, $cardUri, $cardData, $operation = 'CREATE')
+    protected function createUpdateCard($addressBookId, $cardUri, $cardData, $operation = 'CREATE')
     {
         $addressBookConfig = $this->addressbook[$addressBookId]['config'];
         
@@ -721,34 +721,19 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      * @param array $addressBookId
      * @return null or vcard data
      */
-    protected function generateVcard($data, $addressBookId, $cardUri)
+    protected function generateVcard($data, $addressBookId, $cardUID)
     { 
-        if (empty ($data)) {
+        if (empty ($data) || empty($addressBookId) || empty($cardUID))
             return null;
-        }
         
         $addressBookConfig = $this->addressbook[$addressBookId]['config'];
         $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
         $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
         $fieldMap = $addressBookConfig['fieldmap'];
 				$dbUser = ($addressBookConfig['user_specific'])?$this->authBackend->userBackendId:$this->systemUser;
-        $UID = null;
-
-        try {
-            $query = 'SELECT card_uid FROM '.$this->backendMapTableName.' WHERE addressbook_id = ? and card_uri = ? and user_id = ?';
-            $stmt = $this->pdo->prepare($query);
-            $stmt->execute([$addressBookId, $cardUri, $dbUser]);
-            
-            while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-                $UID = $row['card_uid'];
-            }
-        } catch (\Throwable $th) {
-            error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
-        }
-        
         
         // build the Vcard
-        $vcard = (new \Sabre\VObject\Component\VCard(['UID' => $UID]))->convert(\Sabre\VObject\Document::VCARD40);
+        $vcard = (new \Sabre\VObject\Component\VCard(['UID' => $cardUID]))->convert(\Sabre\VObject\Document::VCARD40);
 
         if($data['objectclass'][0] == $addressBookConfig['group_LDAP_Object_Classes'][0])
         {
