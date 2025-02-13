@@ -1,6 +1,6 @@
 { 
-    "name" : "isubsoft/dav",
-    "description" : "This is a ISubsoft WebDAV server",
+    "name" : "isubsoft/ldap-carddav",
+    "description" : "This is a ISubsoft CardDAV server providing support for contacts stored in LDAP",
     "require" : {
         "sabre/dav" : "~4.0.3",
         "sabre/vobject" : "~4.5"

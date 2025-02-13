@@ -68,11 +68,13 @@ $config['card']['addressbook']['ldap']['global'] = [
   'ldap_version'  => 3,       // For address books only LDAP version 3 or above is supported
   'network_timeout' => 10,    // The timeout (in seconds) for connect + bind attempts. This is only supported in PHP >= 5.3.0 with OpenLDAP 2.x
   
-	// -- 'user_specific' and 'writable' values are used as initialization parameters for the sync database. Once the sync database has been initialized changing the values here to any conflicting values will lead to server not processing requests for this address book.
+	// 'user_specific' and 'writable' values are used as initialization parameters for the sync database. 
+	// Once the sync database has been initialized changing the values here to any conflicting values will 
+	// lead to server not processing requests for this address book.
 	'user_specific' 	=> false, // If this is true username placeholder can be used in applicable places
-	'writable'     	 	=> false,
+	'writable'     	 	=> false, // If true (default) then new contacts can be created and existing ones can be updated and deleted
 	
-  // -- The following placeholders are available to be used in 'base_dn' and 'search_filter' below as applicable
+  // The following placeholders are available to be used in 'base_dn' and 'search_filter' below as applicable
   // %u  - Username sent by client for authentication
   // %dn - DN as returned by LDAP search for address book DN
   
@@ -81,18 +83,18 @@ $config['card']['addressbook']['ldap']['global'] = [
 	// LDAP filter to be used to search for contacts
 	'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
 	
-	// -- Bind user for search/read/write contacts. If 'bind_dn' and 'bind_pass' are not provided below 
+	// Bind user for search/read/write contacts. If 'bind_dn' and 'bind_pass' are not provided below 
 	// then LDAP connection using parameters provided in $config['auth']['ldap'] is used to obtain backend data. 
 	// This bind user must have read access to entryUUID, createTimestamp and modifyTimestamp operational attributes 
 	// of all contacts in the address book additionally.
 	'bind_dn'       	=> 'cn=admin,ou=People,dc=example,dc=org',
 	'bind_pass'     	=> '<secret>',
 	
-	// -- Sync LDAP bind user can be used if there are size limits on 'bind_dn' in LDAP. 'sync_bind_dn' should have 
+	// Sync LDAP bind user can be used if there are size limits on 'bind_dn' in LDAP. 'sync_bind_dn' should have 
 	// liberal or no size limits and must have read access to entryUUID, createTimestamp and modifyTimestamp 
-	// attribute of all contacts in the address book
-	// 'sync_bind_dn'       => 'cn=carddavsync,ou=People,dc=example,dc=org',
-	// 'sync_bind_pw'     	=> '<secret>',
+	// attribute of all contacts in the address book. Access to other contact attributes is not required by this user.
+	//  'sync_bind_dn'       => 'cn=carddavsync,ou=People,dc=example,dc=org',
+	//  'sync_bind_pw'     	=> '<secret>',
 	
 	'scope'         => 'list',   // search mode: sub|base|list
 	
@@ -263,11 +265,13 @@ $config['card']['addressbook']['ldap']['personal'] = [
   // 'ldap_version'  => 3,       // For address books only LDAP version 3 or above is supported
   // 'network_timeout' => 10,    // The timeout (in seconds) for connect + bind attempts. This is only supported in PHP >= 5.3.0 with OpenLDAP 2.x
   
-	// -- 'user_specific' and 'writable' values are used as initialization parameters for the sync database. Once the sync database has been initialized changing the values here to any conflicting values will lead to server not processing requests for this address book.
-	'user_specific' 	=> true, // If this is true username placeholder can be used in applicable places
-	'writable'     	 	=> true,
+	// 'user_specific' and 'writable' values are used as initialization parameters for the sync database. 
+	// Once the sync database has been initialized changing the values here to any conflicting values will 
+	// lead to server not processing requests for this address book.
+	'user_specific' 	=> true, 	// If this is true username placeholder can be used in applicable places
+	'writable'     	 	=> true, 	// If true (default) then new contacts can be created and existing ones can be updated and deleted
 	
-  // -- The following placeholders are available to be used in 'base_dn' and 'search_filter' below as applicable
+  // The following placeholders are available to be used in 'base_dn' and 'search_filter' below as applicable
   // %u  - Username sent by client for authentication
   // %dn - DN as returned by LDAP search for address book DN
   
@@ -276,18 +280,18 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	// LDAP filter to be used to search for contacts	
 	'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
 	
-	// -- Bind user for search/read/write contacts. If 'bind_dn' and 'bind_pass' are not provided below 
+	// Bind user for search/read/write contacts. If 'bind_dn' and 'bind_pass' are not provided below 
 	// then LDAP connection using parameters provided in $config['auth']['ldap'] is used to obtain backend data. 
 	// This bind user must have read access to entryUUID, createTimestamp and modifyTimestamp operational attributes 
 	// of all contacts in the address book additionally.
-	// 'bind_dn'       	=> '',
-	// 'bind_pass'     => '',
+	//  'bind_dn'       	=> '',
+	//  'bind_pass'     => '',
 	
-	// -- Sync LDAP bind user can be used if there are size limits on 'bind_dn' in LDAP. 'sync_bind_dn' should have 
+	// Sync LDAP bind user can be used if there are size limits on 'bind_dn' in LDAP. 'sync_bind_dn' should have 
 	// liberal or no size limits and must have read access to entryUUID, createTimestamp and modifyTimestamp 
-	// attribute of all contacts in the address book
-	// 'sync_bind_dn'       	=> 'cn=carddavsync,ou=People,dc=example,dc=org',
-	// 'sync_bind_pw'     	=> '<secret>',
+	// attribute of all contacts in the address book. Access to other contact attributes is not required by this user.
+	//  'sync_bind_dn'       	=> 'cn=carddavsync,ou=People,dc=example,dc=org',
+	//  'sync_bind_pw'     	=> '<secret>',
 	
 	'scope'         => 'list',   // search mode: sub|base|list
 	
