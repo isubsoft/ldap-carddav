@@ -1479,22 +1479,27 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					}
 			
 					// Fetch all mapped contacts
-					$query = 'SELECT card_uri FROM '.$this->backendMapTableName.' WHERE user_id = ? AND addressbook_id = ?';
+					$query = 'SELECT card_uri, backend_id FROM '.$this->backendMapTableName.' WHERE user_id = ? AND addressbook_id = ?';
 					$stmt = $this->pdo->prepare($query);
 					$stmt->execute([$dbUser, $addressBookId]);
 						
 					while($row = $stmt->fetch(\PDO::FETCH_ASSOC))
 					{
 						$cardUri = $row['card_uri'];
-				    $data = $this->fetchLdapContactData($addressBookId, $cardUri, ['entryUUID']);
-				    
-				    if(empty($data))
-				    	return [];
-				    	
-				    if(!$data['count'] > 0)
-				    {
+						$backendId = $row['backend_id'];
+						$backendContactExist = false;
+
+						foreach($backendContacts as $backendContact)
+						{
+							if($backendId == $backendContact['backend_id'])
+							{
+								$backendContactExist = true;
+								break;
+							}
+						}
+						
+						if(!$backendContactExist)
 							$this->addChange($addressBookId, $cardUri);
-				    }
 					}
 
         } catch (\Throwable $th) {
