@@ -24,7 +24,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      * @var array
      */
     public $pdo;
-
+    
     /**
      * A list of additional fields to support
      *
@@ -81,11 +81,12 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      */
     function getPrincipalsByPrefix($prefixPath)
     {
+    		$currentUserPrincipal = $GLOBALS['currentUserPrincipal'];
     		$principals = [];
     		
         if(!isset($this->config['principal']['ldap']['search_bind_dn']) || $this->config['principal']['ldap']['search_bind_dn'] == '')
         {  
-            $principals[] = ['uri' => $prefixPath. '/' . $GLOBALS['currentUserPrincipal']];
+            $principals[] = ['uri' => $prefixPath. '/' . $currentUserPrincipal];
             return $principals;
         }
 
@@ -94,7 +95,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         $ldapConn = Utility::LdapBindConnection(['bindDn' => $bindDn, 'bindPass' => $bindPass], $this->config['server']['ldap']);
   
         $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
-        $filter = Utility::replacePlaceholders($this->config['principal']['ldap']['search_filter'], ['%u' => $GLOBALS['currentUserPrincipal']]);
+        $filter = Utility::replacePlaceholders($this->config['principal']['ldap']['search_filter'], ['%u' => $currentUserPrincipal]);
         
         foreach($this->config['principal']['ldap']['fieldMap'] as $key => $value)
         {
@@ -136,11 +137,13 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
     function getPrincipalByPath($path)
     {
         $principalId = basename($path);
+        $currentUserPrincipal = $GLOBALS['currentUserPrincipal'];
+        
         $principal = [];
 
         if(!isset($this->config['principal']['ldap']['search_bind_dn']) || $this->config['principal']['ldap']['search_bind_dn'] == '')
         {  
-            if(strtolower($principalId) == strtolower($GLOBALS['currentUserPrincipal']))
+            if(strtolower($principalId) == strtolower($currentUserPrincipal))
             	$principal = [ 'id'=> $principalId, 'uri' => $path];
             	
             return $principal;
@@ -171,7 +174,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
                 'uri' => $path
             ];
             
-            if(strtolower($principalId) == strtolower($GLOBALS['currentUserPrincipal']) && isset($data[0]['entryuuid'][0]))
+            if(strtolower($principalId) == strtolower($currentUserPrincipal) && isset($data[0]['entryuuid'][0]))
             {
             	$currentUserPrincipalIsSystemUser = true;
             	
