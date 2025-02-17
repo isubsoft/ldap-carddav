@@ -38,6 +38,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     private $backendMapTableName = 'cards_backend_map';
     
     private $deletedCardsTableName = 'cards_deleted';
+    
+    private $fullSyncTableName = 'cards_full_sync';
 
     /**
      * Address books
@@ -1175,21 +1177,43 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				return $resultTmpError;
 			}
 
-			// Perform initial sync
-			if($syncToken == null)
-			{
-				$data = $this->fullSyncOperation($addressBookId);
-				
-				if(! empty($data))
-				{
-					for ($i=0; $i < count($data); $i++) {
-							$result['added'][] = $data[$i]['card_uri'];
-					}
+			$fullSyncToken = null;
+			
+			try {
+					$query = 'SELECT sync_token FROM ' . $this->fullSyncTableName . ' WHERE addressbook_id = ? AND user_id = ?';
+					$stmt = $this->pdo->prepare($query);
+					$stmt->execute([$addressBookId, $dbUser]);
+					
+					$row = $stmt->fetch(\PDO::FETCH_ASSOC);
+					
+					if($row !== false)
+						$fullSyncToken = $row['sync_token'];
 
-					return $result;
-				}
+			} catch (\Throwable $th) {
+					error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+			}
+
+			// Perform full sync
+			if($syncToken == null || ($fullSyncToken!= null && $fullSyncToken >= $syncToken && $fullSyncToken < $addressBookSyncToken))
+			{
+				$data = [];
 				
-				return null;
+				if($this->fullSyncOperation($addressBookId, $data))
+				{
+					if($syncToken == null)
+					{
+						if(!empty($data))
+						{
+							for ($i=0; $i < count($data); $i++) {
+									$result['added'][] = $data[$i]['card_uri'];
+							}
+
+							return $result;
+						}
+
+						return null;
+					}
+				}
 			}
 			
 			$filter = '(&' . $addressBookConfig['filter'] . '(createtimestamp>=' . gmdate('YmdHis', $syncToken) . 'Z)(!(createtimestamp>=' . gmdate('YmdHis', $addressBookSyncToken) . 'Z)))';
