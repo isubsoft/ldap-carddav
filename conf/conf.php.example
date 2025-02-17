@@ -4,13 +4,15 @@ $config = [];
 
 $config['sync_database'] = 'sqlite:' . __DATA_DIR__ . '/sync/pdo/sqlite/cards.db';
 
-$config['auth']['ldap'] = [
+$config['server']['ldap'] = [
   'host'         => '<hostname>',
   'port'          => 389,
   'use_tls'       => false,
   'ldap_version'  => 3,       // using LDAPv3
   'network_timeout' => 10,    // The timeout (in seconds) for connect + bind attempts. This is only supported in PHP >= 5.3.0 with OpenLDAP 2.x
-  
+];
+
+$config['auth']['ldap'] = [
   // -- The following placeholders are available to be used in bind_dn, bind_pass and search_filter as applicable
   // %u  - Username sent by client for authentication
   // %p  - Password sent by client for authentication
@@ -30,12 +32,6 @@ $config['auth']['ldap'] = [
 ];
 
 $config['principal']['ldap'] = [
-  'host'         => '<hostname>',
-  'port'          => 389,
-  'use_tls'       => false,
-  'ldap_version'  => 3,       // using LDAPv3
-  'network_timeout' => 10,    // The timeout (in seconds) for connect + bind attempts. This is only supported in PHP >= 5.3.0 with OpenLDAP 2.x
-  
   // -- The following placeholders are available to be used in 'search_filter'
   // %u  - Username sent by client for authentication
   
@@ -62,12 +58,7 @@ $config['principal']['ldap'] = [
 $config['card']['addressbook']['ldap']['global'] = [
 	'name'          	=> 'Global Address Book',
   'description'     => 'Global address book',
-  'host'         => '<hostname>',
-  'port'          => 389,
-  'use_tls'       => false,
-  'ldap_version'  => 3,       // For address books only LDAP version 3 or above is supported
-  'network_timeout' => 10,    // The timeout (in seconds) for connect + bind attempts. This is only supported in PHP >= 5.3.0 with OpenLDAP 2.x
-  
+    
 	// 'user_specific' and 'writable' values are used as initialization parameters for the sync database. 
 	// Once the sync database has been initialized changing the values here to any conflicting values will 
 	// lead to server not processing requests for this address book.
@@ -257,14 +248,7 @@ $config['card']['addressbook']['ldap']['global'] = [
 $config['card']['addressbook']['ldap']['personal'] = [
 	'name'          	=> 'Personal Address Book',
   'description'     => 'Personal address book of the user',
-  
-	// -- LDAP connection parameters if using bind_dn or search_bind_dn below
-  // 'host'         => '<hostname>',
-  // 'port'          => 389,
-  // 'use_tls'       => false,
-  // 'ldap_version'  => 3,       // For address books only LDAP version 3 or above is supported
-  // 'network_timeout' => 10,    // The timeout (in seconds) for connect + bind attempts. This is only supported in PHP >= 5.3.0 with OpenLDAP 2.x
-  
+
 	// 'user_specific' and 'writable' values are used as initialization parameters for the sync database. 
 	// Once the sync database has been initialized changing the values here to any conflicting values will 
 	// lead to server not processing requests for this address book.

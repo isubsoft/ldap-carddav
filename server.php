@@ -15,10 +15,14 @@
 require_once 'src/App/Bootstrap.php';
 require_once 'vendor/autoload.php';
 
+$GLOBALS['currentUserPrincipal'] = null;
+$GLOBALS['currentUserPrincipalBackendId'] = null;
+$GLOBALS['currentUserPrincipalLdapConn'] = null;
+
 // Backends
-$authBackend = new ISubsoft\DAV\Auth\Backend\LDAP($config, $pdo);
-$principalBackend = new ISubsoft\DAV\DAVACL\PrincipalBackend\LDAP($config, $authBackend);
-$carddavBackend = new ISubsoft\DAV\CardDAV\Backend\LDAP($config, $pdo, $authBackend);
+$authBackend = new ISubsoft\DAV\Auth\Backend\LDAP($config);
+$principalBackend = new ISubsoft\DAV\DAVACL\PrincipalBackend\LDAP($config, $pdo);
+$carddavBackend = new ISubsoft\DAV\CardDAV\Backend\LDAP($config, $pdo);
 
 // We're assuming that the realm name is called 'SabreDAV'.
 $authBackend->setRealm('SabreDAV');
@@ -44,7 +48,7 @@ $aclPlugin = new Sabre\DAVACL\Plugin();
 $aclPlugin->allowUnauthenticatedAccess = false;
 $aclPlugin->hideNodesFromListings = true;
 
-$server->addPlugin(new Sabre\DAV\Auth\Plugin($authBackend));
+$server->addPlugin(new ISubsoft\DAV\Auth\Plugin($authBackend));
 $server->addPlugin($aclPlugin);
 $server->addPlugin(new Sabre\DAV\Browser\Plugin());
 $server->addPlugin(new Sabre\CardDAV\Plugin());

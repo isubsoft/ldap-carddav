@@ -1,6 +1,6 @@
-/************************************************************
+/**************************************************************
 * Copyright (C) 2023-2025 ISub Softwares (OPC) Private Limited
-************************************************************/
+**************************************************************/
 
 /**************** Tables ******************/
 
@@ -50,6 +50,15 @@ CREATE TABLE cards_deleted
 );
 CREATE INDEX cards_deleted_idx01 ON cards_deleted (user_id, addressbook_id, sync_token);
 
+CREATE TABLE cards_full_sync
+(
+	user_id VARCHAR(255) NOT NULL,
+	addressbook_id  VARCHAR(255) NOT NULL,
+	sync_token BIGINT NOT NULL,
+	PRIMARY KEY (user_id, addressbook_id),
+	FOREIGN KEY(user_id) REFERENCES cards_user(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
+	FOREIGN KEY(addressbook_id) REFERENCES cards_addressbook(addressbook_id) ON DELETE CASCADE ON UPDATE CASCADE
+);
 
 /**************** Triggers ******************/
 

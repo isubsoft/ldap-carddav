@@ -1,7 +1,7 @@
 <?php
-/************************************************************
-* Copyright 2023-2025 ISub Softwares (OPC) Private Limited
-************************************************************/
+/**************************************************************
+* Copyright (C) 2023-2025 ISub Softwares (OPC) Private Limited
+**************************************************************/
 
 namespace ISubsoft\DAV\Auth\Backend;
 
@@ -19,28 +19,6 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
     public $config;
 
     /**
-     * Store PDO resource
-     *
-     * @var array
-     */
-    public $pdo;
-    
-    private $systemUsersTableName = 'cards_system_user';
-
-    /**
-     * Ldap Connection.
-     *
-     * @var string
-     */
-    public $userLdapConn = null;
-
-    public $username = null;
-    public $userBackendId = null;
-
-
-
-
-    /**
      * Creates the backend.
      *
      * configuration array must be provided
@@ -49,9 +27,8 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
      * @param array $config
      * @return void
      */
-    function __construct(array $config, $pdo) {
+    function __construct(array $config) {
         $this->config = $config;
-        $this->pdo = $pdo;
     }
 
 
@@ -70,22 +47,20 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
         if($username == '' || $password == null)
         	return false;
         	
-        $this->username = $username;
-        
         if(isset($this->config['auth']['ldap']['search_bind_dn']) && $this->config['auth']['ldap']['search_bind_dn'] != '')
         {
             $bindDn = $this->config['auth']['ldap']['search_bind_dn'];
             $bindPass = (isset($this->config['auth']['ldap']['search_bind_pw']))?$this->config['auth']['ldap']['search_bind_pw']:null;
 
             // binding to ldap server
-            $ldapBindConn = Utility::LdapBindConnection(['bindDn' => $bindDn, 'bindPass' => $bindPass], $this->config['auth']['ldap']);
+            $ldapBindConn = Utility::LdapBindConnection(['bindDn' => $bindDn, 'bindPass' => $bindPass], $this->config['server']['ldap']);
             
             // verify binding
             if ($ldapBindConn) {
                 $ldaptree = (isset($this->config['auth']['ldap']['search_base_dn']) && $this->config['auth']['ldap']['search_base_dn'] !== '')?$this->config['auth']['ldap']['search_base_dn']:$this->config['auth']['ldap']['base_dn'];
                 $filter = Utility::replacePlaceholders($this->config['auth']['ldap']['search_filter'], ['%u' => $username]);
 
-                $data = Utility::LdapQuery($ldapBindConn, $ldaptree, $filter, ['entryuuid'], strtolower($this->config['auth']['ldap']['scope']));
+                $data = Utility::LdapQuery($ldapBindConn, $ldaptree, $filter, ['dn'], strtolower($this->config['auth']['ldap']['scope']));
 
                 if(empty($data))
                 {
@@ -95,11 +70,6 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
                 
                 if($data['count'] == 1)
                 {
-		 							if(isset($data[0]['entryuuid'][0]))
-		       					$this->userBackendId = $data[0]['entryuuid'][0];
-		       				else
-										error_log("Could not read required operational attributes in " . __METHOD__ . " at line " . __LINE__);
-                		
                     $bindDn = Utility::replacePlaceholders($this->config['auth']['ldap']['bind_dn'], ['%dn' => $data[0]['dn'], '%u' => $username]);
 
                     try {
@@ -112,28 +82,7 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
                         throw new ServiceUnavailable();
                     }
                     
-										try 
-										{
-											$query = 'SELECT user_id FROM '. $this->systemUsersTableName;
-											$stmt = $this->pdo->prepare($query);
-											$stmt->execute([]);
-											
-											while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-													if(strtolower($this->userBackendId) == strtolower($row['user_id']))
-													{
-														error_log("A reserved username was used to authenticate. Rejected.");
-														return false;
-													}
-
-													continue;
-											}
-											
-										} catch (\Throwable $th) {
-												error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
-												throw new ServiceUnavailable();
-										}
-
-                    $this->userLdapConn = $ldapBindConn;
+                    $GLOBALS['currentUserPrincipalLdapConn'] = $ldapBindConn;
                     return true;
                 }      
             }
@@ -144,45 +93,11 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
             $bindPass = Utility::replacePlaceholders($this->config['auth']['ldap']['bind_pass'], ['%p' => $password]);
 
             // binding to ldap server
-            $ldapBindConn = Utility::LdapBindConnection(['bindDn' => $bindDn, 'bindPass' => $bindPass], $this->config['auth']['ldap']);
+            $ldapBindConn = Utility::LdapBindConnection(['bindDn' => $bindDn, 'bindPass' => $bindPass], $this->config['server']['ldap']);
 
             if($ldapBindConn)
             {
-                $data = Utility::LdapQuery($ldapBindConn, $bindDn, null, ['entryuuid'], 'base');
-                
-                if(empty($data))
-                {
-                	error_log("Could not execute backend search: ".__METHOD__.", ".$th->getMessage());
-                	throw new ServiceUnavailable();
-                }
-	 							
-	 							if(isset($data[0]['entryuuid'][0]))
-         					$this->userBackendId = $data[0]['entryuuid'][0];
-         				else
-									error_log("Could not read required operational attributes in " . __METHOD__ . " at line " . __LINE__);
-         					
-								try 
-								{
-									$query = 'SELECT user_id FROM '. $this->systemUsersTableName;
-									$stmt = $this->pdo->prepare($query);
-									$stmt->execute([]);
-									
-									while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-											if(strtolower($this->userBackendId) == strtolower($row['user_id']))
-											{
-												error_log("A reserved username was used to authenticate. Rejected.");
-												return false;
-											}
-
-											continue;
-									}
-									
-								} catch (\Throwable $th) {
-										error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
-										throw new ServiceUnavailable();
-								}
-	 								
-                $this->userLdapConn = $ldapBindConn;
+                $GLOBALS['currentUserPrincipalLdapConn'] = $ldapBindConn;
                 return true;
             }
         }
