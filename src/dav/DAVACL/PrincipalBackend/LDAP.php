@@ -1,11 +1,12 @@
 <?php
-/************************************************************
-* Copyright 2023-2025 ISub Softwares (OPC) Private Limited
-************************************************************/
+/**************************************************************
+* Copyright (C) 2023-2025 ISub Softwares (OPC) Private Limited
+**************************************************************/
 
-namespace isubsoft\dav\DAVACL\PrincipalBackend;
+namespace ISubsoft\DAV\DAVACL\PrincipalBackend;
 
-use isubsoft\dav\Utility\LDAP as Utility;
+use ISubsoft\DAV\Utility\LDAP as Utility;
+use \Sabre\DAV\Exception as SabreDAVException;
 
 class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
 
@@ -16,7 +17,14 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      * @var array
      */
     public $config;
-
+    
+    /**
+     * Store ldap directory access credentials
+     *
+     * @var array
+     */
+    public $pdo;
+    
     /**
      * A list of additional fields to support
      *
@@ -38,13 +46,8 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
             'dbField' => 'mail',
         ]
     ];
-
-    /**
-     * Auth Backend Object class.
-     *
-     * @var string
-     */
-    public $authBackend = null;
+    
+    private $systemUsersTableName = 'cards_system_user';
 
       /**
      * Creates the backend.
@@ -55,9 +58,9 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      * @param array $this->config
      * @return void
      */
-    public function __construct(array $config, $authBackend) { 
+    public function __construct(array $config, \PDO $pdo) { 
         $this->config = $config;
-        $this->authBackend = $authBackend;
+        $this->pdo = $pdo;
     }
 
     /**
@@ -77,42 +80,50 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      * @return array
      */
     function getPrincipalsByPrefix($prefixPath)
-    {      
-        if($this->config['principal']['ldap']['search_bind_dn'] == '' && $this->config['principal']['ldap']['search_bind_pw'] == '')
+    {
+    		$currentUserPrincipal = $GLOBALS['currentUserPrincipal'];
+    		$principals = [];
+    		
+        if(!isset($this->config['principal']['ldap']['search_bind_dn']) || $this->config['principal']['ldap']['search_bind_dn'] == '')
         {  
-            $principal = [ 'uri' => $prefixPath. '/' . $this->authBackend->username];
-            return $principal;
+            $principals[] = ['uri' => $prefixPath. '/' . $currentUserPrincipal];
+            return $principals;
         }
 
         $bindDn = $this->config['principal']['ldap']['search_bind_dn'];
-        $bindPass = $this->config['principal']['ldap']['search_bind_pw'];
-        $ldapConn = Utility::LdapBindConnection(['bindDn' => $bindDn, 'bindPass' => $bindPass], $this->config['principal']['ldap']);
+        $bindPass = (isset($this->config['principal']['ldap']['search_bind_pw']))?$this->config['principal']['ldap']['search_bind_pw']:null;
+        $ldapConn = Utility::LdapBindConnection(['bindDn' => $bindDn, 'bindPass' => $bindPass], $this->config['server']['ldap']);
   
         $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
-        $filter = Utility::replacePlaceholders($this->config['principal']['ldap']['search_filter'], ['%u' => '*']);
-        $attributes = ['displayName','mail'];
+        $filter = Utility::replacePlaceholders($this->config['principal']['ldap']['search_filter'], ['%u' => $currentUserPrincipal]);
+        
+        foreach($this->config['principal']['ldap']['fieldMap'] as $key => $value)
+        {
+					$attributes[] = $value;
+        }
 
         $data = Utility::LdapQuery($ldapConn, $ldaptree, $filter, $attributes, strtolower($this->config['principal']['ldap']['scope']));
                     
         if($data['count'] > 0)
         {
-            for ($i=0; $i < $data['count']; $i++) { 
-                
+            for ($i=0; $i < $data['count']; $i++) {
+            		$principalId = $data[$i][$this->config['principal']['ldap']['fieldMap']['id']][0];
+            		
                 $principal = [
-                    'uri' => $prefixPath. '/' . str_replace('uid=', '',explode(',',$data[$i]['dn'])[0]),
+                    'uri' => $prefixPath. '/' . $principalId
                 ];
+                
                 foreach ($this->fieldMap as $key => $value) {
-                    if ( isset($data[$i][$value['dbField']])) {
-                        $principal[$key] = $data[$i][$value['dbField']][0];
+                    if ( isset($data[$i][$this->config['principal']['ldap']['fieldMap'][$value['dbField']]])) {
+                        $principal[$key] = $data[$i][$this->config['principal']['ldap']['fieldMap'][$value['dbField']]][0];
                     }
                 }
+                
                 $principals[] = $principal;
             }
-        
         }
                     
         return $principals;
-        
     }
 
     /**
@@ -125,40 +136,82 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      */
     function getPrincipalByPath($path)
     {
-        $searchUserId = basename($path);
+        $principalId = basename($path);
+        $currentUserPrincipal = $GLOBALS['currentUserPrincipal'];
+        
+        $principal = [];
 
-        if($this->config['principal']['ldap']['search_bind_dn'] == '' && $this->config['principal']['ldap']['search_bind_pw'] == '')
+        if(!isset($this->config['principal']['ldap']['search_bind_dn']) || $this->config['principal']['ldap']['search_bind_dn'] == '')
         {  
-            $principal = [ 'id'=> $searchUserId, 'uri' => $path];
+            if(strtolower($principalId) == strtolower($currentUserPrincipal))
+            	$principal = [ 'id'=> $principalId, 'uri' => $path];
+            	
             return $principal;
         }
 
         $bindDn = $this->config['principal']['ldap']['search_bind_dn'];
-        $bindPass = $this->config['principal']['ldap']['search_bind_pw'];
-        $ldapConn = Utility::LdapBindConnection(['bindDn' => $bindDn, 'bindPass' => $bindPass], $this->config['principal']['ldap']);
+        $bindPass = (isset($this->config['principal']['ldap']['search_bind_pw']))?$this->config['principal']['ldap']['search_bind_pw']:null;
+        $ldapConn = Utility::LdapBindConnection(['bindDn' => $bindDn, 'bindPass' => $bindPass], $this->config['server']['ldap']);
           
         $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
-        $filter = Utility::replacePlaceholders($this->config['principal']['ldap']['search_filter'], ['%u' => $searchUserId]); // single filter
-        $attributes = ['displayName','mail'];
+        $filter = Utility::replacePlaceholders($this->config['principal']['ldap']['search_filter'], ['%u' => $principalId]); // single filter
+        $principalIdAttribute = $this->config['principal']['ldap']['fieldMap']['id'];
+        $filter = '(&' . $filter . '(' . $principalIdAttribute . '=' . $principalId . '))';
+        
+        foreach($this->config['principal']['ldap']['fieldMap'] as $key => $value)
+        {
+					$attributes[] = $value;
+        }
+        
+        $attributes[] = 'entryuuid';
 
         $data = Utility::LdapQuery($ldapConn, $ldaptree, $filter, $attributes, strtolower($this->config['principal']['ldap']['scope']));
                     
         if($data['count'] == 1)
         { 
             $principal = [
-                'id'  => $searchUserId,
+                'id'  => $principalId,
                 'uri' => $path
             ];
+            
+            if(strtolower($principalId) == strtolower($currentUserPrincipal) && isset($data[0]['entryuuid'][0]))
+            {
+            	$currentUserPrincipalIsSystemUser = true;
+            	
+							try 
+							{
+								$query = 'SELECT user_id FROM '. $this->systemUsersTableName . ' WHERE user_id = ?';
+								$stmt = $this->pdo->prepare($query);
+								$stmt->execute([$data[0]['entryuuid'][0]]);
+								
+								$row = $stmt->fetch(\PDO::FETCH_ASSOC);
+								
+								if($row == false)
+									$currentUserPrincipalIsSystemUser = false;
+								
+							} catch (\Throwable $th) {
+								error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+							}
+							
+         			if($currentUserPrincipalIsSystemUser)
+         			{
+								error_log("Current user backend id matches system user id in " . __METHOD__ . " at line no " . __LINE__);
+         				throw new SabreDAVException\Forbidden("Current user is not a valid user");
+         			}
+         				
+         			$GLOBALS['currentUserPrincipalBackendId'] = $data[0]['entryuuid'][0];
+            }
 
             foreach ($this->fieldMap as $key => $value) {
-                if ( isset($data[0][$value['dbField']])) {
-                    $principal[$key] = $data[0][$value['dbField']][0];
+                if ( isset($data[0][$this->config['principal']['ldap']['fieldMap'][$value['dbField']]])) {
+                    $principal[$key] = $data[0][$this->config['principal']['ldap']['fieldMap'][$value['dbField']]][0];
                 }
             }
+            
             return $principal;
         }
 
-        return ;
+        return [];
     }
 
     /**
@@ -179,7 +232,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      */
     function updatePrincipal($path, \Sabre\DAV\PropPatch $propPatch)
     {
-        return false;
+        return null;
     }
 
     /**
@@ -213,7 +266,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      */
     function searchPrincipals($prefixPath, array $searchProperties, $test = 'allof')
     {
-        return false;
+        return [];
     }
 
     /**
@@ -235,7 +288,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      */
     function findByUri($uri, $principalPrefix)
     {
-        return false;
+        return '';
     }
 
     /**
@@ -246,7 +299,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      */
     function getGroupMemberSet($principal)
     {
-        return false;
+        return [];
     }
 
     /**
@@ -257,7 +310,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      */
     function getGroupMembership($principal)
     {
-        return false;
+        return [];
     }
 
     /**
@@ -271,7 +324,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      */
     function setGroupMemberSet($principal, array $members)
     {
-        return false;
+        return null;
     }
 }
 ?>
