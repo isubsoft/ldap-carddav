@@ -44,8 +44,11 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
      */
     function validateUserPass($username, $password)
     {      
-        if($username == '' || $password == null)
+        if($username == null || $username == '' || $password == null)
+        {
+		    	error_log("Invalid credentials provided in " . __METHOD__ . " at line " . __LINE__);
         	return false;
+        }
         	
         if(isset($this->config['auth']['ldap']['search_bind_dn']) && $this->config['auth']['ldap']['search_bind_dn'] != '')
         {
@@ -86,6 +89,11 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
                     return true;
                 }      
             }
+            else
+            {
+		          error_log("Could not establish bind connection to backend server in " . __METHOD__ . " at line " . __LINE__);
+		          throw new ServiceUnavailable();
+            }
         }
         else
         {
@@ -99,6 +107,11 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
             {
                 $GLOBALS['currentUserPrincipalLdapConn'] = $ldapBindConn;
                 return true;
+            }
+            else
+            {
+		          error_log("Could not establish bind connection to backend server in " . __METHOD__ . " at line " . __LINE__);
+		          throw new ServiceUnavailable();
             }
         }
 
