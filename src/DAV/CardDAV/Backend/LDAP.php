@@ -523,7 +523,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
 					foreach($fieldMap as $vCardKey => $backendMapArr)
 					{
-						if(! isset($backendMapArr['backend_attribute']))
+						if(Utility::isMultidimensional($backendMapArr))
 						{
 							foreach($backendMapArr as $backendMap)
 							{
