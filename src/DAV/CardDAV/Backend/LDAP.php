@@ -145,12 +145,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
       	{
           if(isset($addressBookConfig['search_base_dn']) && $addressBookConfig['search_base_dn'] != '' && isset($addressBookConfig['search_filter']) && $addressBookConfig['search_filter'] != '')
           {
-          	$filter = Utility::replacePlaceholders($addressBookConfig['search_filter'], ['%u' => $principalId]);
+          	$filter = Utility::replacePlaceholders($addressBookConfig['search_filter'], ['%u' => ldap_escape($principalId, "", LDAP_ESCAPE_FILTER)]);
            	$data = Utility::LdapQuery($this->addressbook[$addressBookId]['LdapConnection'], $addressBookConfig['search_base_dn'], $filter, ['dn'], strtolower($addressBookConfig['search_scope']));
           	
             if(!empty($data) && $data['count'] === 1)
             {
-              $addressBookDn = Utility::replacePlaceholders($addressBookConfig['base_dn'], ['%u' => $principalId, '%dn' => $data[0]['dn']]);
+              $addressBookDn = Utility::replacePlaceholders($addressBookConfig['base_dn'], ['%u' => ldap_escape($principalId, "", LDAP_ESCAPE_DN), '%dn' => $data[0]['dn']]);
             }
             else
             {
@@ -159,7 +159,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             }
           }
           else
-          	$addressBookDn = Utility::replacePlaceholders($addressBookConfig['base_dn'], ['%u' => $principalId]);
+          	$addressBookDn = Utility::replacePlaceholders($addressBookConfig['base_dn'], ['%u' => ldap_escape($principalId, "", LDAP_ESCAPE_DN)]);
       	}
       	
         $this->addressbook[$addressBookId]['config'] = $addressBookConfig;
@@ -434,7 +434,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                             
                             if(isset($backendId) && $backendId != null)
                             {
-                                $filter = '(&'.$addressBookConfig['filter']. '(entryuuid=' .$backendId. '))'; 
+                                $filter = '(&'.$addressBookConfig['filter']. '(entryuuid=' . ldap_escape($backendId, "", LDAP_ESCAPE_FILTER) . '))'; 
                         
                                 $data = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, ['dn'], strtolower($addressBookConfig['scope']));
                                 
@@ -1401,7 +1401,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         }
         
   
-        $filter = '(&'.$addressBookConfig['filter']. '(entryuuid=' .$backendId. '))'; 
+        $filter = '(&'.$addressBookConfig['filter']. '(entryuuid=' . ldap_escape($backendId, "", LDAP_ESCAPE_FILTER) . '))'; 
         
         $result = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, empty($attributes)?['dn', 'createTimestamp', 'modifyTimestamp']:$attributes, strtolower($addressBookConfig['scope']));      
         return $result;
