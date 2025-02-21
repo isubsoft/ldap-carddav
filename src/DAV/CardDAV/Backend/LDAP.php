@@ -62,7 +62,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     private $fullSyncTableName = 'cards_full_sync';
     
-    private static $defaultCardMaxSize = 65536;
+    private static $defaultContactMaxSize = 65536;
 
     /**
      * Address books
@@ -189,7 +189,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $this->addressbook[$addressBookId]['addressbookDn'] = $addressBookDn;
         $this->addressbook[$addressBookId]['syncToken'] = $addressBookSyncToken;
         $this->addressbook[$addressBookId]['syncDbUserId'] =  ($addressBookConfig['user_specific'])?$currentUserPrincipalBackendId:$systemUser;
-        $this->addressbook[$addressBookId]['cardMaxSize'] = (int)((isset($addressBookConfig['max_size']) && $addressBookConfig['max_size'] > 0)?$addressBookConfig['max_size']:self::$defaultCardMaxSize);
+        $this->addressbook[$addressBookId]['contactMaxSize'] = (int)((isset($addressBookConfig['max_size']) && $addressBookConfig['max_size'] > 0)?$addressBookConfig['max_size']:self::$defaultContactMaxSize);
         
         $addressBooks[] = [
             'id'                                                          => $addressBookId,
@@ -522,7 +522,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         if(! array_key_exists($rdn, $ldapInfo))
 					throw new SabreDAVException\BadRequest("Identity field not present");
 					
-				if(strlen(serialize($ldapInfo)) > $this->addressbook[$addressBookId]['cardMaxSize'])
+				if(strlen(serialize($ldapInfo)) > $this->addressbook[$addressBookId]['contactMaxSize'])
 					throw new ISubsoftDAVException\ContentTooLarge();
 					
 				if($operation == 'UPDATE')
