@@ -51,7 +51,13 @@ $aclPlugin->hideNodesFromListings = true;
 $server->addPlugin(new ISubsoft\DAV\Auth\Plugin($authBackend));
 $server->addPlugin($aclPlugin);
 $server->addPlugin(new Sabre\DAV\Browser\Plugin());
-$server->addPlugin(new Sabre\CardDAV\Plugin());
+
+$cardDavPlugin = new ISubsoft\DAV\CardDAV\Plugin();
+
+// Set global max resource size
+//  $cardDavPlugin->setResourceSize(<size_in_bytes>);
+
+$server->addPlugin($cardDavPlugin);
 $server->addPlugin(new Sabre\DAV\Sync\Plugin());
 
 // And off we go!

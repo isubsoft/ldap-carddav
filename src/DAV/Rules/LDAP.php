@@ -39,11 +39,11 @@ class LDAP {
 
                     if(empty($vCardParams) && $backendDataFormat == 'BINARY' && isset($ldapConfigInfo['backend_data_mediatype']) && !empty($ldapConfigInfo['backend_data_mediatype']))
                     {                    
-                        $ldapBackendMap = self::getvCardPropertyMap($vObj, $ldapConfigInfo, $compositeAttrStatus['status']);
+                        $ldapBackendMap = self::getvCardPropertyMap($vCardAttr, $vObj, $ldapConfigInfo);
                     }
                     else if($configIndex === $vCardParamListsMatch['configIndex'])
                     {   
-                        $ldapBackendMap = self::getvCardPropertyMap($vObj, $ldapConfigInfo, $compositeAttrStatus['status']);
+                        $ldapBackendMap = self::getvCardPropertyMap($vCardAttr, $vObj, $ldapConfigInfo);
                     }
                 }
             }
@@ -52,7 +52,7 @@ class LDAP {
         {
             if(empty($vCardParams) || ($vCardParamListsMatch['status'] == true))
             {
-                $ldapBackendMap = self::getvCardPropertyMap($vObj, $mappLdapConfig, $compositeAttrStatus['status']);
+                $ldapBackendMap = self::getvCardPropertyMap($vCardAttr, $vObj, $mappLdapConfig);
             }
         }
 
@@ -199,8 +199,10 @@ class LDAP {
         return $ldapBackendValueMap;
     }
 
-    public static function getvCardPropertyMap($vObj, $mappLdapConfig, $mapCompositeAttr)
+    public static function getvCardPropertyMap($vCardAttr, $vObj, $mappLdapConfig)
     {
+        $compositeAttrStatus = Reader::compositeAttrStatus($vCardAttr);
+        $mapCompositeAttr = $compositeAttrStatus['status'];
         $vCardDataFormat = strtoupper($vObj->getValueType());
         $backendDataFormat = strtoupper($mappLdapConfig['backend_data_format']);
         $valueComponent = parse_url($vObj);
@@ -227,7 +229,7 @@ class LDAP {
             if($backendDataFormat == 'TEXT')
             {                
                 $vCardMetaData = Reader::vCardMetaData();
-                $vCardInfo = $vCardMetaData[$vcardAttr];
+                $vCardInfo = $vCardMetaData[$vCardAttr];
                 $newLdapKey = strtolower($mappLdapConfig['backend_attribute']);
             
                 if(isset($valueComponent['scheme']) && (isset($vCardInfo['uri_schemes']['embedded'])) && (in_array($valueComponent['scheme'], $vCardInfo['uri_schemes']['embedded'])))

@@ -7,8 +7,9 @@ namespace ISubsoft\DAV\CardDAV\Backend;
 
 use ISubsoft\DAV\Utility\LDAP as Utility;
 use ISubsoft\DAV\Rules\LDAP as Rules;
+use ISubsoft\DAV\Exception as ISubsoftDAVException;
 use ISubsoft\VObject\Reader as Reader;
-use \Sabre\DAV\Exception as SabreDAVException;
+use Sabre\DAV\Exception as SabreDAVException;
 
 class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\CardDAV\Backend\SyncSupport {
 
@@ -27,19 +28,41 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     protected $pdo;
 
     /**
-     * The table name that will be used for tracking changes in address books.
+     * PDO table name.
      *
      * @var string
      */
     private $addressBooksTableName = 'cards_addressbook';
     
+    /**
+     * PDO table name.
+     *
+     * @var string
+     */
     private $systemUsersTableName = 'cards_system_user';
     
+    /**
+     * PDO table name.
+     *
+     * @var string
+     */
     private $backendMapTableName = 'cards_backend_map';
     
+    /**
+     * PDO table name.
+     *
+     * @var string
+     */
     private $deletedCardsTableName = 'cards_deleted';
     
+    /**
+     * PDO table name.
+     *
+     * @var string
+     */
     private $fullSyncTableName = 'cards_full_sync';
+    
+    private static $defaultCardMaxSize = 65536;
 
     /**
      * Address books
@@ -166,6 +189,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $this->addressbook[$addressBookId]['addressbookDn'] = $addressBookDn;
         $this->addressbook[$addressBookId]['syncToken'] = $addressBookSyncToken;
         $this->addressbook[$addressBookId]['syncDbUserId'] =  ($addressBookConfig['user_specific'])?$currentUserPrincipalBackendId:$systemUser;
+        $this->addressbook[$addressBookId]['cardMaxSize'] = (int)((isset($addressBookConfig['max_size']) && $addressBookConfig['max_size'] > 0)?$addressBookConfig['max_size']:self::$defaultCardMaxSize);
         
         $addressBooks[] = [
             'id'                                                          => $addressBookId,
@@ -392,9 +416,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         
         if(!$addressBookConfig['writable'])
 					throw new SabreDAVException\Forbidden("Not allowed");
-        
+					
         $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
-        $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];        
+        $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
 				$vcard = (Reader::read($cardData))->convert(\Sabre\VObject\Document::VCARD40);
         $ldapInfo = [];
 
@@ -497,6 +521,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
         if(! array_key_exists($rdn, $ldapInfo))
 					throw new SabreDAVException\BadRequest("Identity field not present");
+					
+				if(strlen(serialize($ldapInfo)) > $this->addressbook[$addressBookId]['cardMaxSize'])
+					throw new ISubsoftDAVException\ContentTooLarge();
 					
 				if($operation == 'UPDATE')
 				{

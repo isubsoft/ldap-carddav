@@ -67,6 +67,10 @@ $config['card']['addressbook']['ldap']['global'] = [
 	'user_specific' 	=> false, // If this is true username placeholder can be used in applicable places
 	'writable'     	 	=> false, // If true (default) then new contacts can be created and existing ones can be updated and deleted
 	
+	// Maximum size of a vcard (in bytes) which is accepted for create/update. 
+	// Applicable only when 'writable' is true. Defaults to 64 KiB.
+	//  'max_size'				=> 65536,
+	
   // The following placeholders are available to be used in 'base_dn' and 'search_filter' below as applicable
   // %u  - Username sent by client for authentication
   // %dn - DN as returned by LDAP search for address book DN
@@ -256,6 +260,10 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	// lead to server not processing requests for this address book.
 	'user_specific' 	=> true, 	// If this is true username placeholder can be used in applicable places
 	'writable'     	 	=> true, 	// If true (default) then new contacts can be created and existing ones can be updated and deleted
+
+	// Maximum size of a vcard (in bytes) which is accepted for create/update. 
+	// Applicable only when 'writable' is true. Defaults to 64 KiB.
+	//  'max_size'				=> 65536,
 	
   // The following placeholders are available to be used in 'base_dn' and 'search_filter' below as applicable
   // %u  - Username sent by client for authentication
