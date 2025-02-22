@@ -587,34 +587,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					for($dnComponentIndex=1; $dnComponentIndex<$componentOldLdapTree['count']; $dnComponentIndex++)
 						$parentOldLdapTree = $parentOldLdapTree . (empty($parentOldLdapTree)?"":",") . $componentOldLdapTree[$dnComponentIndex];
 						
-					$mappedBackendAttributes = [];
-
-					foreach($fieldMap as $vCardKey => $backendMapArr)
-					{
-						if(Utility::isMultidimensional($backendMapArr))
-						{
-							foreach($backendMapArr as $backendMap)
-							{
-								if(isset($backendMap['backend_attribute']) && is_array($backendMap['backend_attribute']))
-								{
-									foreach($backendMap['backend_attribute'] as $compositeBackendMapKey => $compositeBackendMapValue)
-									{
-										$mappedBackendAttributes[] = strtolower($compositeBackendMapValue);
-									}
-								}
-								else
-									$mappedBackendAttributes[] = strtolower($backendMap['backend_attribute']);
-							}
-						}
-						else
-						{
-							if(is_array($backendMapArr['backend_attribute']))
-								foreach($backendMapArr['backend_attribute'] as $compositeBackendMapKey => $compositeBackendMapValue)
-									$mappedBackendAttributes[] = strtolower($compositeBackendMapValue);
-							else
-								 $mappedBackendAttributes[] = strtolower($backendMapArr['backend_attribute']);
-						}
-					}
+					$mappedBackendAttributes = Utility::getMappedBackendAttributes($fieldMap);
 
 					foreach($oldLdapInfo[0] as $oldLdapAttrName => $oldLdapAttrValue) 
 					{ 
