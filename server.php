@@ -15,7 +15,7 @@
 require_once 'src/App/Bootstrap.php';
 require_once 'vendor/autoload.php';
 
-$GLOBALS['currentUserPrincipal'] = null;
+$GLOBALS['currentUserPrincipalId'] = null;
 $GLOBALS['currentUserPrincipalBackendId'] = null;
 $GLOBALS['currentUserPrincipalLdapConn'] = null;
 

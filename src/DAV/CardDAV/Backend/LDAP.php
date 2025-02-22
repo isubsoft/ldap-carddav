@@ -106,10 +106,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     function getAddressBooksForUser($principalUri)
     {
   		$principalId = basename($principalUri);
-      $currentUserPrincipal = $GLOBALS['currentUserPrincipal'];
+      $currentUserPrincipalId = $GLOBALS['currentUserPrincipalId'];
       $currentUserPrincipalBackendId = $GLOBALS['currentUserPrincipalBackendId'];
   		
-  		if(strtolower($principalId) != strtolower($currentUserPrincipal))
+  		if(strtolower($principalId) != strtolower($currentUserPrincipalId))
   			throw new SabreDAVException\Forbidden("Not allowed");
         			
       $addressBooks = [];

@@ -49,9 +49,8 @@ $config['principal']['ldap'] = [
   'scope' => 'list', // search mode: sub|base|list
 
 	// Principal property => LDAP user attribute field map
-  'fieldMap' => [	'id' => 'uid', 					// 'id' is the username which is used by the principal (client) to authenticate.
-  															 					// Make sure it is mapped to an appropriate user attribute in LDAP which 
-  															 					// is unique to the user as per the search criteria above.
+  'fieldMap' => [	'id' => 'uid', 					// 'id' is equal to the username used by the principal during authentication.
+  															 					// Make sure it is mapped to an appropriate user attribute in LDAP.
   								'displayname' => 'cn', 	// 'displayname' is a commonly used name of the principal.
   								'mail' => 'mail' 				// 'mail' is an email id of the principal.
   							]
@@ -66,6 +65,12 @@ $config['card']['addressbook']['ldap']['global'] = [
 	// lead to server not processing requests for this address book.
 	'user_specific' 	=> false, // If this is true username placeholder can be used in applicable places
 	'writable'     	 	=> false, // If true (default) then new contacts can be created and existing ones can be updated and deleted
+	
+	// Mark contacts deleted directly in backend in sync database at this interval (in seconds). If contacts
+	// in your backend are deleted by anything other than this server then set the below else clients of this server 
+	// may never get some deleted contacts. Frequent full sync may put load on this server so 
+	// set it to a value as large as possible (like a day). Defaults to never.
+	//  'force_full_sync_interval' => 86400,
 	
 	// Maximum size of a vcard (in bytes) which is accepted for create/update. 
 	// Applicable only when 'writable' is true. Defaults to 64 KiB.
@@ -102,8 +107,14 @@ $config['card']['addressbook']['ldap']['global'] = [
 	
 	// If writable is true then these fields need to be populated:
 	// LDAP_Object_Classes, required_fields, LDAP_rdn
-	'LDAP_Object_Classes' => ['inetOrgPerson'],
+	'LDAP_Object_Classes' => ['inetOrgPerson'], // First objectClass must be the structural objectClass.
 	'required_fields'     => ['cn', 'sn'],
+
+	// Backend contact fields to which there is only read access.
+	// If set contacts can only be updated and not created, renamed or deleted.
+	// Applicable only when 'writable' is true.
+	//  'read_only_fields'     => ['cn', 'sn'],
+
 	'LDAP_rdn'      			=> 'cn',
 	'backend_data_update_policy' => 'merge', 	// Backend data update policy. Valid options are below.
 																						// merge (default)  - Would only replace backend contact attibutes present in field map here and 
@@ -232,7 +243,7 @@ $config['card']['addressbook']['ldap']['global'] = [
                                   'reverse_map_parameter_index' => 0 ]],
 	],
 	
-	'group_LDAP_Object_Classes' => ['groupOfNames'],
+	'group_LDAP_Object_Classes' => ['groupOfNames'], // First objectClass must be the structural objectClass.
 	'group_required_fields'     => ['cn', 'member'],
 	'group_LDAP_rdn'      	    => 'cn',
 	'group_member_map'          => [ 'MEMBER'      => [ 'backend_attribute' => 'member' ] ],
@@ -261,6 +272,12 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	'user_specific' 	=> true, 	// If this is true username placeholder can be used in applicable places
 	'writable'     	 	=> true, 	// If true (default) then new contacts can be created and existing ones can be updated and deleted
 
+	// Mark contacts deleted directly in backend in sync database at this interval (in seconds). If contacts
+	// in your backend are deleted by anything other than this server then set the below else clients of this server 
+	// may never get some deleted contacts. Frequent full sync may put load on this server so 
+	// set it to a value as large as possible (like a day). Defaults to never.
+	//  'force_full_sync_interval' => 86400,
+	
 	// Maximum size of a vcard (in bytes) which is accepted for create/update. 
 	// Applicable only when 'writable' is true. Defaults to 64 KiB.
 	//  'max_size'				=> 65536,
@@ -296,8 +313,14 @@ $config['card']['addressbook']['ldap']['personal'] = [
 
 	// If writable is true then these fields need to be populated:
 	// LDAP_Object_Classes, required_fields, LDAP_rdn.
-	'LDAP_Object_Classes' => ['inetOrgPerson'], //First objectClass must be the structural objectClass.
+	'LDAP_Object_Classes' => ['inetOrgPerson'], // First objectClass must be the structural objectClass.
 	'required_fields'     => ['cn', 'sn'],
+	
+	// Backend contact fields to which there is only read access.
+	// If set contacts can only be updated and not created, renamed or deleted.
+	// Applicable only when 'writable' is true.
+	//  'read_only_fields'     => ['cn', 'sn'],
+	
 	'LDAP_rdn'      			=> 'cn',
 	'backend_data_update_policy' => 'merge', 	// Backend data update policy. Valid options are below.
 																						// merge (default)  - Would only replace backend contact attibutes present in field map here and 
@@ -425,7 +448,7 @@ $config['card']['addressbook']['ldap']['personal'] = [
                                   'reverse_map_parameter_index' => 0 ]],
 	],
 	
-	'group_LDAP_Object_Classes' => ['groupOfNames'],
+	'group_LDAP_Object_Classes' => ['groupOfNames'], // First objectClass must be the structural objectClass.
 	'group_required_fields'     => ['cn', 'member'],
 	'group_LDAP_rdn'      	    => 'cn',
 	'group_member_map'          => [ 'MEMBER'      => [ 'backend_attribute' => 'member' ] ],
