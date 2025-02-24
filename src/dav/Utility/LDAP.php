@@ -25,27 +25,52 @@ class LDAP {
         $ldapConn = null;
 
         try {
-            if(isset($config['use_tls']) && isset($config['host']) && isset($config['port']))
+            if(isset($config['host']) && isset($config['port']))
             {
 		          // Connect to ldap server
-		          $ldapUri = ($config['use_tls'] ? 'ldaps://' : 'ldap://') . $config['host'] . ':' . $config['port'];
+		          $ldapUri = ((isset($config['connection_security']) && $config['connection_security'] == 'secure') ? 'ldaps://' : 'ldap://') . $config['host'] . ':' . $config['port'];
 		          $ldapConn = ldap_connect($ldapUri);
+		          
+		          if(isset($config['connection_security']) && $config['connection_security'] == 'starttls')
+		          {
+		          	if(!ldap_start_tls($ldapConn))
+		          	{
+            			error_log("Start TLS connection security could not be established in " . __METHOD__ . " at line " . __LINE__);
+            			
+		          		if(!ldap_close($ldapConn))
+            				error_log("Server connection could not be closed in " . __METHOD__ . " at line " . __LINE__);
+		          		
+		          		return false;
+		          	}
+		          }
             }
-            
-            if (!$ldapConn) 
+            else
             {
-                return false;
+            	error_log("Mandatory server connection parameters not present " . __METHOD__ . " at line " . __LINE__);
+            	return false;
             }
+            				            
+            if(!$ldapConn) 
+              return false;
 
-						if(isset($config['ldap_version']) && $config['ldap_version'] >= 3)
-						{
-            	ldap_set_option($ldapConn, LDAP_OPT_PROTOCOL_VERSION, $config['ldap_version']);
-						}
+						$ldapVersion = (isset($config['ldap_version']))?$config['ldap_version']:3;
+						
+						if($ldapVersion >= 3)
+            	ldap_set_option($ldapConn, LDAP_OPT_PROTOCOL_VERSION, $ldapVersion);
+            else
+            {
+		    			error_log("LDAP version less than 3 is not supported " . __METHOD__ . " at line " . __LINE__);
+		    			
+		      		if(!ldap_close($ldapConn))
+		      		{
+		    				error_log("Server connection could not be closed in " . __METHOD__ . " at line " . __LINE__);
+		      		}
+		      		
+		      		return false;
+            }
 
 						if(isset($config['network_timeout']))
-						{
             	ldap_set_option($ldapConn, LDAP_OPT_NETWORK_TIMEOUT, $config['network_timeout']);
-						}
 
 	          // using ldap bind
 	          $bindDn = (isset($credentials['bindDn']) && $credentials['bindDn'] != '')?$credentials['bindDn']:null;     // ldap rdn or dn
@@ -229,5 +254,39 @@ class LDAP {
             }
         }
         return true;
+    }
+    
+    public static function getMappedBackendAttributes($fieldMap)
+    {
+    	$mappedBackendAttributes = [];
+    	
+			foreach($fieldMap as $vCardKey => $backendMapArr)
+			{
+				if(self::isMultidimensional($backendMapArr))
+				{
+					foreach($backendMapArr as $backendMap)
+					{
+						if(isset($backendMap['backend_attribute']) && is_array($backendMap['backend_attribute']))
+						{
+							foreach($backendMap['backend_attribute'] as $compositeBackendMapKey => $compositeBackendMapValue)
+							{
+								$mappedBackendAttributes[] = strtolower($compositeBackendMapValue);
+							}
+						}
+						else
+							$mappedBackendAttributes[] = strtolower($backendMap['backend_attribute']);
+					}
+				}
+				else
+				{
+					if(is_array($backendMapArr['backend_attribute']))
+						foreach($backendMapArr['backend_attribute'] as $compositeBackendMapKey => $compositeBackendMapValue)
+							$mappedBackendAttributes[] = strtolower($compositeBackendMapValue);
+					else
+						 $mappedBackendAttributes[] = strtolower($backendMapArr['backend_attribute']);
+				}
+			}
+			
+			return $mappedBackendAttributes;
     }
 }

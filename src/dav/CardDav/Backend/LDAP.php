@@ -7,8 +7,9 @@ namespace ISubsoft\DAV\CardDAV\Backend;
 
 use ISubsoft\DAV\Utility\LDAP as Utility;
 use ISubsoft\DAV\Rules\LDAP as Rules;
+use ISubsoft\DAV\Exception as ISubsoftDAVException;
 use ISubsoft\VObject\Reader as Reader;
-use \Sabre\DAV\Exception as SabreDAVException;
+use Sabre\DAV\Exception as SabreDAVException;
 
 class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\CardDAV\Backend\SyncSupport {
 
@@ -27,19 +28,41 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     protected $pdo;
 
     /**
-     * The table name that will be used for tracking changes in address books.
+     * PDO table name.
      *
      * @var string
      */
     private $addressBooksTableName = 'cards_addressbook';
     
+    /**
+     * PDO table name.
+     *
+     * @var string
+     */
     private $systemUsersTableName = 'cards_system_user';
     
+    /**
+     * PDO table name.
+     *
+     * @var string
+     */
     private $backendMapTableName = 'cards_backend_map';
     
+    /**
+     * PDO table name.
+     *
+     * @var string
+     */
     private $deletedCardsTableName = 'cards_deleted';
     
+    /**
+     * PDO table name.
+     *
+     * @var string
+     */
     private $fullSyncTableName = 'cards_full_sync';
+    
+    private static $defaultContactMaxSize = 65536;
 
     /**
      * Address books
@@ -83,10 +106,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     function getAddressBooksForUser($principalUri)
     {
   		$principalId = basename($principalUri);
-      $currentUserPrincipal = $GLOBALS['currentUserPrincipal'];
+      $currentUserPrincipalId = $GLOBALS['currentUserPrincipalId'];
       $currentUserPrincipalBackendId = $GLOBALS['currentUserPrincipalBackendId'];
   		
-  		if(strtolower($principalId) != strtolower($currentUserPrincipal))
+  		if(strtolower($principalId) != strtolower($currentUserPrincipalId))
   			throw new SabreDAVException\Forbidden("Not allowed");
         			
       $addressBooks = [];
@@ -145,12 +168,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
       	{
           if(isset($addressBookConfig['search_base_dn']) && $addressBookConfig['search_base_dn'] != '' && isset($addressBookConfig['search_filter']) && $addressBookConfig['search_filter'] != '')
           {
-          	$filter = Utility::replacePlaceholders($addressBookConfig['search_filter'], ['%u' => $principalId]);
+          	$filter = Utility::replacePlaceholders($addressBookConfig['search_filter'], ['%u' => ldap_escape($principalId, "", LDAP_ESCAPE_FILTER)]);
            	$data = Utility::LdapQuery($this->addressbook[$addressBookId]['LdapConnection'], $addressBookConfig['search_base_dn'], $filter, ['dn'], strtolower($addressBookConfig['search_scope']));
           	
             if(!empty($data) && $data['count'] === 1)
             {
-              $addressBookDn = Utility::replacePlaceholders($addressBookConfig['base_dn'], ['%u' => $principalId, '%dn' => $data[0]['dn']]);
+              $addressBookDn = Utility::replacePlaceholders($addressBookConfig['base_dn'], ['%u' => ldap_escape($principalId, "", LDAP_ESCAPE_DN), '%dn' => $data[0]['dn']]);
             }
             else
             {
@@ -159,13 +182,14 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             }
           }
           else
-          	$addressBookDn = Utility::replacePlaceholders($addressBookConfig['base_dn'], ['%u' => $principalId]);
+          	$addressBookDn = Utility::replacePlaceholders($addressBookConfig['base_dn'], ['%u' => ldap_escape($principalId, "", LDAP_ESCAPE_DN)]);
       	}
       	
         $this->addressbook[$addressBookId]['config'] = $addressBookConfig;
         $this->addressbook[$addressBookId]['addressbookDn'] = $addressBookDn;
         $this->addressbook[$addressBookId]['syncToken'] = $addressBookSyncToken;
         $this->addressbook[$addressBookId]['syncDbUserId'] =  ($addressBookConfig['user_specific'])?$currentUserPrincipalBackendId:$systemUser;
+        $this->addressbook[$addressBookId]['contactMaxSize'] = (int)((isset($addressBookConfig['max_size']) && $addressBookConfig['max_size'] > 0)?$addressBookConfig['max_size']:self::$defaultContactMaxSize);
         
         $addressBooks[] = [
             'id'                                                          => $addressBookId,
@@ -392,10 +416,51 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         
         if(!$addressBookConfig['writable'])
 					throw new SabreDAVException\Forbidden("Not allowed");
-        
-        $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
-        $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];        
+					
 				$vcard = (Reader::read($cardData))->convert(\Sabre\VObject\Document::VCARD40);
+				
+        if($operation == 'CREATE')
+        {
+		      $cardExists = false;
+		      
+		      try {
+		          $query = 'SELECT 1 FROM '.$this->backendMapTableName.' WHERE user_id = ? AND addressbook_id = ? AND card_uid = ?';
+		          $stmt = $this->pdo->prepare($query);
+		          $stmt->execute([$syncDbUserId, $addressBookId, $vcard->UID]);
+		          
+		          if($stmt->fetch(\PDO::FETCH_ASSOC) !== false)
+		          	$cardExists = true;
+		      } catch (\Throwable $th) {
+		          error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+							throw new SabreDAVException\ServiceUnavailable();
+		      }
+		      
+		      if($cardExists)
+						throw new SabreDAVException\BadRequest("Card with same identity exist");
+        }
+        
+        if($operation == 'UPDATE')
+        {
+		      $cardIdMatch = true;
+		      
+		      try {
+		          $query = 'SELECT 1 FROM '.$this->backendMapTableName.' WHERE user_id = ? AND addressbook_id = ? AND card_uri = ? AND card_uid <> ?';
+		          $stmt = $this->pdo->prepare($query);
+		          $stmt->execute([$syncDbUserId, $addressBookId, $cardUri, $vcard->UID]);
+		          
+		          if($stmt->fetch(\PDO::FETCH_ASSOC) !== false)
+		          	$cardIdMatch = false;
+		      } catch (\Throwable $th) {
+		          error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+							throw new SabreDAVException\ServiceUnavailable();
+		      }
+		      
+		      if(!$cardIdMatch)
+						throw new SabreDAVException\BadRequest("Card identity does not match");
+        }
+					
+        $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
+        $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
         $ldapInfo = [];
 
         if( isset($vcard->KIND) && (strtolower((string)$vcard->KIND) === 'group'))
@@ -434,7 +499,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                             
                             if(isset($backendId) && $backendId != null)
                             {
-                                $filter = '(&'.$addressBookConfig['filter']. '(entryuuid=' .$backendId. '))'; 
+                                $filter = '(&'.$addressBookConfig['filter']. '(entryuuid=' . ldap_escape($backendId, "", LDAP_ESCAPE_FILTER) . '))'; 
                         
                                 $data = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, ['dn'], strtolower($addressBookConfig['scope']));
                                 
@@ -498,6 +563,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         if(! array_key_exists($rdn, $ldapInfo))
 					throw new SabreDAVException\BadRequest("Identity field not present");
 					
+				if(strlen(serialize($ldapInfo)) > $this->addressbook[$addressBookId]['contactMaxSize'])
+					throw new ISubsoftDAVException\ContentTooLarge();
+					
 				if($operation == 'UPDATE')
 				{
 					$oldLdapInfo = $this->fetchLdapContactData($addressBookId, $cardUri, ['*']);
@@ -519,34 +587,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					for($dnComponentIndex=1; $dnComponentIndex<$componentOldLdapTree['count']; $dnComponentIndex++)
 						$parentOldLdapTree = $parentOldLdapTree . (empty($parentOldLdapTree)?"":",") . $componentOldLdapTree[$dnComponentIndex];
 						
-					$mappedBackendAttributes = [];
-
-					foreach($fieldMap as $vCardKey => $backendMapArr)
-					{
-						if(! isset($backendMapArr['backend_attribute']))
-						{
-							foreach($backendMapArr as $backendMap)
-							{
-								if(isset($backendMap['backend_attribute']) && is_array($backendMap['backend_attribute']))
-								{
-									foreach($backendMap['backend_attribute'] as $compositeBackendMapKey => $compositeBackendMapValue)
-									{
-										$mappedBackendAttributes[] = strtolower($compositeBackendMapValue);
-									}
-								}
-								else
-									$mappedBackendAttributes[] = strtolower($backendMap['backend_attribute']);
-							}
-						}
-						else
-						{
-							if(is_array($backendMapArr['backend_attribute']))
-								foreach($backendMapArr['backend_attribute'] as $compositeBackendMapKey => $compositeBackendMapValue)
-									$mappedBackendAttributes[] = strtolower($compositeBackendMapValue);
-							else
-								 $mappedBackendAttributes[] = strtolower($backendMapArr['backend_attribute']);
-						}
-					}
+					$mappedBackendAttributes = Utility::getMappedBackendAttributes($fieldMap);
 
 					foreach($oldLdapInfo[0] as $oldLdapAttrName => $oldLdapAttrValue) 
 					{ 
@@ -571,10 +612,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					$newLdapRdn = $rdn . '=' . ldap_escape(is_array($ldapInfo[$rdn])?$ldapInfo[$rdn][0]:$ldapInfo[$rdn], "", LDAP_ESCAPE_DN);
 
 							if(! ldap_rename($ldapConn, $oldLdapTree, $newLdapRdn, null, false))
-								throw new SabreDAVException\BadRequest();
+								throw new SabreDAVException\BadRequest("Card with same name may already exist");
 
 							if(! ldap_mod_replace($ldapConn, $newLdapRdn . ',' . $parentOldLdapTree, $ldapInfo))
-								throw new SabreDAVException\BadRequest();				
+								throw new SabreDAVException\BadRequest("Card data may be incompatible");
 				}
 				else
 				{
@@ -582,7 +623,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		      $ldapTree = $rdn. '='. ldap_escape(is_array($ldapInfo[$rdn])?$ldapInfo[$rdn][0]:$ldapInfo[$rdn], "", LDAP_ESCAPE_DN) . ',' .$addressBookDn;
 
 		      if(!ldap_add($ldapConn, $ldapTree, $ldapInfo))
-						throw new SabreDAVException\BadRequest();
+						throw new SabreDAVException\BadRequest("Card with same name may already exist");
 
 		      $data = Utility::LdapQuery($ldapConn, $ldapTree, $addressBookConfig['filter'], ['entryuuid'], 'base');
 		      
@@ -1401,7 +1442,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         }
         
   
-        $filter = '(&'.$addressBookConfig['filter']. '(entryuuid=' .$backendId. '))'; 
+        $filter = '(&'.$addressBookConfig['filter']. '(entryuuid=' . ldap_escape($backendId, "", LDAP_ESCAPE_FILTER) . '))'; 
         
         $result = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, empty($attributes)?['dn', 'createTimestamp', 'modifyTimestamp']:$attributes, strtolower($addressBookConfig['scope']));      
         return $result;

@@ -44,8 +44,11 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
      */
     function validateUserPass($username, $password)
     {      
-        if($username == '' || $password == null)
+        if($username == null || $username == '' || $password == null)
+        {
+		    	error_log("Invalid credentials provided in " . __METHOD__ . " at line " . __LINE__);
         	return false;
+        }
         	
         if(isset($this->config['auth']['ldap']['search_bind_dn']) && $this->config['auth']['ldap']['search_bind_dn'] != '')
         {
@@ -58,7 +61,7 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
             // verify binding
             if ($ldapBindConn) {
                 $ldaptree = (isset($this->config['auth']['ldap']['search_base_dn']) && $this->config['auth']['ldap']['search_base_dn'] !== '')?$this->config['auth']['ldap']['search_base_dn']:$this->config['auth']['ldap']['base_dn'];
-                $filter = Utility::replacePlaceholders($this->config['auth']['ldap']['search_filter'], ['%u' => $username]);
+                $filter = Utility::replacePlaceholders($this->config['auth']['ldap']['search_filter'], ['%u' => ldap_escape($username, "", LDAP_ESCAPE_FILTER)]);
 
                 $data = Utility::LdapQuery($ldapBindConn, $ldaptree, $filter, ['dn'], strtolower($this->config['auth']['ldap']['scope']));
 
@@ -70,7 +73,7 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
                 
                 if($data['count'] == 1)
                 {
-                    $bindDn = Utility::replacePlaceholders($this->config['auth']['ldap']['bind_dn'], ['%dn' => $data[0]['dn'], '%u' => $username]);
+                    $bindDn = Utility::replacePlaceholders($this->config['auth']['ldap']['bind_dn'], ['%dn' => $data[0]['dn'], '%u' => ldap_escape($username, "", LDAP_ESCAPE_DN)]);
 
                     try {
                         $ldapUserBind = ldap_bind($ldapBindConn, $bindDn, $password);
@@ -86,10 +89,15 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
                     return true;
                 }      
             }
+            else
+            {
+		          error_log("Could not establish bind connection to backend server in " . __METHOD__ . " at line " . __LINE__);
+		          throw new ServiceUnavailable();
+            }
         }
         else
         {
-            $bindDn = Utility::replacePlaceholders($this->config['auth']['ldap']['bind_dn'], ['%u' => $username]);
+            $bindDn = Utility::replacePlaceholders($this->config['auth']['ldap']['bind_dn'], ['%u' => ldap_escape($username, "", LDAP_ESCAPE_DN)]);
             $bindPass = Utility::replacePlaceholders($this->config['auth']['ldap']['bind_pass'], ['%p' => $password]);
 
             // binding to ldap server
@@ -99,6 +107,11 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
             {
                 $GLOBALS['currentUserPrincipalLdapConn'] = $ldapBindConn;
                 return true;
+            }
+            else
+            {
+		          error_log("Could not establish bind connection to backend server in " . __METHOD__ . " at line " . __LINE__);
+		          throw new ServiceUnavailable();
             }
         }
 
