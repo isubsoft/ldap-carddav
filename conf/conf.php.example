@@ -105,16 +105,6 @@ $config['card']['addressbook']['ldap']['global'] = [
   'search_filter'  => '(&(objectclass=inetOrgPerson)(uid=%u))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
 	'search_scope'   => 'list',   // search mode: sub|base|list
 	
-	// If writable is true then these fields need to be populated:
-	// LDAP_Object_Classes, required_fields, LDAP_rdn
-	'LDAP_Object_Classes' => ['inetOrgPerson'], // First objectClass must be the structural objectClass.
-	'required_fields'     => ['cn', 'sn'],
-
-	// Backend contact fields to which there is only read access. Default is none.
-	//  'read_only_fields'     => ['cn', 'sn'],
-
-	'LDAP_rdn'      			=> 'cn',
-
 	// Backend data update policy. Valid options are below.
 	// merge (default)  - Would only replace backend contact attibutes present in field map here and 
 	//                    leave others intact.
@@ -122,6 +112,21 @@ $config['card']['addressbook']['ldap']['global'] = [
 	//                    field map here. WARNING: This option may lead to loss of contact attributes 
 	//                    in the backend which are not present in field map here.
 	//  'backend_data_update_policy' => 'merge',
+	
+	// If writable is true then these fields need to be populated:
+	// LDAP_Object_Classes, required_fields, LDAP_rdn
+	'LDAP_Object_Classes' => ['inetOrgPerson'], // First objectClass must be the structural objectClass.
+	'required_fields'     => ['cn', 'sn'],
+	'LDAP_rdn'      			=> 'uid',
+
+	// Backend contact field acl. By default no access is denied to any backend field.
+	// 'eval' can have following values
+	// r (default) - Evaluate 'list' as read only fields
+	// w           - Evaluate 'list' as writable fields
+	//  'field_acl'     => 	[ 
+	//												'eval' => 'r',
+	//												'list' => []
+	//											],
 
 	// vCard    => LDAP contact field map
   'fieldmap'      => [
@@ -245,7 +250,19 @@ $config['card']['addressbook']['ldap']['global'] = [
 	'group_LDAP_Object_Classes' => ['groupOfNames'], // First objectClass must be the structural objectClass.
 	'group_required_fields'     => ['cn', 'member'],
 	'group_LDAP_rdn'      	    => 'cn',
+	
+	// Backend contact field acl. By default no access is denied to any backend field.
+	// 'eval' can have following values
+	// r (default) - Evaluate 'list' as read only fields
+	// w           - Evaluate 'list' as writable fields
+	//  'group_field_acl' => 	[ 
+	//													'eval' => 'r',
+	//													'list' => []
+	//												],
+	
 	'group_member_map'          => [ 'MEMBER'      => [ 'backend_attribute' => 'member' ] ],
+	
+	// vCard    => LDAP contact field map
 	'group_fieldmap'            => [     
 																	 'FN'          => [	'backend_attribute' => 'cn',
                                                       'backend_data_format' => 'text',
@@ -309,16 +326,6 @@ $config['card']['addressbook']['ldap']['personal'] = [
   'search_base_dn' => 'ou=People,dc=example,dc=org',
   'search_filter'  => '(&(objectclass=inetOrgPerson)(uid=%u))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
 	'search_scope'   => 'list',   // search mode: sub|base|list
-
-	// If writable is true then these fields need to be populated:
-	// LDAP_Object_Classes, required_fields, LDAP_rdn
-	'LDAP_Object_Classes' => ['inetOrgPerson'], // First objectClass must be the structural objectClass.
-	'required_fields'     => ['cn', 'sn'],
-
-	// Backend contact fields to which there is only read access. Default is none.
-	//  'read_only_fields'     => ['cn', 'sn'],
-	
-	'LDAP_rdn'      			=> 'cn',
 	
 	// Backend data update policy. Valid options are below.
 	// merge (default)  - Would only replace backend contact attibutes present in field map here and 
@@ -328,6 +335,21 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	//                    in the backend which are not present in field map here.
 	//  'backend_data_update_policy' => 'merge',
 
+	// If writable is true then these fields need to be populated:
+	// LDAP_Object_Classes, required_fields, LDAP_rdn
+	'LDAP_Object_Classes' => ['inetOrgPerson'], // First objectClass must be the structural objectClass.
+	'required_fields'     => ['cn', 'sn'],
+	'LDAP_rdn'      			=> 'cn',
+
+	// Backend contact field acl. By default no access is denied to any backend field.
+	// 'eval' can have following values
+	// r (default) - Evaluate 'list' as read only fields
+	// w           - Evaluate 'list' as writable fields
+	//  'field_acl'     => 	[ 
+	//												'eval' => 'r',
+	//												'list' => []
+	//											],
+	
 	// vCard    => LDAP field map
   'fieldmap'      => [
     'FN'            => ['backend_attribute' => 'cn',
@@ -450,7 +472,19 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	'group_LDAP_Object_Classes' => ['groupOfNames'], // First objectClass must be the structural objectClass.
 	'group_required_fields'     => ['cn', 'member'],
 	'group_LDAP_rdn'      	    => 'cn',
+
+	// Backend contact field acl. By default no access is denied to any backend field.
+	// 'eval' can have following values
+	// r (default) - Evaluate 'list' as read only fields
+	// w           - Evaluate 'list' as writable fields
+	//  'group_field_acl' => 	[ 
+	//													'eval' => 'r',
+	//													'list' => []
+	//												],
+	
 	'group_member_map'          => [ 'MEMBER'      => [ 'backend_attribute' => 'member' ] ],
+	
+	// vCard    => LDAP contact field map
 	'group_fieldmap'            => [     
 																	 'FN'          => [	'backend_attribute' => 'cn',
                                                       'backend_data_format' => 'text',

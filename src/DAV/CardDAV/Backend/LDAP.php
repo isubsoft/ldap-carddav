@@ -418,13 +418,14 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $writableAddressBook = (!isset($addressBookConfig['writable']))?true:$addressBookConfig['writable'];
         $maxContactSize = $this->addressbook[$addressBookId]['contactMaxSize'];
         
-				if(strlen($cardData) > $maxContactSize)
-					throw new ISubsoftDAVException\ContentTooLarge();
-        
         if(!$writableAddressBook)
 					throw new SabreDAVException\Forbidden("Not allowed");
 					
+				if(strlen($cardData) > $maxContactSize)
+					throw new ISubsoftDAVException\ContentTooLarge();
+					
 				$vcard = (Reader::read($cardData))->convert($this->defaultVcardVersion);
+	      $UID = (!isset($vcard->UID) || $vcard->UID == null || $vcard->UID == '')?null:$vcard->UID;
 				
         if($operation == 'CREATE')
         {
@@ -433,7 +434,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		      try {
 		          $query = 'SELECT 1 FROM '.$this->backendMapTableName.' WHERE user_id = ? AND addressbook_id = ? AND card_uid = ?';
 		          $stmt = $this->pdo->prepare($query);
-		          $stmt->execute([$syncDbUserId, $addressBookId, $vcard->UID]);
+		          $stmt->execute([$syncDbUserId, $addressBookId, $UID]);
 		          
 		          if($stmt->fetch(\PDO::FETCH_ASSOC) !== false)
 		          	$cardExists = true;
@@ -453,7 +454,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		      try {
 		          $query = 'SELECT 1 FROM '.$this->backendMapTableName.' WHERE user_id = ? AND addressbook_id = ? AND card_uri = ? AND card_uid <> ?';
 		          $stmt = $this->pdo->prepare($query);
-		          $stmt->execute([$syncDbUserId, $addressBookId, $cardUri, $vcard->UID]);
+		          $stmt->execute([$syncDbUserId, $addressBookId, $cardUri, $UID]);
 		          
 		          if($stmt->fetch(\PDO::FETCH_ASSOC) !== false)
 		          	$cardIdMatch = false;
@@ -474,7 +475,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
         $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
         $requiredFields = [];
-        $rdn = null;
+        $rdnField = null;
+        $fieldAclEval = 'r';
+        $fieldAclList = [];
         $readOnlyFields = [];
 				$backendDataUpdatePolicy = (!isset($addressBookConfig['backend_data_update_policy']))?"merge":$addressBookConfig['backend_data_update_policy'];
         $fieldMap = [];
@@ -484,25 +487,45 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         {
           $ldapInfo['objectclass'] = (!isset($addressBookConfig['group_LDAP_Object_Classes']) || !is_array($addressBookConfig['group_LDAP_Object_Classes']))?[]:$addressBookConfig['group_LDAP_Object_Classes'];
           $fieldMap = (!isset($addressBookConfig['group_fieldmap']) || !is_array($addressBookConfig['group_fieldmap']))?[]:$addressBookConfig['group_fieldmap'];
-          $requiredFields = (!isset($addressBookConfig['group_required_fields']) || !is_array($addressBookConfig['group_required_fields']))?[]:$addressBookConfig['group_required_fields'];
-          $rdn = (!isset($addressBookConfig['group_LDAP_rdn']))?null:trim($addressBookConfig['group_LDAP_rdn']);
-          $readOnlyFields = (!isset($addressBookConfig['group_read_only_fields']) || !is_array($addressBookConfig['group_read_only_fields']))?[]:$addressBookConfig['group_read_only_fields'];
+          
+          foreach((!isset($addressBookConfig['group_required_fields']) || !is_array($addressBookConfig['group_required_fields']))?[]:$addressBookConfig['group_required_fields'] as $field)
+          {
+						$requiredFields[] = strtolower($field);
+          }
+          
+          $rdnField = (!isset($addressBookConfig['group_LDAP_rdn']))?null:strtolower($addressBookConfig['group_LDAP_rdn']);
+          $fieldAclEval = (!isset($addressBookConfig['group_field_acl']['eval']))?'r':strtolower($addressBookConfig['group_field_acl']['eval']);
+          
+          foreach((!isset($addressBookConfig['group_field_acl']['list']) || !is_array($addressBookConfig['group_field_acl']['list']))?[]:$addressBookConfig['group_field_acl']['list'] as $field)
+          {
+						$fieldAclList[] = strtolower($field);
+          }
         }
         else
         {
           $ldapInfo['objectclass'] = (!isset($addressBookConfig['LDAP_Object_Classes']) || !is_array($addressBookConfig['LDAP_Object_Classes']))?[]:$addressBookConfig['LDAP_Object_Classes'];
-          $fieldMap = $addressBookConfig['fieldmap'];
-          $requiredFields = (!isset($addressBookConfig['required_fields']) || !is_array($addressBookConfig['required_fields']))?[]:$addressBookConfig['required_fields'];
-          $rdn = (!isset($addressBookConfig['LDAP_rdn']))?null:trim($addressBookConfig['LDAP_rdn']);
-      		$readOnlyFields = (!isset($addressBookConfig['read_only_fields']) || !is_array($addressBookConfig['read_only_fields']))?[]:$addressBookConfig['read_only_fields'];
+          $fieldMap = (!isset($addressBookConfig['fieldmap']) || !is_array($addressBookConfig['fieldmap']))?[]:$addressBookConfig['fieldmap'];
+          
+          foreach((!isset($addressBookConfig['required_fields']) || !is_array($addressBookConfig['required_fields']))?[]:$addressBookConfig['required_fields'] as $field)
+          {
+						$requiredFields[] = strtolower($field);
+          }
+          
+          $rdnField = (!isset($addressBookConfig['LDAP_rdn']))?null:strtolower($addressBookConfig['LDAP_rdn']);
+          $fieldAclEval = (!isset($addressBookConfig['field_acl']['eval']))?'r':strtolower($addressBookConfig['field_acl']['eval']);
+          
+          foreach((!isset($addressBookConfig['field_acl']['list']) || !is_array($addressBookConfig['field_acl']['list']))?[]:$addressBookConfig['field_acl']['list'] as $field)
+          {
+						$fieldAclList[] = strtolower($field);
+          }
         }
         
 				if($operation == 'CREATE' || ($operation == 'UPDATE' && $backendDataUpdatePolicy == 'replace'))
 				{
-		      if($rdn == null || $ldapInfo['objectclass'] == [])
+		      if($rdnField == null || $ldapInfo['objectclass'] == [])
 						throw new SabreDAVException\ServiceUnavailable();
-				}        
-
+				}
+        
         if($isContactGroup)
         {
             foreach($addressBookConfig['group_member_map'] as $vCardKey => $ldapKey) 
@@ -550,8 +573,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
         }
         
-				$mappedBackendAttributes = Utility::getMappedBackendAttributes($fieldMap);
-        
         //Fetch from VCard associative array with respect to vcard to ldap field map 
         foreach($fieldMap as $vCardKey => $ldapKey)
         {
@@ -585,32 +606,98 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             }    
         }
         
+        unset($vcard);
+        
 				if(strlen(serialize($ldapInfo)) > $maxContactSize)
 					throw new ISubsoftDAVException\ContentTooLarge();
 					
-				if($operation == 'CREATE' || ($operation == 'UPDATE' && $backendDataUpdatePolicy == 'replace'))
-				{
-					foreach($readOnlyFields as $key)
-					{
-						if(in_array($key, $mappedBackendAttributes) && array_key_exists($key, $ldapInfo))
-							unset($ldapInfo[$key]);
-					}
+				$mappedBackendAttributes = Utility::getMappedBackendAttributes($fieldMap);
 				
-			    foreach ($requiredFields as $key) {
-			        if(!array_key_exists($key, $ldapInfo))
-								throw new SabreDAVException\BadRequest("Required fields not present");
-			    }
-
-			    if(!array_key_exists($rdn, $ldapInfo))
-						throw new SabreDAVException\BadRequest("Identity field not present");
+				if($fieldAclEval == 'w')
+				{
+					foreach($mappedBackendAttributes as $field)
+					{
+						if(!in_array($field, $fieldAclList))
+							$readOnlyFields[] = $field;
+					}
 				}
+				else
+					$readOnlyFields = $fieldAclList;
 					
 				if($operation == 'UPDATE')
 				{
-					$oldLdapInfo = $this->fetchLdapContactData($addressBookId, $cardUri, ['*']);
-
+					$newLdapRdn = null;
+					
+					$oldLdapInfo = $this->fetchLdapContactData($addressBookId, $cardUri, ['*'], 1);
+					
 					if(empty($oldLdapInfo))
 						throw new SabreDAVException\Conflict();
+						
+					if($fieldAclEval == 'w')
+					{
+						for($i=0; $i<$oldLdapInfo[0]['count']; $i++)
+						{
+							$field = $oldLdapInfo[0][$i];
+							
+							if(!in_array($field, $fieldAclList) && !in_array($field, $readOnlyFields))
+								$readOnlyFields[] = $field;
+						}
+					}
+					
+					if($backendDataUpdatePolicy == 'replace')
+					{
+						foreach($oldLdapInfo[0] as $oldLdapAttrName => $oldLdapAttrValue)
+						{
+							if(!isset($ldapInfo[$oldLdapAttrName]))
+							{
+								if(is_array($oldLdapAttrValue))
+									$ldapInfo[$oldLdapAttrName] = [];
+							}
+						}
+					}
+					else
+					{
+						foreach($mappedBackendAttributes as $attr)
+						{
+							if(!isset($ldapInfo[$attr]))
+								$ldapInfo[$attr] = [];
+						}
+					}
+					
+					if($backendDataUpdatePolicy == 'replace')
+					{
+						foreach($readOnlyFields as $key)
+						{
+							if(array_key_exists($key, $ldapInfo))
+								unset($ldapInfo[$key]);
+						}
+					
+					  foreach ($requiredFields as $key) {
+					      if(!array_key_exists($key, $ldapInfo))
+									throw new SabreDAVException\BadRequest("Required fields not present or do not have write access");
+					  }
+
+					  if(!array_key_exists($rdnField, $ldapInfo))
+							throw new SabreDAVException\BadRequest("Identity field not present or do not have write access");
+
+						$newLdapRdn = $rdnField . '=' . ldap_escape(is_array($ldapInfo[$rdnField])?$ldapInfo[$rdnField][0]:$ldapInfo[$rdnField], "", LDAP_ESCAPE_DN);
+					}
+					else
+					{
+						foreach($readOnlyFields as $key)
+						{
+							if(array_key_exists($key, $ldapInfo))
+								unset($ldapInfo[$key]);
+						}
+						
+				    foreach ($requiredFields as $key) {
+				      if(!in_array($key, $readOnlyFields) && !array_key_exists($key, $ldapInfo))
+								throw new SabreDAVException\BadRequest("Required fields not present or do not have write access");
+				    }
+				    
+				    	if(array_key_exists($rdnField, $ldapInfo))
+								$newLdapRdn = $rdnField . '=' . ldap_escape(is_array($ldapInfo[$rdnField])?$ldapInfo[$rdnField][0]:$ldapInfo[$rdnField], "", LDAP_ESCAPE_DN);
+					}
 
 					$oldLdapTree = $oldLdapInfo[0]['dn'];
 					$componentOldLdapTree = ldap_explode_dn($oldLdapTree, 0);
@@ -626,56 +713,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
 					for($dnComponentIndex=1; $dnComponentIndex<$componentOldLdapTree['count']; $dnComponentIndex++)
 						$parentOldLdapTree = $parentOldLdapTree . (empty($parentOldLdapTree)?"":",") . $componentOldLdapTree[$dnComponentIndex];
-						
-					foreach($oldLdapInfo[0] as $oldLdapAttrName => $oldLdapAttrValue) 
-					{ 
-						if($backendDataUpdatePolicy == 'replace')
-						{
-							if(!isset($ldapInfo[$oldLdapAttrName]))
-							{
-								if(is_array($oldLdapAttrValue))
-									$ldapInfo[$oldLdapAttrName] = [];
-							}
-						}
-						else
-						{
-							if(!isset($ldapInfo[$oldLdapAttrName]))
-							{
-								if(is_array($oldLdapAttrValue) && in_array($oldLdapAttrName, $mappedBackendAttributes))
-									$ldapInfo[$oldLdapAttrName] = [];
-							}
-						}
-					}
-					
-					$newLdapRdn = $oldLdapRdn;
-					
-					if($backendDataUpdatePolicy == 'replace')
-					{
-						$newLdapRdn = $rdn . '=' . ldap_escape(is_array($ldapInfo[$rdn])?$ldapInfo[$rdn][0]:$ldapInfo[$rdn], "", LDAP_ESCAPE_DN);
-					}
-					else
-					{
-						foreach($readOnlyFields as $key)
-						{
-							if(in_array($key, $mappedBackendAttributes) && array_key_exists($key, $ldapInfo))
-								unset($ldapInfo[$key]);
-						}
-						
-				    foreach ($requiredFields as $key) {
-				      if(in_array($key, $mappedBackendAttributes) && !array_key_exists($key, $ldapInfo))
-								throw new SabreDAVException\BadRequest("Required fields not present");
-				    }
-				    
-				    if(in_array($rdn, $mappedBackendAttributes))
-				    {
-				    	if(!array_key_exists($rdn, $ldapInfo))
-								throw new SabreDAVException\BadRequest("Identity field not present");
-								
-							$newLdapRdn = $rdn . '=' . ldap_escape(is_array($ldapInfo[$rdn])?$ldapInfo[$rdn][0]:$ldapInfo[$rdn], "", LDAP_ESCAPE_DN);
-				    }
-					}
 					
 					$ldapTree = $oldLdapTree;
+					
+					if($newLdapRdn == null)
+						$newLdapRdn = $oldLdapRdn;
 
 					if($newLdapRdn != $oldLdapRdn)
 					{
@@ -690,8 +732,21 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				}
 				else
 				{
-	        $UID = (empty($vcard->UID))?$this->guidv4():$vcard->UID;
-		      $ldapTree = $rdn. '='. ldap_escape(is_array($ldapInfo[$rdn])?$ldapInfo[$rdn][0]:$ldapInfo[$rdn], "", LDAP_ESCAPE_DN) . ',' .$addressBookDn;
+					foreach($readOnlyFields as $key)
+					{
+						if(array_key_exists($key, $ldapInfo))
+							unset($ldapInfo[$key]);
+					}
+				
+			    foreach ($requiredFields as $key) {
+			        if(!array_key_exists($key, $ldapInfo))
+								throw new SabreDAVException\BadRequest("Required fields not present or do not have write access");
+			    }
+
+			    if(!array_key_exists($rdnField, $ldapInfo))
+						throw new SabreDAVException\BadRequest("Identity field not present or do not have write access");
+						
+		      $ldapTree = $rdnField. '='. ldap_escape(is_array($ldapInfo[$rdnField])?$ldapInfo[$rdnField][0]:$ldapInfo[$rdnField], "", LDAP_ESCAPE_DN) . ',' .$addressBookDn;
 
 		      if(!ldap_add($ldapConn, $ldapTree, $ldapInfo))
 						throw new SabreDAVException\BadRequest("Card with same name may already exist");
@@ -703,7 +758,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				    try {
 				        $query = "INSERT INTO `".$this->backendMapTableName."` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
 				        $sql = $this->pdo->prepare($query);
-				        $sql->execute([$cardUri, $UID, $addressBookId, $data[0]['entryuuid'][0], $syncDbUserId]);
+				        $sql->execute([$cardUri, ($UID == null)?$this->guidv4():$UID, $addressBookId, $data[0]['entryuuid'][0], $syncDbUserId]);
 				    } catch (\Throwable $th) {
 				        error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
 				    }
@@ -1479,7 +1534,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      * @param array 	$attributes
      * @return array
      */
-    function fetchLdapContactData($addressBookId, $cardUri, $attributes = [])
+    function fetchLdapContactData($addressBookId, $cardUri, $attributes = [], int $attributesOnly = 0)
     {
         $addressBookConfig = $this->addressbook[$addressBookId]['config'];
         $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
@@ -1512,7 +1567,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
   
         $filter = '(&'.$addressBookConfig['filter']. '(entryuuid=' . ldap_escape($backendId, "", LDAP_ESCAPE_FILTER) . '))'; 
         
-        $result = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, empty($attributes)?['dn', 'createTimestamp', 'modifyTimestamp']:$attributes, strtolower($addressBookConfig['scope']));      
+        $result = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, empty($attributes)?['dn', 'createTimestamp', 'modifyTimestamp']:$attributes, strtolower($addressBookConfig['scope']), $attributesOnly);      
         return $result;
     }
 
