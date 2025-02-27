@@ -62,7 +62,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     private $fullSyncTableName = 'cards_full_sync';
     
-    private static $defaultContactMaxSize = 65536;
+    private static $defaultContactMaxSize = 16384;
+
+    private static $defaultBackendDataUpdatePolicy = 'merge';
+    
+    private static $defaultFieldAclEval = 'r';
     
     private $defaultVcardVersion = \Sabre\VObject\Document::VCARD40;
 
@@ -479,7 +483,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $fieldAclEval = 'r';
         $fieldAclList = [];
         $readOnlyFields = [];
-				$backendDataUpdatePolicy = (!isset($addressBookConfig['backend_data_update_policy']))?"merge":$addressBookConfig['backend_data_update_policy'];
+				$backendDataUpdatePolicy = (!isset($addressBookConfig['backend_data_update_policy']))?(self::$defaultBackendDataUpdatePolicy):$addressBookConfig['backend_data_update_policy'];
         $fieldMap = [];
         $ldapInfo = [];
         
@@ -494,7 +498,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
           }
           
           $rdnField = (!isset($addressBookConfig['group_LDAP_rdn']))?null:strtolower($addressBookConfig['group_LDAP_rdn']);
-          $fieldAclEval = (!isset($addressBookConfig['group_field_acl']['eval']))?'r':strtolower($addressBookConfig['group_field_acl']['eval']);
+          $fieldAclEval = (!isset($addressBookConfig['group_field_acl']['eval']))?(self::$defaultFieldAclEval):strtolower($addressBookConfig['group_field_acl']['eval']);
           
           foreach((!isset($addressBookConfig['group_field_acl']['list']) || !is_array($addressBookConfig['group_field_acl']['list']))?[]:$addressBookConfig['group_field_acl']['list'] as $field)
           {
@@ -512,7 +516,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
           }
           
           $rdnField = (!isset($addressBookConfig['LDAP_rdn']))?null:strtolower($addressBookConfig['LDAP_rdn']);
-          $fieldAclEval = (!isset($addressBookConfig['field_acl']['eval']))?'r':strtolower($addressBookConfig['field_acl']['eval']);
+          $fieldAclEval = (!isset($addressBookConfig['field_acl']['eval']))?(self::$defaultFieldAclEval):strtolower($addressBookConfig['field_acl']['eval']);
           
           foreach((!isset($addressBookConfig['field_acl']['list']) || !is_array($addressBookConfig['field_acl']['list']))?[]:$addressBookConfig['field_acl']['list'] as $field)
           {

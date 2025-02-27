@@ -72,9 +72,8 @@ $config['card']['addressbook']['ldap']['global'] = [
 	// set it to a value as large as possible (like a day). Defaults to never.
 	//  'force_full_sync_interval' => 86400,
 	
-	// Maximum size of a vcard (in bytes) which is accepted for create/update. 
-	// Applicable only when 'writable' is true. Defaults to 64 KiB.
-	//  'max_size'				=> 65536,
+	// Maximum size of a card (in bytes) which is accepted for create/update. Defaults to 16 KiB.
+	//  'max_size'				=> 16384,
 	
   // The following placeholders are available to be used in 'base_dn' and 'search_filter' below as applicable
   // %u  - Username sent by client for authentication
@@ -294,9 +293,8 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	// set it to a value as large as possible (like a day). Defaults to never.
 	//  'force_full_sync_interval' => 86400,
 	
-	// Maximum size of a vcard (in bytes) which is accepted for create/update. 
-	// Applicable only when 'writable' is true. Defaults to 64 KiB.
-	//  'max_size'				=> 65536,
+	// Maximum size of a card (in bytes) which is accepted for create/update. Defaults to 16 KiB.
+	//  'max_size'				=> 16384,
 	
   // The following placeholders are available to be used in 'base_dn' and 'search_filter' below as applicable
   // %u  - Username sent by client for authentication
