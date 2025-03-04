@@ -166,8 +166,8 @@ $config['card']['addressbook']['ldap']['global'] = [
 
 		'PHOTO'         => [['backend_attribute' => 'jpegPhoto',
                         'backend_data_format' => 'binary',
-                        'backend_data_mediatype' => ['image/jpeg'],
-                            'parameters' => [ ],
+                        'backend_data_mediatype' => ['image/jpeg', 'image/png'],
+                            'parameters' => [],
                             'reverse_map_parameter_index' => '0']],
 
     'NOTE'        	=> ['backend_attribute' => 'description',
@@ -177,8 +177,8 @@ $config['card']['addressbook']['ldap']['global'] = [
 
     'TEL'						=> [['backend_attribute' => 'homePhone',
                           'backend_data_format' => 'text',
-                          'parameters' => [ ['TYPE' => "voice,home", 'PREF' => '1'],
-                                            ['TYPE' => "voice,home"],
+                          'parameters' => [ ['TYPE' => ['voice', 'home'], 'PREF' => '1'],
+                                            ['TYPE' => ['voice', 'home']],
                                             ['TYPE' => "home"],
                                               null
                                           ],                    
@@ -186,32 +186,32 @@ $config['card']['addressbook']['ldap']['global'] = [
                           ['backend_attribute' => 'telephoneNumber',
                           'backend_data_format' => 'text',
                           'parameters' => [ 
-                          									['TYPE' => "voice,work"],
-                                            ['TYPE' => "voice,work", 'PREF' => '1'],
+                          									['TYPE' => ['voice', 'work']],
+                                            ['TYPE' => ['voice', 'work'], 'PREF' => '1'],
                                             ['TYPE' => "work"]
                                           ],                    
                           'reverse_map_parameter_index' => 0 ],
                         ['backend_attribute' => 'fax',
                         'backend_data_format' => 'text',
                           'parameters' => [ 
-                          									['TYPE' => "voice,fax"],
-                                            ['TYPE' => "voice,fax", 'PREF' => '1'],
+                          									['TYPE' => ['work', 'fax']],
+                                            ['TYPE' => ['work', 'fax'], 'PREF' => '1'],
                                             ['TYPE' => "fax"]
                                       	],                      
                       'reverse_map_parameter_index' => 0],
                       ['backend_attribute' => 'pager',
                       'backend_data_format' => 'text',
                           'parameters' => [ 
-                          									['TYPE' => "voice,pager"],
-                                            ['TYPE' => "voice,pager", 'PREF' => '1'],
+                          									['TYPE' => ['work', 'pager']],
+                                            ['TYPE' => ['work', 'pager'], 'PREF' => '1'],
                                             ['TYPE' => "pager"]
                                       ],                      
                       'reverse_map_parameter_index' => 0],
                       ['backend_attribute' => 'mobile',
                       'backend_data_format' => 'text',
                           'parameters' => [ 
-                          									['TYPE' => "voice,cell"],
-                          									['TYPE' => "voice,cell", 'PREF' => '1'],
+                          									['TYPE' => ['voice', 'cell']],
+                          									['TYPE' => ['voice', 'cell'], 'PREF' => '1'],
                                             ['TYPE' => "cell"]
                                       ],                      
                       'reverse_map_parameter_index' => 0]],
@@ -236,13 +236,14 @@ $config['card']['addressbook']['ldap']['global'] = [
 
       'LANG'        => [['backend_attribute' => 'preferredLanguage',
                           'backend_data_format' => 'text',
-                          'parameters' => [ 'VALUE=language-tag;TYPE="home";PREF=1',
-                                            'VALUE=language-tag;TYPE="home"',
-                                            'VALUE=language-tag;TYPE="work"',
-                                              'TYPE="home"',
-                                              'TYPE="work"',
-                                              null
-                                             ],                    
+                          'parameters' => [ 
+                          									['VALUE' => 'language-tag', 'TYPE' => 'home', 'PREF' => 1],
+                                            ['VALUE' => 'language-tag', 'TYPE' => 'home'],
+                                            ['VALUE' => 'language-tag', 'TYPE' => 'work'],
+                                            ['TYPE'  => 'home'],
+                                            ['TYPE' => 'work'],
+                                            null
+                                          ],                    
                                   'reverse_map_parameter_index' => 0 ]],
 	],
 	
@@ -387,8 +388,8 @@ $config['card']['addressbook']['ldap']['personal'] = [
 
 		'PHOTO'         => [['backend_attribute' => 'jpegPhoto',
                         'backend_data_format' => 'binary',
-                        'backend_data_mediatype' => ['image/jpeg'],
-                            'parameters' => [ ],
+                        'backend_data_mediatype' => ['image/jpeg', 'image/png'],
+                            'parameters' => [],
                             'reverse_map_parameter_index' => '0']],
 
     'NOTE'        	=> ['backend_attribute' => 'description',
@@ -398,8 +399,8 @@ $config['card']['addressbook']['ldap']['personal'] = [
 
     'TEL'						=> [['backend_attribute' => 'homePhone',
                           'backend_data_format' => 'text',
-                          'parameters' => [ ['TYPE' => "voice,home", 'PREF' => '1'],
-                                            ['TYPE' => "voice,home"],
+                          'parameters' => [ ['TYPE' => ['voice', 'home'], 'PREF' => '1'],
+                                            ['TYPE' => ['voice', 'home']],
                                             ['TYPE' => "home"],
                                               null
                                           ],                    
@@ -407,32 +408,32 @@ $config['card']['addressbook']['ldap']['personal'] = [
                           ['backend_attribute' => 'telephoneNumber',
                           'backend_data_format' => 'text',
                           'parameters' => [ 
-                          									['TYPE' => "voice,work"],
-                                            ['TYPE' => "voice,work", 'PREF' => '1'],
+                          									['TYPE' => ['voice', 'work']],
+                                            ['TYPE' => ['voice', 'work'], 'PREF' => '1'],
                                             ['TYPE' => "work"]
                                           ],                    
                           'reverse_map_parameter_index' => 0 ],
                         ['backend_attribute' => 'fax',
                         'backend_data_format' => 'text',
                           'parameters' => [ 
-                          									['TYPE' => "voice,fax"],
-                                            ['TYPE' => "voice,fax", 'PREF' => '1'],
+                          									['TYPE' => ['work', 'fax']],
+                                            ['TYPE' => ['work', 'fax'], 'PREF' => '1'],
                                             ['TYPE' => "fax"]
                                       	],                      
                       'reverse_map_parameter_index' => 0],
                       ['backend_attribute' => 'pager',
                       'backend_data_format' => 'text',
                           'parameters' => [ 
-                          									['TYPE' => "voice,pager"],
-                                            ['TYPE' => "voice,pager", 'PREF' => '1'],
+                          									['TYPE' => ['work', 'pager']],
+                                            ['TYPE' => ['work', 'pager'], 'PREF' => '1'],
                                             ['TYPE' => "pager"]
                                       ],                      
                       'reverse_map_parameter_index' => 0],
                       ['backend_attribute' => 'mobile',
                       'backend_data_format' => 'text',
                           'parameters' => [ 
-                          									['TYPE' => "voice,cell"],
-                          									['TYPE' => "voice,cell", 'PREF' => '1'],
+                          									['TYPE' => ['voice', 'cell']],
+                          									['TYPE' => ['voice', 'cell'], 'PREF' => '1'],
                                             ['TYPE' => "cell"]
                                       ],                      
                       'reverse_map_parameter_index' => 0]],
@@ -457,13 +458,14 @@ $config['card']['addressbook']['ldap']['personal'] = [
 
       'LANG'        => [['backend_attribute' => 'preferredLanguage',
                           'backend_data_format' => 'text',
-                          'parameters' => [ 'VALUE=language-tag;TYPE="home";PREF=1',
-                                            'VALUE=language-tag;TYPE="home"',
-                                            'VALUE=language-tag;TYPE="work"',
-                                              'TYPE="home"',
-                                              'TYPE="work"',
-                                              null
-                                             ],                    
+                          'parameters' => [ 
+                          									['VALUE' => 'language-tag', 'TYPE' => 'home', 'PREF' => 1],
+                                            ['VALUE' => 'language-tag', 'TYPE' => 'home'],
+                                            ['VALUE' => 'language-tag', 'TYPE' => 'work'],
+                                            ['TYPE'  => 'home'],
+                                            ['TYPE' => 'work'],
+                                            null
+                                          ],                    
                                   'reverse_map_parameter_index' => 0 ]],
 	],
 	
