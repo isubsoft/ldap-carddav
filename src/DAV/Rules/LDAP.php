@@ -82,14 +82,24 @@ class LDAP {
                             break;
                         }
                         
-                        $paramValues = explode(',', $paramListValue);
-                        foreach($paramValues as $paramValue)
+                        if(is_array($paramListValue))
                         {
-                            if(! in_array(strtoupper($paramValue), $vCardParams[$paramListKey]))
+                            foreach($paramListValue as $paramValue)
+                            {
+                                if(! in_array(strtoupper($paramValue), $vCardParams[$paramListKey]))
+                                {
+                                    $allParamsValuesMatch = false;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if(! in_array(strtoupper($paramListValue), $vCardParams[$paramListKey]))
                             {
                                 $allParamsValuesMatch = false;
                             }
                         }
+
                         if($allParamsValuesMatch == false)
                         {
                             break;
@@ -131,14 +141,24 @@ class LDAP {
                         break;
                     }
                     
-                    $paramValues = explode(',', $paramListValue);
-                    foreach($paramValues as $paramValue)
+                    if(is_array($paramListValue))
                     {
-                        if(! in_array(strtoupper($paramValue), $vCardParams[$paramListKey]))
+                        foreach($paramListValue as $paramValue)
+                        {
+                            if(! in_array(strtoupper($paramValue), $vCardParams[$paramListKey]))
+                            {
+                                $allParamsValuesMatch = false;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if(! in_array(strtoupper($paramListValue), $vCardParams[$paramListKey]))
                         {
                             $allParamsValuesMatch = false;
                         }
                     }
+                    
                     if($allParamsValuesMatch == false)
                     {
                         break;

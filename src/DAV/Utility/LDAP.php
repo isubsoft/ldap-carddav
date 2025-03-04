@@ -93,22 +93,22 @@ class LDAP {
         return $ldapConn;
     }
 
-    public static function LdapQuery($ldapConn, $base, $filter, $attributes = [], $scope)
+    public static function LdapQuery($ldapConn, $base, $filter, $attributes = [], $scope, int $attributesOnly = 0)
     {
         $data = null;
         
         try {
             if($scope == 'base')
             {
-                $result = ldap_read($ldapConn, $base, $filter, $attributes);
+                $result = ldap_read($ldapConn, $base, $filter, $attributes, $attributesOnly);
             }
             else if($scope == 'list')
             {
-                $result = ldap_list($ldapConn, $base, $filter, $attributes);
+                $result = ldap_list($ldapConn, $base, $filter, $attributes, $attributesOnly);
             }
             else
             {
-                $result = ldap_search($ldapConn, $base, $filter, $attributes);
+                $result = ldap_search($ldapConn, $base, $filter, $attributes, $attributesOnly);
             }
 
             if(!$result)
