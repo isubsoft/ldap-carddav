@@ -890,8 +890,14 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         
         // build the Vcard
         $vcard = (new \Sabre\VObject\Component\VCard(['UID' => $cardUID]))->convert($this->defaultVcardVersion);
+        
+        $isContactGroup = false;
+        $contactGroupMemberFieldName = $addressBookConfig['group_member_map']['MEMBER']['backend_attribute'];
+        
+        if(isset($data[$contactGroupMemberFieldName]) && is_array($data[$contactGroupMemberFieldName]))
+					$isContactGroup = true;
 
-        if($data['objectclass'][0] == $addressBookConfig['group_LDAP_Object_Classes'][0])
+        if($isContactGroup)
         {
             $vcard->add('KIND', 'group');
             $fieldMap = $addressBookConfig['group_fieldmap'];      
