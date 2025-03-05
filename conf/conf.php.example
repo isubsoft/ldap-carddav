@@ -49,7 +49,7 @@ $config['principal']['ldap'] = [
   'scope' => 'list', // search mode: sub|base|list
 
 	// Principal property => LDAP user attribute field map (Use primary name of backend field only and not their alias name here)
-  'fieldMap' => [	'id' => 'uid', 					// 'id' is equal to the username used by the principal during authentication.
+  'fieldmap' => [	'id' => 'uid', 					// 'id' is equal to the username used by the principal during authentication.
   															 					// Make sure it is mapped to an appropriate user attribute in LDAP.
   								'displayname' => 'cn', 	// 'displayname' is a commonly used name of the principal.
   								'mail' => 'mail' 				// 'mail' is an email id of the principal.

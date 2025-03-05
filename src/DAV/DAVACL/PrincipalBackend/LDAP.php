@@ -97,7 +97,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
         $filter = Utility::replacePlaceholders($this->config['principal']['ldap']['search_filter'], ['%u' => ldap_escape($currentUserPrincipalId, "", LDAP_ESCAPE_FILTER)]);
         
-        foreach($this->config['principal']['ldap']['fieldMap'] as $key => $value)
+        foreach($this->config['principal']['ldap']['fieldmap'] as $key => $value)
         {
 					$attributes[] = $value;
         }
@@ -107,15 +107,15 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         if($data['count'] > 0)
         {
             for ($i=0; $i < $data['count']; $i++) {
-            		$principalId = $data[$i][$this->config['principal']['ldap']['fieldMap']['id']][0];
+            		$principalId = $data[$i][$this->config['principal']['ldap']['fieldmap']['id']][0];
             		
                 $principal = [
                     'uri' => $prefixPath. '/' . $principalId
                 ];
                 
                 foreach ($this->fieldMap as $key => $value) {
-                    if ( isset($data[$i][$this->config['principal']['ldap']['fieldMap'][$value['dbField']]])) {
-                        $principal[$key] = $data[$i][$this->config['principal']['ldap']['fieldMap'][$value['dbField']]][0];
+                    if ( isset($data[$i][$this->config['principal']['ldap']['fieldmap'][$value['dbField']]])) {
+                        $principal[$key] = $data[$i][$this->config['principal']['ldap']['fieldmap'][$value['dbField']]][0];
                     }
                 }
                 
@@ -154,10 +154,10 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         $ldapConn = Utility::LdapBindConnection(['bindDn' => $bindDn, 'bindPass' => $bindPass], $this->config['server']['ldap']);
           
         $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
-        $principalIdAttribute = $this->config['principal']['ldap']['fieldMap']['id'];
+        $principalIdAttribute = $this->config['principal']['ldap']['fieldmap']['id'];
         $filter = Utility::replacePlaceholders('(&' . $this->config['principal']['ldap']['search_filter'] . '(' . $principalIdAttribute . '=' . '%u' . '))', ['%u' => ldap_escape($currentUserPrincipalId, "", LDAP_ESCAPE_FILTER)]);
         
-        foreach($this->config['principal']['ldap']['fieldMap'] as $key => $value)
+        foreach($this->config['principal']['ldap']['fieldmap'] as $key => $value)
         {
 					$attributes[] = $value;
         }
@@ -202,8 +202,8 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
             }
 
             foreach ($this->fieldMap as $key => $value) {
-                if ( isset($data[0][$this->config['principal']['ldap']['fieldMap'][$value['dbField']]])) {
-                    $principal[$key] = $data[0][$this->config['principal']['ldap']['fieldMap'][$value['dbField']]][0];
+                if ( isset($data[0][$this->config['principal']['ldap']['fieldmap'][$value['dbField']]])) {
+                    $principal[$key] = $data[0][$this->config['principal']['ldap']['fieldmap'][$value['dbField']]][0];
                 }
             }
             
