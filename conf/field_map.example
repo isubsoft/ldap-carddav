@@ -1,34 +1,34 @@
 // Field map for standard vCard properties to LDAP inetOrgPerson object class
 
-    'FN'            => ['backend_attribute' => 'cn',
+    'FN'            => ['field_name' => 'cn',
                           'parameters' => [],
                          'reverse_map_parameter_index' => ''],
 
-    'N'							=> ['backend_attribute' => [ 'last_name' => 'sn', 'first_name' => 'givenName'],
+    'N'							=> ['field_name' => [ 'last_name' => 'sn', 'first_name' => 'givenName'],
                           'parameters' => [],
                           'reverse_map_parameter_index' => ''],
 
-		'EMAIL'         => ['backend_attribute' => 'mail',
+		'EMAIL'         => ['field_name' => 'mail',
                           'parameters' => [], 
                           'reverse_map_parameter_index' => ''],
 
-		'ORG'         	=> ['backend_attribute' => [ 'org_name' => 'o', 'org_unit_name' => 'ou'],
+		'ORG'         	=> ['field_name' => [ 'org_name' => 'o', 'org_unit_name' => 'ou'],
                           'parameters' => [], 
                           'reverse_map_parameter_index' => ''],
 
-    'TITLE'         => ['backend_attribute' => 'title',
+    'TITLE'         => ['field_name' => 'title',
                           'parameters' => [], 
                           'reverse_map_parameter_index' => ''],
     
-    'ROLE'        => ['backend_attribute' => 'employeeType',
+    'ROLE'        => ['field_name' => 'employeeType',
                           'parameters' => [], 
                           'reverse_map_parameter_index' => ''],  
 
-    'NICKNAME'      => ['backend_attribute' => 'displayName',
+    'NICKNAME'      => ['field_name' => 'displayName',
                           'parameters' => [],  
                           'reverse_map_parameter_index' => ''],
 
-		'PHOTO'         => [['backend_attribute' => 'jpegphoto',
+		'PHOTO'         => [['field_name' => 'jpegphoto',
                             'parameters' => [ 'TYPE=JPEG;ENCODING=B',
                                             'TYPE=JPEG;VALUE=URL',
                                             'MEDIATYPE=image/jpeg;VALUE=URL',
@@ -43,11 +43,11 @@
                             'reverse_map_parameter_index' => '0',
                             'decode_file' => true]],
 
-    'NOTE'        	=> ['backend_attribute' => 'description',
+    'NOTE'        	=> ['field_name' => 'description',
                         'parameters' => [],                     
                           'reverse_map_parameter_index' => ''],
 
-    'TEL'						=> [['backend_attribute' => 'homePhone',
+    'TEL'						=> [['field_name' => 'homePhone',
                           'parameters' => [ 'VALUE=text;TYPE="voice,home";PREF=1',
                                             'VALUE=text;TYPE="voice,home"',
                                             'TYPE=home;VALUE=TEXT',
@@ -56,7 +56,7 @@
                                               null
                                           ],                    
                           'reverse_map_parameter_index' => 0 ],
-                          ['backend_attribute' => 'telephoneNumber',
+                          ['field_name' => 'telephoneNumber',
                           'parameters' => [ 'VALUE=text;TYPE="voice,work"',
                                             'VALUE=text;PREF=1;TYPE="voice,work"',
                                             'TYPE=work;VALUE=TEXT',
@@ -64,7 +64,7 @@
                                               'TYPE="work"',
                                           ],                    
                           'reverse_map_parameter_index' => 0 ],
-                        ['backend_attribute' => 'fax',
+                        ['field_name' => 'fax',
                           'parameters' => [ 'VALUE=text;TYPE="voice,fax"',
                                             'VALUE=text;PREF=1;TYPE="voice,fax"',
                                             'VALUE=text;TYPE="fax"',
@@ -72,7 +72,7 @@
                                             'TYPE="fax"'
                                       ],                      
                       'reverse_map_parameter_index' => 0],
-                      ['backend_attribute' => 'pager',
+                      ['field_name' => 'pager',
                           'parameters' => [ 'VALUE=text;TYPE="voice,pager"',
                                             'VALUE=text;PREF=1;TYPE="voice,pager"',
                                             'VALUE=text;TYPE="pager"',
@@ -80,7 +80,7 @@
                                             'TYPE="pager"'
                                       ],                      
                       'reverse_map_parameter_index' => 0],
-                      ['backend_attribute' => 'mobile',
+                      ['field_name' => 'mobile',
                           'parameters' => [ 'VALUE=text;TYPE="voice,cell"',
                                             'VALUE=text;PREF=1;TYPE="voice,cell"',
                                             'VALUE=text;TYPE="cell"',
@@ -89,7 +89,7 @@
                                       ],                      
                       'reverse_map_parameter_index' => 0]],
                      
-      'ADR'         => [['backend_attribute' => 'homePostalAddress',
+      'ADR'         => [['field_name' => 'homePostalAddress',
                           'parameters' => [ 'VALUE=text;TYPE="home";PREF=1',
                                             'TYPE=home;VALUE=TEXT',
                                             'TYPE="home"',
@@ -98,7 +98,7 @@
                                             ],                    
                                         'reverse_map_parameter_index' => 0,
                                         'map_component_separator' => '$' ],
-                          ['backend_attribute' => ['po_box'=> 'postOfficeBox','street' => 'street','locality' => 'l','province' => 'st', 'postal_code' => 'postalCode'],
+                          ['field_name' => ['po_box'=> 'postOfficeBox','street' => 'street','locality' => 'l','province' => 'st', 'postal_code' => 'postalCode'],
                           'parameters' => [ 'VALUE=text;TYPE="work";PREF=1',
                                             'TYPE=work;VALUE=TEXT',
                                               'TYPE="work"',
@@ -106,7 +106,7 @@
                                              ],                    
                                   'reverse_map_parameter_index' => 0 ]],
 
-      'LANG'        => [['backend_attribute' => 'preferredLanguage',
+      'LANG'        => [['field_name' => 'preferredLanguage',
                           'parameters' => [ 'VALUE=language-tag;TYPE="home";PREF=1',
                                             'VALUE=language-tag;TYPE="home"',
                                             'VALUE=language-tag;TYPE="work"',
@@ -118,4 +118,4 @@
 
 // Field map alternative to be considered if using an appropriate LDAP object class
 
-    'N'							=> ['backend_attribute' => [ 'last_name' => 'sn', 'first_name' => 'givenName', 'prefix' => 'personalTitle' ]
+    'N'							=> ['field_name' => [ 'last_name' => 'sn', 'first_name' => 'givenName', 'prefix' => 'personalTitle' ]
