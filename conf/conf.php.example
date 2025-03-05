@@ -127,7 +127,8 @@ $config['card']['addressbook']['ldap']['me'] = [
 												'list' => ['displayName', 'homePhone', 'telephoneNumber', 'facsimileTelephoneNumber', 'pager', 'mobile', 'homePostalAddress', 'preferredLanguage']
 											],
 
-	// vCard    => LDAP contact field map (Use primary name of backend field only and not their alias name here)
+	// vCard    => LDAP contact field map (Use primary name of backend field and not their alias name here)
+	// vCard property and corresponding parameter match should be according to vCard v4.0
   'fieldmap'      => [
     'FN'            => ['field_name' => 'cn',
                         'field_data_format' => 'text',
@@ -264,7 +265,8 @@ $config['card']['addressbook']['ldap']['me'] = [
 	
 	'group_member_map'          => [ 'MEMBER'      => [ 'field_name' => 'member' ] ],
 	
-	// vCard    => LDAP contact field map (Use primary name of backend field only and not their alias name here)
+	// vCard    => LDAP contact field map (Use primary name of backend field and not their alias name here)
+	// vCard property and corresponding parameter match should be according to vCard v4.0
 	'group_fieldmap'            => [     
 																	 'FN'          => [	'field_name' => 'cn',
                                                       'field_data_format' => 'text',
@@ -351,7 +353,8 @@ $config['card']['addressbook']['ldap']['global'] = [
 	//												'list' => []
 	//											],
 
-	// vCard    => LDAP contact field map (Use primary name of backend field only and not their alias name here)
+	// vCard    => LDAP contact field map (Use primary name of backend field and not their alias name here)
+	// vCard property and corresponding parameter match should be according to vCard v4.0
   'fieldmap'      => [
     'FN'            => ['field_name' => 'cn',
                         'field_data_format' => 'text',
@@ -488,7 +491,8 @@ $config['card']['addressbook']['ldap']['global'] = [
 	
 	'group_member_map'          => [ 'MEMBER'      => [ 'field_name' => 'member' ] ],
 	
-	// vCard    => LDAP contact field map (Use primary name of backend field only and not their alias name here)
+	// vCard    => LDAP contact field map (Use primary name of backend field and not their alias name here)
+	// vCard property and corresponding parameter match should be according to vCard v4.0
 	'group_fieldmap'            => [     
 																	 'FN'          => [	'field_name' => 'cn',
                                                       'field_data_format' => 'text',
@@ -575,7 +579,8 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	//												'list' => []
 	//											],
 	
-	// vCard    => LDAP contact field map (Use primary name of backend field only and not their alias name here)
+	// vCard    => LDAP contact field map (Use primary name of backend field and not their alias name here)
+	// vCard property and corresponding parameter match should be according to vCard v4.0
   'fieldmap'      => [
     'FN'            => ['field_name' => 'cn',
                         'field_data_format' => 'text',
@@ -712,7 +717,8 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	
 	'group_member_map'          => [ 'MEMBER'      => [ 'field_name' => 'member' ] ],
 	
-	// vCard    => LDAP contact field map (Use primary name of backend field only and not their alias name here)
+	// vCard    => LDAP contact field map (Use primary name of backend field and not their alias name here)
+	// vCard property and corresponding parameter match should be according to vCard v4.0
 	'group_fieldmap'            => [     
 																	 'FN'          => [	'field_name' => 'cn',
                                                       'field_data_format' => 'text',
