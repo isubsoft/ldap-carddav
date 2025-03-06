@@ -134,37 +134,37 @@ $config['card']['addressbook']['ldap']['me'] = [
     'FN'            => ['field_name' => 'cn',
                         'field_data_format' => 'text',
                           'parameters' => [],
-                         'reverse_map_parameter_index' => ''],
+                         'reverse_map_parameter_index' => 0],
 
     'N'							=> ['field_name' => [ 'last_name' => 'sn', 'first_name' => 'givenName'],
                         'field_data_format' => 'text',
                           'parameters' => [],
-                          'reverse_map_parameter_index' => ''],
+                          'reverse_map_parameter_index' => 0],
 
 		'EMAIL'         => ['field_name' => 'mail',
                         'field_data_format' => 'text',
                           'parameters' => [], 
-                          'reverse_map_parameter_index' => ''],
+                          'reverse_map_parameter_index' => 0],
 
 		'ORG'         	=> ['field_name' => [ 'org_name' => 'o', 'org_unit_name' => 'ou'],
                         'field_data_format' => 'text',
                           'parameters' => [], 
-                          'reverse_map_parameter_index' => ''],
+                          'reverse_map_parameter_index' => 0],
 
     'TITLE'         => ['field_name' => 'title',
                         'field_data_format' => 'text',
                           'parameters' => [], 
-                          'reverse_map_parameter_index' => ''],
+                          'reverse_map_parameter_index' => 0],
     
     'ROLE'        => ['field_name' => 'employeeType',
                       'field_data_format' => 'text',
                           'parameters' => [], 
-                          'reverse_map_parameter_index' => ''],  
+                          'reverse_map_parameter_index' => 0],  
 
     'NICKNAME'      => ['field_name' => 'displayName',
                         'field_data_format' => 'text',
                           'parameters' => [],  
-                          'reverse_map_parameter_index' => ''],
+                          'reverse_map_parameter_index' => 0],
 
 		'PHOTO'         => [['field_name' => 'jpegPhoto',
                         'field_data_format' => 'binary',
@@ -175,7 +175,7 @@ $config['card']['addressbook']['ldap']['me'] = [
     'NOTE'        	=> ['field_name' => 'description',
                         'field_data_format' => 'text',
                         'parameters' => [],                     
-                          'reverse_map_parameter_index' => ''],
+                          'reverse_map_parameter_index' => 0],
 
     'TEL'						=> [['field_name' => 'homePhone',
                           'field_data_format' => 'text',
@@ -184,7 +184,7 @@ $config['card']['addressbook']['ldap']['me'] = [
                                             ['TYPE' => "home"],
                                               null
                                           ],                    
-                          'reverse_map_parameter_index' => 0 ],
+                          'reverse_map_parameter_index' => 0],
                           ['field_name' => 'telephoneNumber',
                           'field_data_format' => 'text',
                           'parameters' => [ 
@@ -192,7 +192,7 @@ $config['card']['addressbook']['ldap']['me'] = [
                                             ['TYPE' => ['voice', 'work'], 'PREF' => '1'],
                                             ['TYPE' => "work"]
                                           ],                    
-                          'reverse_map_parameter_index' => 0 ],
+                          'reverse_map_parameter_index' => 0],
                         ['field_name' => 'facsimileTelephoneNumber',
                         'field_data_format' => 'text',
                           'parameters' => [ 
@@ -234,19 +234,17 @@ $config['card']['addressbook']['ldap']['me'] = [
                                             ['TYPE' => "work", 'PREF' => '1'],
                                             ['PREF' => '1']
                                              ],                    
-                                  'reverse_map_parameter_index' => 0 ]],
+                                  'reverse_map_parameter_index' => 0]],
 
       'LANG'        => [['field_name' => 'preferredLanguage',
                           'field_data_format' => 'text',
                           'parameters' => [ 
-                          									['VALUE' => 'language-tag', 'TYPE' => 'home', 'PREF' => 1],
-                                            ['VALUE' => 'language-tag', 'TYPE' => 'home'],
-                                            ['VALUE' => 'language-tag', 'TYPE' => 'work'],
+                          									['TYPE' => 'home', 'PREF' => 1],
                                             ['TYPE'  => 'home'],
                                             ['TYPE' => 'work'],
                                             null
                                           ],                    
-                                  'reverse_map_parameter_index' => 0 ]],
+                                  'reverse_map_parameter_index' => 0]],
 	],
 	
 	// If writable is true then these fields need to be populated:
@@ -272,13 +270,13 @@ $config['card']['addressbook']['ldap']['me'] = [
 																	 'FN'          => [	'field_name' => 'cn',
                                                       'field_data_format' => 'text',
 																											'parameters'    => [],
-																									 		'reverse_map_parameter_index' => ''
+																									 		'reverse_map_parameter_index' => 0
 								                 										],
 								                 	
 																	 'NOTE'        => [	'field_name' => 'description',
                                                       'field_data_format' => 'text',
 																											'parameters' => [],                     
-																											'reverse_map_parameter_index' => ''
+																											'reverse_map_parameter_index' => 0
 																										]
                                  ]
 ];
@@ -361,37 +359,37 @@ $config['card']['addressbook']['ldap']['global'] = [
     'FN'            => ['field_name' => 'cn',
                         'field_data_format' => 'text',
                           'parameters' => [],
-                         'reverse_map_parameter_index' => ''],
+                         'reverse_map_parameter_index' => 0],
 
     'N'							=> ['field_name' => [ 'last_name' => 'sn', 'first_name' => 'givenName'],
                         'field_data_format' => 'text',
                           'parameters' => [],
-                          'reverse_map_parameter_index' => ''],
+                          'reverse_map_parameter_index' => 0],
 
 		'EMAIL'         => ['field_name' => 'mail',
                         'field_data_format' => 'text',
                           'parameters' => [], 
-                          'reverse_map_parameter_index' => ''],
+                          'reverse_map_parameter_index' => 0],
 
 		'ORG'         	=> ['field_name' => [ 'org_name' => 'o', 'org_unit_name' => 'ou'],
                         'field_data_format' => 'text',
                           'parameters' => [], 
-                          'reverse_map_parameter_index' => ''],
+                          'reverse_map_parameter_index' => 0],
 
     'TITLE'         => ['field_name' => 'title',
                         'field_data_format' => 'text',
                           'parameters' => [], 
-                          'reverse_map_parameter_index' => ''],
+                          'reverse_map_parameter_index' => 0],
     
     'ROLE'        => ['field_name' => 'employeeType',
                       'field_data_format' => 'text',
                           'parameters' => [], 
-                          'reverse_map_parameter_index' => ''],  
+                          'reverse_map_parameter_index' => 0],  
 
     'NICKNAME'      => ['field_name' => 'displayName',
                         'field_data_format' => 'text',
                           'parameters' => [],  
-                          'reverse_map_parameter_index' => ''],
+                          'reverse_map_parameter_index' => 0],
 
 		'PHOTO'         => [['field_name' => 'jpegPhoto',
                         'field_data_format' => 'binary',
@@ -402,7 +400,7 @@ $config['card']['addressbook']['ldap']['global'] = [
     'NOTE'        	=> ['field_name' => 'description',
                         'field_data_format' => 'text',
                         'parameters' => [],                     
-                          'reverse_map_parameter_index' => ''],
+                          'reverse_map_parameter_index' => 0],
 
     'TEL'						=> [['field_name' => 'homePhone',
                           'field_data_format' => 'text',
@@ -411,7 +409,7 @@ $config['card']['addressbook']['ldap']['global'] = [
                                             ['TYPE' => "home"],
                                               null
                                           ],                    
-                          'reverse_map_parameter_index' => 0 ],
+                          'reverse_map_parameter_index' => 0],
                           ['field_name' => 'telephoneNumber',
                           'field_data_format' => 'text',
                           'parameters' => [ 
@@ -419,7 +417,7 @@ $config['card']['addressbook']['ldap']['global'] = [
                                             ['TYPE' => ['voice', 'work'], 'PREF' => '1'],
                                             ['TYPE' => "work"]
                                           ],                    
-                          'reverse_map_parameter_index' => 0 ],
+                          'reverse_map_parameter_index' => 0],
                         ['field_name' => 'facsimileTelephoneNumber',
                         'field_data_format' => 'text',
                           'parameters' => [ 
@@ -461,19 +459,17 @@ $config['card']['addressbook']['ldap']['global'] = [
                                             ['TYPE' => "work", 'PREF' => '1'],
                                             ['PREF' => '1']
                                              ],                    
-                                  'reverse_map_parameter_index' => 0 ]],
+                                  'reverse_map_parameter_index' => 0]],
 
       'LANG'        => [['field_name' => 'preferredLanguage',
                           'field_data_format' => 'text',
                           'parameters' => [ 
-                          									['VALUE' => 'language-tag', 'TYPE' => 'home', 'PREF' => 1],
-                                            ['VALUE' => 'language-tag', 'TYPE' => 'home'],
-                                            ['VALUE' => 'language-tag', 'TYPE' => 'work'],
+                          									['TYPE' => 'home', 'PREF' => 1],
                                             ['TYPE'  => 'home'],
                                             ['TYPE' => 'work'],
                                             null
                                           ],                    
-                                  'reverse_map_parameter_index' => 0 ]],
+                                  'reverse_map_parameter_index' => 0]],
 	],
 	
 	// If writable is true then these fields need to be populated:
@@ -499,13 +495,13 @@ $config['card']['addressbook']['ldap']['global'] = [
 																	 'FN'          => [	'field_name' => 'cn',
                                                       'field_data_format' => 'text',
 																											'parameters'    => [],
-																									 		'reverse_map_parameter_index' => ''
+																									 		'reverse_map_parameter_index' => 0
 								                 										],
 								                 	
 																	 'NOTE'        => [	'field_name' => 'description',
                                                       'field_data_format' => 'text',
 																											'parameters' => [],                     
-																											'reverse_map_parameter_index' => ''
+																											'reverse_map_parameter_index' => 0
 																										]
                                  ]
 ];
@@ -588,37 +584,37 @@ $config['card']['addressbook']['ldap']['personal'] = [
     'FN'            => ['field_name' => 'cn',
                         'field_data_format' => 'text',
                           'parameters' => [],
-                         'reverse_map_parameter_index' => ''],
+                         'reverse_map_parameter_index' => 0],
 
     'N'							=> ['field_name' => [ 'last_name' => 'sn', 'first_name' => 'givenName'],
                         'field_data_format' => 'text',
                           'parameters' => [],
-                          'reverse_map_parameter_index' => ''],
+                          'reverse_map_parameter_index' => 0],
 
 		'EMAIL'         => ['field_name' => 'mail',
                         'field_data_format' => 'text',
                           'parameters' => [], 
-                          'reverse_map_parameter_index' => ''],
+                          'reverse_map_parameter_index' => 0],
 
 		'ORG'         	=> ['field_name' => [ 'org_name' => 'o', 'org_unit_name' => 'ou'],
                         'field_data_format' => 'text',
                           'parameters' => [], 
-                          'reverse_map_parameter_index' => ''],
+                          'reverse_map_parameter_index' => 0],
 
     'TITLE'         => ['field_name' => 'title',
                         'field_data_format' => 'text',
                           'parameters' => [], 
-                          'reverse_map_parameter_index' => ''],
+                          'reverse_map_parameter_index' => 0],
     
     'ROLE'        => ['field_name' => 'employeeType',
                       'field_data_format' => 'text',
                           'parameters' => [], 
-                          'reverse_map_parameter_index' => ''],  
+                          'reverse_map_parameter_index' => 0],  
 
     'NICKNAME'      => ['field_name' => 'displayName',
                         'field_data_format' => 'text',
                           'parameters' => [],  
-                          'reverse_map_parameter_index' => ''],
+                          'reverse_map_parameter_index' => 0],
 
 		'PHOTO'         => [['field_name' => 'jpegPhoto',
                         'field_data_format' => 'binary',
@@ -629,7 +625,7 @@ $config['card']['addressbook']['ldap']['personal'] = [
     'NOTE'        	=> ['field_name' => 'description',
                         'field_data_format' => 'text',
                         'parameters' => [],                     
-                          'reverse_map_parameter_index' => ''],
+                          'reverse_map_parameter_index' => 0],
 
     'TEL'						=> [['field_name' => 'homePhone',
                           'field_data_format' => 'text',
@@ -638,7 +634,7 @@ $config['card']['addressbook']['ldap']['personal'] = [
                                             ['TYPE' => "home"],
                                               null
                                           ],                    
-                          'reverse_map_parameter_index' => 0 ],
+                          'reverse_map_parameter_index' => 0],
                           ['field_name' => 'telephoneNumber',
                           'field_data_format' => 'text',
                           'parameters' => [ 
@@ -646,7 +642,7 @@ $config['card']['addressbook']['ldap']['personal'] = [
                                             ['TYPE' => ['voice', 'work'], 'PREF' => '1'],
                                             ['TYPE' => "work"]
                                           ],                    
-                          'reverse_map_parameter_index' => 0 ],
+                          'reverse_map_parameter_index' => 0],
                         ['field_name' => 'facsimileTelephoneNumber',
                         'field_data_format' => 'text',
                           'parameters' => [ 
@@ -688,19 +684,17 @@ $config['card']['addressbook']['ldap']['personal'] = [
                                             ['TYPE' => "work", 'PREF' => '1'],
                                             ['PREF' => '1']
                                              ],                    
-                                  'reverse_map_parameter_index' => 0 ]],
+                                  'reverse_map_parameter_index' => 0]],
 
       'LANG'        => [['field_name' => 'preferredLanguage',
                           'field_data_format' => 'text',
                           'parameters' => [ 
-                          									['VALUE' => 'language-tag', 'TYPE' => 'home', 'PREF' => 1],
-                                            ['VALUE' => 'language-tag', 'TYPE' => 'home'],
-                                            ['VALUE' => 'language-tag', 'TYPE' => 'work'],
+                          									['TYPE' => 'home', 'PREF' => 1],
                                             ['TYPE'  => 'home'],
                                             ['TYPE' => 'work'],
                                             null
                                           ],                    
-                                  'reverse_map_parameter_index' => 0 ]],
+                                  'reverse_map_parameter_index' => 0]],
 	],
 	
 	// If writable is true then these fields need to be populated:
@@ -726,13 +720,13 @@ $config['card']['addressbook']['ldap']['personal'] = [
 																	 'FN'          => [	'field_name' => 'cn',
                                                       'field_data_format' => 'text',
 																											'parameters'    => [],
-																									 		'reverse_map_parameter_index' => ''
+																									 		'reverse_map_parameter_index' => 0
 								                 										],
 								                 	
 																	 'NOTE'        => [	'field_name' => 'description',
                                                       'field_data_format' => 'text',
 																											'parameters' => [],                     
-																											'reverse_map_parameter_index' => ''
+																											'reverse_map_parameter_index' => 0
 																										]
                                  ]
 ];
