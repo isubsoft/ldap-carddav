@@ -266,24 +266,24 @@ class LDAP {
 				{
 					foreach($backendMapArr as $backendMap)
 					{
-						if(isset($backendMap['backend_attribute']) && is_array($backendMap['backend_attribute']))
+						if(isset($backendMap['field_name']) && is_array($backendMap['field_name']))
 						{
-							foreach($backendMap['backend_attribute'] as $compositeBackendMapKey => $compositeBackendMapValue)
+							foreach($backendMap['field_name'] as $compositeBackendMapKey => $compositeBackendMapValue)
 							{
 								$mappedBackendAttributes[] = strtolower($compositeBackendMapValue);
 							}
 						}
 						else
-							$mappedBackendAttributes[] = strtolower($backendMap['backend_attribute']);
+							$mappedBackendAttributes[] = strtolower($backendMap['field_name']);
 					}
 				}
 				else
 				{
-					if(is_array($backendMapArr['backend_attribute']))
-						foreach($backendMapArr['backend_attribute'] as $compositeBackendMapKey => $compositeBackendMapValue)
+					if(is_array($backendMapArr['field_name']))
+						foreach($backendMapArr['field_name'] as $compositeBackendMapKey => $compositeBackendMapValue)
 							$mappedBackendAttributes[] = strtolower($compositeBackendMapValue);
 					else
-						 $mappedBackendAttributes[] = strtolower($backendMapArr['backend_attribute']);
+						 $mappedBackendAttributes[] = strtolower($backendMapArr['field_name']);
 				}
 			}
 			
