@@ -91,9 +91,10 @@ $config['card']['addressbook']['ldap']['me'] = [
 	'bind_dn'       	=> 'cn=admin,ou=People,dc=example,dc=org',
 	'bind_pass'     	=> '<secret>',
 	
-	// Sync LDAP bind user can be used if there are size limits on 'bind_dn' in LDAP. 'sync_bind_dn' should have 
-	// liberal or no size limits and must have read access to entryUUID, createTimestamp and modifyTimestamp 
-	// attribute of all contacts in the address book. Access to other contact attributes is not required by this user.
+	// Sync LDAP bind user can be used for contact searches if there are size limits on 'bind_dn' in LDAP.
+	// Read and writes will still be performed by 'bind_dn'. 'sync_bind_dn' should have liberal or no size 
+	// limits and must have read access to entryUUID, createTimestamp and modifyTimestamp attribute of all 
+	// contacts in the address book. Access to other contact attributes is not required by this user.
 	//  'sync_bind_dn'       => 'cn=carddavsync,ou=People,dc=example,dc=org',
 	//  'sync_bind_pw'     	=> '<secret>',
 	
@@ -317,9 +318,10 @@ $config['card']['addressbook']['ldap']['global'] = [
 	'bind_dn'       	=> 'cn=admin,ou=People,dc=example,dc=org',
 	'bind_pass'     	=> '<secret>',
 	
-	// Sync LDAP bind user can be used if there are size limits on 'bind_dn' in LDAP. 'sync_bind_dn' should have 
-	// liberal or no size limits and must have read access to entryUUID, createTimestamp and modifyTimestamp 
-	// attribute of all contacts in the address book. Access to other contact attributes is not required by this user.
+	// Sync LDAP bind user can be used for contact searches if there are size limits on 'bind_dn' in LDAP.
+	// Read and writes will still be performed by 'bind_dn'. 'sync_bind_dn' should have liberal or no size 
+	// limits and must have read access to entryUUID, createTimestamp and modifyTimestamp attribute of all 
+	// contacts in the address book. Access to other contact attributes is not required by this user.
 	//  'sync_bind_dn'       => 'cn=carddavsync,ou=People,dc=example,dc=org',
 	//  'sync_bind_pw'     	=> '<secret>',
 	
@@ -543,9 +545,10 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	//  'bind_dn'       	=> '',
 	//  'bind_pass'     => '',
 	
-	// Sync LDAP bind user can be used if there are size limits on 'bind_dn' in LDAP. 'sync_bind_dn' should have 
-	// liberal or no size limits and must have read access to entryUUID, createTimestamp and modifyTimestamp 
-	// attribute of all contacts in the address book. Access to other contact attributes is not required by this user.
+	// Sync LDAP bind user can be used for contact searches if there are size limits on 'bind_dn' in LDAP.
+	// Read and writes will still be performed by 'bind_dn'. 'sync_bind_dn' should have liberal or no size 
+	// limits and must have read access to entryUUID, createTimestamp and modifyTimestamp attribute of all 
+	// contacts in the address book. Access to other contact attributes is not required by this user.
 	//  'sync_bind_dn'       	=> 'cn=carddavsync,ou=People,dc=example,dc=org',
 	//  'sync_bind_pw'     	=> '<secret>',
 	
