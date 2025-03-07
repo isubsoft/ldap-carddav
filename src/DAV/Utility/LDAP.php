@@ -20,6 +20,10 @@ class LDAP {
                                             '%dn' => 'User DN in LDAP backend'
                                         ];
 
+    private static $allowed_vCard_params = ['TYPE', 'PREF'];
+
+
+
     public static function LdapBindConnection($credentials, $config)
     {
         $ldapConn = null;
@@ -225,7 +229,7 @@ class LDAP {
 
         foreach($params as $vCardParam)
         {
-            if ($param = $vCardKey[$vCardParam]) {
+            if (($param = $vCardKey[$vCardParam]) && in_array($vCardParam, self::$allowed_vCard_params)) {
                 foreach($param as $value) {
                   $vCardParamsInfo[$vCardParam][] = strtoupper($value);
                 }
@@ -233,6 +237,26 @@ class LDAP {
         }
 
         return $vCardParamsInfo;
+    }
+
+    public static function getMappedVCardAttrParams($paramList, $MappIndex)
+    {
+        $vCardParams = [];
+
+        if(empty($paramList))
+            return [];
+
+        $vCardParams = $paramList[$MappIndex];
+
+        foreach($vCardParams as $param => $value)
+        {
+            if(!in_array($param, self::$allowed_vCard_params))
+            {
+                unset($vCardParams[$param]);
+            }
+        }
+        
+        return $vCardParams;
     }
 
     public static function decodeHexInString($string) {
