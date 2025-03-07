@@ -35,15 +35,15 @@ class LDAP {
             {
                 if(empty($vCardParams) || ($vCardParamListsMatch['status'] == true))
                 {
-                    $backendDataFormat = strtoupper($ldapConfigInfo['backend_data_format']);
+                    $backendDataFormat = strtoupper((!isset($ldapConfigInfo['field_data_format']))?'text':$ldapConfigInfo['field_data_format']);
 
-                    if(empty($vCardParams) && $backendDataFormat == 'BINARY' && isset($ldapConfigInfo['backend_data_mediatype']) && !empty($ldapConfigInfo['backend_data_mediatype']))
+                    if(empty($vCardParams) && $backendDataFormat == 'BINARY' && isset($ldapConfigInfo['field_data_mediatype']) && !empty($ldapConfigInfo['field_data_mediatype']))
                     {                    
-                        $ldapBackendMap = self::getvCardPropertyMap($vObj, $ldapConfigInfo, $compositeAttrStatus['status']);
+                        $ldapBackendMap = self::getvCardPropertyMap($vCardAttr, $vObj, $ldapConfigInfo);
                     }
                     else if($configIndex === $vCardParamListsMatch['configIndex'])
                     {   
-                        $ldapBackendMap = self::getvCardPropertyMap($vObj, $ldapConfigInfo, $compositeAttrStatus['status']);
+                        $ldapBackendMap = self::getvCardPropertyMap($vCardAttr, $vObj, $ldapConfigInfo);
                     }
                 }
             }
@@ -52,7 +52,7 @@ class LDAP {
         {
             if(empty($vCardParams) || ($vCardParamListsMatch['status'] == true))
             {
-                $ldapBackendMap = self::getvCardPropertyMap($vObj, $mappLdapConfig, $compositeAttrStatus['status']);
+                $ldapBackendMap = self::getvCardPropertyMap($vCardAttr, $vObj, $mappLdapConfig);
             }
         }
 
@@ -64,8 +64,18 @@ class LDAP {
         if($iterativeArr)
         {
             foreach($ldapKey as $Index => $ldapKeyInfo)
-            {            
-                foreach($ldapKeyInfo['parameters'] as $ParamList)
+            {
+            		$fieldmapParams = [];
+            		
+            		if(isset($ldapKeyInfo['parameters']))
+            		{
+									if(!Utility::isMultidimensional($ldapKeyInfo['parameters'], true) && is_array($ldapKeyInfo['parameters']))
+										$fieldmapParams = [$ldapKeyInfo['parameters']];
+									elseif(Utility::isMultidimensional($ldapKeyInfo['parameters'], true))
+										$fieldmapParams = $ldapKeyInfo['parameters'];
+            		}
+
+                foreach($fieldmapParams as $ParamList)
                 {
                     if($ParamList == null)
                     {
@@ -82,14 +92,24 @@ class LDAP {
                             break;
                         }
                         
-                        $paramValues = explode(',', $paramListValue);
-                        foreach($paramValues as $paramValue)
+                        if(is_array($paramListValue))
                         {
-                            if(! in_array(strtoupper($paramValue), $vCardParams[$paramListKey]))
+                            foreach($paramListValue as $paramValue)
+                            {
+                                if(! in_array(strtoupper($paramValue), $vCardParams[$paramListKey]))
+                                {
+                                    $allParamsValuesMatch = false;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if(! in_array(strtoupper($paramListValue), $vCardParams[$paramListKey]))
                             {
                                 $allParamsValuesMatch = false;
                             }
                         }
+
                         if($allParamsValuesMatch == false)
                         {
                             break;
@@ -114,7 +134,17 @@ class LDAP {
         }
         else
         {
-            foreach($ldapKey['parameters'] as $ParamList)
+		  		$fieldmapParams = [];
+		  		
+		  		if(isset($ldapKeyInfo['parameters']))
+		  		{
+						if(!Utility::isMultidimensional($ldapKeyInfo['parameters'], true) && is_array($ldapKeyInfo['parameters']))
+							$fieldmapParams = [$ldapKeyInfo['parameters']];
+						elseif(Utility::isMultidimensional($ldapKeyInfo['parameters'], true))
+							$fieldmapParams = $ldapKeyInfo['parameters'];
+		  		}
+            		
+            foreach($fieldmapParams as $ParamList)
             {
                 if($ParamList == null)
                 {
@@ -131,14 +161,24 @@ class LDAP {
                         break;
                     }
                     
-                    $paramValues = explode(',', $paramListValue);
-                    foreach($paramValues as $paramValue)
+                    if(is_array($paramListValue))
                     {
-                        if(! in_array(strtoupper($paramValue), $vCardParams[$paramListKey]))
+                        foreach($paramListValue as $paramValue)
+                        {
+                            if(! in_array(strtoupper($paramValue), $vCardParams[$paramListKey]))
+                            {
+                                $allParamsValuesMatch = false;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if(! in_array(strtoupper($paramListValue), $vCardParams[$paramListKey]))
                         {
                             $allParamsValuesMatch = false;
                         }
                     }
+                    
                     if($allParamsValuesMatch == false)
                     {
                         break;
@@ -161,9 +201,9 @@ class LDAP {
         $vCardPropValueArr = $vObj->getParts();
         $ldapBackendValueMap = [];
 
-        if(is_array($ldapKey['backend_attribute']))
+        if(is_array($ldapKey['field_name']))
         {
-            foreach($ldapKey['backend_attribute'] as $propKey => $backendAttr)
+            foreach($ldapKey['field_name'] as $propKey => $backendAttr)
             {
                 $propIndex = array_search($propKey, $mapCompositeAttr);
                 if($propIndex !== false)
@@ -177,7 +217,7 @@ class LDAP {
         }
         else
         {
-            $newLdapKey = strtolower($ldapKey['backend_attribute']);
+            $newLdapKey = strtolower($ldapKey['field_name']);
             $ldapAttrValueArr = [];
 
             if(isset($ldapKey['map_component_separator']) && $ldapKey['map_component_separator'] != '')
@@ -199,10 +239,12 @@ class LDAP {
         return $ldapBackendValueMap;
     }
 
-    public static function getvCardPropertyMap($vObj, $mappLdapConfig, $mapCompositeAttr)
+    public static function getvCardPropertyMap($vCardAttr, $vObj, $mappLdapConfig)
     {
+        $compositeAttrStatus = Reader::compositeAttrStatus($vCardAttr);
+        $mapCompositeAttr = $compositeAttrStatus['status'];
         $vCardDataFormat = strtoupper($vObj->getValueType());
-        $backendDataFormat = strtoupper($mappLdapConfig['backend_data_format']);
+        $backendDataFormat = strtoupper((!isset($mappLdapConfig['field_data_format']))?'text':$mappLdapConfig['field_data_format']);
         $valueComponent = parse_url($vObj);
         $ldapBackendMap = [];
 
@@ -216,7 +258,7 @@ class LDAP {
                 }
                 else
                 {
-                    $newLdapKey = strtolower($mappLdapConfig['backend_attribute']);
+                    $newLdapKey = strtolower($mappLdapConfig['field_name']);
                     $backendvalue = (string)$vObj;
                     $ldapBackendMap = [$newLdapKey => $backendvalue];
                 }                                             
@@ -227,8 +269,8 @@ class LDAP {
             if($backendDataFormat == 'TEXT')
             {                
                 $vCardMetaData = Reader::vCardMetaData();
-                $vCardInfo = $vCardMetaData[$vcardAttr];
-                $newLdapKey = strtolower($mappLdapConfig['backend_attribute']);
+                $vCardInfo = $vCardMetaData[$vCardAttr];
+                $newLdapKey = strtolower($mappLdapConfig['field_name']);
             
                 if(isset($valueComponent['scheme']) && (isset($vCardInfo['uri_schemes']['embedded'])) && (in_array($valueComponent['scheme'], $vCardInfo['uri_schemes']['embedded'])))
                 {
@@ -252,12 +294,12 @@ class LDAP {
                 if(isset($valueComponent['scheme']) && (in_array($valueComponent['scheme'], self::$file_uri_schemes['embedded']) || in_array($valueComponent['scheme'], self::$file_uri_schemes['remote'])))
                 {
                     $isMapp = false;
-                    if(isset($mappLdapConfig['backend_data_mediatype']) && !empty($mappLdapConfig['backend_data_mediatype']))
+                    if(isset($mappLdapConfig['field_data_mediatype']) && !empty($mappLdapConfig['field_data_mediatype']))
                     {
                         $mimeType = finfo_buffer(finfo_open(FILEINFO_MIME), file_get_contents((string)$vObj));
                         $mimeType = explode(';', $mimeType)[0];
                         
-                        if(in_array($mimeType, $mappLdapConfig['backend_data_mediatype']))
+                        if(in_array($mimeType, $mappLdapConfig['field_data_mediatype']))
                         {
                             $isMapp = true;
                         }
@@ -269,7 +311,7 @@ class LDAP {
 
                     if($isMapp === true)
                     {
-                        $newLdapKey = strtolower($mappLdapConfig['backend_attribute']);
+                        $newLdapKey = strtolower($mappLdapConfig['field_name']);
                         $backendvalue = file_get_contents((string)$vObj);
                         $ldapBackendMap = [$newLdapKey => $backendvalue];
                     }                        
@@ -277,12 +319,12 @@ class LDAP {
                 else
                 {
                     $isMapp = false;
-                    if(isset($mappLdapConfig['backend_data_mediatype']) && !empty($mappLdapConfig['backend_data_mediatype']))
+                    if(isset($mappLdapConfig['field_data_mediatype']) && !empty($mappLdapConfig['field_data_mediatype']))
                     {
                         $mimeType = finfo_buffer(finfo_open(FILEINFO_MIME), (string)$vObj);
                         $mimeType = explode(';', $mimeType)[0];
 
-                        if(in_array($mimeType, $mappLdapConfig['backend_data_mediatype']))
+                        if(in_array($mimeType, $mappLdapConfig['field_data_mediatype']))
                         {
                             $isMapp = true;
                         }
@@ -300,7 +342,7 @@ class LDAP {
                         }
                         else
                         {
-                            $newLdapKey = strtolower($mappLdapConfig['backend_attribute']);
+                            $newLdapKey = strtolower($mappLdapConfig['field_name']);
                             $backendvalue = (string)$vObj;
                             $ldapBackendMap = [$newLdapKey => $backendvalue];
                         } 
@@ -317,7 +359,7 @@ class LDAP {
                     }
                     else
                     {
-                        $newLdapKey = strtolower($mappLdapConfig['backend_attribute']);
+                        $newLdapKey = strtolower($mappLdapConfig['field_name']);
                         $backendvalue = (string)$vObj;
                         $ldapBackendMap = [$newLdapKey => $backendvalue];
                     }
@@ -329,12 +371,12 @@ class LDAP {
             if($backendDataFormat == 'BINARY')
             {
                 $isMapp = false;
-                if(isset($mappLdapConfig['backend_data_mediatype']) && !empty($mappLdapConfig['backend_data_mediatype']))
+                if(isset($mappLdapConfig['field_data_mediatype']) && !empty($mappLdapConfig['field_data_mediatype']))
                 {
                     $mimeType = finfo_buffer(finfo_open(FILEINFO_MIME), (string)$vObj);
                     $mimeType = explode(';', $mimeType)[0];
 
-                    if(in_array($mimeType, $mappLdapConfig['backend_data_mediatype']))
+                    if(in_array($mimeType, $mappLdapConfig['field_data_mediatype']))
                     {
                         $isMapp = true;
                     }
@@ -352,7 +394,7 @@ class LDAP {
                     }
                     else
                     {
-                        $newLdapKey = strtolower($mappLdapConfig['backend_attribute']);
+                        $newLdapKey = strtolower($mappLdapConfig['field_name']);
                         $backendvalue = (string)$vObj;
                         $ldapBackendMap = [$newLdapKey => $backendvalue];
                     }

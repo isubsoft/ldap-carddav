@@ -61,7 +61,7 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
             // verify binding
             if ($ldapBindConn) {
                 $ldaptree = (isset($this->config['auth']['ldap']['search_base_dn']) && $this->config['auth']['ldap']['search_base_dn'] !== '')?$this->config['auth']['ldap']['search_base_dn']:$this->config['auth']['ldap']['base_dn'];
-                $filter = Utility::replacePlaceholders($this->config['auth']['ldap']['search_filter'], ['%u' => $username]);
+                $filter = Utility::replacePlaceholders($this->config['auth']['ldap']['search_filter'], ['%u' => ldap_escape($username, "", LDAP_ESCAPE_FILTER)]);
 
                 $data = Utility::LdapQuery($ldapBindConn, $ldaptree, $filter, ['dn'], strtolower($this->config['auth']['ldap']['scope']));
 
@@ -73,7 +73,7 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
                 
                 if($data['count'] == 1)
                 {
-                    $bindDn = Utility::replacePlaceholders($this->config['auth']['ldap']['bind_dn'], ['%dn' => $data[0]['dn'], '%u' => $username]);
+                    $bindDn = Utility::replacePlaceholders($this->config['auth']['ldap']['bind_dn'], ['%dn' => $data[0]['dn'], '%u' => ldap_escape($username, "", LDAP_ESCAPE_DN)]);
 
                     try {
                         $ldapUserBind = ldap_bind($ldapBindConn, $bindDn, $password);
@@ -97,7 +97,7 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
         }
         else
         {
-            $bindDn = Utility::replacePlaceholders($this->config['auth']['ldap']['bind_dn'], ['%u' => $username]);
+            $bindDn = Utility::replacePlaceholders($this->config['auth']['ldap']['bind_dn'], ['%u' => ldap_escape($username, "", LDAP_ESCAPE_DN)]);
             $bindPass = Utility::replacePlaceholders($this->config['auth']['ldap']['bind_pass'], ['%p' => $password]);
 
             // binding to ldap server

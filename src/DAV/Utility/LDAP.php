@@ -20,6 +20,10 @@ class LDAP {
                                             '%dn' => 'User DN in LDAP backend'
                                         ];
 
+    private static $allowed_vCard_params = ['TYPE', 'PREF'];
+
+
+
     public static function LdapBindConnection($credentials, $config)
     {
         $ldapConn = null;
@@ -93,22 +97,22 @@ class LDAP {
         return $ldapConn;
     }
 
-    public static function LdapQuery($ldapConn, $base, $filter, $attributes = [], $scope)
+    public static function LdapQuery($ldapConn, $base, $filter, $attributes = [], $scope, int $attributesOnly = 0)
     {
         $data = null;
         
         try {
             if($scope == 'base')
             {
-                $result = ldap_read($ldapConn, $base, $filter, $attributes);
+                $result = ldap_read($ldapConn, $base, $filter, $attributes, $attributesOnly);
             }
             else if($scope == 'list')
             {
-                $result = ldap_list($ldapConn, $base, $filter, $attributes);
+                $result = ldap_list($ldapConn, $base, $filter, $attributes, $attributesOnly);
             }
             else
             {
-                $result = ldap_search($ldapConn, $base, $filter, $attributes);
+                $result = ldap_search($ldapConn, $base, $filter, $attributes, $attributesOnly);
             }
 
             if(!$result)
@@ -225,7 +229,7 @@ class LDAP {
 
         foreach($params as $vCardParam)
         {
-            if ($param = $vCardKey[$vCardParam]) {
+            if (($param = $vCardKey[$vCardParam]) && in_array(strtoupper($vCardParam), self::$allowed_vCard_params)) {
                 foreach($param as $value) {
                   $vCardParamsInfo[$vCardParam][] = strtoupper($value);
                 }
@@ -233,6 +237,29 @@ class LDAP {
         }
 
         return $vCardParamsInfo;
+    }
+
+    public static function getMappedVCardAttrParams($paramList, $MappIndex)
+    {
+        $vCardParams = [];
+
+        if(empty($paramList))
+            return [];
+
+        if(self::isMultidimensional($paramList, true) && isset($paramList[$MappIndex]) && $paramList[$MappIndex] != null)
+        	$vCardParams = $paramList[$MappIndex];
+        elseif(!self::isMultidimensional($paramList, true))
+        	$vCardParams = $paramList;
+
+        foreach($vCardParams as $param => $value)
+        {
+            if(!in_array(strtoupper($param), self::$allowed_vCard_params))
+            {
+                unset($vCardParams[$param]);
+            }
+        }
+        
+        return $vCardParams;
     }
 
     public static function decodeHexInString($string) {
@@ -247,12 +274,46 @@ class LDAP {
         );
 	}
 
-    public static function isMultidimensional(array $array) {
-        foreach ($array as $value) {
-            if (!is_array($value)) {
+    public static function isMultidimensional(array $array, bool $isNullValueOk = false) {
+        foreach ($array as $key => $value) {
+            if (!is_int($key) || (!$isNullValueOk && !is_array($value)) || ($isNullValueOk && !is_array($value) && $value != null)) {
                 return false;
             }
         }
         return true;
+    }
+    
+    public static function getMappedBackendAttributes($fieldMap)
+    {
+    	$mappedBackendAttributes = [];
+    	
+			foreach($fieldMap as $vCardKey => $backendMapArr)
+			{
+				if(self::isMultidimensional($backendMapArr))
+				{
+					foreach($backendMapArr as $backendMap)
+					{
+						if(isset($backendMap['field_name']) && is_array($backendMap['field_name']))
+						{
+							foreach($backendMap['field_name'] as $compositeBackendMapKey => $compositeBackendMapValue)
+							{
+								$mappedBackendAttributes[] = strtolower($compositeBackendMapValue);
+							}
+						}
+						else
+							$mappedBackendAttributes[] = strtolower($backendMap['field_name']);
+					}
+				}
+				else
+				{
+					if(is_array($backendMapArr['field_name']))
+						foreach($backendMapArr['field_name'] as $compositeBackendMapKey => $compositeBackendMapValue)
+							$mappedBackendAttributes[] = strtolower($compositeBackendMapValue);
+					else
+						 $mappedBackendAttributes[] = strtolower($backendMapArr['field_name']);
+				}
+			}
+			
+			return $mappedBackendAttributes;
     }
 }

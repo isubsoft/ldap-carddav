@@ -10,7 +10,7 @@ class Plugin extends \Sabre\DAV\Auth\Plugin
 	public function check(\Sabre\HTTP\RequestInterface $request, \Sabre\HTTP\ResponseInterface $response)
 	{
 		$returnValue = parent::check($request, $response);
-		$GLOBALS['currentUserPrincipal'] = basename($this->getCurrentPrincipal());
+		$GLOBALS['currentUserPrincipalId'] = basename($this->getCurrentPrincipal());
 		return $returnValue;
 	}
 }

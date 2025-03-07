@@ -66,7 +66,7 @@ class Reader extends \Sabre\VObject\Reader{
     }
 
 
-    function backendValueConversion($value, $backendDataFormat)
+    function backendValueConversion($vCardAttr, $value, $backendDataFormat)
     {
         $backendDataFormat = strtoupper($backendDataFormat);
         $cardData = '';
@@ -74,8 +74,36 @@ class Reader extends \Sabre\VObject\Reader{
 
         if($backendDataFormat == 'TEXT')
         {
-            $cardData = $value;
-            $params = ['value' => 'text'];
+            $vCardMetaData = self::vCardMetaData();
+            $vCardAttrInfo = $vCardMetaData[$vCardAttr];
+            
+            if(isset($vCardAttrInfo['data_time']) && $vCardAttrInfo['date_time'] == true)
+            {
+                $dateTime = DateTimeParser::parseVCardDateTime($value);
+                if($dateTime['date'] != '' && $dateTime['date'] != null && $dateTime['month'] != '' && $dateTime['month'] != null && $dateTime['year'] != '' && $dateTime['year'] != null && 
+                $dateTime['hour'] != '' && $dateTime['hour'] != null && $dateTime['minute'] != '' && $dateTime['minute'] != null && $dateTime['second'] != '' && $dateTime['second'] != null)
+                {
+                    $cardData = $dateTime['date'].'-'.$dateTime['month'].'-'.$dateTime['year'].' '.$dateTime['hour'].':'.$dateTime['minute'].':'.$dateTime['second'];
+                    $params = ['value' => 'DATE-TIME'];
+                }
+                else if($dateTime['date'] != '' && $dateTime['date'] != null && $dateTime['month'] != '' && $dateTime['month'] != null && $dateTime['year'] != '' && $dateTime['year'] != null && 
+                ($dateTime['hour'] == '' || $dateTime['hour'] == null || $dateTime['minute'] == '' || $dateTime['minute'] == null || $dateTime['second'] == '' || $dateTime['second'] == null))
+                {
+                    $cardData = $dateTime['date'].'-'.$dateTime['month'].'-'.$dateTime['year'];
+                    $params = ['value' => 'DATE'];
+                }
+                else if(($dateTime['date'] == '' || $dateTime['date'] == null || $dateTime['month'] == '' || $dateTime['month'] == null || $dateTime['year'] == '' || $dateTime['year'] == null) && 
+                $dateTime['hour'] != '' && $dateTime['hour'] != null && $dateTime['minute'] != '' && $dateTime['minute'] != null && $dateTime['second'] != '' && $dateTime['second'] != null)
+                {
+                    $cardData = $dateTime['hour'].':'.$dateTime['minute'].':'.$dateTime['second'];
+                    $params = ['value' => 'DATE-AND-OR-TIME'];
+                }
+            }
+            else
+            {
+                $cardData = $value;
+                $params = ['value' => 'text'];
+            }     
         }
         else if($backendDataFormat == 'URI')
         {
@@ -87,19 +115,25 @@ class Reader extends \Sabre\VObject\Reader{
             if(self::$encoding_format == 'base64')
             {
                 $cardData = 'data:' . finfo_buffer(finfo_open(FILEINFO_MIME), $value) . ';' . self::$encoding_format . ',' . base64_encode($value);
-            }
-            
+            }         
             $params = ['value' => 'uri'];
+        }
+        else if($backendDataFormat == 'TIMESTAMP')
+        {
+            $dateTime = DateTimeParser::parseVCardDateTime($value);
+
+            $cardData = $dateTime['date'].'-'.$dateTime['month'].'-'.$dateTime['year'].' '.$dateTime['hour'].':'.$dateTime['minute'].':'.$dateTime['second'];
+            $params = ['value' => 'DATE-TIME'];
         }
 
         return  ['cardData' => $cardData, 'params' => $params];
     }
 
-    function memberValue($value, $vcardAttr)
+    function memberValue($value, $vCardAttr)
     {
         $valueComponent = parse_url($value);
         $vCardMetaData = self::vCardMetaData();
-        $vCardInfo = $vCardMetaData[$vcardAttr];
+        $vCardInfo = $vCardMetaData[$vCardAttr];
         $memberValue = '';
 
         if(isset($valueComponent['scheme']) && (isset($vCardInfo['uri_schemes']['embedded'])) && (in_array($valueComponent['scheme'], $vCardInfo['uri_schemes']['embedded'])))
@@ -113,13 +147,13 @@ class Reader extends \Sabre\VObject\Reader{
         return $memberValue;
     }
 
-    function memberValueConversion($value, $vcardAttr)
+    function memberValueConversion($value, $vCardAttr)
     {
         $vCardMetaData = self::vCardMetaData();
-        $vCardInfo = $vCardMetaData[$vcardAttr];
+        $vCardInfo = $vCardMetaData[$vCardAttr];
         $memberValue = '';
 
-        if(isset($vCardInfo['uri_schemes']['embedded']))
+        if(isset($vCardInfo['uri_schemes']['embedded']) && $value != '' && $value != null)
         {
             $schema = $vCardInfo['uri_schemes']['embedded'][0];
             $path = 'uuid:'. $value;

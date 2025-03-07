@@ -98,15 +98,15 @@ curl -u <username>:<password> --location --request PROPFIND '/addressbooks/PRINC
         </d:propstat>
     </d:response>
     <d:response>
-        <d:href>/addressbooks/PRINCIPAL/private/</d:href>
+        <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/</d:href>
         <d:propstat>
             <d:prop>
                 <d:resourcetype>
                     <d:collection/>
                     <card:addressbook/>
                 </d:resourcetype>
-                <d:displayname>Personal Address Book</d:displayname>
-                <x1:getctag xmlns:x1="http://calendarserver.org/ns/">1710082492</x1:getctag>
+                <d:displayname>Address book name</d:displayname>
+                <x1:getctag xmlns:x1="http://calendarserver.org/ns/">CTAG</x1:getctag>
             </d:prop>
             <d:status>HTTP/1.1 200 OK</d:status>
         </d:propstat>
@@ -118,7 +118,7 @@ curl -u <username>:<password> --location --request PROPFIND '/addressbooks/PRINC
 ---- Retrieve addressbook information -
 
 -- REQUEST
-curl -u <username>:<password> --location --request PROPFIND '/addressbooks/PRINCIPAL/private/' \
+curl -u <username>:<password> --location --request PROPFIND '/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/' \
 --header 'Content-Type: application/xml' \
 --header 'Depth: 0' \
 --header 'Accept-Charset: utf-8' \
@@ -136,11 +136,11 @@ curl -u <username>:<password> --location --request PROPFIND '/addressbooks/PRINC
 <?xml version="1.0"?>
 <d:multistatus xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns" xmlns:card="urn:ietf:params:xml:ns:carddav">
     <d:response>
-        <d:href>/addressbooks/PRINCIPAL/private/</d:href>
+        <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/</d:href>
         <d:propstat>
             <d:prop>
-                <d:displayname>Personal Address Book</d:displayname>
-                <x1:getctag xmlns:x1="http://calendarserver.org/ns/">1709792717</x1:getctag>
+                <d:displayname>Address book name</d:displayname>
+                <x1:getctag xmlns:x1="http://calendarserver.org/ns/">CTAG</x1:getctag>
             </d:prop>
             <d:status>HTTP/1.1 200 OK</d:status>
         </d:propstat>
@@ -152,7 +152,7 @@ curl -u <username>:<password> --location --request PROPFIND '/addressbooks/PRINC
 ---- List contacts of an addressbook
 
 -- REQUEST
-curl -u <username>:<password> --location --request REPORT '/addressbooks/PRINCIPAL/private/' \
+curl -u <username>:<password> --location --request REPORT '/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/' \
 --header 'Content-Type: application/xml' \
 --header 'Depth: 1' \
 --header 'Accept-Charset: utf-8' \
@@ -167,19 +167,19 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/PRINCIP
 -- RESPONSE (xml)-
 <d:multistatus xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns" xmlns:card="urn:ietf:params:xml:ns:carddav">
     <d:response>
-        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI</d:href>
         <d:propstat>
             <d:prop>
-                <d:getetag>ETAG</d:getetag><d:getlastmodified>TIMESTAMP</d:getlastmodified><d:getcontentlength>21421</d:getcontentlength>
+                <d:getetag>ETAG</d:getetag><d:getlastmodified>TIMESTAMP</d:getlastmodified><d:getcontentlength>CONTENT_LENGTH</d:getcontentlength>
             </d:prop>
             <d:status>HTTP/1.1 200 OK</d:status>
         </d:propstat>
     </d:response>
     <d:response>
-        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI</d:href>
         <d:propstat>
             <d:prop>
-                <d:getetag>ETAG</d:getetag><d:getlastmodified>TIMESTAMP</d:getlastmodified><d:getcontentlength>223</d:getcontentlength>
+                <d:getetag>ETAG</d:getetag><d:getlastmodified>TIMESTAMP</d:getlastmodified><d:getcontentlength>CONTENT_LENGTH</d:getcontentlength>
             </d:prop>
             <d:status>HTTP/1.1 200 OK</d:status>
         </d:propstat>
@@ -191,7 +191,7 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/PRINCIP
 ---- Fetch contact data in vcard format
 
 -- REQUEST
-curl -u <username>:<password> --header 'Accept: text/vcard; version=3.0' --location '/addressbooks/PRINCIPAL/private/UUID.vcf'
+curl -u <username>:<password> --header 'Accept: text/vcard; version=3.0' --location '/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI'
 
 -- RESPONSE
 BEGIN:VCARD
@@ -212,7 +212,7 @@ END:VCARD
 ---- Fetch contacts data with multiget
 
 -- REQUEST
-curl -u <username>:<password> --location --request REPORT '/addressbooks/PRINCIPAL/private/UUID.vcf' \
+curl -u <username>:<password> --location --request REPORT '/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI' \
 --header 'Content-Type: application/xml' \
 --header 'Depth: 1' \
 --header 'Accept-Charset: utf-8' \
@@ -224,15 +224,15 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/PRINCIP
         <d:getlastmodified />
         <d:getcontentlength />
     </d:prop>
-    <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
-    <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
+    <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI</d:href>
+    <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI</d:href>
 </card:addressbook-multiget>'
 
 -- RESPONSE (xml)-
 <?xml version="1.0"?>
 <d:multistatus xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns" xmlns:card="urn:ietf:params:xml:ns:carddav">
     <d:response>
-        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI</d:href>
         <d:propstat>
             <d:prop>
                 <card:address-data>BEGIN:VCARD&#13;
@@ -250,13 +250,13 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/PRINCIP
                     END:VCARD&#13;
                 </card:address-data>
                 <d:getetag>ETAG</d:getetag><d:getlastmodified>TIMESTAMP</d:getlastmodified>
-                <d:getcontentlength>21421</d:getcontentlength>
+                <d:getcontentlength>CONTENT_LENGTH</d:getcontentlength>
             </d:prop>
             <d:status>HTTP/1.1 200 OK</d:status>
         </d:propstat>
     </d:response>
     <d:response>
-        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI</d:href>
         <d:propstat>
             <d:prop>
                 <card:address-data>BEGIN:VCARD&#13;
@@ -269,7 +269,7 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/PRINCIP
                     END:VCARD&#13;
                 </card:address-data>
                 <d:getetag>ETAG</d:getetag><d:getlastmodified>TIMESTAMP</d:getlastmodified>
-                <d:getcontentlength>223</d:getcontentlength>
+                <d:getcontentlength>CONTENT_LENGTH</d:getcontentlength>
             </d:prop>
             <d:status>HTTP/1.1 200 OK</d:status>
         </d:propstat>
@@ -281,7 +281,7 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/PRINCIP
 ---- Update contact
 
 -- REQUEST
-curl -u <username>:<password> --location --request PUT '/addressbooks/PRINCIPAL/private/UUID.vcf' \
+curl -u <username>:<password> --location --request PUT '/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI' \
 --header 'Content-Type: text/vcard' \
 --header 'Accept-Charset: utf-8' \
 --data-raw 'BEGIN:VCARD
@@ -305,7 +305,7 @@ HTTP/1.1 204 No Content
 ---- Create a contact
 
 -- REQUEST
-curl -u <username>:<password> --location --request PUT '/addressbooks/PRINCIPAL/private/UUID.vcf' \
+curl -u <username>:<password> --location --request PUT '/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI' \
 --header 'Content-Type: text/vcard' \
 --header 'Accept-Charset: utf-8' \
 --data 'BEGIN:VCARD
@@ -322,7 +322,7 @@ HTTP/1.1 204 No Content
 10. Delete contact
 
 -- REQUEST
-curl -u <username>:<password> --location --request DELETE '/addressbooks/PRINCIPAL/private/UUID.vcf'
+curl -u <username>:<password> --location --request DELETE '/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI'
 
 -- RESPONSE
 HTTP/1.1 204 No Content
@@ -332,7 +332,7 @@ HTTP/1.1 204 No Content
 ---- Get First Sync Token
 
 -- REQUEST
-curl -u <username>:<password> --location --request PROPFIND '/addressbooks/PRINCIPAL/private' \
+curl -u <username>:<password> --location --request PROPFIND '/addressbooks/PRINCIPAL/ADDRESSBOOK_ID' \
 --header 'Content-Type: application/xml' \
 --header 'Accept-Charset: utf-8' \
 --header 'Depth: 0' \
@@ -348,11 +348,11 @@ curl -u <username>:<password> --location --request PROPFIND '/addressbooks/PRINC
 <?xml version="1.0"?>
 <d:multistatus xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns" xmlns:card="urn:ietf:params:xml:ns:carddav">
     <d:response>
-        <d:href>/addressbooks/PRINCIPAL/private/</d:href>
+        <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/</d:href>
         <d:propstat>
             <d:prop>
-                <d:displayname>Personal Address Book</d:displayname>
-                <x1:getctag xmlns:x1="http://calendarserver.org/ns/">1710082014</x1:getctag>
+                <d:displayname>Address book name</d:displayname>
+                <x1:getctag xmlns:x1="http://calendarserver.org/ns/">CTAG</x1:getctag>
             </d:prop>
             <d:status>HTTP/1.1 200 OK</d:status>
         </d:propstat>
@@ -370,7 +370,7 @@ curl -u <username>:<password> --location --request PROPFIND '/addressbooks/PRINC
 12. Get changes for addressbook
 
 REQUEST - 
-curl -u <username>:<password> --location --request REPORT '/addressbooks/users/dummy/private' \
+curl -u <username>:<password> --location --request REPORT '/addressbooks/users/dummy/ADDRESSBOOK_ID' \
 --header 'Content-Type: application/xml' \
 --header 'Accept-Charset: utf-8' \
 --header 'Depth: 0' \
@@ -389,7 +389,7 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/users/d
 <?xml version="1.0"?>
 <d:multistatus xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns" xmlns:card="urn:ietf:params:xml:ns:carddav">
     <d:response>
-        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI</d:href>
         <d:propstat>
             <d:prop>
                 <d:getetag>&quot;3cd7580b51461ba927ce376ca670abf6&quot;</d:getetag>
@@ -398,7 +398,7 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/users/d
         </d:propstat>
     </d:response>
     <d:response>
-        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI</d:href>
         <d:propstat>
             <d:prop>
                 <d:getetag>&quot;ae5dc9ca2ab7529668255f89cc9e9e17&quot;</d:getetag>
@@ -407,7 +407,7 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/users/d
         </d:propstat>
     </d:response>
     <d:response>
-        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI</d:href>
         <d:propstat>
             <d:prop>
                 <d:getetag>&quot;983938680a4344abe210c54893f3604a&quot;</d:getetag>
@@ -416,7 +416,7 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/users/d
         </d:propstat>
     </d:response>
     <d:response>
-        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI</d:href>
         <d:propstat>
             <d:prop>
                 <d:getetag>&quot;7b0598eccec1b9d63f9ce63e9c1dc598&quot;</d:getetag>
@@ -425,7 +425,7 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/users/d
         </d:propstat>
     </d:response>
     <d:response>
-        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI</d:href>
         <d:propstat>
             <d:prop>
                 <d:getetag>&quot;b6ed1a6a5d4c17fea33396a7deb1c91c&quot;</d:getetag>
@@ -434,7 +434,7 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/users/d
         </d:propstat>
     </d:response>
     <d:response>
-        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI</d:href>
         <d:propstat>
             <d:prop>
                 <d:getetag>&quot;3873e20c0847d0bd13ad36fdf2cc1c3a&quot;</d:getetag>
@@ -443,7 +443,7 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/users/d
         </d:propstat>
     </d:response>
     <d:response>
-        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI</d:href>
         <d:propstat>
             <d:prop>
                 <d:getetag>&quot;33eb1779d766ff4feed2f3a87ee08f00&quot;</d:getetag>
@@ -453,7 +453,7 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/users/d
     </d:response>
     <d:response>
         <d:status>HTTP/1.1 404 Not Found</d:status>
-        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI</d:href>
         <d:propstat>
             <d:prop/>
             <d:status>HTTP/1.1 418 I'm a teapot</d:status>
@@ -461,7 +461,7 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/users/d
     </d:response>
     <d:response>
         <d:status>HTTP/1.1 404 Not Found</d:status>
-        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI</d:href>
         <d:propstat>
             <d:prop/>
             <d:status>HTTP/1.1 418 I'm a teapot</d:status>
@@ -469,7 +469,7 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/users/d
     </d:response>
     <d:response>
         <d:status>HTTP/1.1 404 Not Found</d:status>
-        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI</d:href>
         <d:propstat>
             <d:prop/>
             <d:status>HTTP/1.1 418 I'm a teapot</d:status>
@@ -477,7 +477,7 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/users/d
     </d:response>
     <d:response>
         <d:status>HTTP/1.1 404 Not Found</d:status>
-        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI</d:href>
         <d:propstat>
             <d:prop/>
             <d:status>HTTP/1.1 418 I'm a teapot</d:status>
@@ -485,7 +485,7 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/users/d
     </d:response>
     <d:response>
         <d:status>HTTP/1.1 404 Not Found</d:status>
-        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI</d:href>
         <d:propstat>
             <d:prop/>
             <d:status>HTTP/1.1 418 I'm a teapot</d:status>
@@ -493,7 +493,7 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/users/d
     </d:response>
     <d:response>
         <d:status>HTTP/1.1 404 Not Found</d:status>
-        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI</d:href>
         <d:propstat>
             <d:prop/>
             <d:status>HTTP/1.1 418 I'm a teapot</d:status>
@@ -501,7 +501,7 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/users/d
     </d:response>
     <d:response>
         <d:status>HTTP/1.1 404 Not Found</d:status>
-        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI</d:href>
         <d:propstat>
             <d:prop/>
             <d:status>HTTP/1.1 418 I'm a teapot</d:status>
@@ -509,7 +509,7 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/users/d
     </d:response>
     <d:response>
         <d:status>HTTP/1.1 404 Not Found</d:status>
-        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI</d:href>
         <d:propstat>
             <d:prop/>
             <d:status>HTTP/1.1 418 I'm a teapot</d:status>
@@ -517,7 +517,7 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/users/d
     </d:response>
     <d:response>
         <d:status>HTTP/1.1 404 Not Found</d:status>
-        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI</d:href>
         <d:propstat>
             <d:prop/>
             <d:status>HTTP/1.1 418 I'm a teapot</d:status>
@@ -525,7 +525,7 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/users/d
     </d:response>
     <d:response>
         <d:status>HTTP/1.1 404 Not Found</d:status>
-        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI</d:href>
         <d:propstat>
             <d:prop/>
             <d:status>HTTP/1.1 418 I'm a teapot</d:status>
@@ -533,7 +533,7 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/users/d
     </d:response>
     <d:response>
         <d:status>HTTP/1.1 404 Not Found</d:status>
-        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI</d:href>
         <d:propstat>
             <d:prop/>
             <d:status>HTTP/1.1 418 I'm a teapot</d:status>
@@ -541,7 +541,7 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/users/d
     </d:response>
     <d:response>
         <d:status>HTTP/1.1 404 Not Found</d:status>
-        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI</d:href>
         <d:propstat>
             <d:prop/>
             <d:status>HTTP/1.1 418 I'm a teapot</d:status>
@@ -549,7 +549,7 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/users/d
     </d:response>
     <d:response>
         <d:status>HTTP/1.1 404 Not Found</d:status>
-        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI</d:href>
         <d:propstat>
             <d:prop/>
             <d:status>HTTP/1.1 418 I'm a teapot</d:status>
@@ -557,7 +557,7 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/users/d
     </d:response>
     <d:response>
         <d:status>HTTP/1.1 404 Not Found</d:status>
-        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI</d:href>
         <d:propstat>
             <d:prop/>
             <d:status>HTTP/1.1 418 I'm a teapot</d:status>
@@ -565,7 +565,7 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/users/d
     </d:response>
     <d:response>
         <d:status>HTTP/1.1 404 Not Found</d:status>
-        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI</d:href>
         <d:propstat>
             <d:prop/>
             <d:status>HTTP/1.1 418 I'm a teapot</d:status>
@@ -573,7 +573,7 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/users/d
     </d:response>
     <d:response>
         <d:status>HTTP/1.1 404 Not Found</d:status>
-        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI</d:href>
         <d:propstat>
             <d:prop/>
             <d:status>HTTP/1.1 418 I'm a teapot</d:status>
@@ -581,7 +581,7 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/users/d
     </d:response>
     <d:response>
         <d:status>HTTP/1.1 404 Not Found</d:status>
-        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI</d:href>
         <d:propstat>
             <d:prop/>
             <d:status>HTTP/1.1 418 I'm a teapot</d:status>
@@ -589,7 +589,7 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/users/d
     </d:response>
     <d:response>
         <d:status>HTTP/1.1 404 Not Found</d:status>
-        <d:href>/addressbooks/PRINCIPAL/private/UUID.vcf</d:href>
+        <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI</d:href>
         <d:propstat>
             <d:prop/>
             <d:status>HTTP/1.1 418 I'm a teapot</d:status>
