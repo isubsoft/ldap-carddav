@@ -64,8 +64,18 @@ class LDAP {
         if($iterativeArr)
         {
             foreach($ldapKey as $Index => $ldapKeyInfo)
-            {            
-                foreach($ldapKeyInfo['parameters'] as $ParamList)
+            {
+            		$fieldmapParams = [];
+            		
+            		if(isset($ldapKeyInfo['parameters']))
+            		{
+									if(!Utility::isMultidimensional($ldapKeyInfo['parameters'], true) && is_array($ldapKeyInfo['parameters']))
+										$fieldmapParams = [$ldapKeyInfo['parameters']];
+									elseif(Utility::isMultidimensional($ldapKeyInfo['parameters'], true))
+										$fieldmapParams = $ldapKeyInfo['parameters'];
+            		}
+
+                foreach($fieldmapParams as $ParamList)
                 {
                     if($ParamList == null)
                     {
@@ -124,7 +134,17 @@ class LDAP {
         }
         else
         {
-            foreach($ldapKey['parameters'] as $ParamList)
+		  		$fieldmapParams = [];
+		  		
+		  		if(isset($ldapKeyInfo['parameters']))
+		  		{
+						if(!Utility::isMultidimensional($ldapKeyInfo['parameters'], true) && is_array($ldapKeyInfo['parameters']))
+							$fieldmapParams = [$ldapKeyInfo['parameters']];
+						elseif(Utility::isMultidimensional($ldapKeyInfo['parameters'], true))
+							$fieldmapParams = $ldapKeyInfo['parameters'];
+		  		}
+            		
+            foreach($fieldmapParams as $ParamList)
             {
                 if($ParamList == null)
                 {

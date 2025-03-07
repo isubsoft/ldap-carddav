@@ -20,6 +20,10 @@ class LDAP {
                                             '%dn' => 'User DN in LDAP backend'
                                         ];
 
+    private static $allowed_vCard_params = ['TYPE', 'PREF'];
+
+
+
     public static function LdapBindConnection($credentials, $config)
     {
         $ldapConn = null;
@@ -225,7 +229,7 @@ class LDAP {
 
         foreach($params as $vCardParam)
         {
-            if ($param = $vCardKey[$vCardParam]) {
+            if (($param = $vCardKey[$vCardParam]) && in_array(strtoupper($vCardParam), self::$allowed_vCard_params)) {
                 foreach($param as $value) {
                   $vCardParamsInfo[$vCardParam][] = strtoupper($value);
                 }
@@ -233,6 +237,27 @@ class LDAP {
         }
 
         return $vCardParamsInfo;
+    }
+
+    public static function getMappedVCardAttrParams($paramList, $MappIndex)
+    {
+        $vCardParams = [];
+
+        if(empty($paramList))
+            return [];
+
+        if(isset($paramList[$MappIndex]) && $paramList[$MappIndex] != null)
+        	$vCardParams = $paramList[$MappIndex];
+
+        foreach($vCardParams as $param => $value)
+        {
+            if(!in_array(strtoupper($param), self::$allowed_vCard_params))
+            {
+                unset($vCardParams[$param]);
+            }
+        }
+        
+        return $vCardParams;
     }
 
     public static function decodeHexInString($string) {
@@ -247,9 +272,9 @@ class LDAP {
         );
 	}
 
-    public static function isMultidimensional(array $array) {
+    public static function isMultidimensional(array $array, bool $isNullValueOk = false) {
         foreach ($array as $value) {
-            if (!is_array($value)) {
+            if ((!$isNullValueOk && !is_array($value)) || ($isNullValueOk && !is_array($value) && $value != null)) {
                 return false;
             }
         }
