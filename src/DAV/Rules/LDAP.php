@@ -35,7 +35,7 @@ class LDAP {
             {
                 if(empty($vCardParams) || ($vCardParamListsMatch['status'] == true))
                 {
-                    $backendDataFormat = strtoupper($ldapConfigInfo['field_data_format']);
+                    $backendDataFormat = strtoupper((!isset($ldapConfigInfo['field_data_format']))?'text':$ldapConfigInfo['field_data_format']);
 
                     if(empty($vCardParams) && $backendDataFormat == 'BINARY' && isset($ldapConfigInfo['field_data_mediatype']) && !empty($ldapConfigInfo['field_data_mediatype']))
                     {                    
@@ -244,7 +244,7 @@ class LDAP {
         $compositeAttrStatus = Reader::compositeAttrStatus($vCardAttr);
         $mapCompositeAttr = $compositeAttrStatus['status'];
         $vCardDataFormat = strtoupper($vObj->getValueType());
-        $backendDataFormat = strtoupper($mappLdapConfig['field_data_format']);
+        $backendDataFormat = strtoupper((!isset($mappLdapConfig['field_data_format']))?'text':$mappLdapConfig['field_data_format']);
         $valueComponent = parse_url($vObj);
         $ldapBackendMap = [];
 

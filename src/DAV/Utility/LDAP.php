@@ -246,8 +246,10 @@ class LDAP {
         if(empty($paramList))
             return [];
 
-        if(isset($paramList[$MappIndex]) && $paramList[$MappIndex] != null)
+        if(self::isMultidimensional($paramList, true) && isset($paramList[$MappIndex]) && $paramList[$MappIndex] != null)
         	$vCardParams = $paramList[$MappIndex];
+        elseif(!self::isMultidimensional($paramList, true))
+        	$vCardParams = $paramList;
 
         foreach($vCardParams as $param => $value)
         {
@@ -273,8 +275,8 @@ class LDAP {
 	}
 
     public static function isMultidimensional(array $array, bool $isNullValueOk = false) {
-        foreach ($array as $value) {
-            if ((!$isNullValueOk && !is_array($value)) || ($isNullValueOk && !is_array($value) && $value != null)) {
+        foreach ($array as $key => $value) {
+            if (!is_int($key) || (!$isNullValueOk && !is_array($value)) || ($isNullValueOk && !is_array($value) && $value != null)) {
                 return false;
             }
         }
