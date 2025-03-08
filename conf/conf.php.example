@@ -131,120 +131,112 @@ $config['card']['addressbook']['ldap']['me'] = [
 	// vCard    => LDAP contact field map (Use primary name of backend field and not their alias name here)
 	// vCard property and corresponding parameter match should be according to vCard v4.0
   'fieldmap'      => [
-    'FN'            => ['field_name' => 'cn',
-                        'field_data_format' => 'text',
-                          'parameters' => [],
-                         'reverse_map_parameter_index' => 0],
+    'FN'            => ['field_name' => 'cn'],
 
-    'N'							=> ['field_name' => [ 'last_name' => 'sn', 'first_name' => 'givenName'],
-                        'field_data_format' => 'text',
-                          'parameters' => [],
-                          'reverse_map_parameter_index' => 0],
+    'N'							=> ['field_name' => [
+    																			'last_name' 	=> 'sn', 
+    																			'first_name' 	=> 'givenName'
+    																		]
+    									 ],
 
-		'EMAIL'         => ['field_name' => 'mail',
-                        'field_data_format' => 'text',
-                          'parameters' => [], 
-                          'reverse_map_parameter_index' => 0],
+		'EMAIL'         => ['field_name' => 'mail'],
 
-		'ORG'         	=> ['field_name' => [ 'org_name' => 'o', 'org_unit_name' => 'ou'],
-                        'field_data_format' => 'text',
-                          'parameters' => [], 
-                          'reverse_map_parameter_index' => 0],
+		'ORG'         	=> ['field_name' => [
+																					'org_name' 			=> 'o', 
+																					'org_unit_name' => 'ou'
+																				]
+											 ],
 
-    'TITLE'         => ['field_name' => 'title',
-                        'field_data_format' => 'text',
-                          'parameters' => [], 
-                          'reverse_map_parameter_index' => 0],
+    'TITLE'         => ['field_name' => 'title'],
     
-    'ROLE'        => ['field_name' => 'employeeType',
-                      'field_data_format' => 'text',
-                          'parameters' => [], 
-                          'reverse_map_parameter_index' => 0],  
+    'ROLE'        	=> ['field_name' => 'employeeType'],
 
-    'NICKNAME'      => ['field_name' => 'displayName',
-                        'field_data_format' => 'text',
-                          'parameters' => [],  
-                          'reverse_map_parameter_index' => 0],
+    'NICKNAME'      => ['field_name' => 'displayName'],
 
-		'PHOTO'         => [['field_name' => 'jpegPhoto',
-                        'field_data_format' => 'binary',
-                        'field_data_mediatype' => ['image/jpeg', 'image/png'],
-                            'parameters' => [],
-                            'reverse_map_parameter_index' => '0']],
+		'PHOTO'         => 	[
+    											// Mapping profile picture
+													[
+														'field_name' => 'jpegPhoto',
+				                  	'field_data_format' => 'binary',
+				                  	'field_data_mediatype' => ['image/jpeg', 'image/png'],
+				                  ]
+                       	],
 
-    'NOTE'        	=> ['field_name' => 'description',
-                        'field_data_format' => 'text',
-                        'parameters' => [],                     
-                          'reverse_map_parameter_index' => 0],
+    'NOTE'        	=> 	['field_name' => 'description'],
 
-    'TEL'						=> [['field_name' => 'homePhone',
-                          'field_data_format' => 'text',
-                          'parameters' => [ ['TYPE' => ['voice', 'home'], 'PREF' => '1'],
-                                            ['TYPE' => ['voice', 'home']],
-                                            ['TYPE' => "home"],
-                                              null
-                                          ],                    
-                          'reverse_map_parameter_index' => 0],
-                          ['field_name' => 'telephoneNumber',
-                          'field_data_format' => 'text',
-                          'parameters' => [ 
-                          									['TYPE' => ['voice', 'work']],
-                                            ['TYPE' => ['voice', 'work'], 'PREF' => '1'],
-                                            ['TYPE' => "work"]
-                                          ],                    
-                          'reverse_map_parameter_index' => 0],
-                        ['field_name' => 'facsimileTelephoneNumber',
-                        'field_data_format' => 'text',
-                          'parameters' => [ 
-                          									['TYPE' => ['work', 'fax']],
-                                            ['TYPE' => ['work', 'fax'], 'PREF' => '1'],
-                                            ['TYPE' => "fax"]
-                                      	],                      
-                      'reverse_map_parameter_index' => 0],
-                      ['field_name' => 'pager',
-                      'field_data_format' => 'text',
-                          'parameters' => [ 
-                          									['TYPE' => ['work', 'pager']],
-                                            ['TYPE' => ['work', 'pager'], 'PREF' => '1'],
-                                            ['TYPE' => "pager"]
-                                      ],                      
-                      'reverse_map_parameter_index' => 0],
-                      ['field_name' => 'mobile',
-                      'field_data_format' => 'text',
-                          'parameters' => [ 
-                          									['TYPE' => ['voice', 'cell']],
-                          									['TYPE' => ['voice', 'cell'], 'PREF' => '1'],
-                                            ['TYPE' => "cell"]
-                                      ],                      
-                      'reverse_map_parameter_index' => 0]],
+    'TEL'						=> 	[
+    											// Mapping pager number
+				                  [	
+				                  	'field_name' => 'pager',
+						                'parameters' => ['TYPE' => 'pager']
+				                  ],
+				                  
+    											// Mapping fax number
+		                      [
+		                      	'field_name' => 'facsimileTelephoneNumber',
+		                        'parameters' => [
+		                        									['TYPE' => ['fax', 'work']],
+		                        									['TYPE' => 'fax'],
+		                        								],
+		                    	],
+		                    	
+    											// Mapping mobile number
+				                  [
+				                  	'field_name' => 'mobile',
+				                    'parameters' => ['TYPE' => 'cell']
+				                  ],
+				                  
+    											// Mapping home telephone number
+    											[
+		  											'field_name' => 'homePhone',
+		                        'parameters' => [ 
+		                                          ['TYPE' => 'home'],
+		                        									['TYPE' => 'home', 'PREF' => '1']
+		                                        ],
+						                'reverse_map_parameter_index' => 1
+                          ],
+                          
+    											// Mapping work telephone number
+                          [	
+                          	'field_name' => 'telephoneNumber',
+		                        'parameters' => [ 
+		                                          ['TYPE' => 'work'],
+		                        									['TYPE' => 'work', 'PREF' => '1'],
+		                                          null
+		                                        ],
+						                'reverse_map_parameter_index' => 1
+                          ],
+                     ],
                      
-      'ADR'         => [['field_name' => 'homePostalAddress',
-                          'field_data_format' => 'text',
-                          'parameters' => [ ['TYPE' => "home", 'PREF' => '1'],
-                                            ['TYPE' => "home"],
-                                            ['PREF' => '1'],
-                                              null
-                                            ],                    
-                                        'reverse_map_parameter_index' => 0,
-                                        'map_component_separator' => '$' ],
-                          ['field_name' => ['po_box'=> 'postOfficeBox','street' => 'street','locality' => 'l','province' => 'st', 'postal_code' => 'postalCode'],
-                          'field_data_format' => 'text',
-                          'parameters' => [ 
-                          									['TYPE' => "work"],
-                                            ['TYPE' => "work", 'PREF' => '1'],
-                                            ['PREF' => '1']
-                                             ],                    
-                                  'reverse_map_parameter_index' => 0]],
+      'ADR'         => [
+		  										// Mapping home postal address
+		    									[
+														'field_name' => 'homePostalAddress',
+				                    'parameters' => ['TYPE' => 'home'],
+				                    'map_component_separator' => '$'
+		                      ],
+		                      
+		  										// Mapping other postal address
+		    									[
+														'field_name' => 'postalAddress',
+				                    'parameters' => [null],
+				                    'map_component_separator' => '$'
+		                      ],
 
-      'LANG'        => [['field_name' => 'preferredLanguage',
-                          'field_data_format' => 'text',
-                          'parameters' => [ 
-                          									['TYPE' => 'home', 'PREF' => 1],
-                                            ['TYPE'  => 'home'],
-                                            ['TYPE' => 'work'],
-                                            null
-                                          ],                    
-                                  'reverse_map_parameter_index' => 0]],
+		  										// Mapping location
+		                      [
+		     										'field_name' => [
+		     																			'po_box'			=> 'postOfficeBox',
+		     																			'street' 			=> 'street',
+		     																			'locality' 		=> 'l',
+		     																			'province' 		=> 'st', 
+		     																			'postal_code' => 'postalCode'
+		     																		],
+		                        'parameters' => ['TYPE' => 'work']
+		                      ]
+                       ],
+
+      'LANG'        => ['field_name' => 'preferredLanguage']
 	],
 	
 	// If writable is true then these fields need to be populated:
@@ -267,18 +259,10 @@ $config['card']['addressbook']['ldap']['me'] = [
 	// vCard    => LDAP contact field map (Use primary name of backend field and not their alias name here)
 	// vCard property and corresponding parameter match should be according to vCard v4.0
 	'group_fieldmap'            => [     
-																	 'FN'          => [	'field_name' => 'cn',
-                                                      'field_data_format' => 'text',
-																											'parameters'    => [],
-																									 		'reverse_map_parameter_index' => 0
-								                 										],
-								                 	
-																	 'NOTE'        => [	'field_name' => 'description',
-                                                      'field_data_format' => 'text',
-																											'parameters' => [],                     
-																											'reverse_map_parameter_index' => 0
-																										]
-                                 ]
+		 'FN'          => [	'field_name' => 'cn'],
+	 	
+		 'NOTE'        => [	'field_name' => 'description']
+	 ]
 ];
 
 $config['card']['addressbook']['ldap']['global'] = [
@@ -356,120 +340,112 @@ $config['card']['addressbook']['ldap']['global'] = [
 	// vCard    => LDAP contact field map (Use primary name of backend field and not their alias name here)
 	// vCard property and corresponding parameter match should be according to vCard v4.0
   'fieldmap'      => [
-    'FN'            => ['field_name' => 'cn',
-                        'field_data_format' => 'text',
-                          'parameters' => [],
-                         'reverse_map_parameter_index' => 0],
+    'FN'            => ['field_name' => 'cn'],
 
-    'N'							=> ['field_name' => [ 'last_name' => 'sn', 'first_name' => 'givenName'],
-                        'field_data_format' => 'text',
-                          'parameters' => [],
-                          'reverse_map_parameter_index' => 0],
+    'N'							=> ['field_name' => [
+    																			'last_name' 	=> 'sn', 
+    																			'first_name' 	=> 'givenName'
+    																		]
+    									 ],
 
-		'EMAIL'         => ['field_name' => 'mail',
-                        'field_data_format' => 'text',
-                          'parameters' => [], 
-                          'reverse_map_parameter_index' => 0],
+		'EMAIL'         => ['field_name' => 'mail'],
 
-		'ORG'         	=> ['field_name' => [ 'org_name' => 'o', 'org_unit_name' => 'ou'],
-                        'field_data_format' => 'text',
-                          'parameters' => [], 
-                          'reverse_map_parameter_index' => 0],
+		'ORG'         	=> ['field_name' => [
+																					'org_name' 			=> 'o', 
+																					'org_unit_name' => 'ou'
+																				]
+											 ],
 
-    'TITLE'         => ['field_name' => 'title',
-                        'field_data_format' => 'text',
-                          'parameters' => [], 
-                          'reverse_map_parameter_index' => 0],
+    'TITLE'         => ['field_name' => 'title'],
     
-    'ROLE'        => ['field_name' => 'employeeType',
-                      'field_data_format' => 'text',
-                          'parameters' => [], 
-                          'reverse_map_parameter_index' => 0],  
+    'ROLE'        	=> ['field_name' => 'employeeType'],
 
-    'NICKNAME'      => ['field_name' => 'displayName',
-                        'field_data_format' => 'text',
-                          'parameters' => [],  
-                          'reverse_map_parameter_index' => 0],
+    'NICKNAME'      => ['field_name' => 'displayName'],
 
-		'PHOTO'         => [['field_name' => 'jpegPhoto',
-                        'field_data_format' => 'binary',
-                        'field_data_mediatype' => ['image/jpeg', 'image/png'],
-                            'parameters' => [],
-                            'reverse_map_parameter_index' => '0']],
+		'PHOTO'         => 	[
+    											// Mapping profile picture
+													[
+														'field_name' => 'jpegPhoto',
+				                  	'field_data_format' => 'binary',
+				                  	'field_data_mediatype' => ['image/jpeg', 'image/png'],
+				                  ]
+                       	],
 
-    'NOTE'        	=> ['field_name' => 'description',
-                        'field_data_format' => 'text',
-                        'parameters' => [],                     
-                          'reverse_map_parameter_index' => 0],
+    'NOTE'        	=> 	['field_name' => 'description'],
 
-    'TEL'						=> [['field_name' => 'homePhone',
-                          'field_data_format' => 'text',
-                          'parameters' => [ ['TYPE' => ['voice', 'home'], 'PREF' => '1'],
-                                            ['TYPE' => ['voice', 'home']],
-                                            ['TYPE' => "home"],
-                                              null
-                                          ],                    
-                          'reverse_map_parameter_index' => 0],
-                          ['field_name' => 'telephoneNumber',
-                          'field_data_format' => 'text',
-                          'parameters' => [ 
-                          									['TYPE' => ['voice', 'work']],
-                                            ['TYPE' => ['voice', 'work'], 'PREF' => '1'],
-                                            ['TYPE' => "work"]
-                                          ],                    
-                          'reverse_map_parameter_index' => 0],
-                        ['field_name' => 'facsimileTelephoneNumber',
-                        'field_data_format' => 'text',
-                          'parameters' => [ 
-                          									['TYPE' => ['work', 'fax']],
-                                            ['TYPE' => ['work', 'fax'], 'PREF' => '1'],
-                                            ['TYPE' => "fax"]
-                                      	],                      
-                      'reverse_map_parameter_index' => 0],
-                      ['field_name' => 'pager',
-                      'field_data_format' => 'text',
-                          'parameters' => [ 
-                          									['TYPE' => ['work', 'pager']],
-                                            ['TYPE' => ['work', 'pager'], 'PREF' => '1'],
-                                            ['TYPE' => "pager"]
-                                      ],                      
-                      'reverse_map_parameter_index' => 0],
-                      ['field_name' => 'mobile',
-                      'field_data_format' => 'text',
-                          'parameters' => [ 
-                          									['TYPE' => ['voice', 'cell']],
-                          									['TYPE' => ['voice', 'cell'], 'PREF' => '1'],
-                                            ['TYPE' => "cell"]
-                                      ],                      
-                      'reverse_map_parameter_index' => 0]],
+    'TEL'						=> 	[
+    											// Mapping pager number
+				                  [	
+				                  	'field_name' => 'pager',
+						                'parameters' => ['TYPE' => 'pager']
+				                  ],
+				                  
+    											// Mapping fax number
+		                      [
+		                      	'field_name' => 'facsimileTelephoneNumber',
+		                        'parameters' => [
+		                        									['TYPE' => ['fax', 'work']],
+		                        									['TYPE' => 'fax'],
+		                        								],
+		                    	],
+		                    	
+    											// Mapping mobile number
+				                  [
+				                  	'field_name' => 'mobile',
+				                    'parameters' => ['TYPE' => 'cell']
+				                  ],
+				                  
+    											// Mapping home telephone number
+    											[
+		  											'field_name' => 'homePhone',
+		                        'parameters' => [ 
+		                                          ['TYPE' => 'home'],
+		                        									['TYPE' => 'home', 'PREF' => '1']
+		                                        ],
+						                'reverse_map_parameter_index' => 1
+                          ],
+                          
+    											// Mapping work telephone number
+                          [	
+                          	'field_name' => 'telephoneNumber',
+		                        'parameters' => [ 
+		                                          ['TYPE' => 'work'],
+		                        									['TYPE' => 'work', 'PREF' => '1'],
+		                                          null
+		                                        ],
+						                'reverse_map_parameter_index' => 1
+                          ],
+                     ],
                      
-      'ADR'         => [['field_name' => 'homePostalAddress',
-                          'field_data_format' => 'text',
-                          'parameters' => [ ['TYPE' => "home", 'PREF' => '1'],
-                                            ['TYPE' => "home"],
-                                            ['PREF' => '1'],
-                                              null
-                                            ],                    
-                                        'reverse_map_parameter_index' => 0,
-                                        'map_component_separator' => '$' ],
-                          ['field_name' => ['po_box'=> 'postOfficeBox','street' => 'street','locality' => 'l','province' => 'st', 'postal_code' => 'postalCode'],
-                          'field_data_format' => 'text',
-                          'parameters' => [ 
-                          									['TYPE' => "work"],
-                                            ['TYPE' => "work", 'PREF' => '1'],
-                                            ['PREF' => '1']
-                                             ],                    
-                                  'reverse_map_parameter_index' => 0]],
+      'ADR'         => [
+		  										// Mapping home postal address
+		    									[
+														'field_name' => 'homePostalAddress',
+				                    'parameters' => ['TYPE' => 'home'],
+				                    'map_component_separator' => '$'
+		                      ],
+		                      
+		  										// Mapping other postal address
+		    									[
+														'field_name' => 'postalAddress',
+				                    'parameters' => [null],
+				                    'map_component_separator' => '$'
+		                      ],
 
-      'LANG'        => [['field_name' => 'preferredLanguage',
-                          'field_data_format' => 'text',
-                          'parameters' => [ 
-                          									['TYPE' => 'home', 'PREF' => 1],
-                                            ['TYPE'  => 'home'],
-                                            ['TYPE' => 'work'],
-                                            null
-                                          ],                    
-                                  'reverse_map_parameter_index' => 0]],
+		  										// Mapping location
+		                      [
+		     										'field_name' => [
+		     																			'po_box'			=> 'postOfficeBox',
+		     																			'street' 			=> 'street',
+		     																			'locality' 		=> 'l',
+		     																			'province' 		=> 'st', 
+		     																			'postal_code' => 'postalCode'
+		     																		],
+		                        'parameters' => ['TYPE' => 'work']
+		                      ]
+                       ],
+
+      'LANG'        => ['field_name' => 'preferredLanguage']
 	],
 	
 	// If writable is true then these fields need to be populated:
@@ -492,18 +468,10 @@ $config['card']['addressbook']['ldap']['global'] = [
 	// vCard    => LDAP contact field map (Use primary name of backend field and not their alias name here)
 	// vCard property and corresponding parameter match should be according to vCard v4.0
 	'group_fieldmap'            => [     
-																	 'FN'          => [	'field_name' => 'cn',
-                                                      'field_data_format' => 'text',
-																											'parameters'    => [],
-																									 		'reverse_map_parameter_index' => 0
-								                 										],
-								                 	
-																	 'NOTE'        => [	'field_name' => 'description',
-                                                      'field_data_format' => 'text',
-																											'parameters' => [],                     
-																											'reverse_map_parameter_index' => 0
-																										]
-                                 ]
+		 'FN'          => [	'field_name' => 'cn'],
+	 	
+		 'NOTE'        => [	'field_name' => 'description']
+	 ]
 ];
 
 $config['card']['addressbook']['ldap']['personal'] = [
@@ -581,120 +549,112 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	// vCard    => LDAP contact field map (Use primary name of backend field and not their alias name here)
 	// vCard property and corresponding parameter match should be according to vCard v4.0
   'fieldmap'      => [
-    'FN'            => ['field_name' => 'cn',
-                        'field_data_format' => 'text',
-                          'parameters' => [],
-                         'reverse_map_parameter_index' => 0],
+    'FN'            => ['field_name' => 'cn'],
 
-    'N'							=> ['field_name' => [ 'last_name' => 'sn', 'first_name' => 'givenName'],
-                        'field_data_format' => 'text',
-                          'parameters' => [],
-                          'reverse_map_parameter_index' => 0],
+    'N'							=> ['field_name' => [
+    																			'last_name' 	=> 'sn', 
+    																			'first_name' 	=> 'givenName'
+    																		]
+    									 ],
 
-		'EMAIL'         => ['field_name' => 'mail',
-                        'field_data_format' => 'text',
-                          'parameters' => [], 
-                          'reverse_map_parameter_index' => 0],
+		'EMAIL'         => ['field_name' => 'mail'],
 
-		'ORG'         	=> ['field_name' => [ 'org_name' => 'o', 'org_unit_name' => 'ou'],
-                        'field_data_format' => 'text',
-                          'parameters' => [], 
-                          'reverse_map_parameter_index' => 0],
+		'ORG'         	=> ['field_name' => [
+																					'org_name' 			=> 'o', 
+																					'org_unit_name' => 'ou'
+																				]
+											 ],
 
-    'TITLE'         => ['field_name' => 'title',
-                        'field_data_format' => 'text',
-                          'parameters' => [], 
-                          'reverse_map_parameter_index' => 0],
+    'TITLE'         => ['field_name' => 'title'],
     
-    'ROLE'        => ['field_name' => 'employeeType',
-                      'field_data_format' => 'text',
-                          'parameters' => [], 
-                          'reverse_map_parameter_index' => 0],  
+    'ROLE'        	=> ['field_name' => 'employeeType'],
 
-    'NICKNAME'      => ['field_name' => 'displayName',
-                        'field_data_format' => 'text',
-                          'parameters' => [],  
-                          'reverse_map_parameter_index' => 0],
+    'NICKNAME'      => ['field_name' => 'displayName'],
 
-		'PHOTO'         => [['field_name' => 'jpegPhoto',
-                        'field_data_format' => 'binary',
-                        'field_data_mediatype' => ['image/jpeg', 'image/png'],
-                            'parameters' => [],
-                            'reverse_map_parameter_index' => '0']],
+		'PHOTO'         => 	[
+    											// Mapping profile picture
+													[
+														'field_name' => 'jpegPhoto',
+				                  	'field_data_format' => 'binary',
+				                  	'field_data_mediatype' => ['image/jpeg', 'image/png'],
+				                  ]
+                       	],
 
-    'NOTE'        	=> ['field_name' => 'description',
-                        'field_data_format' => 'text',
-                        'parameters' => [],                     
-                          'reverse_map_parameter_index' => 0],
+    'NOTE'        	=> 	['field_name' => 'description'],
 
-    'TEL'						=> [['field_name' => 'homePhone',
-                          'field_data_format' => 'text',
-                          'parameters' => [ ['TYPE' => ['voice', 'home'], 'PREF' => '1'],
-                                            ['TYPE' => ['voice', 'home']],
-                                            ['TYPE' => "home"],
-                                              null
-                                          ],                    
-                          'reverse_map_parameter_index' => 0],
-                          ['field_name' => 'telephoneNumber',
-                          'field_data_format' => 'text',
-                          'parameters' => [ 
-                          									['TYPE' => ['voice', 'work']],
-                                            ['TYPE' => ['voice', 'work'], 'PREF' => '1'],
-                                            ['TYPE' => "work"]
-                                          ],                    
-                          'reverse_map_parameter_index' => 0],
-                        ['field_name' => 'facsimileTelephoneNumber',
-                        'field_data_format' => 'text',
-                          'parameters' => [ 
-                          									['TYPE' => ['work', 'fax']],
-                                            ['TYPE' => ['work', 'fax'], 'PREF' => '1'],
-                                            ['TYPE' => "fax"]
-                                      	],                      
-                      'reverse_map_parameter_index' => 0],
-                      ['field_name' => 'pager',
-                      'field_data_format' => 'text',
-                          'parameters' => [ 
-                          									['TYPE' => ['work', 'pager']],
-                                            ['TYPE' => ['work', 'pager'], 'PREF' => '1'],
-                                            ['TYPE' => "pager"]
-                                      ],                      
-                      'reverse_map_parameter_index' => 0],
-                      ['field_name' => 'mobile',
-                      'field_data_format' => 'text',
-                          'parameters' => [ 
-                          									['TYPE' => ['voice', 'cell']],
-                          									['TYPE' => ['voice', 'cell'], 'PREF' => '1'],
-                                            ['TYPE' => "cell"]
-                                      ],                      
-                      'reverse_map_parameter_index' => 0]],
+    'TEL'						=> 	[
+    											// Mapping pager number
+				                  [	
+				                  	'field_name' => 'pager',
+						                'parameters' => ['TYPE' => 'pager']
+				                  ],
+				                  
+    											// Mapping fax number
+		                      [
+		                      	'field_name' => 'facsimileTelephoneNumber',
+		                        'parameters' => [
+		                        									['TYPE' => ['fax', 'work']],
+		                        									['TYPE' => 'fax'],
+		                        								],
+		                    	],
+		                    	
+    											// Mapping mobile number
+				                  [
+				                  	'field_name' => 'mobile',
+				                    'parameters' => ['TYPE' => 'cell']
+				                  ],
+				                  
+    											// Mapping home telephone number
+    											[
+		  											'field_name' => 'homePhone',
+		                        'parameters' => [ 
+		                                          ['TYPE' => 'home'],
+		                        									['TYPE' => 'home', 'PREF' => '1']
+		                                        ],
+						                'reverse_map_parameter_index' => 1
+                          ],
+                          
+    											// Mapping work telephone number
+                          [	
+                          	'field_name' => 'telephoneNumber',
+		                        'parameters' => [ 
+		                                          ['TYPE' => 'work'],
+		                        									['TYPE' => 'work', 'PREF' => '1'],
+		                                          null
+		                                        ],
+						                'reverse_map_parameter_index' => 1
+                          ],
+                     ],
                      
-      'ADR'         => [['field_name' => 'homePostalAddress',
-                          'field_data_format' => 'text',
-                          'parameters' => [ ['TYPE' => "home", 'PREF' => '1'],
-                                            ['TYPE' => "home"],
-                                            ['PREF' => '1'],
-                                              null
-                                            ],                    
-                                        'reverse_map_parameter_index' => 0,
-                                        'map_component_separator' => '$' ],
-                          ['field_name' => ['po_box'=> 'postOfficeBox','street' => 'street','locality' => 'l','province' => 'st', 'postal_code' => 'postalCode'],
-                          'field_data_format' => 'text',
-                          'parameters' => [ 
-                          									['TYPE' => "work"],
-                                            ['TYPE' => "work", 'PREF' => '1'],
-                                            ['PREF' => '1']
-                                             ],                    
-                                  'reverse_map_parameter_index' => 0]],
+      'ADR'         => [
+		  										// Mapping home postal address
+		    									[
+														'field_name' => 'homePostalAddress',
+				                    'parameters' => ['TYPE' => 'home'],
+				                    'map_component_separator' => '$'
+		                      ],
+		                      
+		  										// Mapping other postal address
+		    									[
+														'field_name' => 'postalAddress',
+				                    'parameters' => [null],
+				                    'map_component_separator' => '$'
+		                      ],
 
-      'LANG'        => [['field_name' => 'preferredLanguage',
-                          'field_data_format' => 'text',
-                          'parameters' => [ 
-                          									['TYPE' => 'home', 'PREF' => 1],
-                                            ['TYPE'  => 'home'],
-                                            ['TYPE' => 'work'],
-                                            null
-                                          ],                    
-                                  'reverse_map_parameter_index' => 0]],
+		  										// Mapping location
+		                      [
+		     										'field_name' => [
+		     																			'po_box'			=> 'postOfficeBox',
+		     																			'street' 			=> 'street',
+		     																			'locality' 		=> 'l',
+		     																			'province' 		=> 'st', 
+		     																			'postal_code' => 'postalCode'
+		     																		],
+		                        'parameters' => ['TYPE' => 'work']
+		                      ]
+                       ],
+
+      'LANG'        => ['field_name' => 'preferredLanguage']
 	],
 	
 	// If writable is true then these fields need to be populated:
@@ -717,16 +677,8 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	// vCard    => LDAP contact field map (Use primary name of backend field and not their alias name here)
 	// vCard property and corresponding parameter match should be according to vCard v4.0
 	'group_fieldmap'            => [     
-																	 'FN'          => [	'field_name' => 'cn',
-                                                      'field_data_format' => 'text',
-																											'parameters'    => [],
-																									 		'reverse_map_parameter_index' => 0
-								                 										],
-								                 	
-																	 'NOTE'        => [	'field_name' => 'description',
-                                                      'field_data_format' => 'text',
-																											'parameters' => [],                     
-																											'reverse_map_parameter_index' => 0
-																										]
-                                 ]
+		 'FN'          => [	'field_name' => 'cn'],
+	 	
+		 'NOTE'        => [	'field_name' => 'description']
+	 ]
 ];
