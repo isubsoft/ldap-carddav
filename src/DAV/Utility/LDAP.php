@@ -6,6 +6,7 @@
 namespace ISubsoft\DAV\Utility;
 
 use \Sabre\DAV\Exception\ServiceUnavailable;
+use ISubsoft\VObject\Reader as Reader;
 
 class LDAP {
 
@@ -229,7 +230,7 @@ class LDAP {
 
         foreach($params as $vCardParam)
         {
-            if (($param = $vCardKey[$vCardParam]) && in_array($vCardParam, self::$allowed_vCard_params)) {
+            if (($param = $vCardKey[$vCardParam]) && in_array(strtoupper($vCardParam), self::$allowed_vCard_params)) {
                 foreach($param as $value) {
                   $vCardParamsInfo[$vCardParam][] = strtoupper($value);
                 }
@@ -246,11 +247,14 @@ class LDAP {
         if(empty($paramList))
             return [];
 
-        $vCardParams = $paramList[$MappIndex];
+        if(self::isMultidimensional($paramList, true) && isset($paramList[$MappIndex]) && $paramList[$MappIndex] != null)
+        	$vCardParams = $paramList[$MappIndex];
+        elseif(!self::isMultidimensional($paramList, true))
+        	$vCardParams = $paramList;
 
         foreach($vCardParams as $param => $value)
         {
-            if(!in_array($param, self::$allowed_vCard_params))
+            if(!in_array(strtoupper($param), self::$allowed_vCard_params))
             {
                 unset($vCardParams[$param]);
             }
@@ -271,14 +275,23 @@ class LDAP {
         );
 	}
 
-    public static function isMultidimensional(array $array) {
-        foreach ($array as $value) {
-            if (!is_array($value)) {
+    public static function isMultidimensional(array $array, bool $isNullValueOk = false) {
+        $notSingleArray = false;
+        
+        foreach ($array as $key => $value) {
+            if (!is_int($key) || (!$isNullValueOk && !is_array($value)) || ($isNullValueOk && !is_array($value) && $value != null)) {
                 return false;
             }
+            
+        	$notSingleArray = true;
         }
-        return true;
+        
+        if($notSingleArray)
+        	return true;
+
+        return false;
     }
+
     
     public static function getMappedBackendAttributes($fieldMap)
     {
@@ -312,5 +325,27 @@ class LDAP {
 			}
 			
 			return $mappedBackendAttributes;
+    }
+
+    public static function getCompositebackendValueConversion($ldapValueArr, $vCardKey, $ldapKey)
+    {
+        $elementArr = [];
+        $params = [];
+
+        foreach($ldapValueArr as $ldapValueComponent)
+        {
+            if($ldapValueComponent != '' && $ldapValueComponent != null)
+            {
+                $ldapValueConversionInfo = Reader::backendValueConversion($vCardKey, $ldapValueComponent, (!isset($ldapKey['field_data_format']))?'text':$ldapKey['field_data_format']);
+                $elementArr[] = $ldapValueConversionInfo['cardData'];
+                $params = $ldapValueConversionInfo['params'];
+            }
+            else
+            {
+                $elementArr[] = '';
+            }
+        }
+
+        return ['ldapValueArray' => $elementArr, 'params' => $params];
     }
 }
