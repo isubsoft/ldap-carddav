@@ -278,7 +278,7 @@ class LDAP {
     public static function encodeStringToHex($string, $char) {
         return
             preg_replace_callback(
-                "/([".$char."]){1}/iu",
+                "/([".$char."]){".strlen($char)."}/",
                 function ($matches) {
                     return '\\' . bin2hex($matches[1]);
                 },
