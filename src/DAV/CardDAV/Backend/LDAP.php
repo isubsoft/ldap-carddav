@@ -961,10 +961,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                         continue;
 
                         $vCardParams = Utility::getMappedVCardAttrParams((isset($ldapKey['parameters']) ? $ldapKey['parameters'] : []), (isset($ldapKey['reverse_map_parameter_index']) ? $ldapKey['reverse_map_parameter_index'] : 0));
-                        $valueInfo = Reader::backendValueConversion($vCardKey, $value, (!isset($ldapKey['field_data_format']))?'text':$ldapKey['field_data_format']);
-                        $vCardParams = array_merge($vCardParams, $valueInfo['params']);
+                        $ldapValueConversionInfo = Reader::backendValueConversion($vCardKey, $value, (!isset($ldapKey['field_data_format']))?'text':$ldapKey['field_data_format']);
+                        $vCardParams = array_merge($vCardParams, $ldapValueConversionInfo['params']);
 
-                        !empty($vCardParams) ? $vcard->add($vCardKey, $valueInfo['cardData'], $vCardParams) : $vcard->add($vCardKey, $valueInfo['cardData']);
+                        !empty($vCardParams) ? $vcard->add($vCardKey, $ldapValueConversionInfo['cardData'], $vCardParams) : $vcard->add($vCardKey, $ldapValueConversionInfo['cardData']);
                     }
                 }
             }
@@ -982,27 +982,30 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                                 if($key === 'count')
                                 continue;
 
-                                $elementArr = explode($ldapKey['map_component_separator'], $attrValue);
-                                
+                                $ldapValueArr = explode($ldapKey['map_component_separator'], $attrValue);
+                                $ldapCompositeValueConversion = Utility::getCompositebackendValueConversion($ldapValueArr, $vCardKey, $ldapKey);
                                 $vCardParams = Utility::getMappedVCardAttrParams((isset($ldapKey['parameters']) ? $ldapKey['parameters'] : []), (isset($ldapKey['reverse_map_parameter_index']) ? $ldapKey['reverse_map_parameter_index'] : 0));
+
+                                $vCardParams = !empty($ldapCompositeValueConversion['params']) ? array_merge($vCardParams, $ldapCompositeValueConversion['params']) : $vCardParams;
                                 
-                                !empty($vCardParams) ? $vcard->add($vCardKey, $elementArr, $vCardParams) : $vcard->add($vCardKey, $elementArr);
+                                !empty($vCardParams) ? $vcard->add($vCardKey, $ldapCompositeValueConversion['ldapValueArray'], $vCardParams) : $vcard->add($vCardKey, $ldapCompositeValueConversion['ldapValueArray']);
                             }
                         }
                         else
                         {
-                            $elementArr = explode($ldapKey['map_component_separator'], $data[$newLdapKey][0]);
-
+                            $ldapValueArr = explode($ldapKey['map_component_separator'], $data[$newLdapKey][0]);
+                            $ldapCompositeValueConversion = Utility::getCompositebackendValueConversion($ldapValueArr, $vCardKey, $ldapKey);
                             $vCardParams = Utility::getMappedVCardAttrParams((isset($ldapKey['parameters']) ? $ldapKey['parameters'] : []), (isset($ldapKey['reverse_map_parameter_index']) ? $ldapKey['reverse_map_parameter_index'] : 0));
+
+                            $vCardParams = !empty($ldapCompositeValueConversion['params']) ? array_merge($vCardParams, $ldapCompositeValueConversion['params']) : $vCardParams; 
                             
-                            !empty($vCardParams) ? $vcard->add($vCardKey, $elementArr, $vCardParams) : $vcard->add($vCardKey, $elementArr);
+                            !empty($vCardParams) ? $vcard->add($vCardKey, $ldapCompositeValueConversion['ldapValueArray'], $vCardParams) : $vcard->add($vCardKey, $ldapCompositeValueConversion['ldapValueArray']);
                         }
                     }
                 }
                 else
                 {
                     $isLdapKeyExists = false;
-                    $elementArr = [];
                     $count = 0;
     
                     foreach($ldapKey['field_name'] as $backendAttr)
@@ -1022,14 +1025,19 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                         {
                             for($i = 0; $i < $count; $i++)
                             {
+                                $backendAttrParams = [];
+                                $elementArr = [];
+
                                 foreach($compositeAttrStatus['status'] as $propValue)
                                 {
                                     if(isset($ldapKey['field_name'][$propValue]))
                                     {
                                         $newLdapKey = strtolower($ldapKey['field_name'][$propValue]);
-                                        if(isset($data[$newLdapKey]) && isset($data[$newLdapKey][$i]))
+                                        if(isset($data[$newLdapKey]) && isset($data[$newLdapKey][$i]) && $data[$newLdapKey][$i] != '')
                                         {
-                                            $elementArr[] = $data[$newLdapKey][$i];
+                                            $ldapValueConversionInfo = Reader::backendValueConversion($vCardKey, $data[$newLdapKey][$i], (!isset($ldapKey['field_data_format']))?'text':$ldapKey['field_data_format']);
+                                            $backendAttrParams = $ldapValueConversionInfo['params'];
+                                            $elementArr[] = $ldapValueConversionInfo['cardData'];
                                         }
                                         else
                                         {
@@ -1043,12 +1051,15 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                                 }
     
                                 $vCardParams = Utility::getMappedVCardAttrParams((isset($ldapKey['parameters']) ? $ldapKey['parameters'] : []), (isset($ldapKey['reverse_map_parameter_index']) ? $ldapKey['reverse_map_parameter_index'] : 0));
-                                
+                                $vCardParams = !empty($backendAttrParams) ? array_merge($vCardParams, $backendAttrParams) : $vCardParams;
                                 !empty($vCardParams) ? $vcard->add($vCardKey, $elementArr, $vCardParams) : $vcard->add($vCardKey, $elementArr);
                             }
                         }
                         else
                         {
+                            $backendAttrParams = [];
+                            $elementArr = [];
+
                             foreach($compositeAttrStatus['status'] as $propValue)
                             {
                                 if(isset($ldapKey['field_name'][$propValue]))
@@ -1056,7 +1067,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                                     $newLdapKey = strtolower($ldapKey['field_name'][$propValue]);
                                     if(isset($data[$newLdapKey]))
                                     {
-                                        $elementArr[] = $data[$newLdapKey][0];
+                                        $ldapValueConversionInfo = Reader::backendValueConversion($vCardKey, $data[$newLdapKey][0], (!isset($ldapKey['field_data_format']))?'text':$ldapKey['field_data_format']);
+                                        $backendAttrParams = $ldapValueConversionInfo['params'];
+                                        $elementArr[] = $ldapValueConversionInfo['cardData'];
                                     }
                                     else
                                     {
@@ -1070,7 +1083,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                             }
     
                             $vCardParams = Utility::getMappedVCardAttrParams((isset($ldapKey['parameters']) ? $ldapKey['parameters'] : []), (isset($ldapKey['reverse_map_parameter_index']) ? $ldapKey['reverse_map_parameter_index'] : 0));
-                            
+                            $vCardParams = !empty($backendAttrParams) ? array_merge($vCardParams, $backendAttrParams) : $vCardParams;
                             !empty($vCardParams) ? $vcard->add($vCardKey, $elementArr, $vCardParams) : $vcard->add($vCardKey, $elementArr);
                         }                                               
                     }  
@@ -1095,20 +1108,25 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                                         if($key === 'count')
                                         continue;
 
-                                        $elementArr = explode($ldapKeyInfo['map_component_separator'], $attrValue);
-
+                                        $ldapValueArr = explode($ldapKeyInfo['map_component_separator'], $attrValue);
+                                        $ldapCompositeValueConversion = Utility::getCompositebackendValueConversion($ldapValueArr, $vCardKey, $ldapKeyInfo);
                                         $vCardParams = Utility::getMappedVCardAttrParams((isset($ldapKeyInfo['parameters']) ? $ldapKeyInfo['parameters'] : []), (isset($ldapKeyInfo['reverse_map_parameter_index']) ? $ldapKeyInfo['reverse_map_parameter_index'] : 0));
+        
+                                        $vCardParams = !empty($ldapCompositeValueConversion['params']) ? array_merge($vCardParams, $ldapCompositeValueConversion['params']) : $vCardParams;
                                         
-                                        !empty($vCardParams) ? $vcard->add($vCardKey, $elementArr, $vCardParams) : $vcard->add($vCardKey, $elementArr);
+                                        !empty($vCardParams) ? $vcard->add($vCardKey, $ldapCompositeValueConversion['ldapValueArray'], $vCardParams) : $vcard->add($vCardKey, $ldapCompositeValueConversion['ldapValueArray']);
                                     }
                                 }
                                 else
                                 {
-                                    $elementArr = explode($ldapKeyInfo['map_component_separator'], $data[$newLdapKey][0]);
 
+                                    $ldapValueArr = explode($ldapKeyInfo['map_component_separator'], $data[$newLdapKey][0]);
+                                    $ldapCompositeValueConversion = Utility::getCompositebackendValueConversion($ldapValueArr, $vCardKey, $ldapKeyInfo);
                                     $vCardParams = Utility::getMappedVCardAttrParams((isset($ldapKeyInfo['parameters']) ? $ldapKeyInfo['parameters'] : []), (isset($ldapKeyInfo['reverse_map_parameter_index']) ? $ldapKeyInfo['reverse_map_parameter_index'] : 0));
+    
+                                    $vCardParams = !empty($ldapCompositeValueConversion['params']) ? array_merge($vCardParams, $ldapCompositeValueConversion['params']) : $vCardParams;
                                     
-                                    !empty($vCardParams) ? $vcard->add($vCardKey, $elementArr, $vCardParams) : $vcard->add($vCardKey, $elementArr);
+                                    !empty($vCardParams) ? $vcard->add($vCardKey, $ldapCompositeValueConversion['ldapValueArray'], $vCardParams) : $vcard->add($vCardKey, $ldapCompositeValueConversion['ldapValueArray']);
                                 }
                             }
                         }
@@ -1135,6 +1153,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                                 {
                                     for($i = 0; $i < $count; $i++)
                                     {
+                                        $backendAttrParams = [];
                                         $elementArr = [];
     
                                         foreach($compositeAttrStatus['status'] as $propValue)
@@ -1144,7 +1163,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                                                 $newLdapKey = strtolower($ldapKeyInfo['field_name'][$propValue]);
                                                 if(isset($data[$newLdapKey]) && isset($data[$newLdapKey][$i]))
                                                 {
-                                                    $elementArr[] = $data[$newLdapKey][$i];
+                                                    $ldapValueConversionInfo = Reader::backendValueConversion($vCardKey, $data[$newLdapKey][$i], (!isset($ldapKeyInfo['field_data_format']))?'text':$ldapKeyInfo['field_data_format']);
+                                                    $backendAttrParams = $ldapValueConversionInfo['params'];
+                                                    $elementArr[] = $ldapValueConversionInfo['cardData'];
                                                 }
                                                 else
                                                 {
@@ -1156,14 +1177,15 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                                                 $elementArr[] = '';
                                             }
                                         }
-                                        
+
                                         $vCardParams = Utility::getMappedVCardAttrParams((isset($ldapKeyInfo['parameters']) ? $ldapKeyInfo['parameters'] : []), (isset($ldapKeyInfo['reverse_map_parameter_index']) ? $ldapKeyInfo['reverse_map_parameter_index'] : 0));
-                                        
+                                        $vCardParams = !empty($backendAttrParams) ? array_merge($vCardParams, $backendAttrParams) : $vCardParams;
                                         !empty($vCardParams) ? $vcard->add($vCardKey, $elementArr, $vCardParams) : $vcard->add($vCardKey, $elementArr);
                                     }
                                 }
                                 else
                                 {
+                                    $backendAttrParams = [];
                                     $elementArr = [];
                                     
                                     foreach($compositeAttrStatus['status'] as $propValue)
@@ -1173,7 +1195,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                                             $newLdapKey = strtolower($ldapKeyInfo['field_name'][$propValue]);
                                             if(isset($data[$newLdapKey]))
                                             {
-                                                $elementArr[] = $data[$newLdapKey][0];
+                                                $ldapValueConversionInfo = Reader::backendValueConversion($vCardKey, $data[$newLdapKey][0], (!isset($ldapKeyInfo['field_data_format']))?'text':$ldapKeyInfo['field_data_format']);
+                                                $backendAttrParams = $ldapValueConversionInfo['params'];
+                                                $elementArr[] = $ldapValueConversionInfo['cardData'];
                                             }
                                             else
                                             {
@@ -1185,9 +1209,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                                             $elementArr[] = '';
                                         }
                                     }
-                                
+
                                     $vCardParams = Utility::getMappedVCardAttrParams((isset($ldapKeyInfo['parameters']) ? $ldapKeyInfo['parameters'] : []), (isset($ldapKeyInfo['reverse_map_parameter_index']) ? $ldapKeyInfo['reverse_map_parameter_index'] : 0));
-                                    
+                                    $vCardParams = !empty($backendAttrParams) ? array_merge($vCardParams, $backendAttrParams) : $vCardParams;
                                     !empty($vCardParams) ? $vcard->add($vCardKey, $elementArr, $vCardParams) : $vcard->add($vCardKey, $elementArr);
                                 }                                               
                             }

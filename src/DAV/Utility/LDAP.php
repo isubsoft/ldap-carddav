@@ -6,6 +6,7 @@
 namespace ISubsoft\DAV\Utility;
 
 use \Sabre\DAV\Exception\ServiceUnavailable;
+use ISubsoft\VObject\Reader as Reader;
 
 class LDAP {
 
@@ -274,14 +275,34 @@ class LDAP {
         );
 	}
 
+    public static function encodeStringToHex($string, $char) {
+        return
+            preg_replace_callback(
+                "/([".$char."]){".strlen($char)."}/",
+                function ($matches) {
+                    return '\\' . bin2hex($matches[1]);
+                },
+                $string
+            );
+        }
+
     public static function isMultidimensional(array $array, bool $isNullValueOk = false) {
+        $notSingleArray = false;
+        
         foreach ($array as $key => $value) {
             if (!is_int($key) || (!$isNullValueOk && !is_array($value)) || ($isNullValueOk && !is_array($value) && $value != null)) {
                 return false;
             }
+            
+        	$notSingleArray = true;
         }
-        return true;
+        
+        if($notSingleArray)
+        	return true;
+
+        return false;
     }
+
     
     public static function getMappedBackendAttributes($fieldMap)
     {
@@ -315,5 +336,27 @@ class LDAP {
 			}
 			
 			return $mappedBackendAttributes;
+    }
+
+    public static function getCompositebackendValueConversion($ldapValueArr, $vCardKey, $ldapKey)
+    {
+        $elementArr = [];
+        $params = [];
+
+        foreach($ldapValueArr as $ldapValueComponent)
+        {
+            if($ldapValueComponent != '' && $ldapValueComponent != null)
+            {
+                $ldapValueConversionInfo = Reader::backendValueConversion($vCardKey, self::decodeHexInString($ldapValueComponent), (!isset($ldapKey['field_data_format']))?'text':$ldapKey['field_data_format']);
+                $elementArr[] = $ldapValueConversionInfo['cardData'];
+                $params = $ldapValueConversionInfo['params'];
+            }
+            else
+            {
+                $elementArr[] = '';
+            }
+        }
+
+        return ['ldapValueArray' => $elementArr, 'params' => $params];
     }
 }
