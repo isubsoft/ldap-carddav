@@ -269,16 +269,37 @@ class LDAP {
             "/\\\\[0-9a-zA-Z]{2}/",
             function ($matches) {
                 $match = array_shift($matches);
-                return hex2bin(substr($match, 1));
+                $conValue = hex2bin(substr($match, 1));
+                return ($conValue === false)?$match:$conValue;
             },
             $string
         );
 	}
 
-    public static function encodeStringToHex($string, $char) {
+    public static function encodeStringToHex($string, array $char = []) {
+    		if(count($char) > 8)
+    		{
+    			error_log("Number of characters to be encoded exceeds limit in " . __METHOD__ . '. No encodings performed.');
+    			return $string;
+    		}
+    		
+    		$searchExpr = '';
+    		
+    		foreach($char as $token)
+    			if(mb_strlen($token) === 1)
+    			{
+						if($token == '\\' || $token == '-' || $token == '^' || $token == ']')
+    					$searchExpr = $searchExpr . '\\' . $token;
+    				else
+    					$searchExpr = $searchExpr . $token;
+    			}
+    			
+        if($searchExpr == '')
+        	return $string;
+        	
         return
             preg_replace_callback(
-                "/([".$char."]){".strlen($char)."}/",
+                '/(['.$searchExpr.'])/',
                 function ($matches) {
                     return '\\' . bin2hex($matches[1]);
                 },
