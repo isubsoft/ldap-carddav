@@ -226,7 +226,7 @@ class LDAP {
                 {
                     if(isset($vCardPropValueArr[$propIndex]) && $vCardPropValueArr[$propIndex] != '')
                     {
-                        $ldapAttrValueArr[] = $vCardPropValueArr[$propIndex];
+                        $ldapAttrValueArr[] = Utility::encodeStringToHex($vCardPropValueArr[$propIndex], $ldapKey['map_component_separator']);
                     }
                     else
                     {

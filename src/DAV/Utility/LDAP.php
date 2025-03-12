@@ -275,6 +275,17 @@ class LDAP {
         );
 	}
 
+    public static function encodeStringToHex($string, $char) {
+        return
+            preg_replace_callback(
+                "/([".$char."]){1}/iu",
+                function ($matches) {
+                    return '\\' . bin2hex($matches[1]);
+                },
+                $string
+            );
+        }
+
     public static function isMultidimensional(array $array, bool $isNullValueOk = false) {
         $notSingleArray = false;
         
@@ -336,7 +347,7 @@ class LDAP {
         {
             if($ldapValueComponent != '' && $ldapValueComponent != null)
             {
-                $ldapValueConversionInfo = Reader::backendValueConversion($vCardKey, $ldapValueComponent, (!isset($ldapKey['field_data_format']))?'text':$ldapKey['field_data_format']);
+                $ldapValueConversionInfo = Reader::backendValueConversion($vCardKey, self::decodeHexInString($ldapValueComponent), (!isset($ldapKey['field_data_format']))?'text':$ldapKey['field_data_format']);
                 $elementArr[] = $ldapValueConversionInfo['cardData'];
                 $params = $ldapValueConversionInfo['params'];
             }

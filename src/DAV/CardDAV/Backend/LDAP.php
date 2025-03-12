@@ -609,7 +609,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                 }
             }    
         }
-        
+
         unset($vcard);
         
 				if(strlen(serialize($ldapInfo)) > $maxContactSize)
