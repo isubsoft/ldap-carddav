@@ -326,4 +326,3 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         return null;
     }
 }
-?>

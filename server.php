@@ -50,18 +50,14 @@ $aclPlugin->hideNodesFromListings = true;
 
 $server->addPlugin(new ISubsoft\DAV\Auth\Plugin($authBackend));
 $server->addPlugin($aclPlugin);
-
-// Un-comment the below to use the web interface
-//$server->addPlugin(new Sabre\DAV\Browser\Plugin());
+$server->addPlugin(new Sabre\DAV\Browser\Plugin());
 
 $cardDavPlugin = new ISubsoft\DAV\CardDAV\Plugin();
 
 // Set global max resource size
-//$cardDavPlugin->setResourceSize(<size_in_bytes>);
+//  $cardDavPlugin->setResourceSize(<size_in_bytes>);
 
 $server->addPlugin($cardDavPlugin);
-
-// Disable the below if there are size/time limits on backend contact search
 $server->addPlugin(new Sabre\DAV\Sync\Plugin());
 
 // And off we go!

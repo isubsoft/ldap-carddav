@@ -127,7 +127,7 @@ class LDAP {
 
             foreach($ldapKey as $Index => $ldapKeyInfo)
             {
-                if(in_array(null, $ldapKeyInfo['parameters']))
+                if(isset($ldapKeyInfo['parameters']) && Utility::isMultidimensional($ldapKeyInfo['parameters'], true) && in_array(null, $ldapKeyInfo['parameters']))
                 {                           
                     return (['status' => true, 'configIndex' => $Index ]);
                 }
@@ -226,7 +226,7 @@ class LDAP {
                 {
                     if(isset($vCardPropValueArr[$propIndex]) && $vCardPropValueArr[$propIndex] != '')
                     {
-                        $ldapAttrValueArr[] = Utility::encodeStringToHex($vCardPropValueArr[$propIndex], $ldapKey['map_component_separator']);
+                        $ldapAttrValueArr[] = Utility::encodeStringToHex($vCardPropValueArr[$propIndex], ['\\', $ldapKey['map_component_separator']]);
                     }
                     else
                     {
