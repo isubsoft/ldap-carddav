@@ -118,5 +118,3 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
         return false;
     }
 }
-
-?>

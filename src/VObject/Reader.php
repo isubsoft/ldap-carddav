@@ -164,5 +164,3 @@ class Reader extends \Sabre\VObject\Reader{
     }
 
 }
-
-?>

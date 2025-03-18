@@ -6,6 +6,7 @@
 namespace ISubsoft\DAV\Utility;
 
 use \Sabre\DAV\Exception\ServiceUnavailable;
+use ISubsoft\VObject\Reader as Reader;
 
 class LDAP {
 
@@ -268,20 +269,61 @@ class LDAP {
             "/\\\\[0-9a-zA-Z]{2}/",
             function ($matches) {
                 $match = array_shift($matches);
-                return hex2bin(substr($match, 1));
+                $conValue = hex2bin(substr($match, 1));
+                return ($conValue === false)?$match:$conValue;
             },
             $string
         );
 	}
 
+    public static function encodeStringToHex($string, array $char = []) {
+    		if(count($char) > 8)
+    		{
+    			error_log("Number of characters to be encoded exceeds limit in " . __METHOD__ . '. No encodings performed.');
+    			return $string;
+    		}
+    		
+    		$searchExpr = '';
+    		
+    		foreach($char as $token)
+    			if(mb_strlen($token) === 1)
+    			{
+						if($token == '\\' || $token == '-' || $token == '^' || $token == ']')
+    					$searchExpr = $searchExpr . '\\' . $token;
+    				else
+    					$searchExpr = $searchExpr . $token;
+    			}
+    			
+        if($searchExpr == '')
+        	return $string;
+        	
+        return
+            preg_replace_callback(
+                '/(['.$searchExpr.'])/',
+                function ($matches) {
+                    return '\\' . bin2hex($matches[1]);
+                },
+                $string
+            );
+        }
+
     public static function isMultidimensional(array $array, bool $isNullValueOk = false) {
+        $notSingleArray = false;
+        
         foreach ($array as $key => $value) {
             if (!is_int($key) || (!$isNullValueOk && !is_array($value)) || ($isNullValueOk && !is_array($value) && $value != null)) {
                 return false;
             }
+            
+        	$notSingleArray = true;
         }
-        return true;
+        
+        if($notSingleArray)
+        	return true;
+
+        return false;
     }
+
     
     public static function getMappedBackendAttributes($fieldMap)
     {
@@ -315,5 +357,27 @@ class LDAP {
 			}
 			
 			return $mappedBackendAttributes;
+    }
+
+    public static function getCompositebackendValueConversion($ldapValueArr, $vCardKey, $ldapKey)
+    {
+        $elementArr = [];
+        $params = [];
+
+        foreach($ldapValueArr as $ldapValueComponent)
+        {
+            if($ldapValueComponent != '' && $ldapValueComponent != null)
+            {
+                $ldapValueConversionInfo = Reader::backendValueConversion($vCardKey, self::decodeHexInString($ldapValueComponent), (!isset($ldapKey['field_data_format']))?'text':$ldapKey['field_data_format']);
+                $elementArr[] = $ldapValueConversionInfo['cardData'];
+                $params = $ldapValueConversionInfo['params'];
+            }
+            else
+            {
+                $elementArr[] = '';
+            }
+        }
+
+        return ['ldapValueArray' => $elementArr, 'params' => $params];
     }
 }
