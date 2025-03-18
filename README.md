@@ -1,5 +1,5 @@
 # ldap-carddav
-Extension of SabreDAV to add LDAP as authentication and CardDAV backend.
+A CardDAV server with LDAP as authentication and contacts backend.
 
 -- The following features are available
 1. Multiple address book support.
