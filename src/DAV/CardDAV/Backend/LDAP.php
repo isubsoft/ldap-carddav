@@ -134,6 +134,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		  } catch (\Throwable $th) {
 		        error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
 		  }
+
+
       
       foreach ($this->config['card']['addressbook']['ldap'] as $addressBookId => $addressBookConfig) {
 				try 
@@ -206,6 +208,36 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             '{http://calendarserver.org/ns/}getctag' 											=> (!$addressBookSyncToken == null) ? $addressBookSyncToken : time(),
             '{http://sabredav.org/ns}sync-token'                          => (!$addressBookSyncToken == null) ? $addressBookSyncToken : 0
         ];
+
+
+        if(isset($addressBookConfig['force_full_sync_interval']) && $addressBookConfig['force_full_sync_interval'] != '')
+        {
+            try 
+              {
+                $query = 'SELECT 1 FROM '.$this->fullSyncTableName.' WHERE user_id = ? AND addressbook_id = ?';
+                $stmt = $this->pdo->prepare($query);
+                $stmt->execute([$this->addressbook[$addressBookId]['syncDbUserId'], $addressBookId]);
+                
+                $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+                
+                if($row === false)
+                {
+                    $fullSyncToken = (int)$addressBookSyncToken + (int)$addressBookConfig['force_full_sync_interval'];
+
+                    $this->pdo->beginTransaction();
+                    $query = "INSERT INTO `".$this->fullSyncTableName."` (`user_id`, `addressbook_id`, `sync_token`) VALUES (?, ?, ?)"; 
+                    $sql = $this->pdo->prepare($query);
+                    $sql->execute([$this->addressbook[$addressBookId]['syncDbUserId'], $addressBookId, $fullSyncToken]);
+
+                    $this->pdo->commit();
+                }
+              
+            } catch (\Throwable $th) { 
+                error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+                $this->pdo->rollback();
+            } 
+        }  
+
       }
 
       return $addressBooks;
@@ -609,7 +641,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                 }
             }    
         }
-
+        
         unset($vcard);
         
 				if(strlen(serialize($ldapInfo)) > $maxContactSize)
@@ -1401,6 +1433,25 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						return null;
 					}
 				}
+
+                if(isset($addressBookConfig['force_full_sync_interval']) && $addressBookConfig['force_full_sync_interval'] != '')
+                {
+                    try {
+                        $newFullSyncToken =  (int)$fullSyncToken + (int)$addressBookConfig['force_full_sync_interval'];
+    
+                        $this->pdo->beginTransaction();
+      
+                        $query = "UPDATE `".$this->deletedCardsTableName."` SET sync_token = ? WHERE user_id = ? AND addressbook_id = ?"; 
+                        $sql = $this->pdo->prepare($query);
+                        $sql->execute([$newFullSyncToken, $syncDbUserId, $addressBookId]);
+      
+                        $this->pdo->commit();
+                    } catch (\Throwable $th) {
+                        error_log("Database query could not be executed: " . __METHOD__ . " at line no " . __LINE__ . ", " . $th->getMessage());
+                        $this->pdo->rollback();
+                        return false;
+                    }
+                } 
 			}
 			
 			$filter = '(&' . $addressBookConfig['filter'] . '(createtimestamp>=' . gmdate('YmdHis', $syncToken) . 'Z)(!(createtimestamp>=' . gmdate('YmdHis', $addressBookSyncToken) . 'Z)))';

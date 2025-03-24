@@ -62,7 +62,7 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
             if ($ldapBindConn) {
                 $ldaptree = (isset($this->config['auth']['ldap']['search_base_dn']) && $this->config['auth']['ldap']['search_base_dn'] !== '')?$this->config['auth']['ldap']['search_base_dn']:$this->config['auth']['ldap']['base_dn'];
                 $filter = Utility::replacePlaceholders($this->config['auth']['ldap']['search_filter'], ['%u' => ldap_escape($username, "", LDAP_ESCAPE_FILTER)]);
-
+                
                 $data = Utility::LdapQuery($ldapBindConn, $ldaptree, $filter, ['dn'], strtolower($this->config['auth']['ldap']['scope']));
 
                 if(empty($data))
