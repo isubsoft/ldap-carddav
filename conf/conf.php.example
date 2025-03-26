@@ -129,7 +129,9 @@ $config['card']['addressbook']['ldap']['me'] = [
 											],
 
 	// vCard    => LDAP contact field map (Use primary name of backend field and not their alias name here)
-	// vCard property and corresponding parameter match should be according to vCard v4.0
+	// To map a composite value property to an individual backend field check conf/vcard_metadata.json for logical 
+	// names of the components of a composite value
+	// vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only
   'fieldmap'      => [
     'FN'            => ['field_name' => 'cn'],
 
@@ -158,7 +160,8 @@ $config['card']['addressbook']['ldap']['me'] = [
 													[
 														'field_name' => 'jpegPhoto',
 				                  	'field_data_format' => 'binary',
-				                  	'field_data_mediatype' => ['image/jpeg', 'image/png'],
+				                  	'field_data_mediatype' => ['image/jpeg', 'image/png'], // List of mediatype which a 
+				                  																												 // binary backend field will accept
 				                  ]
                        	],
 
@@ -254,10 +257,13 @@ $config['card']['addressbook']['ldap']['me'] = [
 	//													'list' => []
 	//												],
 	
+	// Backend field which points to the contact which is member of this contact group  
 	'group_member_map'          => [ 'MEMBER'      => [ 'field_name' => 'member' ] ],
 	
 	// vCard    => LDAP contact field map (Use primary name of backend field and not their alias name here)
-	// vCard property and corresponding parameter match should be according to vCard v4.0
+	// To map a composite value property to an individual backend field check conf/vcard_metadata.json for logical 
+	// names of the components of a composite value
+	// vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only
 	'group_fieldmap'            => [     
 		 'FN'          => [	'field_name' => 'cn'],
 	 	
@@ -338,7 +344,9 @@ $config['card']['addressbook']['ldap']['global'] = [
 	//											],
 
 	// vCard    => LDAP contact field map (Use primary name of backend field and not their alias name here)
-	// vCard property and corresponding parameter match should be according to vCard v4.0
+	// To map a composite value property to an individual backend field check conf/vcard_metadata.json for logical 
+	// names of the components of a composite value
+	// vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only
   'fieldmap'      => [
     'FN'            => ['field_name' => 'cn'],
 
@@ -367,7 +375,8 @@ $config['card']['addressbook']['ldap']['global'] = [
 													[
 														'field_name' => 'jpegPhoto',
 				                  	'field_data_format' => 'binary',
-				                  	'field_data_mediatype' => ['image/jpeg', 'image/png'],
+				                  	'field_data_mediatype' => ['image/jpeg', 'image/png'], // List of mediatype which a 
+				                  																												 // binary backend field will accept
 				                  ]
                        	],
 
@@ -463,10 +472,13 @@ $config['card']['addressbook']['ldap']['global'] = [
 	//													'list' => []
 	//												],
 	
+	// Backend field which points to the contact which is member of this contact group  
 	'group_member_map'          => [ 'MEMBER'      => [ 'field_name' => 'member' ] ],
 	
 	// vCard    => LDAP contact field map (Use primary name of backend field and not their alias name here)
-	// vCard property and corresponding parameter match should be according to vCard v4.0
+	// To map a composite value property to an individual backend field check conf/vcard_metadata.json for logical 
+	// names of the components of a composite value
+	// vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only
 	'group_fieldmap'            => [     
 		 'FN'          => [	'field_name' => 'cn'],
 	 	
@@ -547,7 +559,9 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	//											],
 	
 	// vCard    => LDAP contact field map (Use primary name of backend field and not their alias name here)
-	// vCard property and corresponding parameter match should be according to vCard v4.0
+	// To map a composite value property to an individual backend field check conf/vcard_metadata.json for logical 
+	// names of the components of a composite value
+	// vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only
   'fieldmap'      => [
     'FN'            => ['field_name' => 'cn'],
 
@@ -576,7 +590,8 @@ $config['card']['addressbook']['ldap']['personal'] = [
 													[
 														'field_name' => 'jpegPhoto',
 				                  	'field_data_format' => 'binary',
-				                  	'field_data_mediatype' => ['image/jpeg', 'image/png'],
+				                  	'field_data_mediatype' => ['image/jpeg', 'image/png'], // List of mediatype which a 
+				                  																												 // binary backend field will accept
 				                  ]
                        	],
 
@@ -662,7 +677,7 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	'group_LDAP_Object_Classes' => ['groupOfNames'],
 	'group_required_fields'     => ['cn', 'member'],
 	'group_LDAP_rdn'      	    => 'cn',
-
+	
 	// Backend contact field acl. By default no access is denied to any backend field.
 	// 'eval' can have following values
 	// r (default) - Evaluate 'list' as read only fields
@@ -672,10 +687,13 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	//													'list' => []
 	//												],
 	
+	// Backend field which points to the contact which is member of this contact group  
 	'group_member_map'          => [ 'MEMBER'      => [ 'field_name' => 'member' ] ],
 	
 	// vCard    => LDAP contact field map (Use primary name of backend field and not their alias name here)
-	// vCard property and corresponding parameter match should be according to vCard v4.0
+	// To map a composite value property to an individual backend field check conf/vcard_metadata.json for logical 
+	// names of the components of a composite value
+	// vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only
 	'group_fieldmap'            => [     
 		 'FN'          => [	'field_name' => 'cn'],
 	 	
