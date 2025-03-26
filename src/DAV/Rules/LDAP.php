@@ -127,7 +127,7 @@ class LDAP {
 
             foreach($ldapKey as $Index => $ldapKeyInfo)
             {
-                if(in_array(null, $ldapKeyInfo['parameters']))
+                if(isset($ldapKeyInfo['parameters']) && Utility::isMultidimensional($ldapKeyInfo['parameters'], true) && in_array(null, $ldapKeyInfo['parameters']))
                 {                           
                     return (['status' => true, 'configIndex' => $Index ]);
                 }
