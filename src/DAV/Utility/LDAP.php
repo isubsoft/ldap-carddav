@@ -84,13 +84,8 @@ class LDAP {
           	$bindPass = (isset($bindDn) && $bindDn != '' && isset($credentials['bindPass']) && $credentials['bindPass'] != '')?$credentials['bindPass']:null;  // associated password
 
             // binding to ldap server
-            $ldapBind = ldap_bind($ldapConn, $bindDn, $bindPass);
-        
-            // verify binding
-            if (!$ldapBind) 
-            {
-                return false;
-            }     
+            if(!ldap_bind($ldapConn, $bindDn, $bindPass))
+            	return false;
 
         } catch (\Throwable $th) {  
             error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage()); 
