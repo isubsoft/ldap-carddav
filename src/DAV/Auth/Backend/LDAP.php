@@ -59,7 +59,7 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
             $ldapBindConn = Utility::LdapBindConnection(['bindDn' => $bindDn, 'bindPass' => $bindPass], $this->config['server']['ldap']);
             
 						// verify binding
-            if(!$ldapBindConn)
+            if($ldapBindConn === false)
             {
 		          error_log("Could not establish bind connection to backend server in " . __METHOD__ . " at line " . __LINE__);
 		          throw new ServiceUnavailable();
@@ -102,7 +102,7 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
             // binding to ldap server
             $ldapBindConn = Utility::LdapBindConnection(['bindDn' => $bindDn, 'bindPass' => $bindPass], $this->config['server']['ldap']);
 
-            if(!$ldapBindConn)
+            if($ldapBindConn === false)
             {
 		          error_log("Could not establish bind connection to backend server in " . __METHOD__ . " at line " . __LINE__);
 		          throw new ServiceUnavailable();

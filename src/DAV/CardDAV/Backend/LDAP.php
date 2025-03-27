@@ -1386,9 +1386,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 			}
 
 			if($ldapConn === false)
-			{
 				return $resultTmpError;
-			}
 
 			$fullSyncToken = null;
 			
@@ -1670,9 +1668,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         }
         
         if($ldapConn === false)
-        {
 					return [];
-        }
         
         $backendContacts = [];
 				$filter = '(&' . $addressBookConfig['filter'] . '(!(createtimestamp>=' . gmdate('YmdHis', $addressBookSyncToken) . 'Z)))';
