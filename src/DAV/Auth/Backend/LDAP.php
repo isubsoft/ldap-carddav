@@ -58,42 +58,41 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
             // binding to ldap server
             $ldapBindConn = Utility::LdapBindConnection(['bindDn' => $bindDn, 'bindPass' => $bindPass], $this->config['server']['ldap']);
             
-            // verify binding
-            if ($ldapBindConn) {
-                $ldaptree = (isset($this->config['auth']['ldap']['search_base_dn']) && $this->config['auth']['ldap']['search_base_dn'] !== '')?$this->config['auth']['ldap']['search_base_dn']:$this->config['auth']['ldap']['base_dn'];
-                $filter = Utility::replacePlaceholders($this->config['auth']['ldap']['search_filter'], ['%u' => ldap_escape($username, "", LDAP_ESCAPE_FILTER)]);
-
-                $data = Utility::LdapQuery($ldapBindConn, $ldaptree, $filter, ['dn'], strtolower($this->config['auth']['ldap']['scope']));
-
-                if(empty($data))
-                {
-                	error_log("Could not execute backend search: ".__METHOD__.", ".$th->getMessage());
-                	throw new ServiceUnavailable();
-                }
-                
-                if($data['count'] == 1)
-                {
-                    $bindDn = Utility::replacePlaceholders($this->config['auth']['ldap']['bind_dn'], ['%dn' => $data[0]['dn'], '%u' => ldap_escape($username, "", LDAP_ESCAPE_DN)]);
-
-                    try {
-                        $ldapUserBind = ldap_bind($ldapBindConn, $bindDn, $password);
-                        
-                        if(!$ldapUserBind)
-                        	return false;
-                    } catch (\Throwable $th) {
-                        error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
-                        throw new ServiceUnavailable();
-                    }
-                    
-                    $GLOBALS['currentUserPrincipalLdapConn'] = $ldapBindConn;
-                    return true;
-                }      
-            }
-            else
+						// verify binding
+            if($ldapBindConn === false)
             {
 		          error_log("Could not establish bind connection to backend server in " . __METHOD__ . " at line " . __LINE__);
 		          throw new ServiceUnavailable();
             }
+            
+            $ldaptree = (isset($this->config['auth']['ldap']['search_base_dn']) && $this->config['auth']['ldap']['search_base_dn'] !== '')?$this->config['auth']['ldap']['search_base_dn']:$this->config['auth']['ldap']['base_dn'];
+            $filter = Utility::replacePlaceholders($this->config['auth']['ldap']['search_filter'], ['%u' => ldap_escape($username, "", LDAP_ESCAPE_FILTER)]);
+
+            $data = Utility::LdapQuery($ldapBindConn, $ldaptree, $filter, ['dn'], strtolower($this->config['auth']['ldap']['scope']));
+
+            if(empty($data))
+            {
+            	error_log("Could not execute backend search: ".__METHOD__.", ".$th->getMessage());
+            	throw new ServiceUnavailable();
+            }
+            
+            if($data['count'] !== 1)
+        			return false;
+            
+            $bindDn = Utility::replacePlaceholders($this->config['auth']['ldap']['bind_dn'], ['%dn' => $data[0]['dn'], '%u' => ldap_escape($username, "", LDAP_ESCAPE_DN)]);
+
+            try {
+                $ldapUserBind = ldap_bind($ldapBindConn, $bindDn, $password);
+                
+                if(!$ldapUserBind)
+                	return false;
+            } catch (\Throwable $th) {
+                error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
+                throw new ServiceUnavailable();
+            }
+            
+            $GLOBALS['currentUserPrincipalLdapConn'] = $ldapBindConn;
+            return true;
         }
         else
         {
@@ -103,16 +102,14 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
             // binding to ldap server
             $ldapBindConn = Utility::LdapBindConnection(['bindDn' => $bindDn, 'bindPass' => $bindPass], $this->config['server']['ldap']);
 
-            if($ldapBindConn)
-            {
-                $GLOBALS['currentUserPrincipalLdapConn'] = $ldapBindConn;
-                return true;
-            }
-            else
+            if($ldapBindConn === false)
             {
 		          error_log("Could not establish bind connection to backend server in " . __METHOD__ . " at line " . __LINE__);
 		          throw new ServiceUnavailable();
             }
+
+            $GLOBALS['currentUserPrincipalLdapConn'] = $ldapBindConn;
+            return true;
         }
 
         return false;
