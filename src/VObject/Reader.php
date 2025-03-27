@@ -144,7 +144,6 @@ class Reader extends \Sabre\VObject\Reader{
                 $memberValue = $pathComponent[1];
             }
         } 
-
         return $memberValue;
     }
 

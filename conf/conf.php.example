@@ -5,9 +5,9 @@ $config = [];
 $config['sync_database'] = 'sqlite:' . __DATA_DIR__ . '/sync/pdo/sqlite/cards.db';
 
 $config['server']['ldap'] = [
-  'host'         				=> '<hostname>',
+  'host'         				=> '<hostname>', // If not set then system default LDAP URI will be used
   'port'          			=> 389,
-  'ldap_version'  			=> 3, // using LDAPv3
+  'ldap_version'  			=> 3, // If not set then LDAPv3 will be used. LDAPv2 or below are not supported.
   'network_timeout' 		=> 10, // The timeout (in seconds) for connect + bind attempts. This is only supported in PHP >= 5.3.0 with OpenLDAP 2.x
   'connection_security'	=> 'none' 	// none (default): No connection security will be established
   																	// secure: Use secure (ldaps) protocol to connect to the server

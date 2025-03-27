@@ -93,6 +93,9 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         $bindDn = $this->config['principal']['ldap']['search_bind_dn'];
         $bindPass = (isset($this->config['principal']['ldap']['search_bind_pw']))?$this->config['principal']['ldap']['search_bind_pw']:null;
         $ldapConn = Utility::LdapBindConnection(['bindDn' => $bindDn, 'bindPass' => $bindPass], $this->config['server']['ldap']);
+        
+        if($ldapConn === false)
+        	return [];
   
         $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
         $filter = Utility::replacePlaceholders($this->config['principal']['ldap']['search_filter'], ['%u' => ldap_escape($currentUserPrincipalId, "", LDAP_ESCAPE_FILTER)]);
@@ -152,6 +155,9 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         $bindDn = $this->config['principal']['ldap']['search_bind_dn'];
         $bindPass = (isset($this->config['principal']['ldap']['search_bind_pw']))?$this->config['principal']['ldap']['search_bind_pw']:null;
         $ldapConn = Utility::LdapBindConnection(['bindDn' => $bindDn, 'bindPass' => $bindPass], $this->config['server']['ldap']);
+        
+        if($ldapConn === false)
+        	return [];
           
         $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
         $principalIdAttribute = $this->config['principal']['ldap']['fieldmap']['id'];

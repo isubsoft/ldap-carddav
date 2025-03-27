@@ -30,33 +30,35 @@ class LDAP {
         $ldapConn = null;
 
         try {
-            if(isset($config['host']) && isset($config['port']))
+            if(isset($config['host']))
             {
-		          // Connect to ldap server
-		          $ldapUri = ((isset($config['connection_security']) && $config['connection_security'] == 'secure') ? 'ldaps://' : 'ldap://') . $config['host'] . ':' . $config['port'];
-		          $ldapConn = ldap_connect($ldapUri);
+		          $connPort = (isset($config['port']) && $config['port'] != null && $config['port'] != '')?$config['port']:null;
+		          $ldapUri = ((isset($config['connection_security']) && $config['connection_security'] == 'secure') ? 'ldaps://' : 'ldap://') . (string)$config['host'] . (string)(($connPort != null)?':' . $connPort:'');
 		          
-		          if(isset($config['connection_security']) && $config['connection_security'] == 'starttls')
-		          {
-		          	if(!ldap_start_tls($ldapConn))
-		          	{
-            			error_log("Start TLS connection security could not be established in " . __METHOD__ . " at line " . __LINE__);
-            			
-		          		if(!ldap_close($ldapConn))
-            				error_log("Server connection could not be closed in " . __METHOD__ . " at line " . __LINE__);
-		          		
-		          		return false;
-		          	}
-		          }
-            }
-            else
-            {
-            	error_log("Mandatory server connection parameters not present " . __METHOD__ . " at line " . __LINE__);
-            	return false;
-            }
+ 		          // Connect to URI
+	          	$ldapConn = ldap_connect($ldapUri);
+		        }
+		        else
+		        {
+		        	// Connect to default URI
+	          	$ldapConn = ldap_connect();
+		        }
             				            
             if(!$ldapConn) 
               return false;
+              
+	          if(isset($config['connection_security']) && $config['connection_security'] == 'starttls')
+	          {
+	          	if(!ldap_start_tls($ldapConn))
+	          	{
+          			error_log("Start TLS connection security could not be established in " . __METHOD__ . " at line " . __LINE__);
+          			
+	          		if(!ldap_close($ldapConn))
+          				error_log("Server connection could not be closed in " . __METHOD__ . " at line " . __LINE__);
+	          		
+	          		return false;
+	          	}
+	          }
 
 						$ldapVersion = (isset($config['ldap_version']))?$config['ldap_version']:3;
 						
@@ -82,13 +84,8 @@ class LDAP {
           	$bindPass = (isset($bindDn) && $bindDn != '' && isset($credentials['bindPass']) && $credentials['bindPass'] != '')?$credentials['bindPass']:null;  // associated password
 
             // binding to ldap server
-            $ldapBind = ldap_bind($ldapConn, $bindDn, $bindPass);
-        
-            // verify binding
-            if (!$ldapBind) 
-            {
-                return false;
-            }     
+            if(!ldap_bind($ldapConn, $bindDn, $bindPass))
+            	return false;
 
         } catch (\Throwable $th) {  
             error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage()); 
