@@ -74,3 +74,9 @@ CREATE TRIGGER cards_backend_map_before BEFORE INSERT ON cards_backend_map FOR E
 BEGIN
 	INSERT INTO cards_user (user_id) VALUES (NEW.user_id);
 END;
+
+DROP TRIGGER IF EXISTS cards_full_sync_before;
+CREATE TRIGGER cards_full_sync_before BEFORE INSERT ON cards_full_sync FOR EACH ROW WHEN EXISTS (SELECT 1 FROM cards_addressbook WHERE addressbook_id = NEW.addressbook_id AND user_specific) AND NOT EXISTS (SELECT 1 FROM cards_user WHERE user_id = NEW.user_id)
+BEGIN
+	INSERT INTO cards_user (user_id) VALUES (NEW.user_id);
+END;
