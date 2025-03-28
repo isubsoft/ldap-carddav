@@ -10,7 +10,7 @@ require_once 'Bootstrap.php';
 $addressBooksTableName = 'cards_addressbook';
 $userTableName = 'cards_user';
 
-function addUpdateAddressBook($addressbookName = null, $operation = 'add')
+function addAddressBook($addressbookName = null)
 {
 	$config = $GLOBALS['config'];
 	$addressBooksTableName = $GLOBALS['addressBooksTableName'];
@@ -34,20 +34,10 @@ function addUpdateAddressBook($addressbookName = null, $operation = 'add')
 	  $userSpecific = isset($config['card']['addressbook']['ldap'][$addressbookName]['user_specific'])?(bool)$config['card']['addressbook']['ldap'][$addressbookName]['user_specific']:true;
 	  $writable = isset($config['card']['addressbook']['ldap'][$addressbookName]['writable'])?(bool)$config['card']['addressbook']['ldap'][$addressbookName]['writable']:true;
 	  
-		if($operation == 'update')
-		{
-			$query = 'UPDATE '. $addressBooksTableName . ' SET `user_specific` = ?, `writable` = ? WHERE `addressbook_id` = ?';
-			$stmt = $pdo->prepare($query);
-			$stmt->execute([$userSpecific, $writable, $addressbookName]);
-  		echo "\nAddress book '$addressbookName' has been successfully updated in sync database.";
-		}
-		else
-		{
-			$query = 'INSERT INTO '. $addressBooksTableName .' (`addressbook_id`, `user_specific`, `writable`) VALUES (?, ?, ?)';
-			$stmt = $pdo->prepare($query);
-			$stmt->execute([$addressbookName, $userSpecific, $writable]);
-  		echo "\nAddress book '$addressbookName' has been successfully added to sync database.";
-		}
+		$query = 'INSERT INTO '. $addressBooksTableName .' (`addressbook_id`, `user_specific`, `writable`) VALUES (?, ?, ?)';
+		$stmt = $pdo->prepare($query);
+		$stmt->execute([$addressbookName, $userSpecific, $writable]);
+		echo "\nAddress book '$addressbookName' has been successfully added to sync database.";
     
   } catch (\Throwable $th) {
     error_log("[ERROR] Some unexpected error occurred while executing database operation - ".$th->getMessage());
@@ -80,7 +70,7 @@ if(isset($argv[1]) && $argv[1] == 'init')
       {
           foreach($config['card']['addressbook']['ldap'] as $addressBooksName => $values)
           {
-          	if(addUpdateAddressBook($addressBooksName) == false)
+          	if(addAddressBook($addressBooksName) == false)
           	{
           		echo "\n[ERROR] Failed to add address book '$addressBooksName'. Sync database initialization failed. Reverting changes.";
           		
@@ -103,9 +93,9 @@ if(isset($argv[1]) && $argv[1] == 'init')
     exit;
 }
 
-$options = [0 => 'add', 1 => 'update', 2 => 'rename', 3 => 'delete'];
+$options = [0 => 'add', 1 => 'rename', 2 => 'delete'];
 
-$operation = readline("Enter the operation to perform on address book. Enter 0 to add, 1 to update, 2 to rename and 3 to delete: ");
+$operation = readline("Enter the operation to perform on address book. Enter 0 to $options[0], 1 to $options[1] and 2 to $options[2]: ");
 
 if(!array_key_exists($operation, $options))
 {
@@ -117,6 +107,12 @@ if(!array_key_exists($operation, $options))
 
 $oldAddressBook = readline("\nEnter name of the address book to ". $options[$operation].": ");
 
+if($oldAddressBook == null || $oldAddressBook == '')
+{
+	echo "[ERROR] Address book name not provided.";
+	return false;
+}
+
 try {
   $query = 'SELECT * FROM '. $addressBooksTableName .' WHERE addressbook_id = ? LIMIT 1';
   $stmt = $pdo->prepare($query);
@@ -126,21 +122,27 @@ try {
     
   if($row === false && $options[$operation] != 'add')
   {
-      echo "[ERROR] Addressbook '". $oldAddressBook. "' is not present in sync database.";
-      
-			echo "\n";
-      exit;
+    echo "[ERROR] Addressbook '". $oldAddressBook. "' is not present in sync database.";
+    
+		echo "\n";
+    exit(1);
   }
+  else if($row !== false && $options[$operation] == 'add')
+  {
+    echo "[ERROR] Addressbook '". $oldAddressBook. "' is already present in sync database.";
+    
+		echo "\n";
+    exit(1);
+  }
+  
 
   if($options[$operation] == 'add')
   {
-  	if(addUpdateAddressBook($oldAddressBook) == false)
+  	if(addAddressBook($oldAddressBook) == false)
+  	{
+  		echo "\n";
   		exit(1);
-  }
-  else if($options[$operation] == 'update')
-  {
-  	if(addUpdateAddressBook($oldAddressBook, 'update') == false)
-  		exit(1);  
+  	}
   }
   else if($options[$operation] == 'rename')
   {	
@@ -163,6 +165,7 @@ try {
 
 } catch (\Throwable $th) {
     error_log("[ERROR] Some unexpected error occurred in database - ".$th->getMessage());
+		echo "\n";
     exit(1);
 }
 
