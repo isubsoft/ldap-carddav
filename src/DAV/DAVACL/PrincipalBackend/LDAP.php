@@ -172,7 +172,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
 
         $data = Utility::LdapQuery($ldapConn, $ldaptree, $filter, $attributes, strtolower($this->config['principal']['ldap']['scope']));
                     
-        if($data['count'] == 1)
+        if(!empty($data) && $data['count'] === 1)
         { 
             $principal = [
                 'id'  => $principalId,
@@ -200,10 +200,16 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
 							
          			if($currentUserPrincipalIsSystemUser)
          			{
-								error_log("Current user backend id matches system user id in " . __METHOD__ . " at line no " . __LINE__);
-         				throw new SabreDAVException\Forbidden("Current user is not a valid user");
+								error_log("Current principal backend id matches system user id in " . __METHOD__ . " at line no " . __LINE__);
+         				throw new SabreDAVException\Forbidden("Current principal is not a valid principal");
          			}
          				
+         			if(!isset($data[0]['entryuuid'][0]) || $data[0]['entryuuid'][0] == null || $data[0]['entryuuid'][0] == '')
+         			{
+								error_log("Could not obtain current principal backend id or may not have access to read it in " . __METHOD__ . " at line no " . __LINE__);
+         				throw new SabreDAVException\ServiceUnavailable();
+         			}
+         			
          			$GLOBALS['currentUserPrincipalBackendId'] = $data[0]['entryuuid'][0];
             }
 
