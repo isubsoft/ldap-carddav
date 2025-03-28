@@ -149,6 +149,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 			    if($row === false)
 			    	continue;
 			    	
+					if($addressBookConfig['user_specific'] != $row['user_specific'] || $addressBookConfig['writable'] != $row['writable'])
+					{
+						error_log("Configuration properties do not match that of sync database for address book '$addressBookId'. Excluded.");
+						continue;
+					}
+					
 			    $addressBookConfig['user_specific'] = $row['user_specific'];
 			    $addressBookConfig['writable'] = $row['writable'];
 			    
@@ -1768,5 +1774,27 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     
         // Output the 36 character UUID.
         return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
+    }
+    
+    function isAddressbookWritable($addressBookId)
+    {
+			try 
+			{
+		    $query = 'SELECT writable FROM '. $this->addressBooksTableName . ' WHERE addressbook_id =? LIMIT 1';
+		    $stmt = $this->pdo->prepare($query);
+		    $stmt->execute([$addressBookId]);
+		    
+		    $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+		    
+		    if($row === false)
+        	throw new SabreDAVException\ServiceUnavailable();
+		    	
+		    return $row['writable'];
+		  } 
+		  catch (\Throwable $th) {
+	      error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+		  }
+		  
+      throw new SabreDAVException\ServiceUnavailable();
     }
 }

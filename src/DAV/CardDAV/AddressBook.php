@@ -9,7 +9,7 @@ class AddressBook extends \Sabre\CardDAV\AddressBook
 {
 	public function getACL()
 	{
-		  if(isset($this->carddavBackend->config['card']['addressbook']['ldap'][$this->getName()]) && $this->carddavBackend->config['card']['addressbook']['ldap'][$this->getName()]['writable'] == false) 
+		  if($this->carddavBackend->isAddressbookWritable($this->getName()) == false)
 				return [
 				    [
 				        'privilege' => '{DAV:}read',
