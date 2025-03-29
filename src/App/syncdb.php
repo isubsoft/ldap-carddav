@@ -31,12 +31,12 @@ function addAddressBook($addressbookName = null)
 			return false;    	
     }
     
-	  $userSpecific = isset($config['card']['addressbook']['ldap'][$addressbookName]['user_specific'])?(bool)$config['card']['addressbook']['ldap'][$addressbookName]['user_specific']:true;
-	  $writable = isset($config['card']['addressbook']['ldap'][$addressbookName]['writable'])?(bool)$config['card']['addressbook']['ldap'][$addressbookName]['writable']:true;
+	  $userSpecific = (!isset($config['card']['addressbook']['ldap'][$addressbookName]['user_specific']) || $config['card']['addressbook']['ldap'][$addressbookName]['user_specific'] === null)?true:(bool)$config['card']['addressbook']['ldap'][$addressbookName]['user_specific'];
+	  $writable = (!isset($config['card']['addressbook']['ldap'][$addressbookName]['writable']) || $config['card']['addressbook']['ldap'][$addressbookName]['writable'] === null)?true:(bool)$config['card']['addressbook']['ldap'][$addressbookName]['writable'];
 	  
 		$query = 'INSERT INTO '. $addressBooksTableName .' (`addressbook_id`, `user_specific`, `writable`) VALUES (?, ?, ?)';
 		$stmt = $pdo->prepare($query);
-		$stmt->execute([$addressbookName, $userSpecific, $writable]);
+		$stmt->execute([$addressbookName, (int)$userSpecific, (int)$writable]);
 		echo "\nAddress book '$addressbookName' has been successfully added to sync database.";
     
   } catch (\Throwable $th) {
@@ -189,10 +189,10 @@ else if($options[$operation] == 'addressbook')
 			$stmt = $pdo->prepare($query);
 			$stmt->execute();
 
-      echo "-- Address books --";
+      fwrite(STDERR,"-- Address books --");
       
       while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-          echo "\n" . json_encode($row);
+          echo "\n" . $row['addressbook_id'] . "\t" . json_encode($row, JSON_NUMERIC_CHECK);
       }
 		}
 		else if($options[$operation] == 'add')
