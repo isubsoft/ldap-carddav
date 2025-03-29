@@ -112,7 +112,8 @@ if($options[$operation] == 'user')
 	if($oldUserId == null || $oldUserId == '')
 	{
 		echo "[ERROR] User id not provided.";
-		return false;
+		echo "\n";
+  	exit(1);
 	}
 
 	try {
@@ -156,7 +157,8 @@ else if($options[$operation] == 'addressbook')
 			if($oldAddressBook == null || $oldAddressBook == '')
 			{
 				echo "[ERROR] Address book name not provided.";
-				return false;
+				echo "\n";
+		  	exit(1);
 			}
 			
 			$query = 'SELECT * FROM '. $addressBooksTableName .' WHERE addressbook_id = ? LIMIT 1';
