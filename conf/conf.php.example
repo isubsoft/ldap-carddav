@@ -129,8 +129,8 @@ $config['card']['addressbook']['ldap']['me'] = [
 											],
 
 	// vCard    => LDAP contact field map (Use primary name of backend field and not their alias name here)
-	// To map a composite value property to an individual backend field check conf/vcard_metadata.json for logical 
-	// names of the components of a composite value
+	// To map a composite value property to individual backend fields check conf/vcard_metadata.json for 
+	// logical names of the components of a composite value.
 	// vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only
   'fieldmap'      => [
     'FN'            => ['field_name' => 'cn'],
@@ -344,8 +344,8 @@ $config['card']['addressbook']['ldap']['global'] = [
 	//											],
 
 	// vCard    => LDAP contact field map (Use primary name of backend field and not their alias name here)
-	// To map a composite value property to an individual backend field check conf/vcard_metadata.json for logical 
-	// names of the components of a composite value
+	// To map a composite value property to individual backend fields check conf/vcard_metadata.json for 
+	// logical names of the components of a composite value.
 	// vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only
   'fieldmap'      => [
     'FN'            => ['field_name' => 'cn'],
@@ -559,8 +559,8 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	//											],
 	
 	// vCard    => LDAP contact field map (Use primary name of backend field and not their alias name here)
-	// To map a composite value property to an individual backend field check conf/vcard_metadata.json for logical 
-	// names of the components of a composite value
+	// To map a composite value property to individual backend fields check conf/vcard_metadata.json for 
+	// logical names of the components of a composite value.
 	// vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only
   'fieldmap'      => [
     'FN'            => ['field_name' => 'cn'],
