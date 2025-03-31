@@ -10,6 +10,8 @@ require_once __DIR__ . '/Bootstrap.php';
 $addressBooksTableName = 'cards_addressbook';
 $userTableName = 'cards_user';
 
+$initialized = true;
+
 function addAddressBook($addressbookName = null)
 {
 	$config = $GLOBALS['config'];
@@ -47,25 +49,34 @@ function addAddressBook($addressbookName = null)
 	return true;
 }
 
+try {
+	$query = 'SELECT * FROM '. $addressBooksTableName .' LIMIT 1' ;
+	$stmt = $pdo->prepare($query);
+	$stmt->execute([]);
+
+	$row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+	if($row === false)
+		$initialized = false;
+}
+catch (\Throwable $th) {
+    error_log("[ERROR] Some unexpected error occurred in database - ".$th->getMessage());
+    exit(1);
+}
+
 if(isset($argv[1]) && $argv[1] == 'init')
 {
 		echo "Initializing sync database ...";
 		
+		if($initialized)
+		{
+		  echo "\n[INFO] Sync database has already been initialized";
+		  
+			echo "\n";
+		  exit;
+		}
+		
     try {
-      $query = 'SELECT * FROM '. $addressBooksTableName .' LIMIT 1' ;
-	    $stmt = $pdo->prepare($query);
-	    $stmt->execute([]);
-
-      $row = $stmt->fetch(\PDO::FETCH_ASSOC);
-      
-      if(!empty($row))
-      {
-          echo "\n[INFO] Sync database has already been initialized";
-          
-					echo "\n";
-          exit;
-      }
-
       if(isset($config['card']['addressbook']['ldap']))
       {
           foreach($config['card']['addressbook']['ldap'] as $addressBooksName => $values)
@@ -91,6 +102,14 @@ if(isset($argv[1]) && $argv[1] == 'init')
     
 		echo "\n";    
     exit;
+}
+
+if(!$initialized)
+{
+  echo "\n[ERROR] Sync database has not been initialized. Initialize it first.";
+  
+	echo "\n";
+  exit(1);
 }
 
 $options = [0 => 'addressbook', 1 => 'user'];
