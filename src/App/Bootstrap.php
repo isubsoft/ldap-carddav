@@ -12,6 +12,8 @@ define('__CONF_DIR__', __BASE_DIR__ . '/conf');
 
 require __CONF_DIR__ . '/conf.php';
 
+$GLOBALS['environment'] = (isset($config['app']['env']) && $config['app']['env'] != null)?$config['app']['env']:null;
+
 /* Database */
 
 try {

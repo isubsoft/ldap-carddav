@@ -52,7 +52,9 @@ $aclPlugin->hideNodesFromListings = true;
 
 $server->addPlugin(new ISubsoft\DAV\Auth\Plugin($authBackend));
 $server->addPlugin($aclPlugin);
-$server->addPlugin(new Sabre\DAV\Browser\Plugin());
+
+if($GLOBALS['environment'] != 'prod')
+	$server->addPlugin(new Sabre\DAV\Browser\Plugin());
 
 $cardDavPlugin = new ISubsoft\DAV\CardDAV\Plugin();
 

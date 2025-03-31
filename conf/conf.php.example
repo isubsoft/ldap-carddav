@@ -2,6 +2,10 @@
 
 $config = [];
 
+// Set application environment. If set to 'prod' certain application features are turned off which are not suitable
+// or unsafe for production environment. Defaults to null.
+//  $config['app']['env'] = 'prod';
+
 $config['sync_database'] = 'sqlite:' . __DATA_DIR__ . '/sync/pdo/sqlite/cards.db';
 
 $config['server']['ldap'] = [
