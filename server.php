@@ -11,9 +11,11 @@
 *
 *********************************************************************************/
 
+// Initialize
+require_once __DIR__ . '/src/App/Bootstrap.php';
+
 // Loader
-require_once 'src/App/Bootstrap.php';
-require_once 'vendor/autoload.php';
+require_once __BASE_DIR__ . '/vendor/autoload.php';
 
 $GLOBALS['currentUserPrincipalId'] = null;
 $GLOBALS['currentUserPrincipalBackendId'] = null;

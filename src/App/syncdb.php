@@ -4,7 +4,7 @@
 **************************************************************/
 
 /*import database connection*/
-require_once 'Bootstrap.php';
+require_once __DIR__ . '/Bootstrap.php';
 
 /*database Tables*/
 $addressBooksTableName = 'cards_addressbook';
