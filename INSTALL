@@ -49,3 +49,5 @@ Please refer to SabreDav documentation here https://sabre.io/dav/webservers/
 -- LDAP server
 1. Operational attributes entryUUID, modifyTimestamp and createTimestamp need to be indexed for all contacts.
 2. Bind user used for reading/writing contacts in an address book as per conf file need to have read privileges on entryUUID, modifyTimestamp and createTimestamp operational attributes additionally and must have appropriate size limit and time limit. It is recommended to create a separate user for syncing contacts having only read privileges on entryUUID, modifyTimestamp and createTimestamp of the contacts and liberal or no size limit and time limit. This sync user can be mentioned in 'sync_bind_user' and 'sync_bind_pw' of the address book configuration section in the conf file.
+
+-- Follow the Wiki for more information here - https://github.com/isubsoft/ldap-carddav/wiki
