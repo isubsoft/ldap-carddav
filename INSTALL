@@ -35,6 +35,7 @@ Please refer to SabreDav documentation here https://sabre.io/dav/webservers/
 
 -- Sync database creation
 1. Create objects as per sql/<database_product>/ddl.sql file, any user (as required) and issue appropriate grants to the user in the PDO database.
+   SQLite example: sqlite3 data/sync/pdo/sqlite/cards.db < sql/sqlite/ddl.sql
 2. Update PDO DSN appropriately in $config['sync_database'] in conf/conf.php file.
 3. If creating a SQLite database make sure the database file is writeable by the user running PHP.
 
