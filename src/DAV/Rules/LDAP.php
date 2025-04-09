@@ -247,7 +247,7 @@ class LDAP {
         $vCardDataFormat = strtoupper($vObj->getValueType());
         $backendDataFormat = strtoupper((!isset($mappLdapConfig['field_data_format']))?'text':$mappLdapConfig['field_data_format']);
         $ldapBackendMap = [];
-
+       
         if($vCardDataFormat == 'TEXT')
         {
             if($backendDataFormat == 'TEXT' || $backendDataFormat == 'BINARY')
@@ -573,7 +573,7 @@ class LDAP {
                 }                    
             }
         }
-        else if($vCardDataFormat == 'TIMESTAMP')
+        else if($vCardDataFormat == 'DATE' || $vCardDataFormat == 'TIME' || $vCardDataFormat == 'DATE-TIME' || $vCardDataFormat == 'DATE-AND-OR-TIME' || $vCardDataFormat == 'TIMESTAMP')
         {
             if($backendDataFormat == 'TEXT')
             {

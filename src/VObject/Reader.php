@@ -78,24 +78,24 @@ class Reader extends \Sabre\VObject\Reader{
             $vCardMetaData = self::vCardMetaData();
             $vCardAttrInfo = $vCardMetaData[$vCardAttr];
             
-            if(isset($vCardAttrInfo['data_time']) && $vCardAttrInfo['date_time'] == true)
+            if(isset($vCardAttrInfo['date_time']) && $vCardAttrInfo['date_time'] === true)
             {
                 $dateTime = DateTimeParser::parseVCardDateTime($value);
-
+            
                 if(Utility::hasNotValue([$dateTime['date'], $dateTime['month'], $dateTime['year'], $dateTime['hour'], $dateTime['minute'], $dateTime['second']]) == false)
                 {
-                    $cardData = $dateTime['date'].'-'.$dateTime['month'].'-'.$dateTime['year'].' '.$dateTime['hour'].':'.$dateTime['minute'].':'.$dateTime['second'];
+                    $cardData = $dateTime['year'].'-'.$dateTime['month'].'-'.$dateTime['date'].'T'.$dateTime['hour'].':'.$dateTime['minute'].':'.$dateTime['second'];
                     $params = ['value' => 'DATE-TIME'];
                 }
                 else if((Utility::hasNotValue([$dateTime['date'], $dateTime['month'], $dateTime['year']]) == false) && (Utility::hasNotValue([$dateTime['hour'], $dateTime['minute'], $dateTime['second']]) == true))
                 {
-                    $cardData = $dateTime['date'].'-'.$dateTime['month'].'-'.$dateTime['year'];
+                    $cardData = $dateTime['year'].'-'.$dateTime['month'].'-'.$dateTime['date'];
                     $params = ['value' => 'DATE'];
                 }
                 else if((Utility::hasNotValue([$dateTime['date'], $dateTime['month'], $dateTime['year']]) == true) && (Utility::hasNotValue([$dateTime['hour'], $dateTime['minute'], $dateTime['second']]) == false))
                 {
                     $cardData = $dateTime['hour'].':'.$dateTime['minute'].':'.$dateTime['second'];
-                    $params = ['value' => 'DATE-AND-OR-TIME'];
+                    $params = ['value' => 'TIME'];
                 }
             }
             else
@@ -121,7 +121,7 @@ class Reader extends \Sabre\VObject\Reader{
         {
             $dateTime = DateTimeParser::parseVCardDateTime($value);
 
-            $cardData = $dateTime['date'].'-'.$dateTime['month'].'-'.$dateTime['year'].' '.$dateTime['hour'].':'.$dateTime['minute'].':'.$dateTime['second'];
+            $cardData = $dateTime['year'].'-'.$dateTime['month'].'-'.$dateTime['date'].'T'.$dateTime['hour'].':'.$dateTime['minute'].':'.$dateTime['second'];
             $params = ['value' => 'DATE-TIME'];
         }
 
