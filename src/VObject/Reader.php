@@ -5,6 +5,7 @@
 
 namespace ISubsoft\VObject;
 use ISubsoft\DAV\Utility\LDAP as Utility;
+use \Sabre\VObject\DateTimeParser as DateTimeParser;
 
 class Reader extends \Sabre\VObject\Reader{
 
@@ -80,20 +81,18 @@ class Reader extends \Sabre\VObject\Reader{
             if(isset($vCardAttrInfo['data_time']) && $vCardAttrInfo['date_time'] == true)
             {
                 $dateTime = DateTimeParser::parseVCardDateTime($value);
-                if($dateTime['date'] != '' && $dateTime['date'] != null && $dateTime['month'] != '' && $dateTime['month'] != null && $dateTime['year'] != '' && $dateTime['year'] != null && 
-                $dateTime['hour'] != '' && $dateTime['hour'] != null && $dateTime['minute'] != '' && $dateTime['minute'] != null && $dateTime['second'] != '' && $dateTime['second'] != null)
+
+                if(Utility::hasNotValue([$dateTime['date'], $dateTime['month'], $dateTime['year'], $dateTime['hour'], $dateTime['minute'], $dateTime['second']]) == false)
                 {
                     $cardData = $dateTime['date'].'-'.$dateTime['month'].'-'.$dateTime['year'].' '.$dateTime['hour'].':'.$dateTime['minute'].':'.$dateTime['second'];
                     $params = ['value' => 'DATE-TIME'];
                 }
-                else if($dateTime['date'] != '' && $dateTime['date'] != null && $dateTime['month'] != '' && $dateTime['month'] != null && $dateTime['year'] != '' && $dateTime['year'] != null && 
-                ($dateTime['hour'] == '' || $dateTime['hour'] == null || $dateTime['minute'] == '' || $dateTime['minute'] == null || $dateTime['second'] == '' || $dateTime['second'] == null))
+                else if((Utility::hasNotValue([$dateTime['date'], $dateTime['month'], $dateTime['year']]) == false) && (Utility::hasNotValue([$dateTime['hour'], $dateTime['minute'], $dateTime['second']]) == true))
                 {
                     $cardData = $dateTime['date'].'-'.$dateTime['month'].'-'.$dateTime['year'];
                     $params = ['value' => 'DATE'];
                 }
-                else if(($dateTime['date'] == '' || $dateTime['date'] == null || $dateTime['month'] == '' || $dateTime['month'] == null || $dateTime['year'] == '' || $dateTime['year'] == null) && 
-                $dateTime['hour'] != '' && $dateTime['hour'] != null && $dateTime['minute'] != '' && $dateTime['minute'] != null && $dateTime['second'] != '' && $dateTime['second'] != null)
+                else if((Utility::hasNotValue([$dateTime['date'], $dateTime['month'], $dateTime['year']]) == true) && (Utility::hasNotValue([$dateTime['hour'], $dateTime['minute'], $dateTime['second']]) == false))
                 {
                     $cardData = $dateTime['hour'].':'.$dateTime['minute'].':'.$dateTime['second'];
                     $params = ['value' => 'DATE-AND-OR-TIME'];

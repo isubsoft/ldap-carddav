@@ -35,16 +35,17 @@ Please refer to SabreDav documentation here https://sabre.io/dav/webservers/
 
 -- Sync database creation
 1. Create objects as per sql/<database_product>/ddl.sql file, any user (as required) and issue appropriate grants to the user in the PDO database.
+   SQLite example: sqlite3 data/sync/pdo/sqlite/cards.db < sql/sqlite/ddl.sql
 2. Update PDO DSN appropriately in $config['sync_database'] in conf/conf.php file.
 3. If creating a SQLite database make sure the database file is writeable by the user running PHP.
-
--- File permissions
-1. conf/conf.php must not be world readable.
-2. Only data directory and it's sub directories need to be writable by user running PHP.
 
 -- Initializing sync database
 1. Go to src/App directory.
 2. Execute php syncdb.php init to initialize the sync database.
+
+-- File permissions
+1. conf/conf.php must not be world readable.
+2. Only data directory and it's sub directories need to be writable by user running PHP.
 
 -- LDAP server
 1. Operational attributes entryUUID, modifyTimestamp and createTimestamp need to be indexed for all contacts.
