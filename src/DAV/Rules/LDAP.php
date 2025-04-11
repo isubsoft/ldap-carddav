@@ -620,8 +620,13 @@ class LDAP {
 
                     if(Utility::hasNotValue([$dateTime['date'], $dateTime['month'], $dateTime['year'], $dateTime['hour'], $dateTime['minute'], $dateTime['second']]) == false)
                     {
+                        if(!isset($dateTime['timezone']) || $dateTime['timezone'] == '' || is_null($dateTime['timezone']))
+                        {
+                            $dateTime['timezone'] = 'Z';
+                        }
+
                         $newLdapKey = strtolower($mappLdapConfig['field_name']);
-                        $backendvalue = (string)$vObj;
+                        $backendvalue = $dateTime['year'] . $dateTime['month'] . $dateTime['date'] . $dateTime['hour'] . $dateTime['minute'] . $dateTime['second'] . $dateTime['timezone'];
                         $ldapBackendMap = [$newLdapKey => $backendvalue];
                     }
                 } 

@@ -119,9 +119,7 @@ class Reader extends \Sabre\VObject\Reader{
         }
         else if($backendDataFormat == 'TIMESTAMP')
         {
-            $dateTime = DateTimeParser::parseVCardDateTime($value);
-
-            $cardData = $dateTime['year'].'-'.$dateTime['month'].'-'.$dateTime['date'].'T'.$dateTime['hour'].':'.$dateTime['minute'].':'.$dateTime['second'];
+            $cardData = date('Ymd',(strtotime($value))).'T'.date('his',(strtotime($value))).'Z';
             $params = ['value' => 'DATE-TIME'];
         }
 
