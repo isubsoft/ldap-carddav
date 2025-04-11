@@ -278,7 +278,7 @@ class LDAP {
 
                     foreach($vCardValueParts as $vCardValuePart)
                     {
-                        if($vCardValuePart != '' || $vCardValuePart != null)
+                        if($vCardValuePart != '' && $vCardValuePart != null)
                         {
                             $valueComponent = parse_url($vCardValuePart);
         
@@ -340,7 +340,7 @@ class LDAP {
 
                     foreach($vCardValueParts as $vCardValuePart)
                     {
-                        if($vCardValuePart != '' || $vCardValuePart != null)
+                        if($vCardValuePart != '' && $vCardValuePart != null)
                         {
                             $valueComponent = parse_url($vCardValuePart);
 
@@ -447,7 +447,7 @@ class LDAP {
 
                     foreach($vCardValueParts as $vCardValuePart)
                     {
-                        if($vCardValuePart != '' || $vCardValuePart != null)
+                        if($vCardValuePart != '' && $vCardValuePart != null)
                         {
                             $valueComponent = parse_url($vCardValuePart);
 
@@ -486,7 +486,7 @@ class LDAP {
 
                     foreach($vCardValueParts as $vCardValuePart)
                     {
-                        if($vCardValuePart != '' || $vCardValuePart != null)
+                        if($vCardValuePart != '' && $vCardValuePart != null)
                         {
                             $isMediaTypeMapped = true;
                             if(isset($mappLdapConfig['field_data_mediatype']) && !empty($mappLdapConfig['field_data_mediatype']))
