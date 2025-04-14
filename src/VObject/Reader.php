@@ -7,6 +7,8 @@ namespace ISubsoft\VObject;
 use ISubsoft\DAV\Utility\LDAP as Utility;
 use \Sabre\VObject\DateTimeParser as DateTimeParser;
 
+date_default_timezone_set('UTC');
+
 class Reader extends \Sabre\VObject\Reader{
 
     private static $encoding_format = 'base64';
@@ -119,13 +121,7 @@ class Reader extends \Sabre\VObject\Reader{
         }
         else if($backendDataFormat == 'TIMESTAMP')
         {
-            $dateTime = date_parse($value);
-
-            if(isset($dateTime['error_count']) && ($dateTime['error_count'] == 0) && (Utility::hasNotValue([$dateTime['year'], $dateTime['month'], $dateTime['day'], $dateTime['hour'], $dateTime['minute'], $dateTime['second']]) == false))
-            {
-                $cardData = $dateTime['year'] . (strlen($dateTime['month']) == '1' ? '0'. $dateTime['month'] : $dateTime['month']) . (strlen($dateTime['day']) == '1' ? '0'. $dateTime['day'] : $dateTime['day']) .'T'. 
-                            (strlen($dateTime['hour']) == '1' ? '0'. $dateTime['hour'] : $dateTime['hour']) . (strlen($dateTime['minute']) == '1' ? '0'. $dateTime['minute'] : $dateTime['minute']) . (strlen($dateTime['second']) == '1' ? '0'. $dateTime['second'] : $dateTime['second']) . 'Z';
-            }
+            $cardData = date('Ymd', strtotime($value)).'T'.date('HisO', strtotime($value));
             
             $vCardMetaData = self::vCardMetaData();
             $vCardAttrInfo = $vCardMetaData[$vCardAttr];
