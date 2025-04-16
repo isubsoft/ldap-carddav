@@ -7,6 +7,8 @@ namespace ISubsoft\VObject;
 use ISubsoft\DAV\Utility\LDAP as Utility;
 use \Sabre\VObject\DateTimeParser as DateTimeParser;
 
+date_default_timezone_set('UTC');
+
 class Reader extends \Sabre\VObject\Reader{
 
     private static $encoding_format = 'base64';
@@ -84,18 +86,18 @@ class Reader extends \Sabre\VObject\Reader{
             
                 if(Utility::hasNotValue([$dateTime['date'], $dateTime['month'], $dateTime['year'], $dateTime['hour'], $dateTime['minute'], $dateTime['second']]) == false)
                 {
-                    $cardData = $dateTime['year'].'-'.$dateTime['month'].'-'.$dateTime['date'].'T'.$dateTime['hour'].':'.$dateTime['minute'].':'.$dateTime['second'];
+                    $cardData = $dateTime['year'] . $dateTime['month'] . $dateTime['date'] .'T'. $dateTime['hour'] . $dateTime['minute'] . $dateTime['second'] . 'Z';
                     $params = ['value' => 'DATE-TIME'];
                 }
                 else if((Utility::hasNotValue([$dateTime['date'], $dateTime['month'], $dateTime['year']]) == false) && (Utility::hasNotValue([$dateTime['hour'], $dateTime['minute'], $dateTime['second']]) == true))
                 {
-                    $cardData = $dateTime['year'].'-'.$dateTime['month'].'-'.$dateTime['date'];
+                    $cardData = $dateTime['year'] . $dateTime['month'] . $dateTime['date'];
                     $params = ['value' => 'DATE'];
                 }
                 else if((Utility::hasNotValue([$dateTime['date'], $dateTime['month'], $dateTime['year']]) == true) && (Utility::hasNotValue([$dateTime['hour'], $dateTime['minute'], $dateTime['second']]) == false))
                 {
-                    $cardData = $dateTime['hour'].':'.$dateTime['minute'].':'.$dateTime['second'];
-                    $params = ['value' => 'TIME'];
+                    $cardData = $dateTime['hour'] . $dateTime['minute'] . $dateTime['second'] ;
+                    $params = ['value' => 'DATE-AND-OR-TIME'];
                 }
             }
             else
@@ -119,8 +121,15 @@ class Reader extends \Sabre\VObject\Reader{
         }
         else if($backendDataFormat == 'TIMESTAMP')
         {
-            $cardData = date('Ymd',(strtotime($value))).'T'.date('his',(strtotime($value))).'Z';
-            $params = ['value' => 'DATE-TIME'];
+            $cardData = date('Ymd', strtotime($value)).'T'.date('HisO', strtotime($value));
+            
+            $vCardMetaData = self::vCardMetaData();
+            $vCardAttrInfo = $vCardMetaData[$vCardAttr];
+            
+            if(isset($vCardAttrInfo['date_time']) && $vCardAttrInfo['date_time'] === true)
+                $params = ['value' => 'DATE-TIME'];
+            else
+                $params = ['value' => 'TEXT']; 
         }
 
         return  ['cardData' => $cardData, 'params' => $params];
