@@ -37,7 +37,7 @@ Please refer to SabreDav documentation here https://sabre.io/dav/webservers/
 1. Create objects as per sql/<database_product>/ddl.sql file, any user (as required) and issue appropriate grants to the user in the PDO database.
    SQLite example: sqlite3 data/sync/pdo/sqlite/cards.db < sql/sqlite/ddl.sql
 2. Update PDO DSN appropriately in $config['sync_database'] in conf/conf.php file.
-3. If creating a SQLite database make sure the database file is writeable by the user running PHP.
+3. If creating a SQLite database make sure the database file is writeable by the user executing PHP.
 
 -- Initializing sync database
 1. Go to src/App directory.
@@ -45,10 +45,10 @@ Please refer to SabreDav documentation here https://sabre.io/dav/webservers/
 
 -- File permissions
 1. conf/conf.php must not be world readable.
-2. Only data directory and it's sub directories need to be writable by user running PHP.
+2. Only data directory and it's sub directories need to be writable by user executing PHP.
 
 -- LDAP server
 1. Operational attributes entryUUID, modifyTimestamp and createTimestamp need to be indexed for all contacts.
 2. Bind user used for reading/writing contacts in an address book as per conf file need to have read privileges on entryUUID, modifyTimestamp and createTimestamp operational attributes additionally and must have appropriate size limit and time limit. It is recommended to create a separate user for syncing contacts having only read privileges on entryUUID, modifyTimestamp and createTimestamp of the contacts and liberal or no size limit and time limit. This sync user can be mentioned in 'sync_bind_user' and 'sync_bind_pw' of the address book configuration section in the conf file.
 
--- Follow the Wiki for more information here - https://github.com/isubsoft/ldap-carddav/wiki
+-- Follow the Wiki for more information and examples here - https://github.com/isubsoft/ldap-carddav/wiki
