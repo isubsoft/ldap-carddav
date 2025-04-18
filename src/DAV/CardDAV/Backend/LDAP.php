@@ -1413,7 +1413,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 			// Perform full sync
 			if($syncToken == null || ($fullSyncToken != null && $fullSyncToken < $addressBookSyncToken))
 			{
-				$data = $this->fullSyncOperation($addressBookId, $data);
+				$data = $this->fullSyncOperation($addressBookId);
 				
 				if(empty($data))
 					return $result;
