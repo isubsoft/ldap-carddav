@@ -1,15 +1,15 @@
 # ldap-carddav - A CardDAV server with LDAP as authentication and contacts backend
-![LDAP-CardDAV sync](https://github.com/user-attachments/assets/add1a830-7897-4f3a-a3f0-e7212ee7f0bd)  
+![banner_01_trimmed](https://github.com/user-attachments/assets/5deb0f55-3276-4fd3-9344-485352106f6e)  
 
-## The following features are available
+## Features
 1. Authenticate CardDAV users against LDAP.
 2. Multiple address book support.
 3. Global, shared and private address book support.
 4. Full read-write support between CardDAV clients and LDAP with contact renaming.
 5. Bidirectional sync between LDAP and CardDAV clients for new contacts, modified contacts and contacts deleted via CardDAV protocol (contacts deleted directly in LDAP are deleted in CardDAV clients asynchronously).
-6. Fully compatible with direct LDAP address book clients since contacts are stored in LDAP server as normal directory entries and not as vCards.
+6. Fully compatible with LDAP address book applications since contacts are stored in LDAP server as normal directory entries and not as vCards.
 7. Extensive and customizable configuration option to map vCard properties to LDAP attributes including multi-value and composite value properties and attributes.
-8. Media like images storage support.
+8. Media like profile picture support.
 9. Contact group support.
 
 ## Limitations
