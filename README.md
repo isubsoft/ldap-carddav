@@ -1,7 +1,6 @@
-# ldap-carddav
-A CardDAV server with LDAP as authentication and contacts backend.
+# ldap-carddav - A CardDAV server with LDAP as authentication and contacts backend.
 
--- The following features are available
+## The following features are available
 1. Authenticate CardDAV users against LDAP.
 2. Multiple address book support.
 3. Global, shared and private address book support.
@@ -12,13 +11,16 @@ A CardDAV server with LDAP as authentication and contacts backend.
 8. Media like images storage support.
 9. Contact group support.
 
--- Limitations
+## Limitations
 1. Does not support anonymous access to the server.
 2. Same LDAP server must be used for authentication as well as address book.
 3. Does not support any date and/or time vCard property.
 
--- Planned features
+## Planned features
 1. Compatibility to as many vCard data types as possible.
 
--- Installation
+## Installation
 1. Check INSTALL file.
+
+## Wiki
+Check the Wiki here - [https://github.com/isubsoft/ldap-carddav/wiki](https://github.com/isubsoft/ldap-carddav/wiki) for more useful information and resources regarding this project.
