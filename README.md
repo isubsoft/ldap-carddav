@@ -1,5 +1,5 @@
 # ldap-carddav - A CardDAV server with LDAP as authentication and contacts backend
-![banner_01_trimmed_720px](https://github.com/user-attachments/assets/fc6d0105-1cb2-472a-96af-f3953a27eb2f)  
+![banner_01_trimmed](https://github.com/user-attachments/assets/5deb0f55-3276-4fd3-9344-485352106f6e)  
 
 ## The following features are available
 1. Authenticate CardDAV users against LDAP.
