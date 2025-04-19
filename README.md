@@ -20,8 +20,11 @@
 ## Planned features
 1. Compatibility to as many vCard data types as possible.
 
+## Demo
+Checkout a demonstration video here - [https://www.youtube.com/watch?v=1DFFZ4PDOrQ](https://www.youtube.com/watch?v=1DFFZ4PDOrQ)  
+
 ## Installation
 1. Check INSTALL file.
 
 ## Wiki
-Check the Wiki here - [https://github.com/isubsoft/ldap-carddav/wiki](https://github.com/isubsoft/ldap-carddav/wiki) for more useful information and resources regarding this project.
+Check the Wiki here - [https://github.com/isubsoft/ldap-carddav/wiki](https://github.com/isubsoft/ldap-carddav/wiki) for useful information and resources regarding this project.
