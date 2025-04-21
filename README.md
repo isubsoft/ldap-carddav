@@ -21,7 +21,7 @@
 1. Compatibility to as many vCard data types as possible.
 
 ## Demo
-Checkout a demonstration video here - [https://www.youtube.com/watch?v=1DFFZ4PDOrQ](https://www.youtube.com/watch?v=1DFFZ4PDOrQ)  
+Checkout a demonstration video here - [https://www.youtube.com/watch?v=sXhZXPv8dT0](https://www.youtube.com/watch?v=sXhZXPv8dT0)  
 
 ## Installation
 Check INSTALL file.
