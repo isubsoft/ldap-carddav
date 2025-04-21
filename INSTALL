@@ -48,6 +48,11 @@ This project uses composer dependencies. Please install the dependencies by runn
 2. Go to src/App directory.
 3. Execute 'php syncdb.php init' to initialize the sync database.
 
+-- Initializing sync database
+1. Make sure your address books are configured correctly in the conf file before you perform the next steps.
+2. Go to src/App directory.
+3. Execute 'php syncdb.php init' to initialize the sync database.
+
 -- File permissions
 1. conf/conf.php MUST NOT be world readable.
 2. Data directory and any of it's sub directories need to be writable by the user executing PHP. Default data directory is data.
