@@ -377,18 +377,4 @@ class LDAP {
 
         return ['ldapValueArray' => $elementArr, 'params' => $params];
     }
-
-    public static function hasValue(array $array) :bool
-    {
-        return count(array_filter($array, function($num) {
-            return (isset($num) && !is_null($num) && $num !== '');
-        })) > 0;
-    }
-
-    public static function hasNotValue(array $array) :bool
-    {
-        return count(array_filter($array, function($num) {
-            return (!isset($num) || is_null($num) || $num === '');
-        })) > 0;
-    }
 }
