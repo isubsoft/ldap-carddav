@@ -277,13 +277,17 @@ class LDAP {
                         {
                             $dateTime = DateTimeParser::parseVCardDateTime($vCardValuePart);
 
-                            if(Utility::hasNotValue([$dateTime['date'], $dateTime['month'], $dateTime['year'], $dateTime['hour'], $dateTime['minute'], $dateTime['second']]) == false)
+                            if(Utility::hasNotValue([$dateTime['date'], $dateTime['month'], $dateTime['year'], $dateTime['hour']]) == false)
                             {
                                 if(!isset($dateTime['timezone']) || $dateTime['timezone'] == '' || is_null($dateTime['timezone']))
                                 {
                                     $dateTime['timezone'] = 'Z';
                                 }
-                                $vCardPropValueArr[] = $dateTime['year'] . $dateTime['month'] . $dateTime['date'] . $dateTime['hour'] . $dateTime['minute'] . $dateTime['second'] . $dateTime['timezone'];
+
+                                if(Utility::hasNotValue([$dateTime['minute'], $dateTime['second']]) == false)
+                                    $vCardPropValueArr[]= $dateTime['year'] . $dateTime['month'] . $dateTime['date'] . $dateTime['hour'] . $dateTime['minute'] . $dateTime['second'] . $dateTime['timezone'];
+                                else
+                                    $vCardPropValueArr[] = $dateTime['year'] . $dateTime['month'] . $dateTime['date'] . $dateTime['hour'] . $dateTime['timezone'];
                             }
                             else
                             {
@@ -299,17 +303,21 @@ class LDAP {
                 }
                 else
                 {
+                    $newLdapKey = strtolower($mappLdapConfig['field_name']);
                     $dateTime = DateTimeParser::parseVCardDateTime((string)$vObj);
                     
-                    if(Utility::hasNotValue([$dateTime['date'], $dateTime['month'], $dateTime['year'], $dateTime['hour'], $dateTime['minute'], $dateTime['second']]) == false)
+                    if(Utility::hasNotValue([$dateTime['date'], $dateTime['month'], $dateTime['year'], $dateTime['hour']]) == false)
                     {
                         if(!isset($dateTime['timezone']) || $dateTime['timezone'] == '' || is_null($dateTime['timezone']))
                         {
                             $dateTime['timezone'] = 'Z';
                         }
 
-                        $newLdapKey = strtolower($mappLdapConfig['field_name']);
-                        $backendvalue = $dateTime['year'] . $dateTime['month'] . $dateTime['date'] . $dateTime['hour'] . $dateTime['minute'] . $dateTime['second'] . $dateTime['timezone'];
+                        if(Utility::hasNotValue([$dateTime['minute'], $dateTime['second']]) == false)
+                            $backendvalue = $dateTime['year'] . $dateTime['month'] . $dateTime['date'] . $dateTime['hour'] . $dateTime['minute'] . $dateTime['second'] . $dateTime['timezone'];
+                        else
+                            $backendvalue = $dateTime['year'] . $dateTime['month'] . $dateTime['date'] . $dateTime['hour'] . $dateTime['timezone']; 
+
                         $ldapBackendMap = [$newLdapKey => $backendvalue];
                     }
                 } 
@@ -615,13 +623,17 @@ class LDAP {
                         {
                             $dateTime = DateTimeParser::parseVCardDateTime($vCardValuePart);
 
-                            if(Utility::hasNotValue([$dateTime['date'], $dateTime['month'], $dateTime['year'], $dateTime['hour'], $dateTime['minute'], $dateTime['second']]) == false)
+                            if(Utility::hasNotValue([$dateTime['date'], $dateTime['month'], $dateTime['year'], $dateTime['hour']]) == false)
                             {
                                 if(!isset($dateTime['timezone']) || $dateTime['timezone'] == '' || is_null($dateTime['timezone']))
                                 {
                                     $dateTime['timezone'] = 'Z';
                                 }
-                                $vCardPropValueArr[] = $dateTime['year'] . $dateTime['month'] . $dateTime['date'] . $dateTime['hour'] . $dateTime['minute'] . $dateTime['second'] . $dateTime['timezone'];
+
+                                if(Utility::hasNotValue([$dateTime['minute'], $dateTime['second']]) == false)
+                                    $vCardPropValueArr[] = $dateTime['year'] . $dateTime['month'] . $dateTime['date'] . $dateTime['hour'] . $dateTime['minute'] . $dateTime['second'] . $dateTime['timezone'];
+                                else
+                                    $vCardPropValueArr[] = $dateTime['year'] . $dateTime['month'] . $dateTime['date'] . $dateTime['hour'] . $dateTime['timezone'];
                             }
                             else
                             {
@@ -637,17 +649,21 @@ class LDAP {
                 }
                 else
                 {
+                    $newLdapKey = strtolower($mappLdapConfig['field_name']);
                     $dateTime = DateTimeParser::parseVCardDateTime((string)$vObj);
                     
-                    if(Utility::hasNotValue([$dateTime['date'], $dateTime['month'], $dateTime['year'], $dateTime['hour'], $dateTime['minute'], $dateTime['second']]) == false)
+                    if(Utility::hasNotValue([$dateTime['date'], $dateTime['month'], $dateTime['year'], $dateTime['hour']]) == false)
                     {
                         if(!isset($dateTime['timezone']) || $dateTime['timezone'] == '' || is_null($dateTime['timezone']))
                         {
                             $dateTime['timezone'] = 'Z';
                         }
 
-                        $newLdapKey = strtolower($mappLdapConfig['field_name']);
-                        $backendvalue = $dateTime['year'] . $dateTime['month'] . $dateTime['date'] . $dateTime['hour'] . $dateTime['minute'] . $dateTime['second'] . $dateTime['timezone'];
+                        if(Utility::hasNotValue([$dateTime['minute'], $dateTime['second']]) == false)
+                            $backendvalue = $dateTime['year'] . $dateTime['month'] . $dateTime['date'] . $dateTime['hour'] . $dateTime['minute'] . $dateTime['second'] . $dateTime['timezone'];
+                        else
+                            $backendvalue = $dateTime['year'] . $dateTime['month'] . $dateTime['date'] . $dateTime['hour'] . $dateTime['timezone']; 
+
                         $ldapBackendMap = [$newLdapKey => $backendvalue];
                     }
                 } 
