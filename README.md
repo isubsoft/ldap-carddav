@@ -1,5 +1,5 @@
 # ldap-carddav - A CardDAV server with LDAP as authentication and contacts backend
-![LDAP-CardDAV sync](https://github.com/user-attachments/assets/abdb4424-62d8-4166-96bd-8420e11723ea)  
+![banner_02_trimmed_narrow](https://github.com/user-attachments/assets/e7d0f02a-bfd1-489f-b8a8-e0aef168c035)
 
 ## Features
 1. Authenticate CardDAV users against LDAP.
@@ -20,11 +20,8 @@
 ## Planned features
 1. Compatibility to as many vCard data types as possible.
 
-## Demo
-Checkout a demonstration video here - [https://www.youtube.com/watch?v=1DFFZ4PDOrQ](https://www.youtube.com/watch?v=1DFFZ4PDOrQ)  
-
 ## Installation
 Check INSTALL file.
 
 ## Wiki
-Check the Wiki here - [https://github.com/isubsoft/ldap-carddav/wiki](https://github.com/isubsoft/ldap-carddav/wiki) for useful information and resources regarding this project.
+Checkout the Wiki here - [https://github.com/isubsoft/ldap-carddav/wiki](https://github.com/isubsoft/ldap-carddav/wiki) for more useful information and resources regarding this project.
