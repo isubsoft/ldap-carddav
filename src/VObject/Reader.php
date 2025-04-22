@@ -84,9 +84,13 @@ class Reader extends \Sabre\VObject\Reader{
             {
                 $dateTime = DateTimeParser::parseVCardDateTime($value);
             
-                if(Utility::hasNotValue([$dateTime['date'], $dateTime['month'], $dateTime['year'], $dateTime['hour'], $dateTime['minute'], $dateTime['second']]) == false)
+                if(Utility::hasNotValue([$dateTime['date'], $dateTime['month'], $dateTime['year'], $dateTime['hour']]) == false)
                 {
-                    $cardData = $dateTime['year'] . $dateTime['month'] . $dateTime['date'] .'T'. $dateTime['hour'] . $dateTime['minute'] . $dateTime['second'] . 'Z';
+                    if(Utility::hasNotValue([$dateTime['minute'], $dateTime['second']]) == false)
+                        $cardData = $dateTime['year'] . $dateTime['month'] . $dateTime['date'] .'T'. $dateTime['hour'] . $dateTime['minute'] . $dateTime['second'] . 'Z';
+                    else
+                        $cardData = $dateTime['year'] . $dateTime['month'] . $dateTime['date'] .'T'. $dateTime['hour'] . 'Z';
+
                     $params = ['value' => 'DATE-TIME'];
                 }
                 else if((Utility::hasNotValue([$dateTime['date'], $dateTime['month'], $dateTime['year']]) == false) && (Utility::hasNotValue([$dateTime['hour'], $dateTime['minute'], $dateTime['second']]) == true))
@@ -121,7 +125,18 @@ class Reader extends \Sabre\VObject\Reader{
         }
         else if($backendDataFormat == 'TIMESTAMP')
         {
-            $cardData = date('Ymd', strtotime($value)).'T'.date('HisO', strtotime($value));
+            $dateComponent = substr($value, 0, 8);
+            $timeComponent = substr($value, 8);
+            
+            $dateTime = DateTimeParser::parseVCardDateTime($dateComponent. 'T'. $timeComponent);
+
+            if(Utility::hasNotValue([$dateTime['date'], $dateTime['month'], $dateTime['year'], $dateTime['hour']]) == false)
+            {
+                if(Utility::hasNotValue([$dateTime['minute'], $dateTime['second']]) == false)
+                    $cardData = $dateTime['year'] . $dateTime['month'] . $dateTime['date'] .'T'. $dateTime['hour'] . $dateTime['minute'] . $dateTime['second'] . 'Z';
+                else
+                    $cardData = $dateTime['year'] . $dateTime['month'] . $dateTime['date'] .'T'. $dateTime['hour'] . 'Z';
+            }
             
             $vCardMetaData = self::vCardMetaData();
             $vCardAttrInfo = $vCardMetaData[$vCardAttr];
