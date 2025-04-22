@@ -75,14 +75,16 @@
 	{
 		"multi_allowed": false,
 		"composite_attr": false,
-		"parameter": []
+		"parameter": [],
+		"date_time": true
 	},
 
 	"ANNIVERSARY":
 	{
 		"multi_allowed": false,
 		"composite_attr": false,
-		"parameter": []
+		"parameter": [],
+		"date_time": true
 	},
 
 	"GENDER":
