@@ -15,7 +15,6 @@
 ## Limitations
 1. Does not support anonymous access to the server.
 2. Same LDAP server must be used for authentication as well as address book.
-3. Does not support any date and/or time vCard property.
 
 ## Planned features
 1. Compatibility to as many vCard data types as possible.
