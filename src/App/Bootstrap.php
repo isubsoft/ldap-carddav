@@ -18,9 +18,19 @@ $GLOBALS['environment'] = (isset($config['app']['env']) && $config['app']['env']
 
 try {
     $pdo_foreign_keys_enabled = false;
+    $pdo_dsn = !isset($config['sync_database']['dsn']?null:$config['sync_database']['dsn'];
+    $pdo_username = !isset($config['sync_database']['username']?null:$config['sync_database']['username'];
+    $pdo_password = !isset($config['sync_database']['password']?null:$config['sync_database']['password'];
     $pdo_scheme = parse_url($config['sync_database'])['scheme'];
     
-    $pdo = new PDO($config['sync_database']);
+    if($pdo_dsn == null)
+    {
+			error_log("Sync database connection not defined.");
+			http_response_code(500);
+			exit(1);
+    }
+    
+    $pdo = new PDO($pdo_dsn, $pdo_username, $pdo_password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
     if($pdo_scheme == 'sqlite')

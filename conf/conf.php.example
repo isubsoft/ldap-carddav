@@ -6,7 +6,10 @@ $config = [];
 // or unsafe for production environment. Defaults to null.
 //  $config['app']['env'] = 'prod';
 
-$config['sync_database'] = 'sqlite:' . __DATA_DIR__ . '/sync/pdo/sqlite/cards.db';
+$config['sync_database'] = [	'dsn' => 'sqlite:' . __DATA_DIR__ . '/sync/pdo/sqlite/cards.db',
+													 		'username' => null, // username to use for database login, default is null
+													 		'password' => null // password to use for database login, default is null
+													 ];
 
 $config['server']['ldap'] = [
   'host'         				=> '<hostname>', // If not set then system default LDAP URI will be used
