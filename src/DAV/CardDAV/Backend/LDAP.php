@@ -1365,34 +1365,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 			$syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
 			$ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
 
-			$resultTmpError = [
-					'syncToken' => $syncToken,
-					'added'     => [],
-					'modified'  => [],
-					'deleted'   => [],
-			];
-
 			$result = [
 					'syncToken' => $addressBookSyncToken,
 					'added'     => [],
 					'modified'  => [],
 					'deleted'   => [],
 			];
-
-			if($syncToken >= $addressBookSyncToken)
-			{
-				return $result;
-			}
-
-			if(isset($addressBookConfig['sync_bind_dn']) && $addressBookConfig['sync_bind_dn'] != '')
-			{
-				$syncBindDn = $addressBookConfig['sync_bind_dn'];
-				$syncBindPass = (!isset($addressBookConfig['sync_bind_pw']))?null:$addressBookConfig['sync_bind_pw'];
-				$ldapConn = Utility::LdapBindConnection(['bindDn' => $syncBindDn, 'bindPass' => $syncBindPass], $this->config['server']['ldap']);
-			}
-
-			if($ldapConn === false)
-				return $resultTmpError;
 
 			// Perform initial sync
 			if($syncToken == null)
@@ -1425,6 +1403,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				return $result;
 			}
 			
+			// Invalid sync token
+			if($syncToken != null && (!is_int((int)$syncToken) || $syncToken >= $addressBookSyncToken))
+				return null;
+			
 			$fullSyncToken = null;
 			
 			try {
@@ -1441,23 +1423,32 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
 			}
 			
+			// Sync token expiry
 			if($fullSyncToken != null && $fullSyncToken < $addressBookSyncToken)
 				return null;
+				
+			if(isset($addressBookConfig['sync_bind_dn']) && $addressBookConfig['sync_bind_dn'] != '')
+			{
+				$syncBindDn = $addressBookConfig['sync_bind_dn'];
+				$syncBindPass = (!isset($addressBookConfig['sync_bind_pw']))?null:$addressBookConfig['sync_bind_pw'];
+				$ldapConn = Utility::LdapBindConnection(['bindDn' => $syncBindDn, 'bindPass' => $syncBindPass], $this->config['server']['ldap']);
+			}
+
+			if($ldapConn === false)
+      	throw new SabreDAVException\ServiceUnavailable();
 			
 			$filter = '(&' . $addressBookConfig['filter'] . '(createtimestamp>=' . gmdate('YmdHis', $syncToken) . 'Z)(!(createtimestamp>=' . gmdate('YmdHis', $addressBookSyncToken) . 'Z)))';
 			$data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $filter, ['entryuuid'], strtolower($addressBookConfig['scope']));
 
 			if($data === false)
-			{
-				return $resultTmpError;
-			}
+      	throw new SabreDAVException\ServiceUnavailable();
 
 			while($data['entryIns'])
 			{
 				if(!isset($data['data']['entryUUID'][0]))
 				{
 					error_log("Read access to required operational attributes in LDAP not present. Cannot continue. Quitting. ".__METHOD__." at line no ".__LINE__);
-					return $resultTmpError;
+					throw new SabreDAVException\ServiceUnavailable();
 				}
 				
 				$cardUri = null;
@@ -1482,7 +1473,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						}
 				} catch (\Throwable $th) {
 						error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
-						return $resultTmpError;
+						throw new SabreDAVException\ServiceUnavailable();
 				}
 				
 				$result['added'][] = $cardUri;
@@ -1493,16 +1484,14 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 			$data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $filter, ['entryuuid'], strtolower($addressBookConfig['scope']));
 
 			if($data === false)
-			{
-				return $resultTmpError;
-			}
+				throw new SabreDAVException\ServiceUnavailable();
 				
 			while($data['entryIns'])
 			{
 				if(!isset($data['data']['entryUUID'][0]))
 				{
 					error_log("Read access to required operational attributes in LDAP not present. Cannot continue. Quitting. ".__METHOD__." at line no ".__LINE__);
-					return $resultTmpError;
+					throw new SabreDAVException\ServiceUnavailable();
 				}
 				
 				$cardUri = null;
@@ -1533,7 +1522,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						$result['modified'][] = $cardUri;
 				} catch (\Throwable $th) {
 						error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
-						return $resultTmpError;
+						throw new SabreDAVException\ServiceUnavailable();
 				}
 					
 				$data = Utility::LdapIterativeQuery($ldapConn, $data['entryIns']);
@@ -1555,7 +1544,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				}
 			} catch (\Throwable $th) {
 					error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
-					return $resultTmpError;
+					throw new SabreDAVException\ServiceUnavailable();
 			}
 
 			return $result;
