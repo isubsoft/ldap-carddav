@@ -1,4 +1,8 @@
-Check the Wiki for host server requirements here - https://github.com/isubsoft/ldap-carddav/wiki
+-- Wiki
+Link - https://github.com/isubsoft/ldap-carddav/wiki
+
+-- Requirements
+Check the wiki.
 
 -- System dependencies (GNU/Linux Debian 11 used as a reference for a minimal test setup)
 [core packages]
@@ -32,10 +36,10 @@ Download the project files from the repository and place the project folder in a
 -- Go to the project folder path before performing any of the below steps.
 
 -- Composer
-This project uses composer dependencies. Please install the dependencies by running composer update from web document root directory. This project is compatible with SabreDAV 3.2 (PHP 5.5) till SabreDAV 4.0.3 (PHP 7.0.0). VObject 4.5 (PHP 7.1) is required for some vCard v3.0 interoperability with vCard v4.0 for contact groups. You may adjust composer.json according to your need/environment.
+This project uses composer dependencies. Please install the dependencies by running 'composer update'. This project is compatible with SabreDAV 3.2 (PHP 5.5) till SabreDAV 4.0.3 (PHP 7.0.0). VObject 4.5 (PHP 7.1) is required for some vCard v3.0 interoperability with vCard v4.0 for contact groups. You may adjust composer.json according to your need/environment.
 
 -- Application conf file
-Copy conf/conf.php.example as conf/conf.php and update the file conf/conf.php according to your environment and need. Configuration keys are documented along side in the conf/conf.php.example file. Check the wiki here - https://github.com/isubsoft/ldap-carddav/wiki for more advanced configuration examples.
+Copy conf/conf.php.example as conf/conf.php and update the file conf/conf.php according to your environment and need. Configuration keys are documented along side in the conf/conf.php.example file. Check the wiki for more advanced configuration examples.
 
 -- Sync database creation
 1. Create objects as per sql/<database_product>/ddl.sql file and if required create a database user and issue appropriate grants to it.
@@ -45,15 +49,14 @@ Copy conf/conf.php.example as conf/conf.php and update the file conf/conf.php ac
 
 -- Initializing sync database
 1. Make sure your address books are configured correctly in the conf file before you perform the next steps.
-2. Go to src/App directory.
-3. Execute 'php syncdb.php init' to initialize the sync database.
+2. Execute 'php src/App/syncdb.php init' to initialize the sync database.
 
 -- File permissions
 1. conf/conf.php MUST NOT be world readable but MUST be readable and preferably not writable by the user executing PHP.
 2. Data directory need to be writable by the user executing PHP and MUST NOT be world readable. All sub directories of data directory need to be writable by the user executing PHP. Default data directory is data.
 
 -- Web server and PHP configuration
-Check the wiki here - https://github.com/isubsoft/ldap-carddav/wiki for examples.
+Check the wiki for examples.
 
 -- LDAP server
 1. Operational attributes entryUUID, modifyTimestamp and createTimestamp need to be indexed for all contacts.
