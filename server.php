@@ -60,7 +60,7 @@ if($GLOBALS['max_payload_size'] != null)
 
 $server->addPlugin($cardDavPlugin);
 
-if($GLOBALS['enable_incremental_sync'] == true)
+if($GLOBALS['enable_incremental_sync'])
 	$server->addPlugin(new Sabre\DAV\Sync\Plugin());
 
 // And off we go!

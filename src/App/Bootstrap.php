@@ -3,8 +3,6 @@
 * Copyright (C) 2023-2025 ISub Softwares (OPC) Private Limited
 **************************************************************/
 
-
-
 //constants
 define('__BASE_DIR__', __DIR__ . '/../..');
 define('__DATA_DIR__', __BASE_DIR__ . '/data');
