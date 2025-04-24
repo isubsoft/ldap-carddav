@@ -6,7 +6,16 @@ $config = [];
 // or unsafe for production environment. Defaults to null.
 //  $config['app']['env'] = 'prod';
 
-$config['sync_database'] = [	'dsn' => 'sqlite:' . __DATA_DIR__ . '/sync/pdo/sqlite/cards.db',
+// Few CardDAV clients do not implement WebDAV sync specifications correctly leading to broken WebDAV sync.
+// You can enable WebDAV sync globally if your CardDAV client is known to compliant with WebDAV sync specifications.
+// Default is false.
+//  $config['app']['enable_incremental_sync'] = true;
+
+// Set global maximum size (in bytes) of payload accepted. Default is null which means app internal default value will be used.
+$config['app']['max_payload_size'] = null;
+
+$config['sync_database'] = [	
+															'dsn' => 'sqlite:' . __DATA_DIR__ . '/sync/pdo/sqlite/cards.db',
 													 		'username' => null, // username to use for database login, default is null
 													 		'password' => null // password to use for database login, default is null
 													 ];
@@ -22,6 +31,9 @@ $config['server']['ldap'] = [
 ];
 
 $config['auth']['ldap'] = [
+	// Authentication realm. Defaults to 'isubsoft/ldap-carddav'.
+	// 'realm' => '',
+
   // -- The following placeholders are available to be used in bind_dn, bind_pass and search_filter as applicable
   // %u  - Username sent by client for authentication
   // %p  - Password sent by client for authentication

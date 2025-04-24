@@ -26,9 +26,6 @@ $authBackend = new ISubsoft\DAV\Auth\Backend\LDAP($config);
 $principalBackend = new ISubsoft\DAV\DAVACL\PrincipalBackend\LDAP($config, $pdo);
 $carddavBackend = new ISubsoft\DAV\CardDAV\Backend\LDAP($config, $pdo);
 
-// We're assuming that the realm name is called 'SabreDAV'.
-$authBackend->setRealm('SabreDAV');
-
 // Setting up the directory tree //
 $nodes = [
     new Sabre\DAVACL\PrincipalCollection($principalBackend),
@@ -58,11 +55,13 @@ if($GLOBALS['environment'] != 'prod')
 
 $cardDavPlugin = new ISubsoft\DAV\CardDAV\Plugin();
 
-// Set global max resource size
-//  $cardDavPlugin->setResourceSize(<size_in_bytes>);
+if($GLOBALS['max_payload_size'] != null)
+	$cardDavPlugin->setResourceSize($GLOBALS['max_payload_size']);
 
 $server->addPlugin($cardDavPlugin);
-$server->addPlugin(new Sabre\DAV\Sync\Plugin());
+
+if($GLOBALS['enable_incremental_sync'] == true)
+	$server->addPlugin(new Sabre\DAV\Sync\Plugin());
 
 // And off we go!
 $server->exec();

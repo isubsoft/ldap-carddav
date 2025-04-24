@@ -13,14 +13,16 @@ define('__CONF_DIR__', __BASE_DIR__ . '/conf');
 require __CONF_DIR__ . '/conf.php';
 
 $GLOBALS['environment'] = (isset($config['app']['env']) && $config['app']['env'] != null)?$config['app']['env']:null;
+$GLOBALS['enable_incremental_sync'] = (isset($config['app']['enable_incremental_sync']) && is_bool($config['app']['enable_incremental_sync']))?$config['app']['enable_incremental_sync']:false;
+$GLOBALS['max_payload_size'] = (isset($config['app']['max_payload_size']) && is_int($config['app']['max_payload_size']))?$config['app']['max_payload_size']:null;
 
 /* Database */
 
 try {
     $pdo_foreign_keys_enabled = false;
-    $pdo_dsn = !isset($config['sync_database']['dsn']?null:$config['sync_database']['dsn'];
-    $pdo_username = !isset($config['sync_database']['username']?null:$config['sync_database']['username'];
-    $pdo_password = !isset($config['sync_database']['password']?null:$config['sync_database']['password'];
+    $pdo_dsn = !isset($config['sync_database']['dsn'])?null:$config['sync_database']['dsn'];
+    $pdo_username = !isset($config['sync_database']['username'])?null:$config['sync_database']['username'];
+    $pdo_password = !isset($config['sync_database']['password'])?null:$config['sync_database']['password'];
     
     if($pdo_dsn == null)
     {

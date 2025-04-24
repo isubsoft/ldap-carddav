@@ -29,6 +29,7 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
      */
     function __construct(array $config) {
         $this->config = $config;
+        $this->setRealm((isset($config['auth']['ldap']['realm']) && $config['auth']['ldap']['realm'] != null)?$config['auth']['ldap']['realm']:'isubsoft/ldap-carddav');
     }
 
 
