@@ -1360,7 +1360,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 			if($syncToken != null && (!is_int((int)$syncToken) || $syncToken >= $addressBookSyncToken))
 				return null;
 				
-			$forceInitialSyncInterval = (!isset($addressBookConfig['force_full_sync_interval']) || !is_int((int)$addressBookConfig['force_full_sync_interval']))?self::defaultForceFullSyncInterval:$addressBookConfig['force_full_sync_interval'];
+			$forceInitialSyncInterval = (!isset($addressBookConfig['force_full_sync_interval']) || !is_int((int)$addressBookConfig['force_full_sync_interval']))?self::$defaultForceFullSyncInterval:$addressBookConfig['force_full_sync_interval'];
 			
 			// Sync token expiry
 			if(is_int((int)$syncToken) && ($addressBookSyncToken - $syncToken) > $forceInitialSyncInterval)
