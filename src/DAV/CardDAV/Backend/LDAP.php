@@ -55,13 +55,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     private $deletedCardsTableName = 'cards_deleted';
     
-    /**
-     * PDO table name.
-     *
-     * @var string
-     */
-    private $fullSyncTableName = 'cards_full_sync';
-    
     private static $defaultContactMaxSize = 16384;
 
     private static $defaultBackendDataUpdatePolicy = 'merge';
@@ -70,7 +63,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     
     private $defaultVcardVersion = \Sabre\VObject\Document::VCARD40;
 
-    private $forceFullSyncInterval = 86400;
+    private static $defaultForceFullSyncInterval = 86400;
 
     /**
      * Address books
@@ -214,30 +207,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             '{http://calendarserver.org/ns/}getctag' 											=> (!$addressBookSyncToken == null) ? $addressBookSyncToken : time(),
             '{http://sabredav.org/ns}sync-token'                          => (!$addressBookSyncToken == null) ? $addressBookSyncToken : 0
         ];
-
-				$forceFullSyncInterval = (!isset($addressBookConfig['force_full_sync_interval']) || $addressBookConfig['force_full_sync_interval'] == '') ? $this->forceFullSyncInterval : $addressBookConfig['force_full_sync_interval'];
-				$fullSyncToken = (int)$addressBookSyncToken + (int)$forceFullSyncInterval;
-
-				try {
-						$query = 'SELECT 1 FROM '.$this->fullSyncTableName.' WHERE user_id = ? AND addressbook_id = ?';
-						$stmt = $this->pdo->prepare($query);
-						$stmt->execute([$this->addressbook[$addressBookId]['syncDbUserId'], $addressBookId]);
-						
-						$row = $stmt->fetch(\PDO::FETCH_ASSOC);
-						
-						if($row === false)
-						{
-								$this->pdo->beginTransaction();
-								$query = "INSERT INTO `".$this->fullSyncTableName."` (`user_id`, `addressbook_id`, `sync_token`) VALUES (?, ?, ?)"; 
-								$sql = $this->pdo->prepare($query);
-								$sql->execute([$this->addressbook[$addressBookId]['syncDbUserId'], $addressBookId, $fullSyncToken]);
-
-								$this->pdo->commit();
-						}
-				} catch (\Throwable $th) { 
-						error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
-						$this->pdo->rollback();
-				}
       }
 
       return $addressBooks;
@@ -1384,47 +1353,17 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					}
 				}
 
-        $forceFullSyncInterval = (!isset($addressBookConfig['force_full_sync_interval']) || $addressBookConfig['force_full_sync_interval'] == '') ? $this->forceFullSyncInterval : $addressBookConfig['force_full_sync_interval'];
-        $newFullSyncToken =  time() + (int)$forceFullSyncInterval;
-
-        try {
-					$this->pdo->beginTransaction();
-
-					$query = "UPDATE `".$this->fullSyncTableName."` SET sync_token = ? WHERE user_id = ? AND addressbook_id = ?"; 
-					$sql = $this->pdo->prepare($query);
-					$sql->execute([$newFullSyncToken, $syncDbUserId, $addressBookId]);
-
-					$this->pdo->commit();
-				} catch (\Throwable $th) {
-							error_log("Database query could not be executed: " . __METHOD__ . " at line no " . __LINE__ . ", " . $th->getMessage());
-							$this->pdo->rollback();
-				}
-				
 				return $result;
 			}
 			
 			// Invalid sync token
 			if($syncToken != null && (!is_int((int)$syncToken) || $syncToken >= $addressBookSyncToken))
 				return null;
-			
-			$fullSyncToken = null;
-			
-			try {
-					$query = 'SELECT sync_token FROM ' . $this->fullSyncTableName . ' WHERE addressbook_id = ? AND user_id = ?';
-					$stmt = $this->pdo->prepare($query);
-					$stmt->execute([$addressBookId, $syncDbUserId]);
-					
-					$row = $stmt->fetch(\PDO::FETCH_ASSOC);
-					
-					if($row !== false)
-						$fullSyncToken = $row['sync_token'];
-
-			} catch (\Throwable $th) {
-					error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
-			}
+				
+			$forceInitialSyncInterval = (!isset($addressBookConfig['force_full_sync_interval']) || !is_int((int)$addressBookConfig['force_full_sync_interval']))?self::defaultForceFullSyncInterval:$addressBookConfig['force_full_sync_interval'];
 			
 			// Sync token expiry
-			if($fullSyncToken != null && $fullSyncToken < $addressBookSyncToken)
+			if(is_int((int)$syncToken) && ($addressBookSyncToken - $syncToken) > $forceInitialSyncInterval)
 				return null;
 				
 			if(isset($addressBookConfig['sync_bind_dn']) && $addressBookConfig['sync_bind_dn'] != '')
