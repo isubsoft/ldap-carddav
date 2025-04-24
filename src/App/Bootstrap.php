@@ -21,7 +21,6 @@ try {
     $pdo_dsn = !isset($config['sync_database']['dsn']?null:$config['sync_database']['dsn'];
     $pdo_username = !isset($config['sync_database']['username']?null:$config['sync_database']['username'];
     $pdo_password = !isset($config['sync_database']['password']?null:$config['sync_database']['password'];
-    $pdo_scheme = parse_url($config['sync_database'])['scheme'];
     
     if($pdo_dsn == null)
     {
@@ -29,6 +28,8 @@ try {
 			http_response_code(500);
 			exit(1);
     }
+    
+    $pdo_scheme = parse_url($pdo_dsn)['scheme'];
     
     $pdo = new PDO($pdo_dsn, $pdo_username, $pdo_password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
