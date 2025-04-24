@@ -55,6 +55,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     private $deletedCardsTableName = 'cards_deleted';
     
+    /**
+     * PDO table name.
+     *
+     * @var string
+     */
+    private static $fullSyncTableName = 'cards_full_sync';
+    
     private static $defaultContactMaxSize = 16384;
 
     private static $defaultBackendDataUpdatePolicy = 'merge';
@@ -197,6 +204,23 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $this->addressbook[$addressBookId]['syncToken'] = $addressBookSyncToken;
         $this->addressbook[$addressBookId]['syncDbUserId'] =  ($addressBookConfig['user_specific'])?$currentUserPrincipalBackendId:$systemUser;
         $this->addressbook[$addressBookId]['contactMaxSize'] = (int)((isset($addressBookConfig['max_size']) && $addressBookConfig['max_size'] > 0)?$addressBookConfig['max_size']:self::$defaultContactMaxSize);
+        
+				try {
+						$query = 'SELECT 1 FROM '. self::$fullSyncTableName . ' WHERE user_id = ? AND addressbook_id = ?';
+						$stmt = $this->pdo->prepare($query);
+						$stmt->execute([$this->addressbook[$addressBookId]['syncDbUserId'], $addressBookId]);
+						
+						$row = $stmt->fetch(\PDO::FETCH_ASSOC);
+						
+						if($row === false)
+						{
+								$query = "INSERT INTO `" . self::$fullSyncTableName . "` (`user_id`, `addressbook_id`, `sync_token`) VALUES (?, ?, ?)"; 
+								$sql = $this->pdo->prepare($query);
+								$sql->execute([$this->addressbook[$addressBookId]['syncDbUserId'], $addressBookId, time()]);
+						}
+				} catch (\Throwable $th) { 
+						error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+				}
         
         $addressBooks[] = [
             'id'                                                          => $addressBookId,
@@ -1362,8 +1386,24 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				
 			$forceInitialSyncInterval = (!isset($addressBookConfig['force_full_sync_interval']) || !is_int((int)$addressBookConfig['force_full_sync_interval']))?self::$defaultForceFullSyncInterval:$addressBookConfig['force_full_sync_interval'];
 			
+			$fullSyncToken = null;
+			
+			try {
+					$query = 'SELECT sync_token FROM ' . self::$fullSyncTableName . ' WHERE addressbook_id = ? AND user_id = ?';
+					$stmt = $this->pdo->prepare($query);
+					$stmt->execute([$addressBookId, $syncDbUserId]);
+					
+					$row = $stmt->fetch(\PDO::FETCH_ASSOC);
+					
+					if($row !== false)
+						$fullSyncToken = $row['sync_token'];
+
+			} catch (\Throwable $th) {
+					error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+			}
+			
 			// Sync token expiry
-			if(is_int((int)$syncToken) && ($addressBookSyncToken - $syncToken) > $forceInitialSyncInterval)
+			if((is_int((int)$syncToken) && ($addressBookSyncToken - $syncToken) > $forceInitialSyncInterval) || ($fullSyncToken != null && $addressBookSyncToken > ($fullSyncToken + $forceInitialSyncInterval)))
 				return null;
 				
 			if(isset($addressBookConfig['sync_bind_dn']) && $addressBookConfig['sync_bind_dn'] != '')
@@ -1679,6 +1719,16 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
         		throw new SabreDAVException\ServiceUnavailable();
         }
+        
+				$forceFullSyncInterval = (!isset($addressBookConfig['force_full_sync_interval']) || !is_int((int)$addressBookConfig['force_full_sync_interval']))?self::$defaultForceFullSyncInterval:$addressBookConfig['force_full_sync_interval'];
+        
+        try {
+					$query = "UPDATE `" . self::$fullSyncTableName . "` SET sync_token = ? WHERE user_id = ? AND addressbook_id = ? AND sync_token < ?"; 
+					$sql = $this->pdo->prepare($query);
+					$sql->execute([$addressBookSyncToken, $syncDbUserId, $addressBookId, $addressBookSyncToken - $forceFullSyncInterval]);
+				} catch (\Throwable $th) {
+							error_log("Database query could not be executed: " . __METHOD__ . " at line no " . __LINE__ . ", " . $th->getMessage());
+				}
 
         return $backendContacts;
     }
