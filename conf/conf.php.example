@@ -7,17 +7,18 @@ $config = [];
 //  $config['app']['env'] = 'prod';
 
 // Few CardDAV clients do not implement WebDAV sync specifications correctly leading to broken WebDAV sync.
-// You can enable WebDAV sync globally if your CardDAV client is known to compliant with WebDAV sync specifications.
+// You can enable WebDAV sync globally if your CardDAV client is known to be compliant with WebDAV sync specifications.
 // Default is false.
 //  $config['app']['enable_incremental_sync'] = true;
 
-// Set global maximum size (in bytes) of payload accepted. Default is null which means app internal default value will be used.
-$config['app']['max_payload_size'] = null;
+// Set global maximum size (in bytes) of request payload which can be accepted.
+// Default is null which means app internal default value will be used.
+//  $config['app']['max_payload_size'] = null;
 
 $config['sync_database'] = [
 	'dsn' => 'sqlite:' . __DATA_DIR__ . '/sync/pdo/sqlite/cards.db',
-	'username' => null, // username to use for database login, default is null
-	'password' => null // password to use for database login, default is null
+	'username' => '', // username to use for database login, default is null
+	'password' => '' // password to use for database login, default is null
 ];
 
 $config['server']['ldap'] = [
