@@ -2,11 +2,43 @@
 
 $config = [];
 
+// Set temporary files directory. This can either be an absolute path or a 
+// path relative to base directory of the application. Use %systempdir as placeholder for 
+// system temp directory path. To use %systempdir as a literal use %%systempdir
+// Remember %systempdir is an absolute path.
+// Defaults to 'tmp' directory relative to base directory of the application.
+//   $config['tmpdir'] = '%systempdir';
+
+// Set data directory path of the application if it is different from default.
+// This can either be an absolute path or a path relative to base directory of the application.
+// Defaults to 'data' directory relative to base directory of the application.
+//   $config['datadir'] = '/var/lib/ldap_carddav';
+
+// Base URI for this application. Default is '/server.php'.
+// If you have configured clean URLs in your HTTP server configuration then, uncomment the below and update
+// if required.
+//  $config['app']['base_uri'] = '/';
+
 // Set application environment. If set to 'prod' certain application features are turned off which are not suitable
 // or unsafe for production environment. Defaults to null.
 //  $config['app']['env'] = 'prod';
 
-$config['sync_database'] = 'sqlite:' . __DATA_DIR__ . '/sync/pdo/sqlite/cards.db';
+// Few CardDAV clients do not implement WebDAV sync specifications correctly leading to broken WebDAV sync.
+// You can enable WebDAV sync globally if your CardDAV client is known to be compliant with WebDAV sync specifications.
+// Default is false.
+//  $config['app']['enable_incremental_sync'] = true;
+
+// Set global maximum size (in bytes) of request payload which can be accepted.
+// Default is null which means app internal default value will be used.
+//  $config['app']['max_payload_size'] = null;
+
+// The DSN string below can use %datadir as placeholder for the data directory path of the application.
+// %datadir is an absolute directory path. To use %datadir as a literal use %%datadir
+$config['sync_database'] = [
+	'dsn' => 'sqlite:%datadir/sync/syncdb/sqlite/cards.db',
+	'username' => '', // username to use for database login, default is null
+	'password' => '' // password to use for database login, default is null
+];
 
 $config['server']['ldap'] = [
   'host'         				=> '<hostname>', // If not set then system default LDAP URI will be used
@@ -19,6 +51,9 @@ $config['server']['ldap'] = [
 ];
 
 $config['auth']['ldap'] = [
+	// Authentication realm. Defaults to 'isubsoft/ldap-carddav'.
+	// 'realm' => '',
+
   // -- The following placeholders are available to be used in bind_dn, bind_pass and search_filter as applicable
   // %u  - Username sent by client for authentication
   // %p  - Password sent by client for authentication

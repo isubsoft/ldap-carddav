@@ -2,7 +2,7 @@
 ---- Get current principal 
 
 -- REQUEST
-curl -u <username>:<password>  --location --request PROPFIND '/' \
+curl -u <username>:<password>  --location --request PROPFIND 'BASE_URL' \
 --header 'Content-Type: application/xml' \
 --header 'Accept-Charset: utf-8' \
 --header 'Depth: 0' \
@@ -33,7 +33,7 @@ curl -u <username>:<password>  --location --request PROPFIND '/' \
 ---- Get addressbook home of a principal - 
 
 -- REQUEST
-curl -u <username>:<password> --location --request PROPFIND '/principals/users/PRINCIPAL' \
+curl -u <username>:<password> --location --request PROPFIND 'BASE_URL/principals/users/PRINCIPAL' \
 --header 'Content-Type: application/xml' \
 --header 'Accept-Charset: utf-8' \
 --header 'Depth: 0' \
@@ -64,7 +64,7 @@ curl -u <username>:<password> --location --request PROPFIND '/principals/users/P
 ---- Get list of addressbooks of a principal
 
 -- REQUEST
-curl -u <username>:<password> --location --request PROPFIND '/addressbooks/PRINCIPAL' \
+curl -u <username>:<password> --location --request PROPFIND 'BASE_URL/addressbooks/PRINCIPAL' \
 --header 'Content-Type: application/xml' \
 --header 'Accept-Charset: utf-8' \
 --header 'Depth: 1' \
@@ -118,7 +118,7 @@ curl -u <username>:<password> --location --request PROPFIND '/addressbooks/PRINC
 ---- Retrieve addressbook information -
 
 -- REQUEST
-curl -u <username>:<password> --location --request PROPFIND '/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/' \
+curl -u <username>:<password> --location --request PROPFIND 'BASE_URL/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/' \
 --header 'Content-Type: application/xml' \
 --header 'Depth: 0' \
 --header 'Accept-Charset: utf-8' \
@@ -152,7 +152,7 @@ curl -u <username>:<password> --location --request PROPFIND '/addressbooks/PRINC
 ---- List contacts of an addressbook
 
 -- REQUEST
-curl -u <username>:<password> --location --request REPORT '/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/' \
+curl -u <username>:<password> --location --request REPORT 'BASE_URL/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/' \
 --header 'Content-Type: application/xml' \
 --header 'Depth: 1' \
 --header 'Accept-Charset: utf-8' \
@@ -191,7 +191,7 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/PRINCIP
 ---- Fetch contact data in vcard format
 
 -- REQUEST
-curl -u <username>:<password> --header 'Accept: text/vcard; version=3.0' --location '/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI'
+curl -u <username>:<password> --header 'Accept: text/vcard; version=3.0' --location 'BASE_URL/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI'
 
 -- RESPONSE
 BEGIN:VCARD
@@ -212,7 +212,7 @@ END:VCARD
 ---- Fetch contacts data with multiget
 
 -- REQUEST
-curl -u <username>:<password> --location --request REPORT '/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI' \
+curl -u <username>:<password> --location --request REPORT 'BASE_URL/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI' \
 --header 'Content-Type: application/xml' \
 --header 'Depth: 1' \
 --header 'Accept-Charset: utf-8' \
@@ -281,7 +281,7 @@ curl -u <username>:<password> --location --request REPORT '/addressbooks/PRINCIP
 ---- Update contact
 
 -- REQUEST
-curl -u <username>:<password> --location --request PUT '/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI' \
+curl -u <username>:<password> --location --request PUT 'BASE_URL/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI' \
 --header 'Content-Type: text/vcard' \
 --header 'Accept-Charset: utf-8' \
 --data-raw 'BEGIN:VCARD
@@ -305,7 +305,7 @@ HTTP/1.1 204 No Content
 ---- Create a contact
 
 -- REQUEST
-curl -u <username>:<password> --location --request PUT '/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI' \
+curl -u <username>:<password> --location --request PUT 'BASE_URL/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI' \
 --header 'Content-Type: text/vcard' \
 --header 'Accept-Charset: utf-8' \
 --data 'BEGIN:VCARD
@@ -322,7 +322,7 @@ HTTP/1.1 204 No Content
 10. Delete contact
 
 -- REQUEST
-curl -u <username>:<password> --location --request DELETE '/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI'
+curl -u <username>:<password> --location --request DELETE 'BASE_URL/addressbooks/PRINCIPAL/ADDRESSBOOK_ID/CARD_URI'
 
 -- RESPONSE
 HTTP/1.1 204 No Content
@@ -332,7 +332,7 @@ HTTP/1.1 204 No Content
 ---- Get First Sync Token
 
 -- REQUEST
-curl -u <username>:<password> --location --request PROPFIND '/addressbooks/PRINCIPAL/ADDRESSBOOK_ID' \
+curl -u <username>:<password> --location --request PROPFIND 'BASE_URL/addressbooks/PRINCIPAL/ADDRESSBOOK_ID' \
 --header 'Content-Type: application/xml' \
 --header 'Accept-Charset: utf-8' \
 --header 'Depth: 0' \
@@ -370,7 +370,7 @@ curl -u <username>:<password> --location --request PROPFIND '/addressbooks/PRINC
 12. Get changes for addressbook
 
 REQUEST - 
-curl -u <username>:<password> --location --request REPORT '/addressbooks/users/dummy/ADDRESSBOOK_ID' \
+curl -u <username>:<password> --location --request REPORT 'BASE_URL/addressbooks/users/dummy/ADDRESSBOOK_ID' \
 --header 'Content-Type: application/xml' \
 --header 'Accept-Charset: utf-8' \
 --header 'Depth: 0' \

@@ -26,24 +26,17 @@ $authBackend = new ISubsoft\DAV\Auth\Backend\LDAP($config);
 $principalBackend = new ISubsoft\DAV\DAVACL\PrincipalBackend\LDAP($config, $pdo);
 $carddavBackend = new ISubsoft\DAV\CardDAV\Backend\LDAP($config, $pdo);
 
-// We're assuming that the realm name is called 'SabreDAV'.
-$authBackend->setRealm('SabreDAV');
-
 // Setting up the directory tree //
 $nodes = [
     new Sabre\DAVACL\PrincipalCollection($principalBackend),
     new ISubsoft\DAV\CardDAV\AddressBookRoot($principalBackend, $carddavBackend)
 ];
 
-// settings
-
-// Make sure this setting is turned on and reflect the root url for your WebDAV server.
-// This can be for example the root / or a complete path to your server script
-$baseUri = '/';
-
 // The object tree needs in turn to be passed to the server class
 $server = new Sabre\DAV\Server($nodes);
-$server->setBaseUri($baseUri);
+
+// Setting the base uri
+$server->setBaseUri($GLOBALS['base_uri']);
 
 // Plugins
 $aclPlugin = new Sabre\DAVACL\Plugin();
@@ -58,11 +51,13 @@ if($GLOBALS['environment'] != 'prod')
 
 $cardDavPlugin = new ISubsoft\DAV\CardDAV\Plugin();
 
-// Set global max resource size
-//  $cardDavPlugin->setResourceSize(<size_in_bytes>);
+if($GLOBALS['max_payload_size'] != null)
+	$cardDavPlugin->setResourceSize($GLOBALS['max_payload_size']);
 
 $server->addPlugin($cardDavPlugin);
-$server->addPlugin(new Sabre\DAV\Sync\Plugin());
+
+if($GLOBALS['enable_incremental_sync'])
+	$server->addPlugin(new Sabre\DAV\Sync\Plugin());
 
 // And off we go!
 $server->exec();
