@@ -93,7 +93,7 @@ if(isset($argv[1]) && $argv[1] == 'init')
           	}
       	}
       
-      	echo "\nAddress books has been successfully imported to sync database.";
+      	echo "\nAddress book(s) successfully imported.";
 
     } catch (\Throwable $th) {
         error_log("[ERROR] Some unexpected error occurred in database - ".$th->getMessage());
