@@ -32,15 +32,11 @@ $nodes = [
     new ISubsoft\DAV\CardDAV\AddressBookRoot($principalBackend, $carddavBackend)
 ];
 
-// settings
-
-// Make sure this setting is turned on and reflect the root url for your WebDAV server.
-// This can be for example the root / or a complete path to your server script
-$baseUri = '/';
-
 // The object tree needs in turn to be passed to the server class
 $server = new Sabre\DAV\Server($nodes);
-$server->setBaseUri($baseUri);
+
+// Setting the base uri
+$server->setBaseUri($GLOBALS['base_uri']);
 
 // Plugins
 $aclPlugin = new Sabre\DAVACL\Plugin();

@@ -2,6 +2,23 @@
 
 $config = [];
 
+// Set temporary files directory. This can either be an absolute path or a 
+// path relative to base directory of the application. Use %systempdir as placeholder for 
+// system temp directory path. To use %systempdir as a literal use %%systempdir
+// Remember %systempdir is an absolute path.
+// Defaults to 'tmp' directory relative to base directory of the application.
+//   $config['tmpdir'] = '%systempdir';
+
+// Set data directory path of the application if it is different from default.
+// This can either be an absolute path or a path relative to base directory of the application.
+// Defaults to 'data' directory relative to base directory of the application.
+//   $config['datadir'] = '/var/lib/ldap_carddav';
+
+// Base URI for this application. Default is '/server.php'.
+// If you have configured clean URLs in your HTTP server configuration then, uncomment the below and update
+// if required.
+//  $config['app']['base_uri'] = '/';
+
 // Set application environment. If set to 'prod' certain application features are turned off which are not suitable
 // or unsafe for production environment. Defaults to null.
 //  $config['app']['env'] = 'prod';
@@ -15,8 +32,10 @@ $config = [];
 // Default is null which means app internal default value will be used.
 //  $config['app']['max_payload_size'] = null;
 
+// The DSN string below can use %datadir as placeholder for the data directory path of the application.
+// %datadir is an absolute directory path. To use %datadir as a literal use %%datadir
 $config['sync_database'] = [
-	'dsn' => 'sqlite:' . __DATA_DIR__ . '/sync/pdo/sqlite/cards.db',
+	'dsn' => 'sqlite:%datadir/sync/syncdb/sqlite/cards.db',
 	'username' => '', // username to use for database login, default is null
 	'password' => '' // password to use for database login, default is null
 ];
