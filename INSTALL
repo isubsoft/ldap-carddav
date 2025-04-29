@@ -43,8 +43,8 @@ Copy conf/conf.php.example as conf/conf.php and update the file conf/conf.php ac
 
 -- Sync database creation
 1. Create objects as per sql/<database_product>/ddl.sql file and if required create a database user and issue appropriate grants to it.
-   Example (sqlite): sqlite3 data/sync/pdo/sqlite/cards.db < sql/sqlite/ddl.sql
-2. Update dsn and credentials appropriately in $config['sync_database'] in conf/conf.php file.
+   Example (sqlite): sqlite3 data/sync/syncdb/sqlite/cards.db < sql/sqlite/ddl.sql
+2. Update 'dsn' and credentials appropriately in $config['sync_database'] in conf/conf.php file.
 3. If creating a sqlite database make sure the database file is placed inside the data directory.
 
 -- Initializing sync database
