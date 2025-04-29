@@ -33,7 +33,7 @@ $config = [];
 //  $config['app']['max_payload_size'] = null;
 
 // The DSN string below can use %datadir as placeholder for the data directory path of the application.
-// %datadir is an absolute directory path. To use %datadir as a literal use %%datadir
+// Remember %datadir is an absolute directory path. To use %datadir as a literal use %%datadir
 $config['sync_database'] = [
 	'dsn' => 'sqlite:%datadir/sync/syncdb/sqlite/cards.db',
 	'username' => '', // username to use for database login, default is null
