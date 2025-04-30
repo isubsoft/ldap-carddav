@@ -54,6 +54,7 @@ Copy conf/conf.php.example as conf/conf.php and update the file conf/conf.php ac
 -- File permissions
 1. conf/conf.php MUST NOT be world readable but MUST be readable and preferably not writable by the user executing PHP.
 2. Data directory need to be writable by the user executing PHP and MUST NOT be world readable. All sub directories of data directory need to be writable by the user executing PHP. Default data directory is data.
+3. Temporary files directory need to be writable by the user executing PHP unless system temporary files directory is configured. Default temporary files directory is tmp.
 
 -- Web server and PHP configuration
 Check the wiki for examples.
