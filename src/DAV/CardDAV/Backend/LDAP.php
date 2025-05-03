@@ -333,15 +333,29 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				if($fullSyncToken != null && $addressBookSyncToken < ($fullSyncToken + $fullRefreshInterval))
 				{
 					try {
-						$query = 'SELECT card_uri FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ?';
+						$query = 'SELECT card_uid, card_uri FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ?';
 						$stmt = $this->pdo->prepare($query);
 						$stmt->execute([$syncDbUserId, $addressBookId]);
 						
 						while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-							$data = $this->getCard($addressBookId, $row['card_uri']);
+							$data = $this->fetchLdapContactData($addressBookId, $row['card_uri'], ['modifyTimestamp']);
 							
-							if($data !== false)
-								$result[] = $data;
+						  if(empty($data))
+								throw new SabreDAVException\ServiceUnavailable();
+								
+							if(!$data['count'] > 0)
+								continue;
+							
+							if(!isset($data[0]['modifytimestamp'][0]))
+							{
+								error_log("Read access to some operational attributes in LDAP not present. ".__METHOD__." at line no ".__LINE__);
+								throw new SabreDAVException\ServiceUnavailable();
+							}
+							
+							$result[] = [	'id' => $row['card_uid'],
+	                          'uri' => $row['card_uri'],
+	                          'lastmodified' => strtotime($data[0]['modifytimestamp'][0])
+                          ];
 						}
 					} catch (\Throwable $th) {
 							error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
@@ -414,14 +428,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					throw new SabreDAVException\ServiceUnavailable();
 
         if(!$data['count'] > 0)
-        {
-					$this->addChange($addressBookId, $cardUri);
         	return false;
-        }
         	
         if(!isset($data[0]['modifytimestamp'][0]))
         {
 					error_log("Read access to some operational attributes in LDAP not present. ".__METHOD__." at line no ".__LINE__);
+					throw new SabreDAVException\ServiceUnavailable();
         }
         	
         $cardData = $this->generateVcard($data[0], $addressBookId, $cardUID);
