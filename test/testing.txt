@@ -20,7 +20,7 @@ curl -u <username>:<password>  --location --request PROPFIND 'BASE_URL' \
         <d:propstat>
             <d:prop>
                 <d:current-user-principal>
-                    <d:href>/principals/users/PRINCIPAL/</d:href>
+                    <d:href>/principals/PRINCIPAL/</d:href>
                 </d:current-user-principal>
             </d:prop>
             <d:status>HTTP/1.1 200 OK</d:status>
@@ -33,7 +33,7 @@ curl -u <username>:<password>  --location --request PROPFIND 'BASE_URL' \
 ---- Get addressbook home of a principal - 
 
 -- REQUEST
-curl -u <username>:<password> --location --request PROPFIND 'BASE_URL/principals/users/PRINCIPAL' \
+curl -u <username>:<password> --location --request PROPFIND 'BASE_URL/principals/PRINCIPAL' \
 --header 'Content-Type: application/xml' \
 --header 'Accept-Charset: utf-8' \
 --header 'Depth: 0' \
@@ -47,7 +47,7 @@ curl -u <username>:<password> --location --request PROPFIND 'BASE_URL/principals
 <?xml version="1.0"?>
 <d:multistatus xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns" xmlns:card="urn:ietf:params:xml:ns:carddav">
     <d:response>
-        <d:href>/principals/users/PRINCIPAL/</d:href>
+        <d:href>/principals/PRINCIPAL/</d:href>
         <d:propstat>
             <d:prop>
                 <card:addressbook-home-set>

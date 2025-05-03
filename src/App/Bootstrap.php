@@ -3,12 +3,17 @@
 * Copyright (C) 2023-2025 ISub Softwares (OPC) Private Limited
 **************************************************************/
 
-function replacePlaceholder (string $placeholder, string $replacement, string $subject)
+function replacePlaceholder(string $placeholder, string $replacement, string $subject)
 {
+	$defaultRegexpDelim = '/';
 	$placeholderEscChar = substr($placeholder, 0, 1);
+	
+	if($defaultRegexpDelim == $placeholderEscChar)
+		$defaultRegexpDelim = '#';
+		
 	$exprMatches = [];
 
-	if(preg_match_all('#(' . $placeholderEscChar . '*)(' . $placeholder . ')#', $subject, $exprMatches, PREG_OFFSET_CAPTURE) > 0)
+	if(preg_match_all($defaultRegexpDelim . '(' . $placeholderEscChar . '*)(' . $placeholder . ')' . $defaultRegexpDelim, $subject, $exprMatches, PREG_OFFSET_CAPTURE) > 0)
 	{
 		$strOffset = 0;
 		$replacedStr = '';
@@ -55,10 +60,10 @@ $GLOBALS['base_uri'] = (isset($config['app']['base_uri']) && $config['app']['bas
 /* Database */
 
 try {
-    $pdo_foreign_keys_enabled = false;
     $pdo_dsn = !isset($config['sync_database']['dsn'])?null:(string)$config['sync_database']['dsn'];
-    $pdo_username = !isset($config['sync_database']['username'])?null:$config['sync_database']['username'];
-    $pdo_password = !isset($config['sync_database']['password'])?null:$config['sync_database']['password'];
+    $pdo_username = !isset($config['sync_database']['username'])?null:(string)$config['sync_database']['username'];
+    $pdo_password = !isset($config['sync_database']['password'])?null:(string)$config['sync_database']['password'];
+    $pdo_options = !isset($config['sync_database']['options'])?[]:(array)$config['sync_database']['options'];
     
     if($pdo_dsn == null)
     {
@@ -69,42 +74,20 @@ try {
     
     $pdo_scheme = parse_url($pdo_dsn, PHP_URL_SCHEME);
 		$pdo_dsn = replacePlaceholder('%datadir', __DATA_DIR__, $pdo_dsn);
-    $pdo = new PDO($pdo_dsn, $pdo_username, $pdo_password);
+    $pdo = new PDO($pdo_dsn, $pdo_username, $pdo_password, $pdo_options);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
+    if(isset($config['sync_database']['init_commands']) && is_array($config['sync_database']['init_commands']))
+    	foreach($config['sync_database']['init_commands'] as $stmt)
+			  $pdo->exec($stmt);
+    
+    // Enforce foreign key constraints
     if($pdo_scheme == 'sqlite')
-    {
-		  // Enabling foreign keys
 		  $pdo->exec('PRAGMA foreign_keys = ON');
-		  $pdoStmt = $pdo->query('PRAGMA foreign_keys');
-		  $pdoStmt->setFetchMode(PDO::FETCH_NUM);
-		  
-		  foreach ($pdoStmt as $row) {
-				if($row[0] == 1)
-				{
-					$pdo_foreign_keys_enabled = true;
-				}
-				else
-				{
-					$pdo_foreign_keys_enabled = false;
-					break;
-				}
-			}
-    }
-    else if($pdo_scheme == 'mysql' || $pdo_scheme == 'pgsql')
-    {
-    	$pdo_foreign_keys_enabled = true;
-    }
-    
-    if($pdo_foreign_keys_enabled == false)
-    {
-			error_log("Foreign key feature is not enabled or could not be enabled in the database (type '$pdo_scheme'). Cannot continue.");
-			http_response_code(500);
-			exit(1);
-    }
-    
+    else if($pdo_scheme == 'mysql')
+		  $pdo->exec('SET foreign_key_checks = ON');
 } catch (\Throwable $th) {
-    error_log('Could not create database connection: '. $th->getMessage());
+    error_log('Could not create database connection or execute init commands correctly: '. $th->getMessage());
     http_response_code(500);
 		exit(1);
 }
