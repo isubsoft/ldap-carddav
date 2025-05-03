@@ -69,6 +69,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     private static $defaultFieldAclEval = 'r';
     
     private $defaultVcardVersion = \Sabre\VObject\Document::VCARD40;
+    
+		private static $defaultFullRefreshInterval = 14400;
 
     private static $defaultForceFullSyncInterval = 86400;
 
@@ -305,7 +307,49 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     function getCards($addressBookId)
     {
-        $result = [];     
+				$addressBookConfig = $this->addressbook[$addressBookId]['config'];
+				$syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
+        $addressBookSyncToken = $this->addressbook[$addressBookId]['syncToken'];
+        $result = [];
+        
+				$fullSyncToken = null;
+				
+				try {
+						$query = 'SELECT sync_token FROM ' . self::$fullSyncTableName . ' WHERE addressbook_id = ? AND user_id = ?';
+						$stmt = $this->pdo->prepare($query);
+						$stmt->execute([$addressBookId, $syncDbUserId]);
+						
+						$row = $stmt->fetch(\PDO::FETCH_ASSOC);
+						
+						if($row !== false)
+							$fullSyncToken = (int)$row['sync_token'];
+
+				} catch (\Throwable $th) {
+						error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+				}
+				
+				$fullRefreshInterval = (!isset($addressBookConfig['full_refresh_interval']) || !is_int((int)$addressBookConfig['full_refresh_interval']))?self::$defaultFullRefreshInterval:$addressBookConfig['full_refresh_interval'];
+				
+				if($fullSyncToken != null && $addressBookSyncToken < ($fullSyncToken + $fullRefreshInterval))
+				{
+					try {
+						$query = 'SELECT card_uri FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ?';
+						$stmt = $this->pdo->prepare($query);
+						$stmt->execute([$syncDbUserId, $addressBookId]);
+						
+						while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+							$data = $this->getCard($addressBookId, $row['card_uri']);
+							
+							if($data !== false)
+								$result[] = $data;
+						}
+					} catch (\Throwable $th) {
+							error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+							throw new SabreDAVException\ServiceUnavailable();
+					}
+					
+					return $result;
+				}
 
         $data = $this->fullSyncOperation($addressBookId);   
         
@@ -352,11 +396,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		      $stmt = $this->pdo->prepare($query);
 		      $stmt->execute([$syncDbUserId, $addressBookId, $cardUri]);
 		      
-		      while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-		          $cardUID = $row['card_uid'];
-		      }
+					$row = $stmt->fetch(\PDO::FETCH_ASSOC);
+					
+		    	if($row !== false)
+		      	$cardUID = $row['card_uid'];
 		    } catch (\Throwable $th) {
-		          error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+		      	error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+						throw new SabreDAVException\ServiceUnavailable();
 		    }
 
 				if($cardUID == null)
@@ -368,7 +414,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					throw new SabreDAVException\ServiceUnavailable();
 
         if(!$data['count'] > 0)
+        {
+					$this->addChange($addressBookId, $cardUri);
         	return false;
+        }
         	
         if(!isset($data[0]['modifytimestamp'][0]))
         {

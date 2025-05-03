@@ -112,6 +112,12 @@ $config['card']['addressbook']['ldap']['me'] = [
 	'user_specific' 	=> true, // If this is true username placeholder can be used in applicable places
 	'writable'     	 	=> true, // If true (default) then new contacts can be created and existing ones can be updated and deleted
 	
+	// Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
+	// of the address book from backend every time they sync their address book. Set the below to 
+	// prevent full address book refresh from backend at least for this interval (in seconds). 
+	// Defaults to four hours.
+	//  'full_refresh_interval' => 14400,
+
 	// For WebDAV sync clients there is no way to know about contacts which are deleted in the backend by 
 	// some other process. Set the below to delete contacts (which are deleted directly in the backend) in 
 	// incremental sync clients at this interval at worst. A larger value will lead to better performance. 
@@ -327,6 +333,12 @@ $config['card']['addressbook']['ldap']['global'] = [
 	'user_specific' 	=> false, // If this is true username placeholder can be used in applicable places
 	'writable'     	 	=> false, // If true (default) then new contacts can be created and existing ones can be updated and deleted
 	
+	// Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
+	// of the address book from backend every time they sync their address book. Set the below to 
+	// prevent full address book refresh from backend at least for this interval (in seconds). 
+	// Defaults to four hours.
+	//  'full_refresh_interval' => 14400,
+
 	// For WebDAV sync clients there is no way to know about contacts which are deleted in the backend by 
 	// some other process. Set the below to delete contacts (which are deleted directly in the backend) in 
 	// incremental sync clients at this interval at worst. A larger value will lead to better performance. 
@@ -541,6 +553,12 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	// lead to this application not processing requests for this address book.
 	'user_specific' 	=> true, 	// If this is true username placeholder can be used in applicable places
 	'writable'     	 	=> true, 	// If true (default) then new contacts can be created and existing ones can be updated and deleted
+
+	// Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
+	// of the address book from backend every time they sync their address book. Set the below to 
+	// prevent full address book refresh from backend at least for this interval (in seconds). 
+	// Defaults to four hours.
+	//  'full_refresh_interval' => 14400,
 
 	// For WebDAV sync clients there is no way to know about contacts which are deleted in the backend by 
 	// some other process. Set the below to delete contacts (which are deleted directly in the backend) in 
