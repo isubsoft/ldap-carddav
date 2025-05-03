@@ -995,20 +995,20 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                      
                             if(! empty($memberData) && $memberData['count'] > 0)
                             { 
-                                $clientUID = null;
+                                $memberCardUID = null;
 
                                 try {
                                     $query = 'SELECT card_uid FROM ' . self::$backendMapTableName . ' WHERE addressbook_id = ? and backend_id = ? and user_id = ?';
                                     $stmt = $this->pdo->prepare($query);
                                     $stmt->execute([$addressBookId, $memberData[0]['entryuuid'][0], $syncDbUserId]);
                                     while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-                                        $clientUID = $row['card_uid'];
+                                        $memberCardUID = $row['card_uid'];
                                     }
                                 } catch (\Throwable $th) {
                                     error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
                                 }
                                 
-                                $memberValue = Reader::memberValueConversion($clientUID, $vCardKey);
+                                $memberValue = Reader::memberValueConversion($memberCardUID, $vCardKey);
                                 $memberValue ? $vcard->add($vCardKey, $memberValue): '';               
                             }                  
                         }
