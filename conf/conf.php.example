@@ -136,7 +136,7 @@ $config['card']['addressbook']['ldap']['me'] = [
 	// LDAP filter to be used to search for contacts
 	'filter'        	=> '(objectClass=inetOrgPerson)',
 	
-	// Bind user for search/read/write contacts. If 'bind_dn' and 'bind_pass' are not provided below 
+	// Bind user to search/read/write contacts. If 'bind_dn' and 'bind_pass' are not provided below 
 	// then LDAP connection using parameters provided in $config['auth']['ldap'] is used to obtain backend data. 
 	// This bind user must have read access to entryUUID, createTimestamp and modifyTimestamp operational attributes 
 	// of all contacts in the address book additionally.
@@ -357,7 +357,7 @@ $config['card']['addressbook']['ldap']['global'] = [
 	// LDAP filter to be used to search for contacts
 	'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
 	
-	// Bind user for search/read/write contacts. If 'bind_dn' and 'bind_pass' are not provided below 
+	// Bind user to search/read/write contacts. If 'bind_dn' and 'bind_pass' are not provided below 
 	// then LDAP connection using parameters provided in $config['auth']['ldap'] is used to obtain backend data. 
 	// This bind user must have read access to entryUUID, createTimestamp and modifyTimestamp operational attributes 
 	// of all contacts in the address book additionally.
@@ -578,7 +578,7 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	// LDAP filter to be used to search for contacts	
 	'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
 	
-	// Bind user for search/read/write contacts. If 'bind_dn' and 'bind_pass' are not provided below 
+	// Bind user to search/read/write contacts. If 'bind_dn' and 'bind_pass' are not provided below 
 	// then LDAP connection using parameters provided in $config['auth']['ldap'] is used to obtain backend data. 
 	// This bind user must have read access to entryUUID, createTimestamp and modifyTimestamp operational attributes 
 	// of all contacts in the address book additionally.
