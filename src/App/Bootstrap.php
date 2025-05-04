@@ -5,15 +5,15 @@
 
 function replacePlaceholder(string $placeholder, string $replacement, string $subject)
 {
-	$defaultRegexpDelim = '/';
+	$regexpDelim = '/';
 	$placeholderEscChar = substr($placeholder, 0, 1);
 	
-	if($defaultRegexpDelim == $placeholderEscChar)
-		$defaultRegexpDelim = '#';
+	if($regexpDelim == $placeholderEscChar)
+		$regexpDelim = '#';
 		
 	$exprMatches = [];
 
-	if(preg_match_all($defaultRegexpDelim . '(' . $placeholderEscChar . '*)(' . $placeholder . ')' . $defaultRegexpDelim, $subject, $exprMatches, PREG_OFFSET_CAPTURE) > 0)
+	if(preg_match_all($regexpDelim . '(' . $placeholderEscChar . '*)(' . $placeholder . ')' . $regexpDelim, $subject, $exprMatches, PREG_OFFSET_CAPTURE) > 0)
 	{
 		$strOffset = 0;
 		$replacedStr = '';
