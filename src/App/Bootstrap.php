@@ -59,11 +59,17 @@ $GLOBALS['base_uri'] = (isset($config['app']['base_uri']) && $config['app']['bas
 
 /* Database */
 
+$configurablePdoAttributes = [PDO::ATTR_TIMEOUT];
+
 try {
     $pdo_dsn = !isset($config['sync_database']['dsn'])?null:(string)$config['sync_database']['dsn'];
     $pdo_username = !isset($config['sync_database']['username'])?null:(string)$config['sync_database']['username'];
     $pdo_password = !isset($config['sync_database']['password'])?null:(string)$config['sync_database']['password'];
-    $pdo_options = !isset($config['sync_database']['options'])?[]:(array)$config['sync_database']['options'];
+    $pdo_options = [];
+    
+    foreach(!isset($config['sync_database']['options'])?[]:(array)$config['sync_database']['options'] as $pdoAttr => $value)
+    	if(in_array($pdoAttr, $configurablePdoAttributes))
+    		$pdo_options[$pdoAttr] = $value;
     
     if($pdo_dsn == null)
     {
@@ -75,6 +81,8 @@ try {
     $pdo_scheme = parse_url($pdo_dsn, PHP_URL_SCHEME);
 		$pdo_dsn = replacePlaceholder('%datadir', __DATA_DIR__, $pdo_dsn);
     $pdo = new PDO($pdo_dsn, $pdo_username, $pdo_password, $pdo_options);
+    
+    // Setting mandatory database connection attributes
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
     if(isset($config['sync_database']['init_commands']) && is_array($config['sync_database']['init_commands']))
