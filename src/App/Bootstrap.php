@@ -85,13 +85,16 @@ try {
     // Setting mandatory database connection attributes
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
-    if(isset($config['sync_database']['init_commands']) && is_array($config['sync_database']['init_commands']))
-    	foreach($config['sync_database']['init_commands'] as $stmt)
-			  $pdo->exec($stmt);
-    
     // Enforce foreign key constraints
     if($pdo_scheme == 'sqlite')
-		  $pdo->exec('PRAGMA foreign_keys = ON');
+    {
+		  if(isset($config['sync_database']['init_commands']) && is_array($config['sync_database']['init_commands']))
+		  	foreach($config['sync_database']['init_commands'] as $stmt)
+		  		if(preg_match('/^\\s*PRAGMA\\s+/i', $stmt))
+						$pdo->exec($stmt);
+					
+			$pdo->exec('PRAGMA foreign_keys = ON');
+    }
     else if($pdo_scheme == 'mysql')
 		  $pdo->exec('SET foreign_key_checks = ON');
 } catch (\Throwable $th) {
