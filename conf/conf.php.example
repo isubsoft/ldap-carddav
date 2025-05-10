@@ -43,7 +43,8 @@ $config['sync_database'] = [
 	'options' => [], // Currently only PDO::ATTR_TIMEOUT attribute is accepted. Defaults to empty array.
 	'init_commands' => [] // Database specific statements to be executed before database is used 
 												// by the application. Can be used to set some dynamic database parameters which otherwise
-												// are not possible to be set via other means.
+												// cannot be set via other means.
+												// WARNING: Do not use statements which violate the requirements for sync database.
 												// Currently executes sqlite PRAGMA statements only.
 												// Defaults to empty array.
 ];
