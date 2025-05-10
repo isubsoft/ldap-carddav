@@ -8,7 +8,7 @@
 4. Read, write and rename contacts between CardDAV clients and LDAP server.
 5. Bidirectional sync between LDAP server and CardDAV clients for new contacts, modified contacts and contacts deleted via CardDAV protocol. Contacts deleted directly in LDAP server are deleted in CardDAV clients asynchronously.
 6. Supports WebDAV sync to get changes from LDAP server incrementally.
-7. Fully compatible with LDAP address book applications. Contacts are stored in LDAP server as directory entries and not as vCards.
+7. Fully compatible with LDAP address book applications as contacts are stored in LDAP server as directory entries.
 8. Extensive and customizable configuration option to map vCard properties to LDAP attributes including multi-value and composite value properties and attributes.
 9. Contact group support.
 10. Media like profile picture support.
