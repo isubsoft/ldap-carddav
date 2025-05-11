@@ -85,16 +85,31 @@ try {
     // Setting mandatory database connection attributes
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
+    $db_init_commands = (isset($config['sync_database']['init_commands']) && is_array($config['sync_database']['init_commands']))?$config['sync_database']['init_commands']:[];
+    $applicable_db_init_commands = [];
+    
     if($pdo_scheme == 'sqlite')
     {
-		  if(isset($config['sync_database']['init_commands']) && is_array($config['sync_database']['init_commands']))
-		  	foreach($config['sync_database']['init_commands'] as $stmt)
-		  		if(preg_match('/^\\s*PRAGMA\\s+/i', $stmt))
-						$pdo->exec($stmt);
+	  	foreach($db_init_commands as $stmt)
+	  		if(preg_match('/^\\s*PRAGMA\\s+/i', $stmt))
+	  			$applicable_db_init_commands[] = $stmt;
 					
     	// Enforce foreign key constraints
-			$pdo->exec('PRAGMA foreign_keys = ON');
+			$applicable_db_init_commands[] = 'PRAGMA foreign_keys = ON';
     }
+    elseif($pdo_scheme == 'mysql')
+    {
+	  	foreach($db_init_commands as $stmt)
+	  		if(preg_match('/^\\s*SET\\s+/i', $stmt))
+	  			$applicable_db_init_commands[] = $stmt;
+	  			
+    	// Enforce foreign key constraints
+			$applicable_db_init_commands[] = 'SET foreign_key_checks = ON';
+    }
+    
+    // Execute applicable init commands
+    foreach($applicable_db_init_commands as $stmt)
+			$pdo->exec($stmt);
 } catch (\Throwable $th) {
     error_log('Could not create sync database connection or execute init commands correctly: '. $th->getMessage());
     http_response_code(500);
