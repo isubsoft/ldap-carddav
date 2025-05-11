@@ -95,8 +95,6 @@ try {
 					
 			$pdo->exec('PRAGMA foreign_keys = ON');
     }
-    else if($pdo_scheme == 'mysql')
-		  $pdo->exec('SET foreign_key_checks = ON');
 } catch (\Throwable $th) {
     error_log('Could not create database connection or execute init commands correctly: '. $th->getMessage());
     http_response_code(500);
