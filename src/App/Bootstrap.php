@@ -59,7 +59,7 @@ $GLOBALS['base_uri'] = (isset($config['app']['base_uri']) && $config['app']['bas
 
 /* Database */
 
-$configurablePdoAttributes = [PDO::ATTR_TIMEOUT];
+$configurablePdoAttributes = [PDO::ATTR_TIMEOUT, PDO::ATTR_PERSISTENT];
 
 try {
     $pdo_dsn = !isset($config['sync_database']['dsn'])?null:(string)$config['sync_database']['dsn'];
