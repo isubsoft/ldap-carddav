@@ -25,7 +25,4 @@
 Check INSTALL file.
 
 ## Wiki
-Checkout the wiki here - [https://github.com/isubsoft/ldap-carddav/wiki](https://github.com/isubsoft/ldap-carddav/wiki) for more useful information and resources regarding this project.
-
-## Support
-Email: [admin@isubsoft.com](mailto:admin@isubsoft.com?subject=Support%20request%20for%20your%20product%20ldap-carddav)
+Checkout the wiki here - [https://github.com/isubsoft/ldap-carddav/wiki](https://github.com/isubsoft/ldap-carddav/wiki) for more useful information and resources regarding this application.
