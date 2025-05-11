@@ -43,8 +43,8 @@ $config['sync_database'] = [
 	'options' => [], 	// Currently only PDO::ATTR_TIMEOUT and PDO::ATTR_PERSISTENT attribute(s) is accepted. 
 										// Defaults to empty array.
 	'init_commands' => [] // Database specific statements to be executed before database is used 
-												// by the application. Can be used to set some dynamic client parameters which cannot be set 
-												// via other means in a reliable manner. Defaults to empty array.
+												// by the application. Can be used to set some dynamic client side parameters for this application
+												// which cannot be set via other means in a reliable manner. Defaults to empty array.
 												// WARNING: DO NOT use statements which violate the requirements for sync database like turning off
 												// database transactions.
 												// The following database specific statements are anyways executed in the end.
