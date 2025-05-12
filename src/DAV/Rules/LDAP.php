@@ -7,6 +7,7 @@ namespace ISubsoft\DAV\Rules;
 
 use ISubsoft\VObject\Reader as Reader;
 use ISubsoft\DAV\Utility\LDAP as Utility;
+use \Sabre\VObject\DateTimeParser as DateTimeParser;
 
 class LDAP {
 
@@ -246,7 +247,7 @@ class LDAP {
         $vCardDataFormat = strtoupper($vObj->getValueType());
         $backendDataFormat = strtoupper((!isset($mappLdapConfig['field_data_format']))?'text':$mappLdapConfig['field_data_format']);
         $ldapBackendMap = [];
-
+       
         if($vCardDataFormat == 'TEXT')
         {
             if($backendDataFormat == 'TEXT' || $backendDataFormat == 'BINARY')
@@ -263,6 +264,64 @@ class LDAP {
                     $ldapBackendMap = [$newLdapKey => $backendvalue];
                 }                                             
             }
+            else if($backendDataFormat == 'TIMESTAMP')
+            {
+                if($mapCompositeAttr)
+                {
+                    $vCardPropValueArr = [];
+                    $vCardValueParts = $vObj->getParts();
+
+                    foreach($vCardValueParts as $vCardValuePart)
+                    {
+                        if($vCardValuePart != '' && $vCardValuePart != null)
+                        {
+                            $dateTime = DateTimeParser::parseVCardDateTime($vCardValuePart);
+
+                            if(Utility::hasNotValue([$dateTime['date'], $dateTime['month'], $dateTime['year'], $dateTime['hour']]) == false)
+                            {
+                                if(!isset($dateTime['timezone']) || $dateTime['timezone'] == '' || is_null($dateTime['timezone']))
+                                {
+                                    $dateTime['timezone'] = 'Z';
+                                }
+
+                                if(Utility::hasNotValue([$dateTime['minute'], $dateTime['second']]) == false)
+                                    $vCardPropValueArr[]= $dateTime['year'] . $dateTime['month'] . $dateTime['date'] . $dateTime['hour'] . $dateTime['minute'] . $dateTime['second'] . $dateTime['timezone'];
+                                else
+                                    $vCardPropValueArr[] = $dateTime['year'] . $dateTime['month'] . $dateTime['date'] . $dateTime['hour'] . $dateTime['timezone'];
+                            }
+                            else
+                            {
+                                $vCardPropValueArr[] = '';
+                            }
+                        }
+                        else
+                        {
+                            $vCardPropValueArr[] = '';
+                        }
+                    }
+                    $ldapBackendMap = self::compositeLdapBackendValue($vCardPropValueArr, $mappLdapConfig, $mapCompositeAttr);
+                }
+                else
+                {
+                    $newLdapKey = strtolower($mappLdapConfig['field_name']);
+                    $dateTime = DateTimeParser::parseVCardDateTime((string)$vObj);
+                    
+                    if(Utility::hasNotValue([$dateTime['date'], $dateTime['month'], $dateTime['year'], $dateTime['hour']]) == false)
+                    {
+                        if(!isset($dateTime['timezone']) || $dateTime['timezone'] == '' || is_null($dateTime['timezone']))
+                        {
+                            $dateTime['timezone'] = 'Z';
+                        }
+
+                        if(Utility::hasNotValue([$dateTime['minute'], $dateTime['second']]) == false)
+                            $backendvalue = $dateTime['year'] . $dateTime['month'] . $dateTime['date'] . $dateTime['hour'] . $dateTime['minute'] . $dateTime['second'] . $dateTime['timezone'];
+                        else
+                            $backendvalue = $dateTime['year'] . $dateTime['month'] . $dateTime['date'] . $dateTime['hour'] . $dateTime['timezone']; 
+
+                        $ldapBackendMap = [$newLdapKey => $backendvalue];
+                    }
+                } 
+            }
         }
         else if($vCardDataFormat == 'URI')
         {
@@ -278,7 +337,7 @@ class LDAP {
 
                     foreach($vCardValueParts as $vCardValuePart)
                     {
-                        if($vCardValuePart != '' || $vCardValuePart != null)
+                        if($vCardValuePart != '' && $vCardValuePart != null)
                         {
                             $valueComponent = parse_url($vCardValuePart);
         
@@ -340,7 +399,7 @@ class LDAP {
 
                     foreach($vCardValueParts as $vCardValuePart)
                     {
-                        if($vCardValuePart != '' || $vCardValuePart != null)
+                        if($vCardValuePart != '' && $vCardValuePart != null)
                         {
                             $valueComponent = parse_url($vCardValuePart);
 
@@ -447,7 +506,7 @@ class LDAP {
 
                     foreach($vCardValueParts as $vCardValuePart)
                     {
-                        if($vCardValuePart != '' || $vCardValuePart != null)
+                        if($vCardValuePart != '' && $vCardValuePart != null)
                         {
                             $valueComponent = parse_url($vCardValuePart);
 
@@ -486,7 +545,7 @@ class LDAP {
 
                     foreach($vCardValueParts as $vCardValuePart)
                     {
-                        if($vCardValuePart != '' || $vCardValuePart != null)
+                        if($vCardValuePart != '' && $vCardValuePart != null)
                         {
                             $isMediaTypeMapped = true;
                             if(isset($mappLdapConfig['field_data_mediatype']) && !empty($mappLdapConfig['field_data_mediatype']))
@@ -533,6 +592,81 @@ class LDAP {
                         $ldapBackendMap = [$newLdapKey => $backendvalue]; 
                     }
                 }                    
+            }
+        }
+        else if($vCardDataFormat == 'DATE' || $vCardDataFormat == 'TIME' || $vCardDataFormat == 'DATE-TIME' || $vCardDataFormat == 'DATE-AND-OR-TIME' || $vCardDataFormat == 'TIMESTAMP')
+        {
+            if($backendDataFormat == 'TEXT')
+            {
+                if($mapCompositeAttr)
+                {
+                    $vCardPropValueArr = $vObj->getParts();
+                    $ldapBackendMap = self::compositeLdapBackendValue($vCardPropValueArr, $mappLdapConfig, $mapCompositeAttr);
+                }
+                else
+                {
+                    $newLdapKey = strtolower($mappLdapConfig['field_name']);
+                    $backendvalue = (string)$vObj;
+                    $ldapBackendMap = [$newLdapKey => $backendvalue];
+                }
+            }
+            else if($backendDataFormat == 'TIMESTAMP')
+            {
+                if($mapCompositeAttr)
+                {
+                    $vCardPropValueArr = [];
+                    $vCardValueParts = $vObj->getParts();
+
+                    foreach($vCardValueParts as $vCardValuePart)
+                    {
+                        if($vCardValuePart != '' && $vCardValuePart != null)
+                        {
+                            $dateTime = DateTimeParser::parseVCardDateTime($vCardValuePart);
+
+                            if(Utility::hasNotValue([$dateTime['date'], $dateTime['month'], $dateTime['year'], $dateTime['hour']]) == false)
+                            {
+                                if(!isset($dateTime['timezone']) || $dateTime['timezone'] == '' || is_null($dateTime['timezone']))
+                                {
+                                    $dateTime['timezone'] = 'Z';
+                                }
+
+                                if(Utility::hasNotValue([$dateTime['minute'], $dateTime['second']]) == false)
+                                    $vCardPropValueArr[] = $dateTime['year'] . $dateTime['month'] . $dateTime['date'] . $dateTime['hour'] . $dateTime['minute'] . $dateTime['second'] . $dateTime['timezone'];
+                                else
+                                    $vCardPropValueArr[] = $dateTime['year'] . $dateTime['month'] . $dateTime['date'] . $dateTime['hour'] . $dateTime['timezone'];
+                            }
+                            else
+                            {
+                                $vCardPropValueArr[] = ''; 
+                            }       
+                        }
+                        else
+                        {
+                            $vCardPropValueArr[] = '';
+                        }
+                    }
+                    $ldapBackendMap = self::compositeLdapBackendValue($vCardPropValueArr, $mappLdapConfig, $mapCompositeAttr);
+                }
+                else
+                {
+                    $newLdapKey = strtolower($mappLdapConfig['field_name']);
+                    $dateTime = DateTimeParser::parseVCardDateTime((string)$vObj);
+                    
+                    if(Utility::hasNotValue([$dateTime['date'], $dateTime['month'], $dateTime['year'], $dateTime['hour']]) == false)
+                    {
+                        if(!isset($dateTime['timezone']) || $dateTime['timezone'] == '' || is_null($dateTime['timezone']))
+                        {
+                            $dateTime['timezone'] = 'Z';
+                        }
+
+                        if(Utility::hasNotValue([$dateTime['minute'], $dateTime['second']]) == false)
+                            $backendvalue = $dateTime['year'] . $dateTime['month'] . $dateTime['date'] . $dateTime['hour'] . $dateTime['minute'] . $dateTime['second'] . $dateTime['timezone'];
+                        else
+                            $backendvalue = $dateTime['year'] . $dateTime['month'] . $dateTime['date'] . $dateTime['hour'] . $dateTime['timezone']; 
+
+                        $ldapBackendMap = [$newLdapKey => $backendvalue];
+                    }
+                } 
             }
         }
 

@@ -2,23 +2,65 @@
 
 $config = [];
 
+// Set temporary files directory. This can either be an absolute path or a 
+// path relative to base directory of the application. Use %systempdir as placeholder for 
+// system temp directory path. To use %systempdir as a literal use %%systempdir
+// Remember %systempdir is an absolute path.
+// Defaults to 'tmp' directory relative to base directory of the application.
+//   $config['tmpdir'] = '%systempdir';
+
+// Set data directory path of the application if it is different from default.
+// This can either be an absolute path or a path relative to base directory of the application.
+// Defaults to 'data' directory relative to base directory of the application.
+//   $config['datadir'] = '/var/lib/ldap_carddav';
+
+// Base URI for this application. Default is '/server.php'.
+// If you have configured clean URLs in your HTTP server configuration then, uncomment the below and update
+// if required.
+//  $config['app']['base_uri'] = '/';
+
 // Set application environment. If set to 'prod' certain application features are turned off which are not suitable
 // or unsafe for production environment. Defaults to null.
 //  $config['app']['env'] = 'prod';
 
-$config['sync_database'] = 'sqlite:' . __DATA_DIR__ . '/sync/pdo/sqlite/cards.db';
+// Few CardDAV clients do not implement WebDAV sync specifications correctly leading to broken WebDAV sync.
+// You can enable WebDAV sync globally if your CardDAV client is known to be compliant with WebDAV sync specifications.
+// Default is false.
+//  $config['app']['enable_incremental_sync'] = true;
+
+// Set global maximum size (in bytes) of request payload which can be accepted.
+// Default is null which means app internal default value will be used.
+//  $config['app']['max_payload_size'] = null;
+
+// The DSN string below can use %datadir as placeholder for the data directory path of the application.
+// Remember %datadir is an absolute directory path. To use %datadir as a literal use %%datadir
+$config['sync_database'] = [
+	'dsn' => 'sqlite:%datadir/sync/syncdb/sqlite/cards.db', // See https://www.php.net/manual/en/pdo.drivers.php for 
+																													// database driver specific DSN construction.
+	'username' => '', // username to use for database login, default is null
+	'password' => '', // password to use for database login, default is null
+	'options' => [], // Database driver specific options
+	'init_commands' => [] // Database driver specific commands to be executed before database is used by the application.
+												// The following commands are always executed.
+												// sqlite: PRAGMA foreign_keys = ON
+												// mysql: SET foreign_key_checks = ON 
+];
 
 $config['server']['ldap'] = [
   'host'         				=> '<hostname>', // If not set then system default LDAP URI will be used
-  'port'          			=> 389,
-  'ldap_version'  			=> 3, // If not set then LDAPv3 will be used. LDAPv2 or below are not supported.
-  'network_timeout' 		=> 10, // The timeout (in seconds) for connect + bind attempts. This is only supported in PHP >= 5.3.0 with OpenLDAP 2.x
+	// 'port'          			=> 389, // If not set then default ports for ldap and ldaps schemes will be used.
+  // 'ldap_version'  			=> 3, // If not set then LDAPv3 will be used. LDAPv2 or below are not supported.
+  'network_timeout' 		=> 10, // The timeout (in seconds) for connect + bind attempts. 
+  														 // This is only supported in PHP >= 5.3.0 with OpenLDAP 2.x
   'connection_security'	=> 'none' 	// none (default): No connection security will be established
   																	// secure: Use secure (ldaps) protocol to connect to the server
   																	// starttls: Use starttls protocol for security
 ];
 
 $config['auth']['ldap'] = [
+	// Authentication realm. Defaults to 'isubsoft/ldap-carddav'.
+	// 'realm' => '',
+
   // -- The following placeholders are available to be used in bind_dn, bind_pass and search_filter as applicable
   // %u  - Username sent by client for authentication
   // %p  - Password sent by client for authentication
@@ -66,14 +108,20 @@ $config['card']['addressbook']['ldap']['me'] = [
     
 	// 'user_specific' and 'writable' values are used as initialization parameters for the sync database. 
 	// Once the sync database has been initialized changing the values here to any conflicting values will 
-	// lead to server not processing requests for this address book.
+	// lead to this application not processing requests for this address book.
 	'user_specific' 	=> true, // If this is true username placeholder can be used in applicable places
 	'writable'     	 	=> true, // If true (default) then new contacts can be created and existing ones can be updated and deleted
 	
-	// Mark contacts deleted directly in backend in sync database at this interval (in seconds). If contacts
-	// in your backend are deleted by anything other than this server then set the below else clients of this server 
-	// may never get some deleted contacts. Frequent full sync may put load on this server so 
-	// set it to a value as large as possible (like a day). Defaults to never.
+	// Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
+	// of the address book from backend every time they sync their address book. Set the below to 
+	// prevent full address book refresh from backend at least for this interval (in seconds). 
+	// Defaults to four hours.
+	//  'full_refresh_interval' => 14400,
+
+	// For WebDAV sync clients there is no way to know about contacts which are deleted in the backend by 
+	// some other process. Set the below to delete contacts (which are deleted directly in the backend) in 
+	// incremental sync clients at this interval at worst. A larger value will lead to better performance. 
+	// Defaults to a day.
 	//  'force_full_sync_interval' => 86400,
 	
 	// Maximum size of a card (in bytes) which is accepted for create/update. Defaults to 16 KiB.
@@ -88,7 +136,7 @@ $config['card']['addressbook']['ldap']['me'] = [
 	// LDAP filter to be used to search for contacts
 	'filter'        	=> '(objectClass=inetOrgPerson)',
 	
-	// Bind user for search/read/write contacts. If 'bind_dn' and 'bind_pass' are not provided below 
+	// Bind user to search/read/write contacts. If 'bind_dn' and 'bind_pass' are not provided below 
 	// then LDAP connection using parameters provided in $config['auth']['ldap'] is used to obtain backend data. 
 	// This bind user must have read access to entryUUID, createTimestamp and modifyTimestamp operational attributes 
 	// of all contacts in the address book additionally.
@@ -281,14 +329,20 @@ $config['card']['addressbook']['ldap']['global'] = [
     
 	// 'user_specific' and 'writable' values are used as initialization parameters for the sync database. 
 	// Once the sync database has been initialized changing the values here to any conflicting values will 
-	// lead to server not processing requests for this address book.
+	// lead to this application not processing requests for this address book.
 	'user_specific' 	=> false, // If this is true username placeholder can be used in applicable places
 	'writable'     	 	=> false, // If true (default) then new contacts can be created and existing ones can be updated and deleted
 	
-	// Mark contacts deleted directly in backend in sync database at this interval (in seconds). If contacts
-	// in your backend are deleted by anything other than this server then set the below else clients of this server 
-	// may never get some deleted contacts. Frequent full sync may put load on this server so 
-	// set it to a value as large as possible (like a day). Defaults to never.
+	// Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
+	// of the address book from backend every time they sync their address book. Set the below to 
+	// prevent full address book refresh from backend at least for this interval (in seconds). 
+	// Defaults to four hours.
+	//  'full_refresh_interval' => 14400,
+
+	// For WebDAV sync clients there is no way to know about contacts which are deleted in the backend by 
+	// some other process. Set the below to delete contacts (which are deleted directly in the backend) in 
+	// incremental sync clients at this interval at worst. A larger value will lead to better performance. 
+	// Defaults to a day.
 	//  'force_full_sync_interval' => 86400,
 	
 	// Maximum size of a card (in bytes) which is accepted for create/update. Defaults to 16 KiB.
@@ -303,7 +357,7 @@ $config['card']['addressbook']['ldap']['global'] = [
 	// LDAP filter to be used to search for contacts
 	'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
 	
-	// Bind user for search/read/write contacts. If 'bind_dn' and 'bind_pass' are not provided below 
+	// Bind user to search/read/write contacts. If 'bind_dn' and 'bind_pass' are not provided below 
 	// then LDAP connection using parameters provided in $config['auth']['ldap'] is used to obtain backend data. 
 	// This bind user must have read access to entryUUID, createTimestamp and modifyTimestamp operational attributes 
 	// of all contacts in the address book additionally.
@@ -496,14 +550,20 @@ $config['card']['addressbook']['ldap']['personal'] = [
 
 	// 'user_specific' and 'writable' values are used as initialization parameters for the sync database. 
 	// Once the sync database has been initialized changing the values here to any conflicting values will 
-	// lead to server not processing requests for this address book.
+	// lead to this application not processing requests for this address book.
 	'user_specific' 	=> true, 	// If this is true username placeholder can be used in applicable places
 	'writable'     	 	=> true, 	// If true (default) then new contacts can be created and existing ones can be updated and deleted
 
-	// Mark contacts deleted directly in backend in sync database at this interval (in seconds). If contacts
-	// in your backend are deleted by anything other than this server then set the below else clients of this server 
-	// may never get some deleted contacts. Frequent full sync may put load on this server so 
-	// set it to a value as large as possible (like a day). Defaults to never.
+	// Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
+	// of the address book from backend every time they sync their address book. Set the below to 
+	// prevent full address book refresh from backend at least for this interval (in seconds). 
+	// Defaults to four hours.
+	//  'full_refresh_interval' => 14400,
+
+	// For WebDAV sync clients there is no way to know about contacts which are deleted in the backend by 
+	// some other process. Set the below to delete contacts (which are deleted directly in the backend) in 
+	// incremental sync clients at this interval at worst. A larger value will lead to better performance. 
+	// Defaults to a day.
 	//  'force_full_sync_interval' => 86400,
 	
 	// Maximum size of a card (in bytes) which is accepted for create/update. Defaults to 16 KiB.
@@ -518,7 +578,7 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	// LDAP filter to be used to search for contacts	
 	'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
 	
-	// Bind user for search/read/write contacts. If 'bind_dn' and 'bind_pass' are not provided below 
+	// Bind user to search/read/write contacts. If 'bind_dn' and 'bind_pass' are not provided below 
 	// then LDAP connection using parameters provided in $config['auth']['ldap'] is used to obtain backend data. 
 	// This bind user must have read access to entryUUID, createTimestamp and modifyTimestamp operational attributes 
 	// of all contacts in the address book additionally.
