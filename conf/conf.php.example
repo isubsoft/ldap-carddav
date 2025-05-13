@@ -35,15 +35,21 @@ $config = [];
 // The DSN string below can use %datadir as placeholder for the data directory path of the application.
 // Remember %datadir is an absolute directory path. To use %datadir as a literal use %%datadir
 $config['sync_database'] = [
-	'dsn' => 'sqlite:%datadir/sync/syncdb/sqlite/cards.db', // See https://www.php.net/manual/en/pdo.drivers.php for 
-																													// database driver specific DSN construction.
-	'username' => '', // username to use for database login, default is null
-	'password' => '', // password to use for database login, default is null
-	'options' => [], // Database driver specific options
-	'init_commands' => [] // Database driver specific commands to be executed before database is used by the application.
-												// The following commands are always executed.
+	// See https://www.php.net/manual/en/pdo.drivers.php for setting 
+	// database driver specific dsn, username, password and options below.
+	'dsn' => 'sqlite:%datadir/sync/syncdb/sqlite/cards.db',
+	'username' => '', // Defaults to null.
+	'password' => '', // Defaults to null.
+	'options' => [], 	// Currently only PDO::ATTR_TIMEOUT and PDO::ATTR_PERSISTENT attribute(s) is accepted. 
+										// Defaults to empty array.
+	'init_commands' => [] // Database specific statements to be executed before database is used 
+												// by the application. Can be used to set some dynamic client side parameters for this application
+												// which cannot be set via other means in a reliable manner. Defaults to empty array.
+												// WARNING: DO NOT use statements which violate the requirements for sync database like turning off
+												// database transactions.
+												// The following database specific statements are anyways executed in the end.
 												// sqlite: PRAGMA foreign_keys = ON
-												// mysql: SET foreign_key_checks = ON 
+												// mysql: SET foreign_key_checks = ON
 ];
 
 $config['server']['ldap'] = [

@@ -202,9 +202,11 @@ class LDAP {
 
     public static function replacePlaceholders($subject, $values = [])
     {
+        $replacedSubject = $subject;
+        
         foreach(self::$allowed_placeholders as $placeholder => $desc)
                 if(array_key_exists($placeholder, $values))
-                    $replacedSubject = replacePlaceholder($placeholder, $values[$placeholder], $subject);
+                    $replacedSubject = replacePlaceholder($placeholder, $values[$placeholder], $replacedSubject);
         
         return $replacedSubject;
     }

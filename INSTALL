@@ -30,20 +30,20 @@ php-mysql
 apache2
 libapache2-mod-php
 
--- Download project
-Download the project files from the repository and place the project folder in a path suitable to your HTTP server. The project folder path should be set as the document root in your HTTP server configuration file.
+-- Download application
+Download the application files from the repository in an empty folder (henceforth called the application folder) and place the application folder in a path suitable to your HTTP server. The application folder path should be set as the document root in your HTTP server configuration file.
 
--- Go to the project folder path before performing any of the below steps.
+-- Go to the application folder path before performing any of the below steps.
 
 -- Composer
-This project uses composer dependencies. Please install the dependencies by running 'composer update'. This project is compatible with SabreDAV 3.2 (PHP 5.5) till SabreDAV 4.0.3 (PHP 7.0.0). VObject 4.5 (PHP 7.1) is required for some vCard v3.0 interoperability with vCard v4.0 for contact groups. You may adjust composer.json according to your need/environment.
+This application uses composer dependencies. Please install the dependencies by running 'composer update'. This application is compatible with SabreDAV 3.2 (PHP 5.5) till SabreDAV 4.0.3 (PHP 7.0.0). VObject 4.5 (PHP 7.1) is required for some vCard v3.0 interoperability with vCard v4.0 for contact groups. You may adjust composer.json according to your need/environment.
 
 -- Application conf file
 Copy conf/conf.php.example as conf/conf.php and update the file conf/conf.php according to your environment and need. Configuration keys are documented along side in the conf/conf.php.example file. Check the wiki for more advanced configuration examples.
 
 -- Sync database creation
 
-1. Create objects as per sql/<database_product>/ddl.sql file and if required create a database user and issue appropriate grants to it.
+1. Create database objects as per sql/<database_product>/ddl.sql file and if required create a database user and issue appropriate grants to it.
    Example (sqlite): sqlite3 data/sync/syncdb/sqlite/cards.db < sql/sqlite/ddl.sql
 2. Update 'dsn' and credentials appropriately in $config['sync_database'] in conf/conf.php file.
 3. If creating a sqlite database make sure the database file is placed inside the data directory.

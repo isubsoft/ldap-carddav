@@ -12,9 +12,6 @@ $userTableName = 'cards_user';
 
 $initialized = true;
 
-
-
-
 function addAddressBook($addressbookName = null)
 {
 	$config = $GLOBALS['config'];
