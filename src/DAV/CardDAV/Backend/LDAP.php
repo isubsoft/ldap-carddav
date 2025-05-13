@@ -1773,7 +1773,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					{
 						$query = "INSERT INTO `" . self::$fullSyncTableName . "` (`user_id`, `addressbook_id`, `sync_token`) VALUES (?, ?, ?)"; 
 						$sql = $this->pdo->prepare($query);
-						$sql->execute([$this->addressbook[$syncDbUserId, $addressBookId, $addressBookSyncToken]);
+						$sql->execute([$syncDbUserId, $addressBookId, $addressBookSyncToken]);
 					}
 				} catch (\Throwable $th) {
 							error_log("Database query could not be executed: " . __METHOD__ . " at line no " . __LINE__ . ", " . $th->getMessage());
