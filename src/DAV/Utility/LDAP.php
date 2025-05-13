@@ -200,25 +200,13 @@ class LDAP {
     }
 
 
-    public static function replacePlaceholders($string, $values = [])
+    public static function replacePlaceholders($subject, $values = [])
     {
-        foreach(self::$allowed_placeholders as $placeholder => $value)
-        {
-            preg_match('/('.$placeholder.')/', $string, $matches, PREG_OFFSET_CAPTURE);
-            
-            if(!empty($matches))
-            {
+        foreach(self::$allowed_placeholders as $placeholder => $desc)
                 if(array_key_exists($placeholder, $values))
-                {
-                    $string = str_replace($placeholder, $values[$placeholder], $string);
-                }
-                else{
-                    $string = str_replace($placeholder, '', $string);
-                }
-            }
-        }
+                    $replacedSubject = replacePlaceholder($placeholder, $values[$placeholder], $subject);
         
-        return $string;
+        return $replacedSubject;
     }
 
     public static function getVCardAttrParams($vCardKey, $params)
