@@ -374,7 +374,7 @@ class LDAP {
 
         foreach($array as $value)
         {
-            if(!is_null($num) && $num !== '')
+            if(!is_null($value) && $value !== '')
                 $flag = true;
         }
 
@@ -387,7 +387,7 @@ class LDAP {
 
         foreach($array as $value)
         {
-            if(is_null($num) || $num === '')
+            if(is_null($value) || $value === '')
                 $flag = true;
         }
 
