@@ -169,7 +169,8 @@
 	{
 		"multi_allowed": false,
 		"composite_attr": false,
-		"parameter": ["VALUE", "CALSCALE", "LANGUAGE"]
+		"parameter": ["VALUE", "CALSCALE", "LANGUAGE"],
+		"date_time": true
 	},
 
 	"EXPERTISE":
