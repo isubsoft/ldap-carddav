@@ -368,26 +368,33 @@ class LDAP {
         return ['ldapValueArray' => $elementArr, 'params' => $params];
     }
 
+    /**
+     * 
+     */
     public static function hasValue(array $array) :bool
     {
         $flag = false;
 
         foreach($array as $value)
         {
-            if(!is_null($value) && $value !== '')
+            if(!is_null($value) && ((is_string($value) && $value !== '') || (is_int($value) && $value !== '') || (is_bool($value) && $value != false)))
                 $flag = true;
         }
 
         return $flag;
     }
 
-    public static function hasNotValue(array $array) :bool
+
+    /**
+     * 
+     */
+    public static function notHasValue(array $array) :bool
     {
         $flag = false;
 
         foreach($array as $value)
         {
-            if(is_null($value) || $value === '')
+            if(is_null($value) || (is_string($value) && $value === '') || (is_int($value) && $value === '') || (is_bool($value) && $value == false))
                 $flag = true;
         }
 
