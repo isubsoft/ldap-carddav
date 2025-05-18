@@ -191,7 +191,7 @@ curl --dump-header response.header --output response.body --silent -u %username:
 ---- Fetch contact data in vcard format
 
 -- REQUEST
-curl --dump-header response.header --output response.body --silent -u %username:%password --header 'Accept: text/vcard; version=3.0' --location '%base_url/addressbooks/%principal/%addressbook/%CARD_URI'
+curl --dump-header response.header --output response.body --silent -u %username:%password --header 'Accept: text/vcard; version=3.0' --location --request GET '%base_url/addressbooks/%principal/%addressbook/%card_uri'
 
 -- SAMPLE RESPONSE BODY (contents of file - response.body)
 BEGIN:VCARD
@@ -212,7 +212,7 @@ END:VCARD
 ---- Fetch contacts data with multiget
 
 -- REQUEST
-curl --dump-header response.header --output response.body --silent -u %username:%password --location --request REPORT '%base_url/addressbooks/%principal/%addressbook/%CARD_URI' \
+curl --dump-header response.header --output response.body --silent -u %username:%password --location --request REPORT '%base_url/addressbooks/%principal/%addressbook/%card_uri' \
 --header 'Content-Type: application/xml' \
 --header 'Depth: 1' \
 --header 'Accept-Charset: utf-8' \
@@ -224,8 +224,8 @@ curl --dump-header response.header --output response.body --silent -u %username:
         <d:getlastmodified />
         <d:getcontentlength />
     </d:prop>
-    <d:href>/addressbooks/%principal/%addressbook/%CARD_URI</d:href>
-    <d:href>/addressbooks/%principal/%addressbook/%CARD_URI</d:href>
+    <d:href>/addressbooks/%principal/%addressbook/%card_uri</d:href>
+    <d:href>/addressbooks/%principal/%addressbook/%card_uri</d:href>
 </card:addressbook-multiget>'
 
 -- SAMPLE RESPONSE BODY (contents of file - response.body)
@@ -281,7 +281,7 @@ curl --dump-header response.header --output response.body --silent -u %username:
 ---- Update contact
 
 -- REQUEST
-curl --dump-header response.header --output response.body --silent -u %username:%password --location --request PUT '%base_url/addressbooks/%principal/%addressbook/%CARD_URI' \
+curl --dump-header response.header --output response.body --silent -u %username:%password --location --request PUT '%base_url/addressbooks/%principal/%addressbook/%card_uri' \
 --header 'Content-Type: text/vcard' \
 --header 'Accept-Charset: utf-8' \
 --data-raw 'BEGIN:VCARD
@@ -305,7 +305,7 @@ HTTP/1.1 204 No Content
 ---- Create a contact
 
 -- REQUEST
-curl --dump-header response.header --output response.body --silent -u %username:%password --location --request PUT '%base_url/addressbooks/%principal/%addressbook/%CARD_URI' \
+curl --dump-header response.header --output response.body --silent -u %username:%password --location --request PUT '%base_url/addressbooks/%principal/%addressbook/%card_uri' \
 --header 'Content-Type: text/vcard' \
 --header 'Accept-Charset: utf-8' \
 --data 'BEGIN:VCARD
@@ -322,7 +322,7 @@ HTTP/1.1 204 No Content
 10. Delete contact
 
 -- REQUEST
-curl --dump-header response.header --output response.body --silent -u %username:%password --location --request DELETE '%base_url/addressbooks/%principal/%addressbook/%CARD_URI'
+curl --dump-header response.header --output response.body --silent -u %username:%password --location --request DELETE '%base_url/addressbooks/%principal/%addressbook/%card_uri'
 
 -- SAMPLE RESPONSE BODY (contents of file - response.body)
 HTTP/1.1 204 No Content
