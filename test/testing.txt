@@ -370,7 +370,7 @@ curl --dump-header /dev/stderr --silent --location -u %username:%password --requ
 12. Get changes for addressbook
 
 -- REQUEST
-curl --dump-header /dev/stderr --silent --location -u %username:%password --request REPORT '%base_url/addressbooks/users/dummy/%addressbook' \
+curl --dump-header /dev/stderr --silent --location -u %username:%password --request REPORT '%base_url/addressbooks/%principal/%addressbook' \
 --header 'Content-Type: application/xml' \
 --header 'Accept-Charset: utf-8' \
 --header 'Depth: 0' \
