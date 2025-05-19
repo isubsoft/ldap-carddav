@@ -2,7 +2,7 @@
 ---- Get current principal 
 
 -- REQUEST
-curl --dump-header response.header --output response.body --silent -u %username:%password  --location --request PROPFIND '%base_url' \
+curl --dump-header /dev/stderr --silent --location -u %username:%password --request PROPFIND '%base_url' \
 --header 'Content-Type: application/xml' \
 --header 'Accept-Charset: utf-8' \
 --header 'Depth: 0' \
@@ -12,7 +12,7 @@ curl --dump-header response.header --output response.body --silent -u %username:
   </d:prop>
 </d:propfind>'
 
--- SAMPLE RESPONSE BODY (contents of file - response.body)
+-- SAMPLE RESPONSE BODY
 <?xml version="1.0"?>
 <d:multistatus xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns" xmlns:card="urn:ietf:params:xml:ns:carddav">
     <d:response>
@@ -33,7 +33,7 @@ curl --dump-header response.header --output response.body --silent -u %username:
 ---- Get addressbook home of a principal - 
 
 -- REQUEST
-curl --dump-header response.header --output response.body --silent -u %username:%password --location --request PROPFIND '%base_url/principals/%principal' \
+curl --dump-header /dev/stderr --silent --location -u %username:%password --request PROPFIND '%base_url/principals/%principal' \
 --header 'Content-Type: application/xml' \
 --header 'Accept-Charset: utf-8' \
 --header 'Depth: 0' \
@@ -43,7 +43,7 @@ curl --dump-header response.header --output response.body --silent -u %username:
   </d:prop>
 </d:propfind>'
 
--- SAMPLE RESPONSE BODY (contents of file - response.body)
+-- SAMPLE RESPONSE BODY
 <?xml version="1.0"?>
 <d:multistatus xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns" xmlns:card="urn:ietf:params:xml:ns:carddav">
     <d:response>
@@ -64,7 +64,7 @@ curl --dump-header response.header --output response.body --silent -u %username:
 ---- Get list of addressbooks of a principal
 
 -- REQUEST
-curl --dump-header response.header --output response.body --silent -u %username:%password --location --request PROPFIND '%base_url/addressbooks/%principal' \
+curl --dump-header /dev/stderr --silent --location -u %username:%password --request PROPFIND '%base_url/addressbooks/%principal' \
 --header 'Content-Type: application/xml' \
 --header 'Accept-Charset: utf-8' \
 --header 'Depth: 1' \
@@ -76,7 +76,7 @@ curl --dump-header response.header --output response.body --silent -u %username:
   </d:prop> 
 </d:propfind>'
 
--- SAMPLE RESPONSE BODY (contents of file - response.body)
+-- SAMPLE RESPONSE BODY
 <?xml version="1.0"?>
 <d:multistatus xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns" xmlns:card="urn:ietf:params:xml:ns:carddav">
     <d:response>
@@ -118,7 +118,7 @@ curl --dump-header response.header --output response.body --silent -u %username:
 ---- Retrieve addressbook information -
 
 -- REQUEST
-curl --dump-header response.header --output response.body --silent -u %username:%password --location --request PROPFIND '%base_url/addressbooks/%principal/%addressbook/' \
+curl --dump-header /dev/stderr --silent --location -u %username:%password --request PROPFIND '%base_url/addressbooks/%principal/%addressbook/' \
 --header 'Content-Type: application/xml' \
 --header 'Depth: 0' \
 --header 'Accept-Charset: utf-8' \
@@ -132,7 +132,7 @@ curl --dump-header response.header --output response.body --silent -u %username:
   </d:prop> 
 </d:propfind>'
 
--- SAMPLE RESPONSE BODY (contents of file - response.body)
+-- SAMPLE RESPONSE BODY
 <?xml version="1.0"?>
 <d:multistatus xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns" xmlns:card="urn:ietf:params:xml:ns:carddav">
     <d:response>
@@ -152,7 +152,7 @@ curl --dump-header response.header --output response.body --silent -u %username:
 ---- List contacts of an addressbook
 
 -- REQUEST
-curl --dump-header response.header --output response.body --silent -u %username:%password --location --request REPORT '%base_url/addressbooks/%principal/%addressbook/' \
+curl --dump-header /dev/stderr --silent --location -u %username:%password --request REPORT '%base_url/addressbooks/%principal/%addressbook/' \
 --header 'Content-Type: application/xml' \
 --header 'Depth: 1' \
 --header 'Accept-Charset: utf-8' \
@@ -164,7 +164,7 @@ curl --dump-header response.header --output response.body --silent -u %username:
     </d:prop>
 </card:addressbook-query>'
 
--- SAMPLE RESPONSE BODY (contents of file - response.body)
+-- SAMPLE RESPONSE BODY
 <d:multistatus xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns" xmlns:card="urn:ietf:params:xml:ns:carddav">
     <d:response>
         <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK/CARD_URI</d:href>
@@ -191,9 +191,9 @@ curl --dump-header response.header --output response.body --silent -u %username:
 ---- Fetch contact data in vcard format
 
 -- REQUEST
-curl --dump-header response.header --output response.body --silent -u %username:%password --header 'Accept: text/vcard; version=3.0' --location --request GET '%base_url/addressbooks/%principal/%addressbook/%card_uri'
+curl --dump-header /dev/stderr --silent --location -u %username:%password --header 'Accept: text/vcard; version=3.0' --location --request GET '%base_url/addressbooks/%principal/%addressbook/%card_uri'
 
--- SAMPLE RESPONSE BODY (contents of file - response.body)
+-- SAMPLE RESPONSE BODY
 BEGIN:VCARD
 VERSION:3.0
 PRODID:-//Sabre//Sabre VObject 4.2.2//EN
@@ -212,7 +212,7 @@ END:VCARD
 ---- Fetch contacts data with multiget
 
 -- REQUEST
-curl --dump-header response.header --output response.body --silent -u %username:%password --location --request REPORT '%base_url/addressbooks/%principal/%addressbook/%card_uri' \
+curl --dump-header /dev/stderr --silent --location -u %username:%password --request REPORT '%base_url/addressbooks/%principal/%addressbook/%card_uri' \
 --header 'Content-Type: application/xml' \
 --header 'Depth: 1' \
 --header 'Accept-Charset: utf-8' \
@@ -228,7 +228,7 @@ curl --dump-header response.header --output response.body --silent -u %username:
     <d:href>/addressbooks/%principal/%addressbook/%card_uri</d:href>
 </card:addressbook-multiget>'
 
--- SAMPLE RESPONSE BODY (contents of file - response.body)
+-- SAMPLE RESPONSE BODY
 <?xml version="1.0"?>
 <d:multistatus xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns" xmlns:card="urn:ietf:params:xml:ns:carddav">
     <d:response>
@@ -281,7 +281,7 @@ curl --dump-header response.header --output response.body --silent -u %username:
 ---- Update contact
 
 -- REQUEST
-curl --dump-header response.header --output response.body --silent -u %username:%password --location --request PUT '%base_url/addressbooks/%principal/%addressbook/%card_uri' \
+curl --dump-header /dev/stderr --silent --location -u %username:%password --request PUT '%base_url/addressbooks/%principal/%addressbook/%card_uri' \
 --header 'Content-Type: text/vcard' \
 --header 'Accept-Charset: utf-8' \
 --data-raw 'BEGIN:VCARD
@@ -297,7 +297,7 @@ TEL;TYPE=home,voice;VALUE=URI:1000000012
 TEL;TYPE=work,voice;VALUE=URI:9991812722
 END:VCARD'
 
--- SAMPLE RESPONSE BODY (contents of file - response.body)
+-- SAMPLE RESPONSE BODY
 HTTP/1.1 204 No Content
 
 -----------------------------------------------------------------------------
@@ -305,7 +305,7 @@ HTTP/1.1 204 No Content
 ---- Create a contact
 
 -- REQUEST
-curl --dump-header response.header --output response.body --silent -u %username:%password --location --request PUT '%base_url/addressbooks/%principal/%addressbook/%card_uri' \
+curl --dump-header /dev/stderr --silent --location -u %username:%password --request PUT '%base_url/addressbooks/%principal/%addressbook/%card_uri' \
 --header 'Content-Type: text/vcard' \
 --header 'Accept-Charset: utf-8' \
 --data 'BEGIN:VCARD
@@ -314,7 +314,7 @@ PHOTO;VALUE=uri:<url>
 N:Raven;Test;;;
 END:VCARD'
 
--- SAMPLE RESPONSE BODY (contents of file - response.body)
+-- SAMPLE RESPONSE BODY
 HTTP/1.1 204 No Content
 
 --------------------------------------------------------------------------------
@@ -322,9 +322,9 @@ HTTP/1.1 204 No Content
 10. Delete contact
 
 -- REQUEST
-curl --dump-header response.header --output response.body --silent -u %username:%password --location --request DELETE '%base_url/addressbooks/%principal/%addressbook/%card_uri'
+curl --dump-header /dev/stderr --silent --location -u %username:%password --request DELETE '%base_url/addressbooks/%principal/%addressbook/%card_uri'
 
--- SAMPLE RESPONSE BODY (contents of file - response.body)
+-- SAMPLE RESPONSE BODY
 HTTP/1.1 204 No Content
 
 -----------------------------------------------------------------------------------
@@ -332,7 +332,7 @@ HTTP/1.1 204 No Content
 ---- Get First Sync Token
 
 -- REQUEST
-curl --dump-header response.header --output response.body --silent -u %username:%password --location --request PROPFIND '%base_url/addressbooks/%principal/%addressbook' \
+curl --dump-header /dev/stderr --silent --location -u %username:%password --request PROPFIND '%base_url/addressbooks/%principal/%addressbook' \
 --header 'Content-Type: application/xml' \
 --header 'Accept-Charset: utf-8' \
 --header 'Depth: 0' \
@@ -344,7 +344,7 @@ curl --dump-header response.header --output response.body --silent -u %username:
   </d:prop>
 </d:propfind>'
 
--- SAMPLE RESPONSE BODY (contents of file - response.body)
+-- SAMPLE RESPONSE BODY
 <?xml version="1.0"?>
 <d:multistatus xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns" xmlns:card="urn:ietf:params:xml:ns:carddav">
     <d:response>
@@ -370,7 +370,7 @@ curl --dump-header response.header --output response.body --silent -u %username:
 12. Get changes for addressbook
 
 -- REQUEST
-curl --dump-header response.header --output response.body --silent -u %username:%password --location --request REPORT '%base_url/addressbooks/users/dummy/%addressbook' \
+curl --dump-header /dev/stderr --silent --location -u %username:%password --request REPORT '%base_url/addressbooks/users/dummy/%addressbook' \
 --header 'Content-Type: application/xml' \
 --header 'Accept-Charset: utf-8' \
 --header 'Depth: 0' \
@@ -385,7 +385,7 @@ curl --dump-header response.header --output response.body --silent -u %username:
   </d:prop>
 </d:sync-collection>'
 
--- SAMPLE RESPONSE BODY (contents of file - response.body)
+-- SAMPLE RESPONSE BODY
 <?xml version="1.0"?>
 <d:multistatus xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns" xmlns:card="urn:ietf:params:xml:ns:carddav">
     <d:response>
@@ -433,5 +433,3 @@ curl --dump-header response.header --output response.body --silent -u %username:
     </d:response>
     <d:sync-token>http://sabre.io/ns/sync/SYNC_TOKEN</d:sync-token>
 </d:multistatus>
-
-
