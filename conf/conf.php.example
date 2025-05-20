@@ -24,9 +24,10 @@ $config = [];
 //  $config['app']['env'] = 'prod';
 
 // Few CardDAV clients do not implement WebDAV sync specifications correctly leading to broken WebDAV sync.
-// You can enable WebDAV sync globally if your CardDAV client is known to be compliant with WebDAV sync specifications.
-// Default is false.
-//  $config['app']['enable_incremental_sync'] = true;
+// You can disable WebDAV sync globally if your CardDAV client is known to be non-compliant with WebDAV 
+// sync specifications and no workarounds are available in the application to make it work.
+// Default is true.
+//  $config['app']['enable_incremental_sync'] = false;
 
 // Set global maximum size (in bytes) of request payload which can be accepted.
 // Default is null which means app internal default value will be used.

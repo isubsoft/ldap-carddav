@@ -5,7 +5,7 @@
 
 namespace ISubsoft\DAV\Utility;
 
-use \Sabre\DAV\Exception\ServiceUnavailable;
+use Sabre\DAV\Exception as SabreDAVException;
 use ISubsoft\VObject\Reader as Reader;
 
 class LDAP {
@@ -89,7 +89,7 @@ class LDAP {
 
         } catch (\Throwable $th) {  
             error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage()); 
-            throw new ServiceUnavailable($th->getMessage());
+            throw new SabreDAVException\ServiceUnavailable();
         }        
 
         return $ldapConn;
@@ -126,7 +126,7 @@ class LDAP {
 
         } catch (\Throwable $th) {
             error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
-            throw new ServiceUnavailable($th->getMessage());
+            throw new SabreDAVException\ServiceUnavailable();
         }    
 
         return $data;
@@ -152,7 +152,7 @@ class LDAP {
                        
                     } catch (\Throwable $th) {
                         error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
-                        throw new ServiceUnavailable($th->getMessage());
+                        throw new SabreDAVException\ServiceUnavailable();
                     }
                     
                     return $data;
@@ -188,7 +188,7 @@ class LDAP {
                         
                     } catch (\Throwable $th) {
                         error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
-                        throw new ServiceUnavailable($th->getMessage());
+                        throw new SabreDAVException\ServiceUnavailable();
                     }
                     
                     return $data;
@@ -381,4 +381,12 @@ class LDAP {
             return (!isset($num) || is_null($num) || $num === '');
         })) > 0;
     }
+    
+		public static function responseCodeException($responseCode, $message)
+		{
+			if($responseCode == 400)
+				return new SabreDAVException\BadRequest($message);
+				
+			return new SabreDAVException\ServiceUnavailable();
+		}
 }
