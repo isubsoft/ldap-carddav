@@ -70,9 +70,24 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     
     private $defaultVcardVersion = \Sabre\VObject\Document::VCARD40;
     
+		private $defaultFrontendVcardVersion = \Sabre\VObject\Document::VCARD30;
+    
 		private static $defaultFullRefreshInterval = 14400;
 
     private static $defaultForceFullSyncInterval = 86400;
+    
+		/**
+     * User agent (UA) identification
+     *
+     * @var array
+     */
+		private static $uaIdentifier = [
+			'moz_tb' => [
+				'name' => 'Mozilla Thunderbird',
+				'ua_regexp' => '#Mozilla.*\s+Thunderbird/(\S+)#i',
+				'capture_group' => [1 => 'version']
+			]
+		];
 
     /**
      * Address books
@@ -1333,9 +1348,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             }
         }
        
-        // send the  VCard
-        $output = $vcard->serialize();
-        return $output;
+			// convert to default frontend version and send the vcard
+			return $vcard->convert($this->defaultFrontendVcardVersion)->serialize();
     }
 
     /**
@@ -1424,9 +1438,36 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				return $result;
 			}
 			
+			$userAgent = $_SERVER['HTTP_USER_AGENT'];
+			$uaValues = ['id' => '', 'initial_sync_response_code' => null];
+
+			foreach(self::$uaIdentifier as $id => $properties)
+			{
+				$matches = [];
+				
+				if(preg_match($properties['ua_regexp'], $userAgent, $matches) === 1)
+				{
+					$uaValues['id'] = $id;
+					
+					foreach($properties['capture_group'] as $captureGroupIndex => $captureGroupName)
+						if(isset($matches[$captureGroupIndex]))
+							$uaValues['properties'][$captureGroupName] = $matches[$captureGroupIndex];
+							
+					break;
+				}
+			}
+
+			if($uaValues['id'] == 'moz_tb')
+				$uaValues['initial_sync_response_code'] = 400;
+			
 			// Invalid sync token
 			if($syncToken != null && (!is_int((int)$syncToken) || $syncToken >= $addressBookSyncToken))
+			{
+				if($uaValues['initial_sync_response_code'] != null)
+					throw Utility::responseCodeException($uaValues['initial_sync_response_code'], 'Sync token is invalid (response workaround applied for user agent id - ' . $uaValues['id'] . ')');
+				
 				return null;
+			}
 				
 			$forceInitialSyncInterval = (!isset($addressBookConfig['force_full_sync_interval']) || !is_int((int)$addressBookConfig['force_full_sync_interval']))?self::$defaultForceFullSyncInterval:$addressBookConfig['force_full_sync_interval'];
 			
@@ -1448,7 +1489,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 			
 			// Sync token expiry
 			if((is_int((int)$syncToken) && ($addressBookSyncToken - $syncToken) > $forceInitialSyncInterval) || ($fullSyncToken != null && $addressBookSyncToken > ($fullSyncToken + $forceInitialSyncInterval)))
+			{
+				if($uaValues['initial_sync_response_code'] != null)
+					throw Utility::responseCodeException($uaValues['initial_sync_response_code'], 'Sync token has expired (response workaround applied for user agent id - ' . $uaValues['id'] . ')');
+					
 				return null;
+			}
 				
 			if(isset($addressBookConfig['sync_bind_dn']) && $addressBookConfig['sync_bind_dn'] != '')
 			{
