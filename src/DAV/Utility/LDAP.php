@@ -5,7 +5,7 @@
 
 namespace ISubsoft\DAV\Utility;
 
-use \Sabre\DAV\Exception\ServiceUnavailable;
+use Sabre\DAV\Exception as SabreDAVException;
 use ISubsoft\VObject\Reader as Reader;
 
 class LDAP {
@@ -89,7 +89,7 @@ class LDAP {
 
         } catch (\Throwable $th) {  
             error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage()); 
-            throw new ServiceUnavailable($th->getMessage());
+            throw new SabreDAVException\ServiceUnavailable();
         }        
 
         return $ldapConn;
@@ -126,7 +126,7 @@ class LDAP {
 
         } catch (\Throwable $th) {
             error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
-            throw new ServiceUnavailable($th->getMessage());
+            throw new SabreDAVException\ServiceUnavailable();
         }    
 
         return $data;
@@ -152,7 +152,7 @@ class LDAP {
                        
                     } catch (\Throwable $th) {
                         error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
-                        throw new ServiceUnavailable($th->getMessage());
+                        throw new SabreDAVException\ServiceUnavailable();
                     }
                     
                     return $data;
@@ -188,7 +188,7 @@ class LDAP {
                         
                     } catch (\Throwable $th) {
                         error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
-                        throw new ServiceUnavailable($th->getMessage());
+                        throw new SabreDAVException\ServiceUnavailable();
                     }
                     
                     return $data;
@@ -368,17 +368,43 @@ class LDAP {
         return ['ldapValueArray' => $elementArr, 'params' => $params];
     }
 
+		/********
+			Returns true if any of the array values is a scalar and not an empty string
+		********/
     public static function hasValue(array $array) :bool
     {
-        return count(array_filter($array, function($num) {
-            return (isset($num) && !is_null($num) && $num !== '');
-        })) > 0;
+        $flag = false;
+
+        foreach($array as $value)
+        {
+            if(is_scalar($value) && ((is_string($value) && trim($value) !== '') || !is_string($value)))
+                $flag = true;
+        }
+
+        return $flag;
     }
 
-    public static function hasNotValue(array $array) :bool
+		/********
+			Returns true if any of the array values is either not a scalar or an empty string
+		********/
+    public static function notHasValue(array $array) :bool
     {
-        return count(array_filter($array, function($num) {
-            return (!isset($num) || is_null($num) || $num === '');
-        })) > 0;
+        $flag = false;
+
+        foreach($array as $value)
+        {
+            if(!is_scalar($value) || (is_string($value) && trim($value) === ''))
+                $flag = true;
+        }
+
+        return $flag;
     }
+    
+		public static function responseCodeException($responseCode, $message)
+		{
+			if($responseCode == 400)
+				return new SabreDAVException\BadRequest($message);
+				
+			return new SabreDAVException\ServiceUnavailable();
+		}
 }

@@ -24,9 +24,10 @@ $config = [];
 //  $config['app']['env'] = 'prod';
 
 // Few CardDAV clients do not implement WebDAV sync specifications correctly leading to broken WebDAV sync.
-// You can enable WebDAV sync globally if your CardDAV client is known to be compliant with WebDAV sync specifications.
-// Default is false.
-//  $config['app']['enable_incremental_sync'] = true;
+// You can disable WebDAV sync globally if your CardDAV client is known to be non-compliant with WebDAV 
+// sync specifications and no workarounds are available in the application to make it work.
+// Default is true.
+//  $config['app']['enable_incremental_sync'] = false;
 
 // Set global maximum size (in bytes) of request payload which can be accepted.
 // Default is null which means app internal default value will be used.
@@ -137,7 +138,8 @@ $config['card']['addressbook']['ldap']['me'] = [
   // %u  - Username sent by client for authentication
   // %dn - DN as returned by LDAP search for address book DN
   
-	'base_dn'       	=> '%dn', // Base DN for contact search
+	'base_dn'       	=> '%dn', // Address book DN (used as base DN to search for contacts 
+															// and as parent DN for new contacts).
 	
 	// LDAP filter to be used to search for contacts
 	'filter'        	=> '(objectClass=inetOrgPerson)',
@@ -358,7 +360,8 @@ $config['card']['addressbook']['ldap']['global'] = [
   // %u  - Username sent by client for authentication
   // %dn - DN as returned by LDAP search for address book DN
   
-	'base_dn'       	=> 'ou=People,dc=example,dc=org', // Base DN for contact search
+	'base_dn'       	=> 'ou=People,dc=example,dc=org', // Address book DN (used as base DN to search for contacts 
+																											// and as parent DN for new contacts).
 	
 	// LDAP filter to be used to search for contacts
 	'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
@@ -579,7 +582,8 @@ $config['card']['addressbook']['ldap']['personal'] = [
   // %u  - Username sent by client for authentication
   // %dn - DN as returned by LDAP search for address book DN
   
-	'base_dn'       	=> 'ou=Address Book,%dn', // Base DN for contact search
+	'base_dn'       	=> 'ou=Address Book,%dn', // Address book DN (used as base DN to search for contacts 
+																							// and as parent DN for new contacts).
 	
 	// LDAP filter to be used to search for contacts	
 	'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
