@@ -70,6 +70,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     
     private $defaultVcardVersion = \Sabre\VObject\Document::VCARD40;
     
+		private $defaultFrontendVcardVersion = \Sabre\VObject\Document::VCARD30;
+    
 		private static $defaultFullRefreshInterval = 14400;
 
     private static $defaultForceFullSyncInterval = 86400;
@@ -1333,9 +1335,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             }
         }
        
-        // send the  VCard
-        $output = $vcard->serialize();
-        return $output;
+			// convert to default frontend version and send the vcard
+			return $vcard->convert($this->defaultFrontendVcardVersion)->serialize();
     }
 
     /**
