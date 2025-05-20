@@ -368,18 +368,36 @@ class LDAP {
         return ['ldapValueArray' => $elementArr, 'params' => $params];
     }
 
+		/********
+			Returns true if any of the array values is a scalar and not an empty string
+		********/
     public static function hasValue(array $array) :bool
     {
-        return count(array_filter($array, function($num) {
-            return (isset($num) && !is_null($num) && $num !== '');
-        })) > 0;
+        $flag = false;
+
+        foreach($array as $value)
+        {
+            if(is_scalar($value) && ((is_string($value) && trim($value) !== '') || !is_string($value)))
+                $flag = true;
+        }
+
+        return $flag;
     }
 
-    public static function hasNotValue(array $array) :bool
+		/********
+			Returns true if any of the array values is either not a scalar or an empty string
+		********/
+    public static function notHasValue(array $array) :bool
     {
-        return count(array_filter($array, function($num) {
-            return (!isset($num) || is_null($num) || $num === '');
-        })) > 0;
+        $flag = false;
+
+        foreach($array as $value)
+        {
+            if(!is_scalar($value) || (is_string($value) && trim($value) === ''))
+                $flag = true;
+        }
+
+        return $flag;
     }
     
 		public static function responseCodeException($responseCode, $message)
