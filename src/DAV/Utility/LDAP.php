@@ -375,7 +375,7 @@ class LDAP {
 
         foreach($array as $value)
         {
-            if(!is_null($value) && ((is_string($value) && $value !== '') || (is_int($value) && $value !== '') || (is_bool($value) && $value != false)))
+            if(is_scalar($value) && ((is_string($value) && trim($value) !== '') || !is_string($value)))
                 $flag = true;
         }
 
@@ -392,7 +392,7 @@ class LDAP {
 
         foreach($array as $value)
         {
-            if(is_null($value) || (is_string($value) && $value === '') || (is_int($value) && $value === '') || (is_bool($value) && $value == false))
+            if(!is_scalar($value) || (is_string($value) && trim($value) === ''))
                 $flag = true;
         }
 
