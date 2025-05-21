@@ -50,6 +50,16 @@ CREATE TABLE cards_deleted
 );
 CREATE INDEX cards_deleted_idx01 ON cards_deleted (user_id, addressbook_id, sync_token);
 
+CREATE TABLE cards_full_refresh
+(
+	user_id VARCHAR(255) NOT NULL,
+	addressbook_id  VARCHAR(255) NOT NULL,
+	sync_token BIGINT NOT NULL,
+	CONSTRAINT cards_full_refresh_pk PRIMARY KEY (user_id, addressbook_id),
+	CONSTRAINT cards_full_refresh_fk01 FOREIGN KEY(user_id) REFERENCES cards_user (user_id) ON DELETE CASCADE ON UPDATE CASCADE,
+	CONSTRAINT cards_full_refresh_fk02 FOREIGN KEY(addressbook_id) REFERENCES cards_addressbook (addressbook_id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
 CREATE TABLE cards_full_sync
 (
 	user_id VARCHAR(255) NOT NULL,
@@ -83,6 +93,16 @@ BEGIN
 	END IF;
 END //
 
+DELIMITER ;
+
+DROP TRIGGER IF EXISTS cards_full_refresh_before;
+DELIMITER //
+CREATE TRIGGER cards_full_refresh_before BEFORE INSERT ON cards_full_refresh FOR EACH ROW
+BEGIN
+	if (EXISTS (SELECT 1 FROM cards_addressbook WHERE addressbook_id = NEW.addressbook_id AND user_specific) AND NOT EXISTS (SELECT 1 FROM cards_user WHERE user_id = NEW.user_id)) THEN 
+             INSERT INTO cards_user (user_id) VALUES (NEW.user_id);
+	END IF;
+END //
 DELIMITER ;
 
 DROP TRIGGER IF EXISTS cards_full_sync_before;
