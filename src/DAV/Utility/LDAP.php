@@ -21,7 +21,7 @@ class LDAP {
                                             '%dn' => 'User DN in LDAP backend'
                                         ];
 
-    private static $allowed_vCard_params = ['TYPE', 'PREF'];
+    private static $allowed_vCard_params = ['TYPE'];
 
 
 
