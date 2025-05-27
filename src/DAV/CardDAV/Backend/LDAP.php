@@ -1451,6 +1451,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					
 					if($row !== false)
 						$fullSyncToken = (int)$row['sync_token'];
+					else
+					{
+						$query = "INSERT INTO `" . self::$fullSyncTableName . "` (`user_id`, `addressbook_id`, `sync_token`) VALUES (?, ?, ?)"; 
+						$sql = $this->pdo->prepare($query);
+						$sql->execute([$syncDbUserId, $addressBookId, $syncToken]);
+					}
 
 			} catch (\Throwable $th) {
 					error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
@@ -1699,22 +1705,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
         $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
 				$backendContacts = [];
-				
-        // Initializing full sync table here since webdav sync clients will also get here as part of first/initial sync
-        try {
-					$query = 'SELECT sync_token FROM ' . self::$fullSyncTableName . ' WHERE addressbook_id = ? AND user_id = ?';
-					$stmt = $this->pdo->prepare($query);
-					$stmt->execute([$addressBookId, $syncDbUserId]);
-					
-					if($stmt->fetch(\PDO::FETCH_ASSOC) === false)
-					{
-						$query = "INSERT INTO `" . self::$fullSyncTableName . "` (`user_id`, `addressbook_id`, `sync_token`) VALUES (?, ?, ?)"; 
-						$sql = $this->pdo->prepare($query);
-						$sql->execute([$syncDbUserId, $addressBookId, $addressBookSyncToken]);
-					}
-				} catch (\Throwable $th) {
-						error_log("Database query could not be executed: " . __METHOD__ . " at line no " . __LINE__ . ", " . $th->getMessage());
-				}
 				
 				$fullRefreshSyncToken = null;
 				
