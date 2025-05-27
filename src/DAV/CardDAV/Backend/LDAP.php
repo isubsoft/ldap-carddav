@@ -1432,6 +1432,21 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 			// Invalid sync token
 			if($syncToken != null && (!settype($syncToken, 'integer') || $syncToken >= $addressBookSyncToken))
 			{
+        try {
+					$query = "UPDATE `" . self::$fullSyncTableName . "` SET sync_token = ? WHERE user_id = ? AND addressbook_id = ?"; 
+					$sql = $this->pdo->prepare($query);
+					$sql->execute([time(), $syncDbUserId, $addressBookId]);
+					
+					if(!$sql->rowCount() > 0)
+					{
+						$query = "INSERT INTO `" . self::$fullSyncTableName . "` (`user_id`, `addressbook_id`, `sync_token`) VALUES (?, ?, ?)"; 
+						$sql = $this->pdo->prepare($query);
+						$sql->execute([$syncDbUserId, $addressBookId, time()]);
+					}
+				} catch (\Throwable $th) {
+						error_log("Database query could not be executed: " . __METHOD__ . " at line no " . __LINE__ . ", " . $th->getMessage());
+				}
+				
 				if($uaValues['initial_sync_response_code'] != null)
 					throw Utility::responseCodeException($uaValues['initial_sync_response_code'], 'Sync token is invalid (response workaround applied for user agent id - ' . $uaValues['id'] . ')');
 				
@@ -1465,6 +1480,21 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 			// Sync token expiry
 			if((settype($syncToken, 'integer') && ($addressBookSyncToken - $syncToken) > $forceInitialSyncInterval) || ($fullSyncToken != null && $addressBookSyncToken > ($fullSyncToken + $forceInitialSyncInterval)))
 			{
+        try {
+					$query = "UPDATE `" . self::$fullSyncTableName . "` SET sync_token = ? WHERE user_id = ? AND addressbook_id = ?"; 
+					$sql = $this->pdo->prepare($query);
+					$sql->execute([time(), $syncDbUserId, $addressBookId]);
+					
+					if(!$sql->rowCount() > 0)
+					{
+						$query = "INSERT INTO `" . self::$fullSyncTableName . "` (`user_id`, `addressbook_id`, `sync_token`) VALUES (?, ?, ?)"; 
+						$sql = $this->pdo->prepare($query);
+						$sql->execute([$syncDbUserId, $addressBookId, time()]);
+					}
+				} catch (\Throwable $th) {
+						error_log("Database query could not be executed: " . __METHOD__ . " at line no " . __LINE__ . ", " . $th->getMessage());
+				}
+				
 				if($uaValues['initial_sync_response_code'] != null)
 					throw Utility::responseCodeException($uaValues['initial_sync_response_code'], 'Sync token has expired (response workaround applied for user agent id - ' . $uaValues['id'] . ')');
 					
@@ -1722,7 +1752,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
 				}
 				
-				$fullRefreshInterval = (!isset($addressBookConfig['full_refresh_interval']) || !is_int((int)$addressBookConfig['full_refresh_interval']))?self::$defaultFullRefreshInterval:$addressBookConfig['full_refresh_interval'];
+				$fullRefreshInterval = (!isset($addressBookConfig['full_refresh_interval']) || !is_int($addressBookConfig['full_refresh_interval']))?self::$defaultFullRefreshInterval:$addressBookConfig['full_refresh_interval'];
 				
 				if($fullRefreshSyncToken != null && $addressBookSyncToken < ($fullRefreshSyncToken + $fullRefreshInterval))
 				{
