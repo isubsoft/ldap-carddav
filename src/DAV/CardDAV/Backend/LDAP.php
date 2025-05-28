@@ -53,7 +53,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      *
      * @var string
      */
-    private $deletedCardsTableName = 'cards_deleted';
+    private static $deletedCardsTableName = 'cards_deleted';
     
     /**
      * PDO table name.
@@ -1405,10 +1405,14 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 			{
 		    try {
 					$query = "UPDATE `" . self::$fullSyncTableName . "` SET sync_token = ? WHERE user_id = ? AND addressbook_id = ?"; 
-					$sql = $this->pdo->prepare($query);
-					$sql->execute([$addressBookSyncToken, $syncDbUserId, $addressBookId]);
+					$stmt = $this->pdo->prepare($query);
+					$stmt->execute([$addressBookSyncToken, $syncDbUserId, $addressBookId]);
 					
 					$fullSyncToken = $addressBookSyncToken;
+					
+					$query = "DELETE FROM `" . self::$deletedCardsTableName . "` WHERE user_id = ? AND addressbook_id = ? AND sync_token < ?"; 
+					$stmt = $this->pdo->prepare($query);
+					$stmt->execute([$syncDbUserId, $addressBookId, $fullSyncToken]);
 				} catch (\Throwable $th) {
 						error_log("Database query could not be executed: " . __METHOD__ . " at line no " . __LINE__ . ", " . $th->getMessage());
 				}
@@ -1573,7 +1577,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 			
 			try {
 				// Fetch contacts from deleted table
-				$query = 'SELECT card_uri FROM '.$this->deletedCardsTableName.' WHERE user_id = ? AND addressbook_id = ? AND sync_token >= ? AND sync_token < ?';
+				$query = 'SELECT card_uri FROM ' . self::$deletedCardsTableName . ' WHERE user_id = ? AND addressbook_id = ? AND sync_token >= ? AND sync_token < ?';
 				$stmt = $this->pdo->prepare($query);
 				$stmt->execute([$syncDbUserId, $addressBookId, $syncToken, $addressBookSyncToken]);
 					
@@ -1614,7 +1618,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		          $sql->execute([$addressBookId, $objectUri, $syncDbUserId]);
 
 
-		          $query = "INSERT INTO `".$this->deletedCardsTableName."` (`sync_token` ,`addressbook_id` ,`card_uri`, `user_id`) VALUES (?, ?, ?, ?)"; 
+		          $query = "INSERT INTO `" . self::$deletedCardsTableName . "` (`sync_token` ,`addressbook_id` ,`card_uri`, `user_id`) VALUES (?, ?, ?, ?)"; 
 		          $sql = $this->pdo->prepare($query);
 		          $sql->execute([time(), $addressBookId, $objectUri, $syncDbUserId]);
 
