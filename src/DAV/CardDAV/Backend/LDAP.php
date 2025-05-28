@@ -1376,6 +1376,41 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					'modified'  => [],
 					'deleted'   => [],
 			];
+			
+			$forceInitialSyncInterval = (isset($addressBookConfig['force_full_sync_interval']) && is_int($addressBookConfig['force_full_sync_interval']) && $addressBookConfig['force_full_sync_interval'] > 0)?$addressBookConfig['force_full_sync_interval']:self::$defaultForceFullSyncInterval;
+			
+			$fullSyncToken = null;
+			
+			try {
+					$query = 'SELECT sync_token FROM ' . self::$fullSyncTableName . ' WHERE addressbook_id = ? AND user_id = ?';
+					$stmt = $this->pdo->prepare($query);
+					$stmt->execute([$addressBookId, $syncDbUserId]);
+					
+					$row = $stmt->fetch(\PDO::FETCH_ASSOC);
+					
+					if($row !== false)
+						$fullSyncToken = (int)$row['sync_token'];
+					else
+					{
+						$query = "INSERT INTO `" . self::$fullSyncTableName . "` (`user_id`, `addressbook_id`, `sync_token`) VALUES (?, ?, ?)"; 
+						$stmt = $this->pdo->prepare($query);
+						$stmt->execute([$syncDbUserId, $addressBookId, $addressBookSyncToken]);
+					}
+
+			} catch (\Throwable $th) {
+					error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+			}
+			
+			if($fullSyncToken != null && $addressBookSyncToken > ($fullSyncToken + $forceInitialSyncInterval))
+			{
+		    try {
+					$query = "UPDATE `" . self::$fullSyncTableName . "` SET sync_token = ? WHERE user_id = ? AND addressbook_id = ?"; 
+					$sql = $this->pdo->prepare($query);
+					$sql->execute([$addressBookSyncToken, $syncDbUserId, $addressBookId]);
+				} catch (\Throwable $th) {
+						error_log("Database query could not be executed: " . __METHOD__ . " at line no " . __LINE__ . ", " . $th->getMessage());
+				}
+			}
 
 			// Perform initial sync
 			if($syncToken == null)
@@ -1383,27 +1418,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				$data = $this->fullSyncOperation($addressBookId);
 				
 				if(!empty($data))
-				{
 					for ($i=0; $i < count($data); $i++) {
 							$result['added'][] = $data[$i]['card_uri'];
 					}
-				}
 				
-        try {
-					$query = "UPDATE `" . self::$fullSyncTableName . "` SET sync_token = ? WHERE user_id = ? AND addressbook_id = ?"; 
-					$sql = $this->pdo->prepare($query);
-					$sql->execute([$addressBookSyncToken, $syncDbUserId, $addressBookId]);
-					
-					if(!$sql->rowCount() > 0)
-					{
-						$query = "INSERT INTO `" . self::$fullSyncTableName . "` (`user_id`, `addressbook_id`, `sync_token`) VALUES (?, ?, ?)"; 
-						$sql = $this->pdo->prepare($query);
-						$sql->execute([$syncDbUserId, $addressBookId, $addressBookSyncToken]);
-					}
-				} catch (\Throwable $th) {
-						error_log("Database query could not be executed: " . __METHOD__ . " at line no " . __LINE__ . ", " . $th->getMessage());
-				}
-
 				return $result;
 			}
 			
@@ -1436,24 +1454,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					throw Utility::responseCodeException($uaValues['initial_sync_response_code'], 'Sync token is invalid (response workaround applied for user agent id - ' . $uaValues['id'] . ')');
 				
 				return null;
-			}
-				
-			$forceInitialSyncInterval = (isset($addressBookConfig['force_full_sync_interval']) && is_int($addressBookConfig['force_full_sync_interval']) && $addressBookConfig['force_full_sync_interval'] > 0)?$addressBookConfig['force_full_sync_interval']:self::$defaultForceFullSyncInterval;
-			
-			$fullSyncToken = null;
-			
-			try {
-					$query = 'SELECT sync_token FROM ' . self::$fullSyncTableName . ' WHERE addressbook_id = ? AND user_id = ?';
-					$stmt = $this->pdo->prepare($query);
-					$stmt->execute([$addressBookId, $syncDbUserId]);
-					
-					$row = $stmt->fetch(\PDO::FETCH_ASSOC);
-					
-					if($row !== false)
-						$fullSyncToken = (int)$row['sync_token'];
-
-			} catch (\Throwable $th) {
-					error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
 			}
 			
 			// Sync token expiry
