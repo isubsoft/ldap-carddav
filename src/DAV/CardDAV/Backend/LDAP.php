@@ -227,7 +227,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $this->addressbook[$addressBookId]['addressbookDn'] = $addressBookDn;
         $this->addressbook[$addressBookId]['syncToken'] = $addressBookSyncToken;
         $this->addressbook[$addressBookId]['syncDbUserId'] =  ($addressBookConfig['user_specific'])?$currentUserPrincipalBackendId:$systemUser;
-        $this->addressbook[$addressBookId]['contactMaxSize'] = (int)((isset($addressBookConfig['max_size']) && $addressBookConfig['max_size'] > 0)?$addressBookConfig['max_size']:self::$defaultContactMaxSize);
+        $this->addressbook[$addressBookId]['contactMaxSize'] = ((isset($addressBookConfig['max_size']) && is_int($addressBookConfig['max_size']) && $addressBookConfig['max_size'] > 0)?$addressBookConfig['max_size']:self::$defaultContactMaxSize);
         
         $addressBooks[] = [
             'id'                                                          => $addressBookId,
@@ -1438,7 +1438,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				return null;
 			}
 				
-			$forceInitialSyncInterval = (!isset($addressBookConfig['force_full_sync_interval']) || !is_int($addressBookConfig['force_full_sync_interval']))?self::$defaultForceFullSyncInterval:$addressBookConfig['force_full_sync_interval'];
+			$forceInitialSyncInterval = (isset($addressBookConfig['force_full_sync_interval']) && is_int($addressBookConfig['force_full_sync_interval']) && $addressBookConfig['force_full_sync_interval'] > 0)?$addressBookConfig['force_full_sync_interval']:self::$defaultForceFullSyncInterval;
 			
 			$fullSyncToken = null;
 			
@@ -1716,7 +1716,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
 				}
 				
-				$fullRefreshInterval = (!isset($addressBookConfig['full_refresh_interval']) || !is_int((int)$addressBookConfig['full_refresh_interval']))?self::$defaultFullRefreshInterval:$addressBookConfig['full_refresh_interval'];
+				$fullRefreshInterval = (isset($addressBookConfig['full_refresh_interval']) && is_int($addressBookConfig['full_refresh_interval']) && $addressBookConfig['full_refresh_interval'] > 0)?$addressBookConfig['full_refresh_interval']:self::$defaultFullRefreshInterval;
 				
 				if($fullRefreshSyncToken != null && $addressBookSyncToken < ($fullRefreshSyncToken + $fullRefreshInterval))
 				{
