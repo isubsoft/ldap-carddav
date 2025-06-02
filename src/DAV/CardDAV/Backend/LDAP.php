@@ -1461,9 +1461,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				
 				return null;
 			}
-
-			if($ldapConn === false)
-      	throw new SabreDAVException\ServiceUnavailable();
 			
 			// Sync token expiry
 			if((settype($syncToken, 'integer') && ($addressBookSyncToken - $syncToken) > $forceInitialSyncInterval) || (settype($syncToken, 'integer') && $fullSyncToken != null && $syncToken < $fullSyncToken))
