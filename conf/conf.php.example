@@ -144,17 +144,18 @@ $config['card']['addressbook']['ldap']['me'] = [
 	// LDAP filter to be used to search for contacts
 	'filter'        	=> '(objectClass=inetOrgPerson)',
 	
-	// Bind user to search/read/write contacts. If 'bind_dn' and 'bind_pass' are not provided below 
-	// then LDAP connection using parameters provided in $config['auth']['ldap'] is used to obtain backend data. 
+	// Bind user to search/read/write contacts. If 'bind_dn' and 'bind_pass' values are not provided below 
+	// and if this address book is marked as 'user_specific' then LDAP connection using 'bind_dn' and 'bind_pass'
+	// values provided in $config['auth']['ldap'] will be used to access contact data from backend.
 	// This bind user must have read access to entryUUID, createTimestamp and modifyTimestamp operational attributes 
 	// of all contacts in the address book additionally.
 	'bind_dn'       	=> 'cn=admin,ou=People,dc=example,dc=org',
 	'bind_pass'     	=> '<secret>',
 	
-	// Sync LDAP bind user can be used for contact searches if there are size limits on 'bind_dn' in LDAP.
-	// Read and writes will still be performed by 'bind_dn'. 'sync_bind_dn' should have liberal or no size 
-	// limits and must have read access to entryUUID, createTimestamp and modifyTimestamp attribute of all 
-	// contacts in the address book. Access to other contact attributes is not required by this user.
+	// Sync LDAP bind user can be used for contact searches if there are size or time limits on 'bind_dn' in LDAP.
+	// Read and write of contact data will still be performed by 'bind_dn'. 'sync_bind_dn' should have liberal or 
+	// no size or time limits and must have read access to entryUUID, createTimestamp and modifyTimestamp attribute 
+	// of all contacts in the address book. Access to other contact attributes is not required by this user.
 	//  'sync_bind_dn'       => 'cn=carddavsync,ou=People,dc=example,dc=org',
 	//  'sync_bind_pw'     	=> '<secret>',
 	
@@ -367,17 +368,18 @@ $config['card']['addressbook']['ldap']['global'] = [
 	// LDAP filter to be used to search for contacts
 	'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
 	
-	// Bind user to search/read/write contacts. If 'bind_dn' and 'bind_pass' are not provided below 
-	// then LDAP connection using parameters provided in $config['auth']['ldap'] is used to obtain backend data. 
+	// Bind user to search/read/write contacts. If 'bind_dn' and 'bind_pass' values are not provided below 
+	// and if this address book is marked as 'user_specific' then LDAP connection using 'bind_dn' and 'bind_pass'
+	// values provided in $config['auth']['ldap'] will be used to access contact data from backend.
 	// This bind user must have read access to entryUUID, createTimestamp and modifyTimestamp operational attributes 
 	// of all contacts in the address book additionally.
 	'bind_dn'       	=> 'cn=admin,ou=People,dc=example,dc=org',
 	'bind_pass'     	=> '<secret>',
 	
-	// Sync LDAP bind user can be used for contact searches if there are size limits on 'bind_dn' in LDAP.
-	// Read and writes will still be performed by 'bind_dn'. 'sync_bind_dn' should have liberal or no size 
-	// limits and must have read access to entryUUID, createTimestamp and modifyTimestamp attribute of all 
-	// contacts in the address book. Access to other contact attributes is not required by this user.
+	// Sync LDAP bind user can be used for contact searches if there are size or time limits on 'bind_dn' in LDAP.
+	// Read and write of contact data will still be performed by 'bind_dn'. 'sync_bind_dn' should have liberal or 
+	// no size or time limits and must have read access to entryUUID, createTimestamp and modifyTimestamp attribute 
+	// of all contacts in the address book. Access to other contact attributes is not required by this user.
 	//  'sync_bind_dn'       => 'cn=carddavsync,ou=People,dc=example,dc=org',
 	//  'sync_bind_pw'     	=> '<secret>',
 	
@@ -590,17 +592,18 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	// LDAP filter to be used to search for contacts	
 	'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
 	
-	// Bind user to search/read/write contacts. If 'bind_dn' and 'bind_pass' are not provided below 
-	// then LDAP connection using parameters provided in $config['auth']['ldap'] is used to obtain backend data. 
+	// Bind user to search/read/write contacts. If 'bind_dn' and 'bind_pass' values are not provided below 
+	// and if this address book is marked as 'user_specific' then LDAP connection using 'bind_dn' and 'bind_pass'
+	// values provided in $config['auth']['ldap'] will be used to access contact data from backend.
 	// This bind user must have read access to entryUUID, createTimestamp and modifyTimestamp operational attributes 
 	// of all contacts in the address book additionally.
 	//  'bind_dn'       	=> '',
 	//  'bind_pass'     => '',
 	
-	// Sync LDAP bind user can be used for contact searches if there are size limits on 'bind_dn' in LDAP.
-	// Read and writes will still be performed by 'bind_dn'. 'sync_bind_dn' should have liberal or no size 
-	// limits and must have read access to entryUUID, createTimestamp and modifyTimestamp attribute of all 
-	// contacts in the address book. Access to other contact attributes is not required by this user.
+	// Sync LDAP bind user can be used for contact searches if there are size or time limits on 'bind_dn' in LDAP.
+	// Read and write of contact data will still be performed by 'bind_dn'. 'sync_bind_dn' should have liberal or 
+	// no size or time limits and must have read access to entryUUID, createTimestamp and modifyTimestamp attribute 
+	// of all contacts in the address book. Access to other contact attributes is not required by this user.
 	//  'sync_bind_dn'       	=> 'cn=carddavsync,ou=People,dc=example,dc=org',
 	//  'sync_bind_pw'     	=> '<secret>',
 	
