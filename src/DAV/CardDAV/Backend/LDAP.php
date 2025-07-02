@@ -261,7 +261,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     function updateAddressBook($addressBookId, \Sabre\DAV\PropPatch $propPatch)
     {
-        return false;
+			throw new SabreDAVException\MethodNotAllowed("Operation not defined");
     }
 
     /**
@@ -277,7 +277,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     function createAddressBook($principalUri, $url, array $properties)
     {
-        return false;
+			throw new SabreDAVException\MethodNotAllowed("Operation not defined");
     }
 
     /**
@@ -288,7 +288,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     function deleteAddressBook($addressBookId)
     {
-        return false;
+			throw new SabreDAVException\MethodNotAllowed("Operation not defined");
     }
 
     /**

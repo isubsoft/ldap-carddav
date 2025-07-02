@@ -243,7 +243,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      */
     function updatePrincipal($path, \Sabre\DAV\PropPatch $propPatch)
     {
-        return null;
+			throw new SabreDAVException\MethodNotAllowed("Operation not defined");
     }
 
     /**
