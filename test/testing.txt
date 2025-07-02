@@ -300,7 +300,7 @@ curl --dump-header /dev/stderr --silent --location -u %username:%password --requ
 --upload-file contact.vcf
 
 -- SAMPLE RESPONSE BODY
-HTTP/1.1 204 No Content
+HTTP/1.1 201 No Content
 
 --------------------------------------------------------------------------------
 
