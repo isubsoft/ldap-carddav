@@ -145,10 +145,10 @@ $config['card']['addressbook']['ldap']['me'] = [
 	'filter'        	=> '(objectClass=inetOrgPerson)',
 	
 	// Bind user to search/read/write contacts. If 'bind_dn' and 'bind_pass' values are not provided below 
-	// and if this address book is marked as 'user_specific' then LDAP connection using 'bind_dn' and 'bind_pass'
-	// values provided in $config['auth']['ldap'] will be used to access contact data from backend.
+	// and if this address book is marked as 'user_specific' then 'bind_dn' and 'bind_pass' values provided 
+	// in $config['auth']['ldap'] will be used instead.
 	// This bind user must have read access to entryUUID, createTimestamp and modifyTimestamp operational attributes 
-	// of all contacts in the address book additionally.
+	// of all contacts in the address book in addition to contact data.
 	'bind_dn'       	=> 'cn=admin,ou=People,dc=example,dc=org',
 	'bind_pass'     	=> '<secret>',
 	
@@ -369,10 +369,10 @@ $config['card']['addressbook']['ldap']['global'] = [
 	'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
 	
 	// Bind user to search/read/write contacts. If 'bind_dn' and 'bind_pass' values are not provided below 
-	// and if this address book is marked as 'user_specific' then LDAP connection using 'bind_dn' and 'bind_pass'
-	// values provided in $config['auth']['ldap'] will be used to access contact data from backend.
+	// and if this address book is marked as 'user_specific' then 'bind_dn' and 'bind_pass' values provided 
+	// in $config['auth']['ldap'] will be used instead.
 	// This bind user must have read access to entryUUID, createTimestamp and modifyTimestamp operational attributes 
-	// of all contacts in the address book additionally.
+	// of all contacts in the address book in addition to contact data.
 	'bind_dn'       	=> 'cn=admin,ou=People,dc=example,dc=org',
 	'bind_pass'     	=> '<secret>',
 	
@@ -593,10 +593,10 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
 	
 	// Bind user to search/read/write contacts. If 'bind_dn' and 'bind_pass' values are not provided below 
-	// and if this address book is marked as 'user_specific' then LDAP connection using 'bind_dn' and 'bind_pass'
-	// values provided in $config['auth']['ldap'] will be used to access contact data from backend.
+	// and if this address book is marked as 'user_specific' then 'bind_dn' and 'bind_pass' values provided 
+	// in $config['auth']['ldap'] will be used instead.
 	// This bind user must have read access to entryUUID, createTimestamp and modifyTimestamp operational attributes 
-	// of all contacts in the address book additionally.
+	// of all contacts in the address book in addition to contact data.
 	//  'bind_dn'       	=> '',
 	//  'bind_pass'     => '',
 	

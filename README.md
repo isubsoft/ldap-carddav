@@ -20,6 +20,7 @@
 ## Planned features
 1. Compatibility to as many vCard data types as possible.
 2. Custom vCard property support.
+3. Caching of backend contacts.
 
 ## Installation
 Check INSTALL file.
