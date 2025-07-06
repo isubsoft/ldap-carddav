@@ -284,18 +284,7 @@ curl --dump-header /dev/stderr --silent --location -u %username:%password --requ
 curl --dump-header /dev/stderr --silent --location -u %username:%password --request PUT '%base_url/addressbooks/%principal/%addressbook/%card_uri' \
 --header 'Content-Type: text/vcard' \
 --header 'Accept-Charset: utf-8' \
---data-raw 'BEGIN:VCARD
-VERSION:3.0
-PRODID:-//Sabre//Sabre VObject 4.2.2//EN
-UID:3e5a72018f75c75e5514e9ec1e7bddd2a5127b36.vcf
-FN:test2 test2
-N:test2;test2;;;
-EMAIL:test2@test2.com
-EMAIL:abc@b.c
-NICKNAME:test2 displayname
-TEL;TYPE=home,voice;VALUE=URI:1000000012
-TEL;TYPE=work,voice;VALUE=URI:9991812722
-END:VCARD'
+--upload-file contact.vcf
 
 -- SAMPLE RESPONSE BODY
 HTTP/1.1 204 No Content
@@ -308,14 +297,10 @@ HTTP/1.1 204 No Content
 curl --dump-header /dev/stderr --silent --location -u %username:%password --request PUT '%base_url/addressbooks/%principal/%addressbook/%card_uri' \
 --header 'Content-Type: text/vcard' \
 --header 'Accept-Charset: utf-8' \
---data 'BEGIN:VCARD
-VERSION:3.0
-PHOTO;VALUE=uri:<url>
-N:Raven;Test;;;
-END:VCARD'
+--upload-file contact.vcf
 
 -- SAMPLE RESPONSE BODY
-HTTP/1.1 204 No Content
+HTTP/1.1 201 No Content
 
 --------------------------------------------------------------------------------
 

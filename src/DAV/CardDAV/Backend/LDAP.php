@@ -261,7 +261,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     function updateAddressBook($addressBookId, \Sabre\DAV\PropPatch $propPatch)
     {
-        return false;
+			throw new SabreDAVException\MethodNotAllowed("Operation not supported");
     }
 
     /**
@@ -277,7 +277,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     function createAddressBook($principalUri, $url, array $properties)
     {
-        return false;
+			throw new SabreDAVException\MethodNotAllowed("Operation not supported");
     }
 
     /**
@@ -288,7 +288,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     function deleteAddressBook($addressBookId)
     {
-        return false;
+			throw new SabreDAVException\MethodNotAllowed("Operation not supported");
     }
 
     /**
@@ -466,7 +466,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				if(strlen($cardData) > $maxContactSize)
 					throw new ISubsoftDAVException\ContentTooLarge();
 					
-				$vcard = (Reader::read($cardData))->convert($this->defaultVcardVersion);
+				$vcard = Reader::read($cardData);
+				
+				foreach($vcard->validate() as $validationError)
+					if($validationError['level'] >= 3)
+						throw new SabreDAVException\BadRequest("Validation error for card property '" . ($validationError['node'])->name . "'. Make sure card version is mentioned in the card and all data in the card is formatted according to the version mentioned in the card.");
+					
+				$vcard = $vcard->convert($this->defaultVcardVersion);
 	      $UID = (!isset($vcard->UID) || $vcard->UID == null || $vcard->UID == '')?null:$vcard->UID;
 				
         if($operation == 'CREATE')
