@@ -5,7 +5,7 @@
 
 namespace ISubsoft\DAV\Utility;
 
-use \Sabre\DAV\Exception\ServiceUnavailable;
+use Sabre\DAV\Exception as SabreDAVException;
 use ISubsoft\VObject\Reader as Reader;
 
 class LDAP {
@@ -21,7 +21,7 @@ class LDAP {
                                             '%dn' => 'User DN in LDAP backend'
                                         ];
 
-    private static $allowed_vCard_params = ['TYPE', 'PREF'];
+    private static $allowed_vCard_params = ['TYPE'];
 
 
 
@@ -89,7 +89,7 @@ class LDAP {
 
         } catch (\Throwable $th) {  
             error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage()); 
-            throw new ServiceUnavailable($th->getMessage());
+            throw new SabreDAVException\ServiceUnavailable();
         }        
 
         return $ldapConn;
@@ -126,7 +126,7 @@ class LDAP {
 
         } catch (\Throwable $th) {
             error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
-            throw new ServiceUnavailable($th->getMessage());
+            throw new SabreDAVException\ServiceUnavailable();
         }    
 
         return $data;
@@ -152,7 +152,7 @@ class LDAP {
                        
                     } catch (\Throwable $th) {
                         error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
-                        throw new ServiceUnavailable($th->getMessage());
+                        throw new SabreDAVException\ServiceUnavailable();
                     }
                     
                     return $data;
@@ -188,7 +188,7 @@ class LDAP {
                         
                     } catch (\Throwable $th) {
                         error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
-                        throw new ServiceUnavailable($th->getMessage());
+                        throw new SabreDAVException\ServiceUnavailable();
                     }
                     
                     return $data;
@@ -200,25 +200,15 @@ class LDAP {
     }
 
 
-    public static function replacePlaceholders($string, $values = [])
+    public static function replacePlaceholders($subject, $values = [])
     {
-        foreach(self::$allowed_placeholders as $placeholder => $value)
-        {
-            preg_match('/('.$placeholder.')/', $string, $matches, PREG_OFFSET_CAPTURE);
-            
-            if(!empty($matches))
-            {
-                if(array_key_exists($placeholder, $values))
-                {
-                    $string = str_replace($placeholder, $values[$placeholder], $string);
-                }
-                else{
-                    $string = str_replace($placeholder, '', $string);
-                }
-            }
-        }
+        $replacedSubject = $subject;
         
-        return $string;
+        foreach(self::$allowed_placeholders as $placeholder => $desc)
+                if(array_key_exists($placeholder, $values))
+                    $replacedSubject = replacePlaceholder($placeholder, $values[$placeholder], $replacedSubject);
+        
+        return $replacedSubject;
     }
 
     public static function getVCardAttrParams($vCardKey, $params)
@@ -377,4 +367,44 @@ class LDAP {
 
         return ['ldapValueArray' => $elementArr, 'params' => $params];
     }
+
+		/********
+			Returns true if any of the array values is a scalar and not an empty string
+		********/
+    public static function hasValue(array $array) :bool
+    {
+        $flag = false;
+
+        foreach($array as $value)
+        {
+            if(is_scalar($value) && ((is_string($value) && trim($value) !== '') || !is_string($value)))
+                $flag = true;
+        }
+
+        return $flag;
+    }
+
+		/********
+			Returns true if any of the array values is either not a scalar or an empty string
+		********/
+    public static function notHasValue(array $array) :bool
+    {
+        $flag = false;
+
+        foreach($array as $value)
+        {
+            if(!is_scalar($value) || (is_string($value) && trim($value) === ''))
+                $flag = true;
+        }
+
+        return $flag;
+    }
+    
+		public static function responseCodeException($responseCode, $message)
+		{
+			if($responseCode == 400)
+				return new SabreDAVException\BadRequest($message);
+				
+			return new SabreDAVException\ServiceUnavailable();
+		}
 }
