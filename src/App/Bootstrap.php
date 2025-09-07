@@ -46,6 +46,8 @@ require __CONF_DIR__ . '/conf.php';
 
 define('__DATA_DIR__', (isset($config['datadir']) && $config['datadir'] != '')?((preg_match('#^/#', $config['datadir']) == 1)?$config['datadir']:__BASE_DIR__ . '/' . $config['datadir']):__BASE_DIR__ . '/data');
 
+define('__CACHE_DIR__', (isset($config['cachedir']) && $config['cachedir'] != '')?((preg_match('#^/#', $config['cachedir']) == 1)?$config['cachedir']:__BASE_DIR__ . '/' . $config['cachedir']):__BASE_DIR__ . '/cache');
+
 $tmpDir = !isset($config['tmpdir'])?'':(string)$config['tmpdir'];
 
 $tmpDir = replacePlaceholder('%systempdir', sys_get_temp_dir(), $tmpDir);
