@@ -377,13 +377,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		    }
             
 				$cacheInvalid = false;
-				$cachedData = null;
+				$cacheData = null;
 				$cardModifiedTimestamp = null;
         $cardData = null;
         
-       	$cachedData = $cache->get($cardUri, null);
+       	$cacheData = $cache->get($cardUri, null);
         	
-        if($cachedData === null)
+        if($cacheData === null)
         {
         	$cacheInvalid = true;
 		      $data = $this->fetchLdapContactDataById($addressBookId, $backendId, ['*', 'modifyTimestamp']);
@@ -409,7 +409,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         }
         else
         {
-        	foreach(explode(":", $cachedData) as $index => $value)
+        	foreach(explode(":", $cacheData) as $index => $value)
         	{
         		if($index === 0)
         			$cardModifiedTimestamp = $value;
@@ -1797,12 +1797,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						$stmt->execute([$syncDbUserId, $addressBookId]);
 						
 						while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-							$cachedData = null;
+							$cacheData = null;
 							$cardModifiedTimestamp = null;
 						  
-					  	$cachedData = $cache->get($row['card_uri'], null);
+					  	$cacheData = $cache->get($row['card_uri'], null);
 						  	
-						  if($cachedData == null)
+						  if($cacheData == null)
 						  {
 								$data = $this->fetchLdapContactDataById($addressBookId, $row['backend_id'], ['modifyTimestamp']);
 								
@@ -1822,7 +1822,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							}
 							else
 							{
-						  	foreach(explode(":", $cachedData) as $index => $value)
+						  	foreach(explode(":", $cacheData) as $index => $value)
 						  	{
 						  		if($index === 0)
 						  			$cardModifiedTimestamp = $value;
