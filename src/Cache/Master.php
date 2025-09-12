@@ -17,7 +17,7 @@ class Master
 		return implode(".", $key);
 	}	                          
 
-	private static function getBackend(string $backend)
+	private static function getBackend(string $backend, $backendConfig)
 	{
 		$backendObj = new Backend\Dummy();
 		
@@ -29,7 +29,7 @@ class Master
 		if($backend == 'memcached') {
 			$memcached = new \Memcached();
 			
-			if(!isset($cacheConfig['backend'][$backend]['servers']) || !$memcached->addServers($cacheConfig['backend'][$backend]['servers'])) {
+			if(!isset($backendConfig['servers']) || !$memcached->addServers($backendConfig['servers'])) {
 				error_log("Caching is disbaled as object for 'memcached' cache backend could not be instantiated. Check your 'memcached' cache backend configuration.  ".__METHOD__." at line no ".__LINE__);
 				return $backendObj;
 			}
@@ -51,7 +51,7 @@ class Master
 		$objClass = 'card';
 		$backend = (isset($cacheConfig[$objClass]['backend']) && $cacheConfig[$objClass]['backend'] != '')?$cacheConfig[$objClass]['backend']:null;
 
-		return self::getBackend($backend);
+		return self::getBackend($backend, $cacheConfig['backend'][$backend]);
 	}
 	
 	public static function cardKey(string $syncDbUserId, string $addressBookId, string $uri)
