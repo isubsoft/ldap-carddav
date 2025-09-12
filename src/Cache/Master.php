@@ -51,7 +51,7 @@ class Master
 		$objClass = 'card';
 		$backend = (isset($cacheConfig[$objClass]['backend']) && $cacheConfig[$objClass]['backend'] != '')?$cacheConfig[$objClass]['backend']:null;
 
-		return self::getBackend($backend, $cacheConfig['backend'][$backend]);
+		return self::getBackend($backend, !isset($cacheConfig['backend'][$backend])?null:$cacheConfig['backend'][$backend]);
 	}
 	
 	public static function cardKey(string $syncDbUserId, string $addressBookId, string $uri)
