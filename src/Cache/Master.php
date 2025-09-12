@@ -10,8 +10,13 @@ class Master
 	public static $allowedBackends = [
 		'card' => ['memory', 'apcu', 'local_fs', 'memcached']
   ];
-	                          
-	public static function getCardBackend(array $cacheConfig, string $syncDbUserId, string $addressBookId)
+
+	private static function getKey(array $key)
+	{
+		return implode(".", $key);
+	}	                          
+
+	public static function getCardBackend(array $cacheConfig)
 	{
 		$objClass = 'card';
 		$backend = (isset($cacheConfig[$objClass]['backend']) && $cacheConfig[$objClass]['backend'] != '')?$cacheConfig[$objClass]['backend']:null;
@@ -21,11 +26,37 @@ class Master
 			return $backendObj;
 			
 		if($backend == 'local_fs')
-		{
-			$basePath = __CACHE_DIR__ . '/' . ((isset($cacheConfig[$objClass][$backend]['base_path']) && $cacheConfig[$objClass][$backend]['base_path'] != '')?$cacheConfig[$objClass][$backend]['base_path']:$objClass) . '/' . $syncDbUserId . '/' . $addressBookId;
-			$backendObj = new Backend\LocalFS($basePath);
-		}
+			$backendObj = new Backend\LocalFS(__CACHE_DIR__);
 		
 		return $backendObj;
 	}
+	
+	public static function generateCardKey(string $syncDbUserId, string $addressBookId, string $uri)
+	{
+		$objClass = 'card';
+		return strtolower(md5(self::getKey([$objClass, $syncDbUserId, $addressBookId, $uri])));
+	}
+	
+  public static function encodeCard(array $values)
+  {
+		$cacheValues = [];			
+		
+		foreach($values as $key => $value)
+			$cacheValues[$key] = base64_encode($value);
+		
+		return json_encode($cacheValues);
+  }
+  
+  public static function decodeCard($value)
+  {
+		$cardValues = [];
+		
+		if(!is_string($value))
+			return $cardValues;
+		
+		foreach(json_decode($value, true) as $key => $value)
+			$cardValues[$key] = base64_decode($value);
+  
+  	return $cardValues;
+  }
 }

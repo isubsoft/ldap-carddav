@@ -335,8 +335,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         
         return $result;
     }
-
-
+    
+    
     /**
      * Returns a specfic card.
      *
@@ -356,7 +356,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				
 				$addressBookConfig = $this->addressbook[$addressBookId]['config'];
 				$syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
-        $cache = CacheMaster::getCardBackend($this->config['cache'], $syncDbUserId, $addressBookId);
+        $cache = CacheMaster::getCardBackend($this->config['cache']);
         
 				try 
 				{
@@ -376,16 +376,14 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						throw new SabreDAVException\ServiceUnavailable();
 		    }
             
-				$cacheInvalid = false;
-				$cacheData = null;
-				$cardModifiedTimestamp = null;
-        $cardData = null;
-        
-       	$cacheData = $cache->get($cardUri, null);
+				$cacheInvalid = false; // If true cache need to be refreshed
+       	$result = CacheMaster::decodeCard($cache->get(CacheMaster::generateCardKey($syncDbUserId, $addressBookId, $cardUri), null));
         	
-        if($cacheData === null)
+        if(!isset($result['carddata']) || !isset($result['lastmodified']) || Reader::read($result['carddata'])->convert($this->defaultVcardVersion)->UID != $cardUID)
         {
         	$cacheInvalid = true;
+					$cardModifiedTimestamp = null;
+		      $cardData = null;
 		      $data = $this->fetchLdapContactDataById($addressBookId, $backendId, ['*', 'modifyTimestamp']);
 		      
 		      if(empty($data))
@@ -401,41 +399,39 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		      }
 		      
 					$cardModifiedTimestamp = strtotime($data[0]['modifytimestamp'][0]);
-        
         	$cardData = $this->generateVcard($data[0], $addressBookId, $cardUID);
         	
 					if(empty($cardData))
 						throw new SabreDAVException\ServiceUnavailable();
+						
+					$result = [
+            'carddata'      => $cardData,
+            'lastmodified'  => $cardModifiedTimestamp,
+            'etag'          => '"' . md5($cardData) . '"',
+            'size'          => strlen($cardData)
+					];
         }
-        else
-        {
-        	foreach(explode(":", $cacheData) as $index => $value)
-        	{
-        		if($index === 0)
-        			$cardModifiedTimestamp = $value;
-        		if($index === 1)
-        			$cardData = base64_decode($value);
-        		if($index > 1)
-        			break;
-        	}
+        
+        if(!isset($result['etag'])) {
+	       	$cacheInvalid = true;
+        	$result['etag'] = '"' . md5($result['carddata']) . '"';
+        }
         	
-		      if($cardData == null || $cardModifiedTimestamp == null)
-		      {
-						error_log("Cached data is not reliable. Clear cache: " . __METHOD__ . " at line no " . __LINE__);
-						throw new SabreDAVException\ServiceUnavailable();
-					}
+        if(!isset($result['size'])) {
+	       	$cacheInvalid = true;
+        	$result['size'] = strlen($result['carddata']);
         }
 					
-				if($cacheInvalid)
-					$cache->set($cardUri, $cardModifiedTimestamp . ":" . base64_encode($cardData));
-         
-        $result = [
-            'id'            => $cardUID,
-            'carddata'      => $cardData,
-            'uri'           => $cardUri,
-            'lastmodified'  => $cardModifiedTimestamp
-        ];
-                    
+				if($cacheInvalid) {
+					if(!$cache->set(CacheMaster::generateCardKey($syncDbUserId, $addressBookId, $cardUri), CacheMaster::encodeCard($result))) {
+				    error_log("Could not set cache data: " . __METHOD__ . " at line no " . __LINE__ . ", " . $th->getMessage());
+						throw new SabreDAVException\ServiceUnavailable();
+					}
+				}
+					
+        $result['id'] = $cardUID;
+        $result['uri'] = $cardUri;
+				
         return $result;
     }
     
@@ -495,7 +491,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
         $writableAddressBook = (!isset($addressBookConfig['writable']))?true:$addressBookConfig['writable'];
         $maxContactSize = $this->addressbook[$addressBookId]['contactMaxSize'];
-        $cache = CacheMaster::getCardBackend($this->config['cache'], $syncDbUserId, $addressBookId);
+        $cache = CacheMaster::getCardBackend($this->config['cache']);
         
         if(!$writableAddressBook)
 					throw new SabreDAVException\Forbidden("Not allowed");
@@ -503,7 +499,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				if(strlen($cardData) > $maxContactSize)
 					throw new ISubsoftDAVException\ContentTooLarge();
 					
-				if(!$cache->delete($cardUri))
+				if(!$cache->delete(CacheMaster::generateCardKey($syncDbUserId, $addressBookId, $cardUri)))
 				{
 		      error_log("Could not delete cached data: " . __METHOD__ . " at line no " . __LINE__ . ", " . $th->getMessage());
 					throw new SabreDAVException\ServiceUnavailable();
@@ -932,12 +928,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
         $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
         $writableAddressBook = (!isset($addressBookConfig['writable']))?true:$addressBookConfig['writable'];
-        $cache = CacheMaster::getCardBackend($this->config['cache'], $syncDbUserId, $addressBookId);
+        $cache = CacheMaster::getCardBackend($this->config['cache']);
         
         if(!$writableAddressBook)
         	return false;
         	
-				if(!$cache->delete($cardUri))
+				if(!$cache->delete(CacheMaster::generateCardKey($syncDbUserId, $addressBookId, $cardUri)))
 				{
 		      error_log("Could not delete cached data: " . __METHOD__ . " at line no " . __LINE__ . ", " . $th->getMessage());
 					throw new SabreDAVException\ServiceUnavailable();
@@ -1426,7 +1422,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 			$addressBookSyncToken = $this->addressbook[$addressBookId]['syncToken'];
 			$syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
 			$ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
-      $cache = CacheMaster::getCardBackend($this->config['cache'], $syncDbUserId, $addressBookId);
+      $cache = CacheMaster::getCardBackend($this->config['cache']);
 
 			$result = [
 					'syncToken' => $addressBookSyncToken,
@@ -1621,7 +1617,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 								continue;
 						}
 						
-						if(!$cache->delete($cardUri))
+						if(!$cache->delete(CacheMaster::generateCardKey($syncDbUserId, $addressBookId, $cardUri)))
 						{
 						  error_log("Could not delete cached data: " . __METHOD__ . " at line no " . __LINE__ . ", " . $th->getMessage());
 							throw new SabreDAVException\ServiceUnavailable();
@@ -1768,7 +1764,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $addressBookSyncToken = $this->addressbook[$addressBookId]['syncToken'];
         $syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
         $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
-        $cache = CacheMaster::getCardBackend($this->config['cache'], $syncDbUserId, $addressBookId);
+        $cache = CacheMaster::getCardBackend($this->config['cache']);
 				$backendContacts = [];
 				
 				$fullRefreshSyncToken = null;
@@ -1797,12 +1793,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						$stmt->execute([$syncDbUserId, $addressBookId]);
 						
 						while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-							$cacheData = null;
+							$cacheValues = null;
 							$cardModifiedTimestamp = null;
 						  
-					  	$cacheData = $cache->get($row['card_uri'], null);
+					  	$cacheValues = CacheMaster::decodeCard($cache->get(CacheMaster::generateCardKey($syncDbUserId, $addressBookId, $row['card_uri']), null));
+					  	$cardModifiedTimestamp = !isset($cacheValues['lastmodified'])?null:$cacheValues['lastmodified'];
 						  	
-						  if($cacheData == null)
+						  if($cardModifiedTimestamp == null)
 						  {
 								$data = $this->fetchLdapContactDataById($addressBookId, $row['backend_id'], ['modifyTimestamp']);
 								
@@ -1812,29 +1809,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 								if(!$data['count'] > 0)
 									continue;
 								
-								if(!isset($data[0]['modifytimestamp'][0]))
-								{
+								if(!isset($data[0]['modifytimestamp'][0])) {
 									error_log("Read access to some operational attributes in LDAP not present. ".__METHOD__." at line no ".__LINE__);
 									throw new SabreDAVException\ServiceUnavailable();
 								}
 								
 								$cardModifiedTimestamp = $data[0]['modifytimestamp'][0];
-							}
-							else
-							{
-						  	foreach(explode(":", $cacheData) as $index => $value)
-						  	{
-						  		if($index === 0)
-						  			$cardModifiedTimestamp = $value;
-						  		if($index > 0)
-						  			break;
-						  	}
-						  	
-								if($cardModifiedTimestamp == null)
-								{
-									error_log("Cached data is not reliable. Clear cache: " . __METHOD__ . " at line no " . __LINE__);
-									throw new SabreDAVException\ServiceUnavailable();
-								}
 							}
 							
 							$backendContacts[] = [
@@ -1852,9 +1832,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					return $backendContacts;
 				}
 				
-				if(!$cache->clear())
-					throw new SabreDAVException\ServiceUnavailable();
-        
         if(isset($addressBookConfig['sync_bind_dn']) && $addressBookConfig['sync_bind_dn'] != '')
         {
         	$syncBindDn = $addressBookConfig['sync_bind_dn'];
@@ -1911,7 +1888,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
           
             $contactData['backend_id'] = $data['data']['entryUUID'][0];
             $contactData['modified_timestamp'] = strtotime($data['data']['modifyTimestamp'][0]);
-        
+                
             $backendContacts[] = $contactData;
             $data = Utility::LdapIterativeQuery($ldapConn, $data['entryIns']);
 					}
@@ -1926,6 +1903,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						$cardUri = $row['card_uri'];
 						$backendId = $row['backend_id'];
 						$backendContactExist = false;
+						
+						if(!$cache->delete(CacheMaster::generateCardKey($syncDbUserId, $addressBookId, $cardUri))) {
+		      		error_log("Could not delete cached data: " . __METHOD__ . " at line no " . __LINE__ . ", " . $th->getMessage());
+							throw new SabreDAVException\ServiceUnavailable();
+						}
 
 						foreach($backendContacts as $backendContact)
 						{

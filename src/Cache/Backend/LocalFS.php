@@ -148,7 +148,11 @@ class LocalFS implements CacheInterface
      */
     public function setMultiple($values, $ttl = null)
     {
-    	return false;
+    	foreach($values as $key => $value)
+    		if(!$this->set($key, $value))
+    			return false;
+    		
+    	return true;
     }
 
     /**
@@ -164,7 +168,11 @@ class LocalFS implements CacheInterface
      */
     public function deleteMultiple($keys)
     {
-    	return false;
+    	foreach($keys as $key)
+    		if(!$this->delete($key))
+    			return false;
+    		
+    	return true;
     }
 
     /**
