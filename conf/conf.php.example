@@ -114,26 +114,25 @@ $config['principal']['ldap'] = [
   							]
 ];
 
-// Define parameters for cards caching backend. Allowed backends are mentioned below.
-// memory: System memory
-// apcu: APCu cache
-// local_fs: Local filesystem
+// Caching. Allowed backends are mentioned below.
 // memcached: Memcached server
-$config['cache']['card'] = [ 
-	'local_fs' => [
-		// Path relative to %cachedir. Absolute paths will be converted to relative paths. Defaults to card.
-		//  'base_path' => 'card'
-	],
+// local_fs: Local filesystem
+// apcu: APCu cache ( check https://www.php.net/manual/en/book.apcu.php for details )
+// memory: System memory (for testing purpose only, cache is not persisted between requests)
+
+// Caching backend to enable. If not set then caching is disabled.
+//  $config['cache']['card']['backend'] = 'local_fs';
+
+// Configure caching backend below. Currently only memcached backend needs configuration.
+$config['cache']['backend'] = [
 	// 'memcached' => [
+	// 'servers' should be same as $servers parameter to function \Memcached::addServers ( check https://www.php.net/manual/en/memcached.addservers.php for details )
 	// 	'servers' => [
 	//		['<hostname1>', <port1>, <weight1>],
 	//		['<hostname2>', <port2>, <weight2>]
 	//	]
 	// ]
 ];
-
-// Caching backend to enable. If not set then caching is disabled.
-//  $config['cache']['card']['backend'] = 'local_fs';
 
 $config['card']['addressbook']['ldap']['me'] = [
 	'name'          	=> 'Me',
