@@ -27,6 +27,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      * @var PDO
      */
     protected $pdo;
+    
+    /**
+     * Cache object.
+     *
+     * @var cache
+     */
+    private $cache;
 
     /**
      * PDO table name.
@@ -116,6 +123,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     function __construct(array $config, \PDO $pdo) {
         $this->config = $config;
         $this->pdo = $pdo;
+      	$this->cache = CacheMaster::getCardBackend($config['cache']);
     }
 
 
@@ -356,7 +364,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				
 				$addressBookConfig = $this->addressbook[$addressBookId]['config'];
 				$syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
-        $cache = CacheMaster::getCardBackend($this->config['cache']);
+        $cache = $this->cache;
         
 				try 
 				{
@@ -491,7 +499,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
         $writableAddressBook = (!isset($addressBookConfig['writable']))?true:$addressBookConfig['writable'];
         $maxContactSize = $this->addressbook[$addressBookId]['contactMaxSize'];
-        $cache = CacheMaster::getCardBackend($this->config['cache']);
+        $cache = $this->cache;
         
         if(!$writableAddressBook)
 					throw new SabreDAVException\Forbidden("Not allowed");
@@ -928,7 +936,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
         $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
         $writableAddressBook = (!isset($addressBookConfig['writable']))?true:$addressBookConfig['writable'];
-        $cache = CacheMaster::getCardBackend($this->config['cache']);
+        $cache = $this->cache;
         
         if(!$writableAddressBook)
         	return false;
@@ -1422,7 +1430,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 			$addressBookSyncToken = $this->addressbook[$addressBookId]['syncToken'];
 			$syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
 			$ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
-      $cache = CacheMaster::getCardBackend($this->config['cache']);
+      $cache = $this->cache;
 
 			$result = [
 					'syncToken' => $addressBookSyncToken,
@@ -1764,7 +1772,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $addressBookSyncToken = $this->addressbook[$addressBookId]['syncToken'];
         $syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
         $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
-        $cache = CacheMaster::getCardBackend($this->config['cache']);
+        $cache = $this->cache;
 				$backendContacts = [];
 				
 				$fullRefreshSyncToken = null;
