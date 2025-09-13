@@ -498,10 +498,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					throw new ISubsoftDAVException\ContentTooLarge();
 					
 				if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri)))
-				{
 		      error_log("Could not delete cache data: " . __METHOD__ . " at line no " . __LINE__);
-					throw new SabreDAVException\ServiceUnavailable();
-				}
 					
 				$vcard = Reader::read($cardData);
 				
@@ -932,10 +929,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         	return false;
         	
 				if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri)))
-				{
 		      error_log("Could not delete cache data: " . __METHOD__ . " at line no " . __LINE__);
-					throw new SabreDAVException\ServiceUnavailable();
-				}
         
         $data = $this->fetchLdapContactDataByUri($addressBookId, $cardUri, ['dn', 'entryUUID']);
         
@@ -1616,10 +1610,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						}
 						
 						if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri)))
-						{
 						  error_log("Could not delete cache data: " . __METHOD__ . " at line no " . __LINE__);
-							throw new SabreDAVException\ServiceUnavailable();
-						}
 
 						$result['modified'][] = $cardUri;
 				} catch (\Throwable $th) {
@@ -1902,10 +1893,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						$backendId = $row['backend_id'];
 						$backendContactExist = false;
 						
-						if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri))) {
+						if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri)))
 		      		error_log("Could not delete cache data: " . __METHOD__ . " at line no " . __LINE__);
-							throw new SabreDAVException\ServiceUnavailable();
-						}
 
 						foreach($backendContacts as $backendContact)
 						{
