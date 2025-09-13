@@ -87,10 +87,7 @@ class LocalFS implements CacheInterface
     {
     	$cacheFile = $this->basePath . '/' . $key;
     	
-    	if(file_exists($cacheFile))
-    		return unlink($cacheFile);
-    		
-    	return true;
+			return @unlink($cacheFile);
     }
 
     /**
@@ -104,7 +101,7 @@ class LocalFS implements CacheInterface
     	
     	if(file_exists($this->basePath))
 		  	foreach(glob($cacheFilePattern) as $cacheFile)
-		  		if(unlink($cacheFile) === false)
+		  		if(!@unlink($cacheFile))
 		  			return false;
     			
     	return true;
