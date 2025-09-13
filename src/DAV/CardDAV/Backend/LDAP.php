@@ -386,9 +386,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             
 				$cacheInvalid = false; // If true cache need to be refreshed
        	$result = CacheMaster::decodeCard($cache->get(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri), null));
+       	
+       	if($result == [] || $result == null)
+					$cacheInvalid = true;
         	
-        if(!isset($result['carddata']) || !isset($result['lastmodified']) || Reader::read($result['carddata'])->convert($this->defaultVcardVersion)->UID != $cardUID)
+        if($cacheInvalid)
         {
+		    	$result = [];
         	$cacheInvalid = true;
 					$cardModifiedTimestamp = null;
 		      $cardData = null;
@@ -418,25 +422,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             'etag'          => '"' . md5($cardData) . '"',
             'size'          => strlen($cardData)
 					];
+					
+					if(!$cache->set(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri), CacheMaster::encodeCard($result)))
+				    error_log("Could not set cache data: " . __METHOD__ . " at line no " . __LINE__ . ", " . $th->getMessage());
         }
         
-        if(!isset($result['etag'])) {
-	       	$cacheInvalid = true;
-        	$result['etag'] = '"' . md5($result['carddata']) . '"';
-        }
-        	
-        if(!isset($result['size'])) {
-	       	$cacheInvalid = true;
-        	$result['size'] = strlen($result['carddata']);
-        }
-					
-				if($cacheInvalid) {
-					if(!$cache->set(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri), CacheMaster::encodeCard($result))) {
-				    error_log("Could not set cache data: " . __METHOD__ . " at line no " . __LINE__ . ", " . $th->getMessage());
-						throw new SabreDAVException\ServiceUnavailable();
-					}
-				}
-					
         $result['id'] = $cardUID;
         $result['uri'] = $cardUri;
 				
