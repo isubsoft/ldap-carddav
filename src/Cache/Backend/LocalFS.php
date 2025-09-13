@@ -85,12 +85,12 @@ class LocalFS implements CacheInterface
      */
     public function delete($key)
     {
+    	if(!$this->has($key))
+    		return false;
+    		
     	$cacheFile = $this->basePath . '/' . $key;
     	
-    	if(file_exists($cacheFile))
-    		return unlink($cacheFile);
-    		
-    	return true;
+   		return unlink($cacheFile);
     }
 
     /**

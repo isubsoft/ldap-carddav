@@ -424,7 +424,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					];
 					
 					if(!$cache->set(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri), CacheMaster::encodeCard($result)))
-				    error_log("Could not set cache data: " . __METHOD__ . " at line no " . __LINE__ . ", " . $th->getMessage());
+				    error_log("Could not set cache data: " . __METHOD__ . " at line no " . __LINE__);
         }
         
         $result['id'] = $cardUID;
@@ -499,7 +499,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					
 				if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri)))
 				{
-		      error_log("Could not delete cached data: " . __METHOD__ . " at line no " . __LINE__ . ", " . $th->getMessage());
+		      error_log("Could not delete cache data: " . __METHOD__ . " at line no " . __LINE__);
 					throw new SabreDAVException\ServiceUnavailable();
 				}
 					
@@ -933,7 +933,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         	
 				if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri)))
 				{
-		      error_log("Could not delete cached data: " . __METHOD__ . " at line no " . __LINE__ . ", " . $th->getMessage());
+		      error_log("Could not delete cache data: " . __METHOD__ . " at line no " . __LINE__);
 					throw new SabreDAVException\ServiceUnavailable();
 				}
         
@@ -1617,7 +1617,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						
 						if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri)))
 						{
-						  error_log("Could not delete cached data: " . __METHOD__ . " at line no " . __LINE__ . ", " . $th->getMessage());
+						  error_log("Could not delete cache data: " . __METHOD__ . " at line no " . __LINE__);
 							throw new SabreDAVException\ServiceUnavailable();
 						}
 
@@ -1903,7 +1903,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						$backendContactExist = false;
 						
 						if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri))) {
-		      		error_log("Could not delete cached data: " . __METHOD__ . " at line no " . __LINE__ . ", " . $th->getMessage());
+		      		error_log("Could not delete cache data: " . __METHOD__ . " at line no " . __LINE__);
 							throw new SabreDAVException\ServiceUnavailable();
 						}
 
