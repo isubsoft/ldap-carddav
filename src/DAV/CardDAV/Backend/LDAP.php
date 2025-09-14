@@ -384,48 +384,52 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						throw new SabreDAVException\ServiceUnavailable();
 		    }
             
-				$cacheInvalid = false; // If true cache need to be refreshed
-       	$result = CacheMaster::decodeCard($cache->get(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri), null));
+				$cacheValid = true; // If false then cache need to be refreshed
+       	$result = CacheMaster::decode($cache->get(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri), null));
        	
        	if($result == [] || $result == null)
-					$cacheInvalid = true;
-        	
-        if($cacheInvalid)
-        {
-		    	$result = [];
-        	$cacheInvalid = true;
-					$cardModifiedTimestamp = null;
-		      $cardData = null;
-		      $data = $this->fetchLdapContactDataById($addressBookId, $backendId, ['*', 'modifyTimestamp']);
-		      
-		      if(empty($data))
-						throw new SabreDAVException\ServiceUnavailable();
-						
-		      if(!$data['count'] > 0)
-		      	return false;
-		      	
-		      if(!isset($data[0]['modifytimestamp'][0]))
-		      {
-						error_log("Read access to some operational attributes in LDAP not present. ".__METHOD__." at line no ".__LINE__);
-						throw new SabreDAVException\ServiceUnavailable();
-		      }
-		      
-					$cardModifiedTimestamp = strtotime($data[0]['modifytimestamp'][0]);
-        	$cardData = $this->generateVcard($data[0], $addressBookId, $cardUID);
-        	
-					if(empty($cardData))
-						throw new SabreDAVException\ServiceUnavailable();
-						
-					$result = [
-            'carddata'      => $cardData,
-            'lastmodified'  => $cardModifiedTimestamp,
-            'etag'          => '"' . md5($cardData) . '"',
-            'size'          => strlen($cardData)
-					];
+					$cacheValid = false;
 					
-					if(!$cache->set(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri), CacheMaster::encodeCard($result)))
-				    error_log("Could not set cache data: " . __METHOD__ . " at line no " . __LINE__);
-        }
+				if($cacheValid) {
+		      $result['id'] = $cardUID;
+		      $result['uri'] = $cardUri;
+        	
+        	return $result;
+				}
+        	
+	    	$result = [];
+      	$cacheInvalid = true;
+				$cardModifiedTimestamp = null;
+	      $cardData = null;
+	      $data = $this->fetchLdapContactDataById($addressBookId, $backendId, ['*', 'modifyTimestamp']);
+	      
+	      if(empty($data))
+					throw new SabreDAVException\ServiceUnavailable();
+					
+	      if(!$data['count'] > 0)
+	      	return false;
+	      	
+	      if(!isset($data[0]['modifytimestamp'][0]))
+	      {
+					error_log("Read access to some operational attributes in LDAP not present. ".__METHOD__." at line no ".__LINE__);
+					throw new SabreDAVException\ServiceUnavailable();
+	      }
+	      
+				$cardModifiedTimestamp = strtotime($data[0]['modifytimestamp'][0]);
+      	$cardData = $this->generateVcard($data[0], $addressBookId, $cardUID);
+      	
+				if(empty($cardData))
+					throw new SabreDAVException\ServiceUnavailable();
+					
+				$result = [
+          'carddata'      => $cardData,
+          'lastmodified'  => $cardModifiedTimestamp,
+          'etag'          => '"' . md5($cardData) . '"',
+          'size'          => strlen($cardData)
+				];
+				
+				if(!$cache->set(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri), CacheMaster::encode($result)))
+			    error_log("Could not set cache data: " . __METHOD__ . " at line no " . __LINE__);
         
         $result['id'] = $cardUID;
         $result['uri'] = $cardUri;
@@ -1785,7 +1789,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							$cacheValues = null;
 							$cardModifiedTimestamp = null;
 						  
-					  	$cacheValues = CacheMaster::decodeCard($cache->get(CacheMaster::cardKey($syncDbUserId, $addressBookId, $row['card_uri']), null));
+					  	$cacheValues = CacheMaster::decode($cache->get(CacheMaster::cardKey($syncDbUserId, $addressBookId, $row['card_uri']), null));
 					  	$cardModifiedTimestamp = !isset($cacheValues['lastmodified'])?null:$cacheValues['lastmodified'];
 						  	
 						  if($cardModifiedTimestamp == null)

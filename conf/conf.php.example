@@ -120,8 +120,11 @@ $config['principal']['ldap'] = [
 // apcu: APCu cache ( check https://www.php.net/manual/en/book.apcu.php for details )
 // memory: System memory (for testing purpose only, cache is not persisted between requests)
 
-// Caching backend to enable. If not set then caching is disabled.
+// Caching backend to enable specific to object type. If not set then caching is disabled.
+// 'local_fs' is not a valid backend for 'principal' type since it currently lacks support for cache expiry.
+// TTL for 'principal' type is currently fixed at 24 hours.
 //  $config['cache']['card']['backend'] = 'local_fs';
+//  $config['cache']['principal']['backend'] = 'apcu';
 
 // Configure caching backend below. Currently only memcached backend needs configuration.
 $config['cache']['backend'] = [

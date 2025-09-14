@@ -10,21 +10,19 @@ use Sabre\DAV\Exception as SabreDAVException;
 
 class Master
 {
-	public static $allowedBackends = ['memory', 'apcu', 'local_fs', 'memcached'];
+	public static $allowedBackends = [
+		'principal' => ['memory', 'apcu', 'memcached'],
+		'card' => ['memory', 'apcu', 'local_fs', 'memcached']
+	];
 
 	private static function getKey(array $key)
 	{
-		return implode(".", $key);
+		return strtolower(md5(implode(".", $key)));
 	}	                          
 
-	private static function getBackend(string $backend, $backendConfig)
+	private static function getBackend($backend, $backendConfig)
 	{
 		$backendObj = new Backend\Dummy();
-		
-		if(!in_array($backend, self::$allowedBackends)) {
-			error_log("Caching is disabled as '$backend' is not a valid caching backend. Check your configuration.  ".__METHOD__." at line no ".__LINE__);
-			return $backendObj;
-		}
 		
 		if($backend == 'memcached') {
 			$memcached = new \Memcached();
@@ -45,22 +43,46 @@ class Master
 		
 		return $backendObj;
 	}
+	
+	public static function getPrincipalBackend(array $cacheConfig)
+	{
+		$objClass = 'principal';
+		$backend = (isset($cacheConfig[$objClass]['backend']) && $cacheConfig[$objClass]['backend'] != '')?$cacheConfig[$objClass]['backend']:null;
+		
+		if($backend != null && !in_array($backend, self::$allowedBackends[$objClass])) {
+			error_log("Caching is disabled as '$backend' is not a valid caching backend for '$objClass'. Check your configuration.  ".__METHOD__." at line no ".__LINE__);
+			$backend = null;
+		}
+
+		return self::getBackend($backend, !isset($cacheConfig['backend'][$backend])?null:$cacheConfig['backend'][$backend]);
+	}
 
 	public static function getCardBackend(array $cacheConfig)
 	{
 		$objClass = 'card';
 		$backend = (isset($cacheConfig[$objClass]['backend']) && $cacheConfig[$objClass]['backend'] != '')?$cacheConfig[$objClass]['backend']:null;
+		
+		if($backend != null && !in_array($backend, self::$allowedBackends[$objClass])) {
+			error_log("Caching is disabled as '$backend' is not a valid caching backend for '$objClass'. Check your configuration.  ".__METHOD__." at line no ".__LINE__);
+			$backend = null;
+		}
 
 		return self::getBackend($backend, !isset($cacheConfig['backend'][$backend])?null:$cacheConfig['backend'][$backend]);
 	}
 	
+	public static function principalKey(string $principalId)
+	{
+		$objClass = 'principal';
+		return self::getKey([$objClass, $principalId]);
+	}
+
 	public static function cardKey(string $syncDbUserId, string $addressBookId, string $uri)
 	{
 		$objClass = 'card';
-		return strtolower(md5(self::getKey([$objClass, $syncDbUserId, $addressBookId, $uri])));
+		return self::getKey([$objClass, $syncDbUserId, $addressBookId, $uri]);
 	}
 	
-  public static function encodeCard(array $values)
+  public static function encode(array $values)
   {
 		$cacheValues = [];			
 		
@@ -70,7 +92,7 @@ class Master
 		return json_encode($cacheValues);
   }
   
-  public static function decodeCard($value)
+  public static function decode($value)
   {
 		$cardValues = [];
 		
