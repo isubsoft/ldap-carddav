@@ -26,6 +26,12 @@ sqlite3
 [packages if using mysql as pdo database]
 php-mysql
 
+[packages if using memcached as cache backend]
+php-memcached
+
+[packages if using apcu as cache backend]
+php-apcu
+
 [packages if using apache as web server]
 apache2
 libapache2-mod-php
@@ -52,9 +58,15 @@ Copy conf/conf.php.example as conf/conf.php and update the file conf/conf.php ac
 2. Execute 'php src/App/syncdb.php init' to initialize the sync database.
 
 -- File permissions
-1. conf/conf.php MUST NOT be world readable but MUST be readable and preferably not writable by the user executing PHP.
-2. Data directory need to be writable by the user executing PHP and MUST NOT be world readable. All sub directories of data directory need to be writable by the user executing PHP. Default data directory is data.
-3. Temporary files directory need to be writable by the user executing PHP unless system temporary files directory is configured. Default temporary files directory is tmp.
+1. Make sure no application files or folders are initially owned by user www-data.
+2. conf/conf.php MUST NOT be world readable but MUST be readable and preferably not writable by the user executing PHP.
+   Equivalent of UNIX command: chmod o-rwx conf/conf.php && chmod g-w conf/conf.php && chgrp www-data conf/conf.php
+3. Data directory need to be writable by the user executing PHP and MUST NOT be world readable. All sub directories of data directory need to be writable by the user executing PHP. Default data directory is data.
+   Equivalent of UNIX command: chmod o-rwx data && chown -R www-data:www-data data
+4. Cache directory need to be writable by the user executing PHP and MUST NOT be world readable. All sub directories of cache directory need to be writable by the user executing PHP. Default cache directory is cache.
+   Equivalent of UNIX command: chmod o-rwx cache && chown -R www-data:www-data cache
+5. Temporary files directory need to be writable by the user executing PHP unless system temporary files directory is configured. Default temporary files directory is tmp.
+   Equivalent of UNIX command: chmod o-rwx tmp && chown -R www-data:www-data tmp
 
 -- Web server and PHP configuration
 Check the wiki for examples.

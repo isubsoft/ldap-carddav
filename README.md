@@ -1,26 +1,26 @@
 # ldap-carddav - A CardDAV server with LDAP as authentication and contacts backend
-![A CardDAV server for LDAP](https://github.com/user-attachments/assets/e7d0f02a-bfd1-489f-b8a8-e0aef168c035)
+![A CardDAV interface to LDAP](https://github.com/user-attachments/assets/e7d0f02a-bfd1-489f-b8a8-e0aef168c035)
 
 ## Features
-1. Authenticate CardDAV users against LDAP server.
-2. Multiple address book support.
-3. Global, shared and private address book support.
-4. Read, write and rename contacts between CardDAV clients and LDAP server.
-5. Bidirectional sync between LDAP server and CardDAV clients for new contacts, modified contacts and contacts deleted via CardDAV protocol. Contacts deleted directly in LDAP server are deleted in CardDAV clients asynchronously.
-6. Supports WebDAV sync to get changes from LDAP server incrementally.
-7. Fully compatible with LDAP address book applications since contacts are stored in LDAP server as directory entries.
-8. Extensive and customizable configuration option to map vCard properties to LDAP attributes including multi-value and composite value properties and attributes.
-9. Contact group support.
-10. Media like profile picture support.
+1. Store contacts directly in LDAP directory.
+2. Authenticate CardDAV users against LDAP directory.
+3. Multiple address book support.
+4. Global, shared and private address book support.
+5. Read, write and rename contacts in LDAP directory using CardDAV protocol.
+6. Bidirectional sync between LDAP directory and CardDAV clients. Contacts deleted directly in LDAP are deleted in CardDAV clients asynchronously.
+7. Supports WebDAV sync to get changes from LDAP incrementally.
+8. Fully compatible with LDAP address book applications since contacts are stored directly in LDAP directory.
+9. Extensive and customizable configuration option to map vCard properties to LDAP directory attributes including multi-value and composite value properties and attributes.
+10. Contact group support.
+11. Media like profile picture support for contacts.
 
 ## Limitations
 1. Does not support anonymous access to the server.
-2. Same LDAP server must be used for authentication as well as for address books.
+2. Same LDAP directory must be used for authentication as well as for address books.
 
 ## Planned features
 1. Compatibility to as many vCard data types as possible.
 2. Custom vCard property support.
-3. Caching of backend contacts.
 
 ## Installation
 Check INSTALL file.

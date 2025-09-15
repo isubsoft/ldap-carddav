@@ -14,6 +14,11 @@ $config = [];
 // Defaults to 'data' directory relative to base directory of the application.
 //   $config['datadir'] = '/var/lib/ldap_carddav';
 
+// Set cache directory path of the application if it is different from default.
+// This can either be an absolute path or a path relative to base directory of the application.
+// Defaults to 'cache' directory relative to base directory of the application.
+//   $config['cachedir'] = '/var/cache/ldap_carddav';
+
 // Base URI for this application. Default is '/server.php'.
 // If you have configured clean URLs in your HTTP server configuration then, uncomment the below and update
 // if required.
@@ -107,6 +112,29 @@ $config['principal']['ldap'] = [
   								'displayname' => 'cn', 	// 'displayname' is a commonly used name of the principal.
   								'mail' => 'mail' 				// 'mail' is an email id of the principal.
   							]
+];
+
+// Caching. Allowed backends are mentioned below.
+// memcached: Memcached server
+// local_fs: Local filesystem
+// apcu: APCu cache ( check https://www.php.net/manual/en/book.apcu.php for details )
+// memory: System memory (for testing purpose only, cache is not persisted between requests)
+
+// Caching backend to enable specific to object type. If not set then caching is disabled.
+// 'local_fs' is not a valid backend for 'principal' type since it currently lacks support for cache expiry.
+// TTL for 'principal' type is currently fixed at 24 hours.
+//  $config['cache']['card']['backend'] = 'local_fs';
+//  $config['cache']['principal']['backend'] = 'apcu';
+
+// Configure caching backend below. Currently only memcached backend needs configuration.
+$config['cache']['backend'] = [
+	// 'memcached' => [
+	// 'servers' should be same as $servers parameter to function \Memcached::addServers ( check https://www.php.net/manual/en/memcached.addservers.php for details )
+	// 	'servers' => [
+	//		['<hostname1>', <port1>, <weight1>],
+	//		['<hostname2>', <port2>, <weight2>]
+	//	]
+	// ]
 ];
 
 $config['card']['addressbook']['ldap']['me'] = [
