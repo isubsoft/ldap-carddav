@@ -125,36 +125,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $this->pdo = $pdo;
       	$this->cache = CacheMaster::getCardBackend($config['cache']);
     }
-
-
-    /**
-     * Returns the list of addressbooks for a specific user.
-     *
-     * Every addressbook should have the following properties:
-     *   id - an arbitrary unique id
-     *   uri - the 'basename' part of the url
-     *   principaluri - Same as the passed parameter
-     *
-     * Any additional clark-notation property may be passed besides this. Some
-     * common ones are :
-     *   {DAV:}displayname
-     *   {urn:ietf:params:xml:ns:carddav}addressbook-description
-     *   {http://calendarserver.org/ns/}getctag
-     *
-     * @param string $principalUri
-     * @return array
-     */
-    function getAddressBooksForUser($principalUri)
+    
+    
+    private function setAddressBook($principalId)
     {
-  		$principalId = basename($principalUri);
-      $currentUserPrincipalId = $GLOBALS['currentUserPrincipalId'];
       $currentUserPrincipalBackendId = $GLOBALS['currentUserPrincipalBackendId'];
   		
-  		if(strtolower($principalId) != strtolower($currentUserPrincipalId))
-  			throw new SabreDAVException\Forbidden("Not allowed");
-        			
-      $addressBooks = [];
-      
 			try 
 			{
 		    $query = 'SELECT user_id FROM ' . self::$systemUsersTableName . ' LIMIT 1';
@@ -167,7 +143,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		    	$systemUser = $row['user_id'];
 		    
 		  } catch (\Throwable $th) {
-		        error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+		    error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+				throw new SabreDAVException\ServiceUnavailable();
 		  }
       
       foreach ($this->config['card']['addressbook']['ldap'] as $addressBookId => $addressBookConfig) {
@@ -192,8 +169,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 			    $addressBookConfig['writable'] = $row['writable'];
 			    
 			  } catch (\Throwable $th) {
-			        error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
-			        return [];
+	        error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+					throw new SabreDAVException\ServiceUnavailable();
 			  }
 
       	$addressBookDn = $addressBookConfig['base_dn'];
@@ -237,15 +214,51 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $this->addressbook[$addressBookId]['syncToken'] = $addressBookSyncToken;
         $this->addressbook[$addressBookId]['syncDbUserId'] =  ($addressBookConfig['user_specific'])?$currentUserPrincipalBackendId:$systemUser;
         $this->addressbook[$addressBookId]['contactMaxSize'] = ((isset($addressBookConfig['max_size']) && is_int($addressBookConfig['max_size']) && $addressBookConfig['max_size'] > 0)?$addressBookConfig['max_size']:self::$defaultContactMaxSize);
-        
+      }    
+    }
+
+
+    /**
+     * Returns the list of addressbooks for a specific user.
+     *
+     * Every addressbook should have the following properties:
+     *   id - an arbitrary unique id
+     *   uri - the 'basename' part of the url
+     *   principaluri - Same as the passed parameter
+     *
+     * Any additional clark-notation property may be passed besides this. Some
+     * common ones are :
+     *   {DAV:}displayname
+     *   {urn:ietf:params:xml:ns:carddav}addressbook-description
+     *   {http://calendarserver.org/ns/}getctag
+     *
+     * @param string $principalUri
+     * @return array
+     */
+    function getAddressBooksForUser($principalUri)
+    {
+  		$principalId = basename($principalUri);
+      $currentUserPrincipalId = $GLOBALS['currentUserPrincipalId'];
+  		
+  		if(strtolower($principalId) != strtolower($currentUserPrincipalId))
+  			throw new SabreDAVException\Forbidden("Not allowed");
+  			
+  		if($this->addressbook == [])
+  			$this->setAddressBook($principalId);
+  		
+      $addressBooks = [];
+      
+      foreach ($this->addressbook as $addressBookId => $addressBookProperty) {      
+      	$addressBookSyncToken = $addressBookProperty['syncToken'];
+      
         $addressBooks[] = [
             'id'                                                          => $addressBookId,
             'uri'                                                         => $addressBookId,
             'principaluri'                                                => $principalUri,
-            '{DAV:}displayname'                                           => isset($addressBookConfig['name']) ? $addressBookConfig['name'] : '',
-            '{' . \Sabre\CardDAV\Plugin::NS_CARDDAV . '}addressbook-description'  => isset($addressBookConfig['description']) ? $addressBookConfig['description'] : '',
-            '{http://calendarserver.org/ns/}getctag' 											=> (!$addressBookSyncToken == null) ? $addressBookSyncToken : time(),
-            '{http://sabredav.org/ns}sync-token'                          => (!$addressBookSyncToken == null) ? $addressBookSyncToken : 0
+            '{DAV:}displayname'                                           => isset($this->config['card']['addressbook']['ldap'][$addressBookId]['name'])?$this->config['card']['addressbook']['ldap'][$addressBookId]['name']:'',
+            '{' . \Sabre\CardDAV\Plugin::NS_CARDDAV . '}addressbook-description'  => isset($this->config['card']['addressbook']['ldap'][$addressBookId]['description'])?$this->config['card']['addressbook']['ldap'][$addressBookId]['description']:'',
+            '{http://calendarserver.org/ns/}getctag' 											=> (!$addressBookSyncToken == null)?$addressBookSyncToken:time(),
+            '{http://sabredav.org/ns}sync-token'                          => (!$addressBookSyncToken == null)?$addressBookSyncToken:0
         ];
       }
 
