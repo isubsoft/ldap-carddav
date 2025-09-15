@@ -10,6 +10,7 @@ use ISubsoft\DAV\Rules\LDAP as Rules;
 use ISubsoft\DAV\Exception as ISubsoftDAVException;
 use ISubsoft\VObject\Reader as Reader;
 use Sabre\DAV\Exception as SabreDAVException;
+use ISubsoft\Cache\Master as CacheMaster;
 
 class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\CardDAV\Backend\SyncSupport {
 
@@ -26,6 +27,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      * @var PDO
      */
     protected $pdo;
+    
+    /**
+     * Cache object.
+     *
+     * @var cache
+     */
+    private $cache;
 
     /**
      * PDO table name.
@@ -115,37 +123,14 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     function __construct(array $config, \PDO $pdo) {
         $this->config = $config;
         $this->pdo = $pdo;
+      	$this->cache = CacheMaster::getCardBackend($config['cache']);
     }
-
-
-    /**
-     * Returns the list of addressbooks for a specific user.
-     *
-     * Every addressbook should have the following properties:
-     *   id - an arbitrary unique id
-     *   uri - the 'basename' part of the url
-     *   principaluri - Same as the passed parameter
-     *
-     * Any additional clark-notation property may be passed besides this. Some
-     * common ones are :
-     *   {DAV:}displayname
-     *   {urn:ietf:params:xml:ns:carddav}addressbook-description
-     *   {http://calendarserver.org/ns/}getctag
-     *
-     * @param string $principalUri
-     * @return array
-     */
-    function getAddressBooksForUser($principalUri)
+    
+    
+    private function setAddressBook($principalId)
     {
-  		$principalId = basename($principalUri);
-      $currentUserPrincipalId = $GLOBALS['currentUserPrincipalId'];
       $currentUserPrincipalBackendId = $GLOBALS['currentUserPrincipalBackendId'];
   		
-  		if(strtolower($principalId) != strtolower($currentUserPrincipalId))
-  			throw new SabreDAVException\Forbidden("Not allowed");
-        			
-      $addressBooks = [];
-      
 			try 
 			{
 		    $query = 'SELECT user_id FROM ' . self::$systemUsersTableName . ' LIMIT 1';
@@ -158,7 +143,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		    	$systemUser = $row['user_id'];
 		    
 		  } catch (\Throwable $th) {
-		        error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+		    error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+				throw new SabreDAVException\ServiceUnavailable();
 		  }
       
       foreach ($this->config['card']['addressbook']['ldap'] as $addressBookId => $addressBookConfig) {
@@ -183,8 +169,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 			    $addressBookConfig['writable'] = $row['writable'];
 			    
 			  } catch (\Throwable $th) {
-			        error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
-			        return [];
+	        error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+					throw new SabreDAVException\ServiceUnavailable();
 			  }
 
       	$addressBookDn = $addressBookConfig['base_dn'];
@@ -228,15 +214,51 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $this->addressbook[$addressBookId]['syncToken'] = $addressBookSyncToken;
         $this->addressbook[$addressBookId]['syncDbUserId'] =  ($addressBookConfig['user_specific'])?$currentUserPrincipalBackendId:$systemUser;
         $this->addressbook[$addressBookId]['contactMaxSize'] = ((isset($addressBookConfig['max_size']) && is_int($addressBookConfig['max_size']) && $addressBookConfig['max_size'] > 0)?$addressBookConfig['max_size']:self::$defaultContactMaxSize);
-        
+      }    
+    }
+
+
+    /**
+     * Returns the list of addressbooks for a specific user.
+     *
+     * Every addressbook should have the following properties:
+     *   id - an arbitrary unique id
+     *   uri - the 'basename' part of the url
+     *   principaluri - Same as the passed parameter
+     *
+     * Any additional clark-notation property may be passed besides this. Some
+     * common ones are :
+     *   {DAV:}displayname
+     *   {urn:ietf:params:xml:ns:carddav}addressbook-description
+     *   {http://calendarserver.org/ns/}getctag
+     *
+     * @param string $principalUri
+     * @return array
+     */
+    function getAddressBooksForUser($principalUri)
+    {
+  		$principalId = basename($principalUri);
+      $currentUserPrincipalId = $GLOBALS['currentUserPrincipalId'];
+  		
+  		if(strtolower($principalId) != strtolower($currentUserPrincipalId))
+  			throw new SabreDAVException\Forbidden("Not allowed");
+  			
+  		if($this->addressbook == [])
+  			$this->setAddressBook($principalId);
+  		
+      $addressBooks = [];
+      
+      foreach ($this->addressbook as $addressBookId => $addressBookProperty) {      
+      	$addressBookSyncToken = $addressBookProperty['syncToken'];
+      
         $addressBooks[] = [
             'id'                                                          => $addressBookId,
             'uri'                                                         => $addressBookId,
             'principaluri'                                                => $principalUri,
-            '{DAV:}displayname'                                           => isset($addressBookConfig['name']) ? $addressBookConfig['name'] : '',
-            '{' . \Sabre\CardDAV\Plugin::NS_CARDDAV . '}addressbook-description'  => isset($addressBookConfig['description']) ? $addressBookConfig['description'] : '',
-            '{http://calendarserver.org/ns/}getctag' 											=> (!$addressBookSyncToken == null) ? $addressBookSyncToken : time(),
-            '{http://sabredav.org/ns}sync-token'                          => (!$addressBookSyncToken == null) ? $addressBookSyncToken : 0
+            '{DAV:}displayname'                                           => isset($this->config['card']['addressbook']['ldap'][$addressBookId]['name'])?$this->config['card']['addressbook']['ldap'][$addressBookId]['name']:'',
+            '{' . \Sabre\CardDAV\Plugin::NS_CARDDAV . '}addressbook-description'  => isset($this->config['card']['addressbook']['ldap'][$addressBookId]['description'])?$this->config['card']['addressbook']['ldap'][$addressBookId]['description']:'',
+            '{http://calendarserver.org/ns/}getctag' 											=> (!$addressBookSyncToken == null)?$addressBookSyncToken:time(),
+            '{http://sabredav.org/ns}sync-token'                          => (!$addressBookSyncToken == null)?$addressBookSyncToken:0
         ];
       }
 
@@ -334,8 +356,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         
         return $result;
     }
-
-
+    
+    
     /**
      * Returns a specfic card.
      *
@@ -355,6 +377,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				
 				$addressBookConfig = $this->addressbook[$addressBookId]['config'];
 				$syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
+        $cache = $this->cache;
         
 				try 
 				{
@@ -374,32 +397,56 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						throw new SabreDAVException\ServiceUnavailable();
 		    }
             
-        $data = $this->fetchLdapContactDataById($addressBookId, $backendId, ['*', 'modifyTimestamp']);
-        
-        if(empty($data))
-					throw new SabreDAVException\ServiceUnavailable();
-
-        if(!$data['count'] > 0)
-        	return false;
+				$cacheValid = true; // If false then cache need to be refreshed
+       	$result = CacheMaster::decode($cache->get(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri), null));
+       	
+       	if($result == [] || $result == null)
+					$cacheValid = false;
+					
+				if($cacheValid) {
+		      $result['id'] = $cardUID;
+		      $result['uri'] = $cardUri;
         	
-        if(!isset($data[0]['modifytimestamp'][0]))
-        {
+        	return $result;
+				}
+        	
+	    	$result = [];
+      	$cacheInvalid = true;
+				$cardModifiedTimestamp = null;
+	      $cardData = null;
+	      $data = $this->fetchLdapContactDataById($addressBookId, $backendId, ['*', 'modifyTimestamp']);
+	      
+	      if(empty($data))
+					throw new SabreDAVException\ServiceUnavailable();
+					
+	      if(!$data['count'] > 0)
+	      	return false;
+	      	
+	      if(!isset($data[0]['modifytimestamp'][0]))
+	      {
 					error_log("Read access to some operational attributes in LDAP not present. ".__METHOD__." at line no ".__LINE__);
 					throw new SabreDAVException\ServiceUnavailable();
-        }
-        	
-        $cardData = $this->generateVcard($data[0], $addressBookId, $cardUID);
-        
-        if(empty($cardData))
+	      }
+	      
+				$cardModifiedTimestamp = strtotime($data[0]['modifytimestamp'][0]);
+      	$cardData = $this->generateVcard($data[0], $addressBookId, $cardUID);
+      	
+				if(empty($cardData))
 					throw new SabreDAVException\ServiceUnavailable();
-         
-        $result = [
-            'id'            => $cardUID,
-            'carddata'      => $cardData,
-            'uri'           => $cardUri,
-            'lastmodified'  => strtotime($data[0]['modifytimestamp'][0])
-        ];
-                    
+					
+				$result = [
+          'carddata'      => $cardData,
+          'lastmodified'  => $cardModifiedTimestamp,
+          'etag'          => '"' . md5($cardData) . '"',
+          'size'          => strlen($cardData)
+				];
+				
+				if(!$cache->set(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri), CacheMaster::encode($result)))
+			    error_log("Could not set cache data: " . __METHOD__ . " at line no " . __LINE__);
+        
+        $result['id'] = $cardUID;
+        $result['uri'] = $cardUri;
+				
         return $result;
     }
     
@@ -459,12 +506,16 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
         $writableAddressBook = (!isset($addressBookConfig['writable']))?true:$addressBookConfig['writable'];
         $maxContactSize = $this->addressbook[$addressBookId]['contactMaxSize'];
+        $cache = $this->cache;
         
         if(!$writableAddressBook)
 					throw new SabreDAVException\Forbidden("Not allowed");
 					
 				if(strlen($cardData) > $maxContactSize)
 					throw new ISubsoftDAVException\ContentTooLarge();
+					
+				if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri)))
+		      error_log("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore the error: " . __METHOD__ . " at line no " . __LINE__);
 					
 				$vcard = Reader::read($cardData);
 				
@@ -886,11 +937,16 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     function deleteCard($addressBookId, $cardUri)
     {
         $addressBookConfig = $this->addressbook[$addressBookId]['config'];
+        $syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
         $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
         $writableAddressBook = (!isset($addressBookConfig['writable']))?true:$addressBookConfig['writable'];
+        $cache = $this->cache;
         
         if(!$writableAddressBook)
         	return false;
+        	
+				if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri)))
+		      error_log("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore the error: " . __METHOD__ . " at line no " . __LINE__);
         
         $data = $this->fetchLdapContactDataByUri($addressBookId, $cardUri, ['dn', 'entryUUID']);
         
@@ -1375,6 +1431,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 			$addressBookSyncToken = $this->addressbook[$addressBookId]['syncToken'];
 			$syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
 			$ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
+      $cache = $this->cache;
 
 			$result = [
 					'syncToken' => $addressBookSyncToken,
@@ -1568,6 +1625,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 								
 								continue;
 						}
+						
+						if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri)))
+		      		error_log("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore the error: " . __METHOD__ . " at line no " . __LINE__);
 
 						$result['modified'][] = $cardUri;
 				} catch (\Throwable $th) {
@@ -1710,6 +1770,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $addressBookSyncToken = $this->addressbook[$addressBookId]['syncToken'];
         $syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
         $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
+        $cache = $this->cache;
 				$backendContacts = [];
 				
 				$fullRefreshSyncToken = null;
@@ -1738,25 +1799,35 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						$stmt->execute([$syncDbUserId, $addressBookId]);
 						
 						while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-							$data = $this->fetchLdapContactDataById($addressBookId, $row['backend_id'], ['modifyTimestamp']);
-							
-						  if(empty($data))
-								throw new SabreDAVException\ServiceUnavailable();
+							$cacheValues = null;
+							$cardModifiedTimestamp = null;
+						  
+					  	$cacheValues = CacheMaster::decode($cache->get(CacheMaster::cardKey($syncDbUserId, $addressBookId, $row['card_uri']), null));
+					  	$cardModifiedTimestamp = !isset($cacheValues['lastmodified'])?null:$cacheValues['lastmodified'];
+						  	
+						  if($cardModifiedTimestamp == null)
+						  {
+								$data = $this->fetchLdapContactDataById($addressBookId, $row['backend_id'], ['modifyTimestamp']);
 								
-							if(!$data['count'] > 0)
-								continue;
-							
-							if(!isset($data[0]['modifytimestamp'][0]))
-							{
-								error_log("Read access to some operational attributes in LDAP not present. ".__METHOD__." at line no ".__LINE__);
-								throw new SabreDAVException\ServiceUnavailable();
+								if(empty($data))
+									throw new SabreDAVException\ServiceUnavailable();
+									
+								if(!$data['count'] > 0)
+									continue;
+								
+								if(!isset($data[0]['modifytimestamp'][0])) {
+									error_log("Read access to some operational attributes in LDAP not present. ".__METHOD__." at line no ".__LINE__);
+									throw new SabreDAVException\ServiceUnavailable();
+								}
+								
+								$cardModifiedTimestamp = $data[0]['modifytimestamp'][0];
 							}
 							
 							$backendContacts[] = [
                 'card_uri' => $row['card_uri'],
 								'card_uid' => $row['card_uid'],
                 'backend_id' => $row['backend_id'],
-                'modified_timestamp' => strtotime($data[0]['modifytimestamp'][0])
+                'modified_timestamp' => $cardModifiedTimestamp
               ];
 						}
 					} catch (\Throwable $th) {
@@ -1766,7 +1837,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					
 					return $backendContacts;
 				}
-        
+				
         if(isset($addressBookConfig['sync_bind_dn']) && $addressBookConfig['sync_bind_dn'] != '')
         {
         	$syncBindDn = $addressBookConfig['sync_bind_dn'];
@@ -1823,7 +1894,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
           
             $contactData['backend_id'] = $data['data']['entryUUID'][0];
             $contactData['modified_timestamp'] = strtotime($data['data']['modifyTimestamp'][0]);
-        
+                
             $backendContacts[] = $contactData;
             $data = Utility::LdapIterativeQuery($ldapConn, $data['entryIns']);
 					}
@@ -1838,6 +1909,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						$cardUri = $row['card_uri'];
 						$backendId = $row['backend_id'];
 						$backendContactExist = false;
+						
+						if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri)))
+		      		error_log("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore the error: " . __METHOD__ . " at line no " . __LINE__);
 
 						foreach($backendContacts as $backendContact)
 						{
