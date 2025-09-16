@@ -56,6 +56,8 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
     ];
     
     private $systemUsersTableName = 'cards_system_user';
+    
+    private static $cacheTtl = 86400;
 
       /**
      * Creates the backend.
@@ -243,7 +245,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
             
             $principal['__backend_id'] = $GLOBALS['currentUserPrincipalBackendId'];
             
-						if(!$cache->set(CacheMaster::principalKey($principalId), CacheMaster::encode($principal), 86400))
+						if(!$cache->set(CacheMaster::principalKey($principalId), CacheMaster::encode($principal), (isset($this->config['cache']['principal']['ttl']) && is_int($this->config['cache']['principal']['ttl']) && $this->config['cache']['principal']['ttl'] > 0)?$this->config['cache']['principal']['ttl']:self::$cacheTtl))
 						  error_log("Could not set cache data: " . __METHOD__ . " at line no " . __LINE__);
             
             $principal['id'] = $principalId;
