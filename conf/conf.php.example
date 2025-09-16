@@ -121,10 +121,12 @@ $config['principal']['ldap'] = [
 // memory: System memory (for testing purpose only, cache is not persisted between requests)
 
 // Caching backend to enable specific to object type. If not set then caching is disabled.
-// 'local_fs' is not a valid backend for 'principal' type since it currently lacks support for cache expiry.
-// TTL for 'principal' type is currently fixed at 24 hours.
+// 'local_fs' backend is valid for 'card' type only.
 //  $config['cache']['card']['backend'] = 'local_fs';
 //  $config['cache']['principal']['backend'] = 'apcu';
+
+// TTL (in seconds) for 'principal' type cache, defaults to 1 day.
+//  $config['cache']['principal']['ttl'] = 86400;
 
 // Configure caching backend below. Currently only memcached backend needs configuration.
 $config['cache']['backend'] = [
