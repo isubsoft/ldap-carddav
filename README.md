@@ -12,7 +12,6 @@
 8. Extensive and customizable configuration option to map vCard properties to LDAP directory attributes including multi-value and composite value properties and attributes.
 9. Contact group support.
 10. Media like profile picture support for contacts.
-11. Caching support using popular backends like Memcached and APCu.
 
 ## Limitations
 1. Does not support anonymous access to the server.
@@ -21,6 +20,7 @@
 ## Planned features
 1. Compatibility to as many vCard data types as possible.
 2. Custom vCard property support.
+3. Caching of data objects.
 
 ## Installation
 Check INSTALL file.
