@@ -239,26 +239,104 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     {
   		$principalId = basename($principalUri);
       $currentUserPrincipalId = $GLOBALS['currentUserPrincipalId'];
+      $currentUserPrincipalBackendId = $GLOBALS['currentUserPrincipalBackendId'];
   		
   		if(strtolower($principalId) != strtolower($currentUserPrincipalId))
   			throw new SabreDAVException\Forbidden("Not allowed");
-  			
-  		if($this->addressbook == [])
-  			$this->setAddressBook($principalId);
-  		
+        			
       $addressBooks = [];
       
-      foreach ($this->addressbook as $addressBookId => $addressBookProperty) {      
-      	$addressBookSyncToken = $addressBookProperty['syncToken'];
+			try 
+			{
+		    $query = 'SELECT user_id FROM ' . self::$systemUsersTableName . ' LIMIT 1';
+		    $stmt = $this->pdo->prepare($query);
+		    $stmt->execute([]);
+		    
+		    $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+		    
+		    if($row !== false)
+		    	$systemUser = $row['user_id'];
+		    
+		  } catch (\Throwable $th) {
+		        error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+		  }
       
+      foreach ($this->config['card']['addressbook']['ldap'] as $addressBookId => $addressBookConfig) {
+				try 
+				{
+			    $query = 'SELECT addressbook_id, user_specific, writable FROM ' . self::$addressBooksTableName . ' WHERE addressbook_id =? LIMIT 1';
+			    $stmt = $this->pdo->prepare($query);
+			    $stmt->execute([$addressBookId]);
+			    
+			    $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+			    
+			    if($row === false)
+			    	continue;
+			    	
+					if($addressBookConfig['user_specific'] != $row['user_specific'] || $addressBookConfig['writable'] != $row['writable'])
+					{
+						error_log("Configuration properties do not match that of sync database for address book '$addressBookId'. Excluded.");
+						continue;
+					}
+					
+			    $addressBookConfig['user_specific'] = $row['user_specific'];
+			    $addressBookConfig['writable'] = $row['writable'];
+			    
+			  } catch (\Throwable $th) {
+			        error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
+			        return [];
+			  }
+
+      	$addressBookDn = $addressBookConfig['base_dn'];
+        $addressBookSyncToken = time();
+           
+				if(isset($addressBookConfig['bind_dn']) && $addressBookConfig['bind_dn'] != '')
+        {
+        	$this->addressbook[$addressBookId]['LdapConnection'] = Utility::LdapBindConnection(['bindDn' => $addressBookConfig['bind_dn'], 'bindPass' => isset($addressBookConfig['bind_pass'])?$addressBookConfig['bind_pass']:null], $this->config['server']['ldap']);
+        }
+        else if($addressBookConfig['user_specific'] == true)
+          $this->addressbook[$addressBookId]['LdapConnection'] = $GLOBALS['currentUserPrincipalLdapConn'];
+        else
+        {
+		      error_log("No available connections to backend for address book - '" . $addressBookId . "'." . __METHOD__ . " at line no " . __LINE__ );
+		      continue;
+        }
+          
+      	if($addressBookConfig['user_specific'] == true)
+      	{
+          if(isset($addressBookConfig['search_base_dn']) && $addressBookConfig['search_base_dn'] != '' && isset($addressBookConfig['search_filter']) && $addressBookConfig['search_filter'] != '')
+          {
+          	$filter = Utility::replacePlaceholders($addressBookConfig['search_filter'], ['%u' => ldap_escape($principalId, "", LDAP_ESCAPE_FILTER)]);
+           	$data = Utility::LdapQuery($this->addressbook[$addressBookId]['LdapConnection'], $addressBookConfig['search_base_dn'], $filter, ['dn'], strtolower($addressBookConfig['search_scope']));
+          	
+            if(!empty($data) && $data['count'] === 1)
+            {
+              $addressBookDn = Utility::replacePlaceholders($addressBookConfig['base_dn'], ['%u' => ldap_escape($principalId, "", LDAP_ESCAPE_DN), '%dn' => $data[0]['dn']]);
+            }
+            else
+            {
+				      error_log("Address book search returned no result or more than one result " . __METHOD__ . " at line no " . __LINE__ . " for address book id - " . $addressBookId);
+				      continue;
+            }
+          }
+          else
+          	$addressBookDn = Utility::replacePlaceholders($addressBookConfig['base_dn'], ['%u' => ldap_escape($principalId, "", LDAP_ESCAPE_DN)]);
+      	}
+      	
+        $this->addressbook[$addressBookId]['config'] = $addressBookConfig;
+        $this->addressbook[$addressBookId]['addressbookDn'] = $addressBookDn;
+        $this->addressbook[$addressBookId]['syncToken'] = $addressBookSyncToken;
+        $this->addressbook[$addressBookId]['syncDbUserId'] =  ($addressBookConfig['user_specific'])?$currentUserPrincipalBackendId:$systemUser;
+        $this->addressbook[$addressBookId]['contactMaxSize'] = ((isset($addressBookConfig['max_size']) && is_int($addressBookConfig['max_size']) && $addressBookConfig['max_size'] > 0)?$addressBookConfig['max_size']:self::$defaultContactMaxSize);
+        
         $addressBooks[] = [
             'id'                                                          => $addressBookId,
             'uri'                                                         => $addressBookId,
             'principaluri'                                                => $principalUri,
-            '{DAV:}displayname'                                           => isset($this->config['card']['addressbook']['ldap'][$addressBookId]['name'])?$this->config['card']['addressbook']['ldap'][$addressBookId]['name']:'',
-            '{' . \Sabre\CardDAV\Plugin::NS_CARDDAV . '}addressbook-description'  => isset($this->config['card']['addressbook']['ldap'][$addressBookId]['description'])?$this->config['card']['addressbook']['ldap'][$addressBookId]['description']:'',
-            '{http://calendarserver.org/ns/}getctag' 											=> (!$addressBookSyncToken == null)?$addressBookSyncToken:time(),
-            '{http://sabredav.org/ns}sync-token'                          => (!$addressBookSyncToken == null)?$addressBookSyncToken:0
+            '{DAV:}displayname'                                           => isset($addressBookConfig['name']) ? $addressBookConfig['name'] : '',
+            '{' . \Sabre\CardDAV\Plugin::NS_CARDDAV . '}addressbook-description'  => isset($addressBookConfig['description']) ? $addressBookConfig['description'] : '',
+            '{http://calendarserver.org/ns/}getctag' 											=> (!$addressBookSyncToken == null) ? $addressBookSyncToken : time(),
+            '{http://sabredav.org/ns}sync-token'                          => (!$addressBookSyncToken == null) ? $addressBookSyncToken : 0
         ];
       }
 
