@@ -190,10 +190,6 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
 					$cacheValid = false;
 					
 				if($cacheValid) {
-					if(strtolower($principalId) == strtolower($currentUserPrincipalId)) {
-          	$GLOBALS['currentUserPrincipalBackendId'] = $principal['__backend_id'];					
-					}
-					
 					$principal['id'] = $principalId;
         	$principal['uri'] = $path;
         	
@@ -229,34 +225,6 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
 		   				throw new SabreDAVException\ServiceUnavailable();
 		   			}
          			
-            if(strtolower($principalId) == strtolower($currentUserPrincipalId) && isset($data[0]['entryuuid'][0]))
-            {
-            	$currentUserPrincipalIsSystemUser = true;
-            	
-							try 
-							{
-								$query = 'SELECT user_id FROM '. $this->systemUsersTableName . ' WHERE user_id = ?';
-								$stmt = $this->pdo->prepare($query);
-								$stmt->execute([$data[0]['entryuuid'][0]]);
-								
-								$row = $stmt->fetch(\PDO::FETCH_ASSOC);
-								
-								if($row == false)
-									$currentUserPrincipalIsSystemUser = false;
-								
-							} catch (\Throwable $th) {
-								error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
-							}
-							
-         			if($currentUserPrincipalIsSystemUser)
-         			{
-								error_log("Current principal backend id matches system user id in " . __METHOD__ . " at line no " . __LINE__);
-         				throw new SabreDAVException\Forbidden("Current principal is not a valid principal");
-         			}
-         			
-         			$GLOBALS['currentUserPrincipalBackendId'] = $data[0]['entryuuid'][0];
-            }
-
             foreach ($this->fieldMap as $key => $value) {
                 if ( isset($data[0][$this->config['principal']['ldap']['fieldmap'][$value['dbField']]])) {
                     $principal[$key] = $data[0][$this->config['principal']['ldap']['fieldmap'][$value['dbField']]][0];

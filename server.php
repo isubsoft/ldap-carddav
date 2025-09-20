@@ -18,7 +18,6 @@ require_once __DIR__ . '/src/App/Bootstrap.php';
 require_once __BASE_DIR__ . '/vendor/autoload.php';
 
 $GLOBALS['currentUserPrincipalId'] = null;
-$GLOBALS['currentUserPrincipalBackendId'] = null;
 $GLOBALS['currentUserPrincipalLdapConn'] = null;
 
 // Backends
