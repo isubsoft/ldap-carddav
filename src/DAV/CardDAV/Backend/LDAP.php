@@ -104,8 +104,18 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 			]
 		];
 		
+    /**
+     * Principal id
+     *
+     * @var string
+     */
 		private $principalId = null;
 		
+    /**
+     * Principal backend id
+     *
+     * @var string
+     */
 		private $principalBackendId = null;
 		
     /**
@@ -221,7 +231,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
   		
   		// We do not know how to deal with a principal who is different from logged in user principal
   		if(strtolower($this->principalId) != strtolower($currentUserPrincipalId))
-  			throw new SabreDAVException\Forbidden("Not allowed");
+  			throw new SabreDAVException\Forbidden("User does not have access to this path");
         			
 			try 
 			{
