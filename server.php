@@ -24,7 +24,7 @@ $GLOBALS['currentUserPrincipalLdapConn'] = null;
 // Backends
 $authBackend = new ISubsoft\DAV\Auth\Backend\LDAP($config);
 $principalBackend = new ISubsoft\DAV\DAVACL\PrincipalBackend\LDAP($config, $pdo);
-$carddavBackend = new ISubsoft\DAV\CardDAV\Backend\LDAP($config, $pdo);
+$carddavBackend = new ISubsoft\DAV\CardDAV\Backend\LDAP($config, $pdo, $principalBackend);
 
 // Setting up the directory tree //
 $nodes = [
