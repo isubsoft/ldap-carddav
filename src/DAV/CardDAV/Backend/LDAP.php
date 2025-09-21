@@ -1846,11 +1846,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						$stmt->execute([$syncDbUserId, $addressBookId]);
 						
 						while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-							$cacheValues = null;
+							$cardValues = false;
 							$cardModifiedTimestamp = null;
 						  
-					  	$cacheValues = CacheMaster::decode($cache->get(CacheMaster::cardKey($syncDbUserId, $addressBookId, $row['card_uri']), null));
-					  	$cardModifiedTimestamp = !isset($cacheValues['lastmodified'])?null:$cacheValues['lastmodified'];
+					  	$cardValues = $this->getCard($addressBookId, $row['card_uri']);
+					  	$cardModifiedTimestamp = !isset($cardValues['lastmodified'])?null:$cardValues['lastmodified'];
 						  	
 						  if($cardModifiedTimestamp == null)
 						  {
