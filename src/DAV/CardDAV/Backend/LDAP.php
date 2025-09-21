@@ -451,8 +451,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 	      if(empty($data))
 					throw new SabreDAVException\ServiceUnavailable();
 					
-	      if(!$data['count'] > 0)
+	      if($data['count'] === 0)
 	      	return false;
+					
+	      if($data['count'] > 1) {
+					error_log("Multiple backend contacts found. Check configuration. ".__METHOD__." at line no ".__LINE__);
+					throw new SabreDAVException\ServiceUnavailable();
+	      }
 	      	
 	      if(!isset($data[0]['modifytimestamp'][0]))
 	      {
