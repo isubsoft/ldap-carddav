@@ -1826,7 +1826,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $addressBookSyncToken = $this->addressbook[$addressBookId]['syncToken'];
         $syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
         $cache = $this->cache;
-				$backendContacts = [];
+				$cards = [];
 
 				$fullRefreshSyncToken = null;
 				
@@ -1862,14 +1862,14 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					  		
 							unset($cardValues['carddata']);
 							
-							$backendContacts[] = $cardValues;
+							$cards[] = $cardValues;
 						}
 					} catch (\Throwable $th) {
 							error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
 							throw new SabreDAVException\ServiceUnavailable();
 					}
 					
-					return $backendContacts;
+					return $cards;
 				}
 				
 				$this->setAddressbookBackendProperties($addressBookId);
@@ -1931,7 +1931,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				  		
 						unset($cardValues['carddata']);
           
-            $backendContacts[] = $cardValues;
+            $cards[] = $cardValues;
             $data = Utility::LdapIterativeQuery($ldapConn, $data['entryIns']);
 					}
 					
@@ -1945,7 +1945,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					foreach($stmt->fetchAll(\PDO::FETCH_ASSOC) as $row)
 						$contacts[] = $row['card_uri'];
 					
-					foreach($backendContacts as $cardValues) {
+					foreach($cards as $cardValues) {
 						if(!in_array($cardValues['uri'], $contacts)) {
 							if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $row['card_uri'])))
 				    		error_log("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore the error: " . __METHOD__ . " at line no " . __LINE__);
@@ -1973,7 +1973,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							error_log("Database query could not be executed: " . __METHOD__ . " at line no " . __LINE__ . ", " . $th->getMessage());
 				}
 
-        return $backendContacts;
+        return $cards;
     }
 
     function guidv4($data = null) {
