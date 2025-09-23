@@ -371,20 +371,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $addressBookSyncToken = $this->addressbook[$addressBookId]['syncToken'];
         $result = [];
         
-        $data = $this->fullSyncOperation($addressBookId);   
+        $result = $this->fullSyncOperation($addressBookId);
         
-        if(!empty($data))
-        {
-            for ($i=0; $i < count($data); $i++) { 
-                
-                $row = [    'id' => $data[$i]['card_uid'],
-                            'uri' => $data[$i]['card_uri'],
-                            'lastmodified' => $data[$i]['modified_timestamp']
-                            ];
-
-                $result[] = $row;
-            }     
-        }
+        if(empty($result))
+        	return [];
         
         return $result;
     }
@@ -451,8 +441,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 	      if(empty($data))
 					throw new SabreDAVException\ServiceUnavailable();
 					
-	      if(!$data['count'] > 0)
+	      if($data['count'] === 0)
 	      	return false;
+					
+	      if($data['count'] > 1) {
+					error_log("Multiple backend contacts found. Check configuration. ".__METHOD__." at line no ".__LINE__);
+					throw new SabreDAVException\ServiceUnavailable();
+	      }
 	      	
 	      if(!isset($data[0]['modifytimestamp'][0]))
 	      {
@@ -991,21 +986,31 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $data = $this->fetchLdapContactDataByUri($addressBookId, $cardUri, ['dn', 'entryUUID']);
         
         if(empty($data))
-        	return false;
+					throw new SabreDAVException\ServiceUnavailable();
+					
+	      if($data['count'] === 0) {
+					$this->addChange($addressBookId, $cardUri);
+					
+	      	return true;
+	      }
+					
+	      if($data['count'] > 1) {
+					error_log("Multiple backend contacts found. Check configuration. ".__METHOD__." at line no ".__LINE__);
+					throw new SabreDAVException\ServiceUnavailable();
+	      }
         
         $ldapTree = $data[0]['dn'];
 
         try {
-            $ldapDelete = ldap_delete($ldapConn, $ldapTree);
-            
-            if(!$ldapDelete)
+            if(!ldap_delete($ldapConn, $ldapTree))
 	            return false;
         } catch (\Throwable $th) {
             error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
             throw new SabreDAVException\ServiceUnavailable();
         }
 
-        $this->addChange($addressBookId, $cardUri);
+				$this->addChange($addressBookId, $cardUri);
+        
         return true;
     }
 
@@ -1525,12 +1530,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 			// Perform initial sync
 			if($syncToken == null)
 			{
-				$data = $this->fullSyncOperation($addressBookId);
+				$cards = $this->fullSyncOperation($addressBookId);
 				
-				if(!empty($data))
-					for ($i=0; $i < count($data); $i++) {
-							$result['added'][] = $data[$i]['card_uri'];
-					}
+				if(empty($cards))
+					return $result;
+				
+				foreach ($cards as $cardValues)
+					$result['added'][] = $cardValues['uri'];
 				
 				return $result;
 			}
@@ -1774,7 +1780,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     
 
     /**
-     * Get contact using cards backend map table and ldap directory database.
+     * Get contact using cards backend map table and ldap directory.
      *
      * @param string  $addressBookId
      * @param string  $cardUri
@@ -1818,7 +1824,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $addressBookSyncToken = $this->addressbook[$addressBookId]['syncToken'];
         $syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
         $cache = $this->cache;
-				$backendContacts = [];
+				$cards = [];
 
 				$fullRefreshSyncToken = null;
 				
@@ -1846,43 +1852,22 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						$stmt->execute([$syncDbUserId, $addressBookId]);
 						
 						while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-							$cacheValues = null;
-							$cardModifiedTimestamp = null;
-						  
-					  	$cacheValues = CacheMaster::decode($cache->get(CacheMaster::cardKey($syncDbUserId, $addressBookId, $row['card_uri']), null));
-					  	$cardModifiedTimestamp = !isset($cacheValues['lastmodified'])?null:$cacheValues['lastmodified'];
-						  	
-						  if($cardModifiedTimestamp == null)
-						  {
-								$data = $this->fetchLdapContactDataById($addressBookId, $row['backend_id'], ['modifyTimestamp']);
-								
-								if(empty($data))
-									throw new SabreDAVException\ServiceUnavailable();
-									
-								if(!$data['count'] > 0)
-									continue;
-								
-								if(!isset($data[0]['modifytimestamp'][0])) {
-									error_log("Read access to some operational attributes in LDAP not present. ".__METHOD__." at line no ".__LINE__);
-									throw new SabreDAVException\ServiceUnavailable();
-								}
-								
-								$cardModifiedTimestamp = $data[0]['modifytimestamp'][0];
-							}
+							$cardValues = false;
+					  	$cardValues = $this->getCard($addressBookId, $row['card_uri']);
+					  	
+					  	if($cardValues === false)
+					  		continue;
+					  		
+							unset($cardValues['carddata']);
 							
-							$backendContacts[] = [
-                'card_uri' => $row['card_uri'],
-								'card_uid' => $row['card_uid'],
-                'backend_id' => $row['backend_id'],
-                'modified_timestamp' => $cardModifiedTimestamp
-              ];
+							$cards[] = $cardValues;
 						}
 					} catch (\Throwable $th) {
 							error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
 							throw new SabreDAVException\ServiceUnavailable();
 					}
 					
-					return $backendContacts;
+					return $cards;
 				}
 				
 				$this->setAddressbookBackendProperties($addressBookId);
@@ -1916,66 +1901,54 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         			throw new SabreDAVException\ServiceUnavailable();
 						}
 						
-            $contactData = null;
+            $backendId = $data['data']['entryUUID'][0];
           
             $query = 'SELECT card_uri, card_uid FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?';
             $stmt = $this->pdo->prepare($query);
-            $stmt->execute([$syncDbUserId, $addressBookId, $data['data']['entryUUID'][0]]);
+            $stmt->execute([$syncDbUserId, $addressBookId, $backendId]);
             $row = $stmt->fetch(\PDO::FETCH_ASSOC);
           
-            if (!empty($row)) 
-            {
-              $contactData = [	'card_uri' => $row['card_uri'], 
-				          							'card_uid' => $row['card_uid']
-				            				 ];
-            }
-            else
-            {
+            if ($row === false) {
           		// Adding contacts present in LDAP with no reference here
               $cardUID = $this->guidv4();
               $cardUri = $cardUID .'.vcf';
               
               $query = "INSERT INTO `" . self::$backendMapTableName . "` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
               $sql = $this->pdo->prepare($query);
-              $sql->execute([$cardUri, $cardUID, $addressBookId, $data['data']['entryUUID'][0], $syncDbUserId]);
-
-              $contactData = [    'card_uri' => $cardUri, 
-              						'card_uid' => $cardUID
-                				];
+              $sql->execute([$cardUri, $cardUID, $addressBookId, $backendId, $syncDbUserId]);
             }
+            
+						if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $row['card_uri'])))
+			    		error_log("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore the error: " . __METHOD__ . " at line no " . __LINE__);
+            
+						$cardValues = false;
+				  	$cardValues = $this->getCard($addressBookId, $row['card_uri']);
+				  	
+				  	if($cardValues === false)
+				  		continue;
+				  		
+						unset($cardValues['carddata']);
           
-            $contactData['backend_id'] = $data['data']['entryUUID'][0];
-            $contactData['modified_timestamp'] = strtotime($data['data']['modifyTimestamp'][0]);
-                
-            $backendContacts[] = $contactData;
+            $cards[] = $cardValues;
             $data = Utility::LdapIterativeQuery($ldapConn, $data['entryIns']);
 					}
-			
-					// Fetch all mapped contacts
-					$query = 'SELECT card_uri, backend_id FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ?';
+					
+					// Deleting cards not present in backend
+					$contacts = [];
+					
+					$query = 'SELECT card_uri FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ?';
 					$stmt = $this->pdo->prepare($query);
 					$stmt->execute([$syncDbUserId, $addressBookId]);
-						
-					while($row = $stmt->fetch(\PDO::FETCH_ASSOC))
-					{
-						$cardUri = $row['card_uri'];
-						$backendId = $row['backend_id'];
-						$backendContactExist = false;
-						
-						if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri)))
-		      		error_log("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore the error: " . __METHOD__ . " at line no " . __LINE__);
-
-						foreach($backendContacts as $backendContact)
-						{
-							if($backendId == $backendContact['backend_id'])
-							{
-								$backendContactExist = true;
-								break;
-							}
+			
+					foreach($stmt->fetchAll(\PDO::FETCH_ASSOC) as $row)
+						$contacts[] = $row['card_uri'];
+					
+					foreach($cards as $cardValues) {
+						if(!in_array($cardValues['uri'], $contacts)) {
+							if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $row['card_uri'])))
+				    		error_log("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore the error: " . __METHOD__ . " at line no " . __LINE__);
+							$this->addChange($addressBookId, $cardValues['uri']);
 						}
-						
-						if(!$backendContactExist)
-							$this->addChange($addressBookId, $cardUri);
 					}
 
         } catch (\Throwable $th) {
@@ -1998,7 +1971,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							error_log("Database query could not be executed: " . __METHOD__ . " at line no " . __LINE__ . ", " . $th->getMessage());
 				}
 
-        return $backendContacts;
+        return $cards;
     }
 
     function guidv4($data = null) {
