@@ -1530,12 +1530,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 			// Perform initial sync
 			if($syncToken == null)
 			{
-				$result['added'] = [];
-				
 				$cards = $this->fullSyncOperation($addressBookId);
 				
 				if(empty($cards))
-					return [ 'added' => [] ];
+					return $result;
 				
 				foreach ($cards as $cardValues)
 					$result['added'][] = $cardValues['uri'];
