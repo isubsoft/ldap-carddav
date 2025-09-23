@@ -19,8 +19,9 @@
 2. Same LDAP directory must be used for authentication as well as for address books.
 
 ## Planned features
-1. Compatibility to as many vCard data types as possible.
-2. Custom vCard property support.
+1. Support for more PDO databases.
+2. Compatibility to as many vCard data types as possible.
+3. Custom vCard property support.
 
 ## Installation
 Check INSTALL file.
