@@ -1581,6 +1581,17 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				return null;
 			}
 			
+			$fullRefreshInterval = (isset($addressBookConfig['full_refresh_interval']) && is_int($addressBookConfig['full_refresh_interval']) && $addressBookConfig['full_refresh_interval'] > 0)?$addressBookConfig['full_refresh_interval']:self::$defaultFullRefreshInterval;
+			
+			// Sync interval should be minimum of 15 mins or 1/10 of 'full_refresh_interval' whichever is lower
+			$minSyncInterval = ($fullRefreshInterval / 10 > 900)?900:$fullRefreshInterval / 10;
+			
+			if($addressBookSyncToken - $syncToken < $minSyncInterval) {
+				$result['syncToken'] = $syncToken;
+				
+				return $result;
+			}
+			
 			$this->setAddressbookBackendProperties($addressBookId);
 			
 			$addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
