@@ -1541,6 +1541,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				return $result;
 			}
 			
+			$this->fullSyncOperation($addressBookId);
+			
 			$userAgent = $_SERVER['HTTP_USER_AGENT'];
 			$uaValues = ['id' => '', 'initial_sync_response_code' => null];
 
@@ -1913,6 +1915,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						}
 						
             $backendId = $data['data']['entryUUID'][0];
+            $cardUri = null;
           
             $query = 'SELECT card_uri, card_uid FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?';
             $stmt = $this->pdo->prepare($query);
@@ -1928,37 +1931,41 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
               $sql = $this->pdo->prepare($query);
               $sql->execute([$cardUri, $cardUID, $addressBookId, $backendId, $syncDbUserId]);
             }
+            else {
+              $cardUri = $row['card_uri'];
             
-						if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $row['card_uri'])))
-			    		error_log("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore the error: " . __METHOD__ . " at line no " . __LINE__);
+							if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri)))
+					  		error_log("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore the error: " . __METHOD__ . " at line no " . __LINE__);
+            }
             
 						$cardValues = false;
-				  	$cardValues = $this->getCard($addressBookId, $row['card_uri']);
+				  	$cardValues = $this->getCard($addressBookId, $cardUri);
 				  	
 				  	if($cardValues === false)
 				  		continue;
 				  		
 						unset($cardValues['carddata']);
           
+            $contactsUriList[] = $cardValues['uri'];
             $cards[] = $cardValues;
             $data = Utility::LdapIterativeQuery($ldapConn, $data['entryIns']);
 					}
 					
 					// Deleting cards not present in backend
-					$contacts = [];
+					$mappedContactsUriList = [];
 					
 					$query = 'SELECT card_uri FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ?';
 					$stmt = $this->pdo->prepare($query);
 					$stmt->execute([$syncDbUserId, $addressBookId]);
 			
 					foreach($stmt->fetchAll(\PDO::FETCH_ASSOC) as $row)
-						$contacts[] = $row['card_uri'];
+						$mappedContactsUriList[] = $row['card_uri'];
 					
-					foreach($cards as $cardValues) {
-						if(!in_array($cardValues['uri'], $contacts)) {
-							if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $row['card_uri'])))
+					foreach($mappedContactsUriList as $mappedContactUri) {
+						if(!in_array($mappedContactUri, $contactsUriList)) {
+							if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $mappedContactUri)))
 				    		error_log("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore the error: " . __METHOD__ . " at line no " . __LINE__);
-							$this->addChange($addressBookId, $cardValues['uri']);
+							$this->addChange($addressBookId, $mappedContactUri);
 						}
 					}
 
