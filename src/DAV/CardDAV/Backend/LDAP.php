@@ -1946,7 +1946,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				  		
 						unset($cardValues['carddata']);
           
-            $contactsUriList[] = $cardValues['uri'];
+            $backendContactsUriList[] = $cardValues['uri'];
             $cards[] = $cardValues;
             $data = Utility::LdapIterativeQuery($ldapConn, $data['entryIns']);
 					}
@@ -1962,7 +1962,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						$mappedContactsUriList[] = $row['card_uri'];
 					
 					foreach($mappedContactsUriList as $mappedContactUri) {
-						if(!in_array($mappedContactUri, $contactsUriList)) {
+						if(!in_array($mappedContactUri, $backendContactsUriList)) {
 							if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $mappedContactUri)))
 				    		error_log("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore the error: " . __METHOD__ . " at line no " . __LINE__);
 							$this->addChange($addressBookId, $mappedContactUri);
