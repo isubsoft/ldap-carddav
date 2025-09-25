@@ -282,10 +282,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         }
         
 	      $addressBookSyncToken = $this->addressbook[$addressBookId]['syncToken'];
-	      
-				// The below should be called once $this->addressbook properties have been set
-				$this->fullSyncOperation($addressBookId);
-				$this->getChangesForAddressBook($addressBookId, $addressBookSyncToken, 1);
         
         $addressBooks[] = [
             'id'                                                          => $addressBookId,
