@@ -1631,14 +1631,14 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 			}
 				
 			$filter = '(&' . $addressBookConfig['filter'] . '(!(createtimestamp>=' . gmdate('YmdHis', $syncToken) . 'Z))(modifytimestamp>=' . gmdate('YmdHis', $syncToken) . 'Z)(!(modifytimestamp>=' . gmdate('YmdHis', $addressBookSyncToken) . 'Z)))';
-			$data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $filter, ['entryuuid'], strtolower($addressBookConfig['scope']));
+			$data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $filter, ['entryuuid', 'modifytimestamp'], strtolower($addressBookConfig['scope']));
 
 			if($data === false)
 				throw new SabreDAVException\ServiceUnavailable();
 				
 			while($data['entryIns'])
 			{
-				if(!isset($data['data']['entryUUID'][0]))
+				if(!isset($data['data']['entryUUID'][0]) || !isset($data['data']['modifyTimestamp'][0]))
 				{
 					error_log("Read access to required operational attributes in LDAP not present. Cannot continue. Quitting. ".__METHOD__." at line no ".__LINE__);
 					throw new SabreDAVException\ServiceUnavailable();
@@ -1668,6 +1668,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 								
 								continue;
 						}
+						
+						$cardValues = $this->getCard($addressBookId, $cardUri);
+						
+						if(isset($cardValues['lastmodified']) && $cardValues['lastmodified'] < strtotime($data['data']['modifyTimestamp'][0]))
+							if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri)))
+				    		error_log("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore the error: " . __METHOD__ . " at line no " . __LINE__);
 						
 						$result['modified'][] = $cardUri;
 				} catch (\Throwable $th) {
@@ -1874,7 +1880,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         	throw new SabreDAVException\ServiceUnavailable();
         
 				$filter = '(&' . $addressBookConfig['filter'] . '(!(createtimestamp>=' . gmdate('YmdHis', $addressBookSyncToken) . 'Z)))';
-        $data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $filter, ['entryuuid','modifytimestamp'], strtolower($addressBookConfig['scope']));
+        $data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $filter, ['entryuuid'], strtolower($addressBookConfig['scope']));
         
         if($data === false)
          throw new SabreDAVException\ServiceUnavailable();
@@ -1883,7 +1889,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         {
           while($data['entryIns']) 
 					{
-						if(!isset($data['data']['entryUUID'][0]) || !isset($data['data']['modifyTimestamp'][0]))
+						if(!isset($data['data']['entryUUID'][0]))
 						{
 							error_log("Read access to required operational attributes in LDAP not present. Cannot continue. Quitting. ".__METHOD__." at line no ".__LINE__);
         			throw new SabreDAVException\ServiceUnavailable();
