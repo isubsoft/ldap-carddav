@@ -840,6 +840,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						throw new SabreDAVException\ServiceUnavailable();
 					}
 					
+					if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri)))
+						  error_log("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore the error: " . __METHOD__ . " at line no " . __LINE__);
+					
 					$oldLdapRdn = $componentOldLdapTree[0];
 					$parentOldLdapTree = "";
 
@@ -881,7 +884,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		      $ldapTree = $rdnField. '='. ldap_escape(is_array($ldapInfo[$rdnField])?$ldapInfo[$rdnField][0]:$ldapInfo[$rdnField], "", LDAP_ESCAPE_DN) . ',' .$addressBookDn;
 
 		      if(!ldap_add($ldapConn, $ldapTree, $ldapInfo))
-						throw new SabreDAVException\BadRequest("Card with same name may already exist");
+						throw new SabreDAVException\BadRequest("Card data may be incompatible or card with same name may already exist");
 
 		      $data = Utility::LdapQuery($ldapConn, $ldapTree, $addressBookConfig['filter'], ['entryuuid'], 'base');
 		      
@@ -957,12 +960,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     function updateCard($addressBookId, $cardUri, $cardData)
     {
-		  $syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
-		  $cache = $this->cache;
-        
-			if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri)))
-		      error_log("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore the error: " . __METHOD__ . " at line no " . __LINE__);
-		      
 	    return $this->createUpdateCard($addressBookId, $cardUri, $cardData, 'UPDATE');
     }
 
@@ -1672,9 +1669,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 								continue;
 						}
 						
-						if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri)))
-		      		error_log("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore the error: " . __METHOD__ . " at line no " . __LINE__);
-
 						$result['modified'][] = $cardUri;
 				} catch (\Throwable $th) {
 						error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
