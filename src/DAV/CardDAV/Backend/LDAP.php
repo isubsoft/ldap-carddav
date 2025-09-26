@@ -125,6 +125,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */    
     private $addressbook = [];
     
+		private static $cacheTtl = 3600;
+    
     /**
      * Creates the backend.
      *
@@ -470,7 +472,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
           'size'          => strlen($cardData)
 				];
 				
-				if(!$cache->set(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri), CacheMaster::encode($result)))
+				if(!$cache->set(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri), CacheMaster::encode($result), (isset($this->config['cache']['card']['ttl']) && is_int($this->config['cache']['card']['ttl']) && $this->config['cache']['card']['ttl'] > 0)?$this->config['cache']['card']['ttl']:self::$cacheTtl))
 			    error_log("Could not set cache data: " . __METHOD__ . " at line no " . __LINE__);
         
         $result['id'] = $cardUID;
@@ -544,9 +546,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					
 				if(strlen($cardData) > $maxContactSize)
 					throw new ISubsoftDAVException\ContentTooLarge();
-					
-				if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri)))
-		      error_log("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore the error: " . __METHOD__ . " at line no " . __LINE__);
 					
 				$vcard = Reader::read($cardData);
 				
@@ -958,6 +957,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     function updateCard($addressBookId, $cardUri, $cardData)
     {
+		  $syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
+		  $cache = $this->cache;
+        
+			if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri)))
+		      error_log("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore the error: " . __METHOD__ . " at line no " . __LINE__);
+		      
 	    return $this->createUpdateCard($addressBookId, $cardUri, $cardData, 'UPDATE');
     }
 
@@ -1562,7 +1567,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 			$fullRefreshInterval = (isset($addressBookConfig['full_refresh_interval']) && is_int($addressBookConfig['full_refresh_interval']) && $addressBookConfig['full_refresh_interval'] > 0)?$addressBookConfig['full_refresh_interval']:self::$defaultFullRefreshInterval;
 			
 			// Sync interval should be minimum of 30 mins or 1/10 of 'full_refresh_interval' whichever is lower
-			$minSyncInterval = ($fullRefreshInterval / 10 > 1800)?1800:$fullRefreshInterval / 10;
+			$minSyncInterval = (isset($this->config['cache']['card']['ttl']) && is_int($this->config['cache']['card']['ttl']) && $this->config['cache']['card']['ttl'] > 0)?$this->config['cache']['card']['ttl']:self::$cacheTtl;
 			
 			if($addressBookSyncToken - $syncToken < $minSyncInterval) {
 				$result['syncToken'] = $syncToken;
@@ -1907,12 +1912,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
               $sql = $this->pdo->prepare($query);
               $sql->execute([$cardUri, $cardUID, $addressBookId, $backendId, $syncDbUserId]);
             }
-            else {
+            else
               $cardUri = $row['card_uri'];
-            
-							if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri)))
-					  		error_log("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore the error: " . __METHOD__ . " at line no " . __LINE__);
-            }
             
 						$cardValues = false;
 				  	$cardValues = $this->getCard($addressBookId, $cardUri);

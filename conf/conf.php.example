@@ -125,6 +125,9 @@ $config['principal']['ldap'] = [
 //  $config['cache']['card']['backend'] = 'local_fs';
 //  $config['cache']['principal']['backend'] = 'apcu';
 
+// TTL (in seconds) for 'card' type cache, defaults to 1 hour.
+//  $config['cache']['card']['ttl'] = 3600;
+
 // TTL (in seconds) for 'principal' type cache, defaults to 1 day.
 //  $config['cache']['principal']['ttl'] = 86400;
 
