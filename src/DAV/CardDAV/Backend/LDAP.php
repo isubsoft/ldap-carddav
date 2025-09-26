@@ -984,23 +984,23 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         if(!$writableAddressBook)
         	return false;
         	
-				if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri)))
-		      error_log("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore the error: " . __METHOD__ . " at line no " . __LINE__);
-        
         $data = $this->fetchLdapContactDataByUri($addressBookId, $cardUri, ['dn', 'entryUUID']);
         
         if(empty($data))
 					throw new SabreDAVException\ServiceUnavailable();
 					
+	      if($data['count'] > 1) {
+					error_log("Multiple backend contacts found. Check configuration. ".__METHOD__." at line no ".__LINE__);
+					throw new SabreDAVException\ServiceUnavailable();
+	      }
+	      
+				if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri)))
+		      error_log("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore the error: " . __METHOD__ . " at line no " . __LINE__);
+					
 	      if($data['count'] === 0) {
 					$this->addChange($addressBookId, $cardUri);
 					
 	      	return true;
-	      }
-					
-	      if($data['count'] > 1) {
-					error_log("Multiple backend contacts found. Check configuration. ".__METHOD__." at line no ".__LINE__);
-					throw new SabreDAVException\ServiceUnavailable();
 	      }
         
         $ldapTree = $data[0]['dn'];
