@@ -66,7 +66,7 @@ class LocalFS implements CacheInterface
     	$cacheFile = $this->basePath . '/' . $key;
     	$ttlFile = $this->basePath . '/' . $key . ".ttl";
     	
-	  	if(file_put_contents($ttlFile, (!is_int($ttl) || $ttl === 0)?self::$noTtlDefault:$ttl) == false || file_put_contents($cacheFile, $value) == false) {
+	  	if(file_put_contents($ttlFile, (!is_int($ttl) || $ttl === 0 || $ttl > 2592000)?self::$noTtlDefault:$ttl) == false || file_put_contents($cacheFile, $value) == false) {
     		$this->delete($key);
 	  		return false;
 	  	}
