@@ -1669,7 +1669,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 								continue;
 						}
 						
-						$cardValues = $this->getCard($addressBookId, $cardUri);
+						$cardValues = CacheMaster::decode($cache->get(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri), null));
 						
 						if(isset($cardValues['lastmodified']) && $cardValues['lastmodified'] < strtotime($data['data']['modifyTimestamp'][0]))
 							if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri)))
@@ -1880,7 +1880,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         	throw new SabreDAVException\ServiceUnavailable();
         
 				$filter = '(&' . $addressBookConfig['filter'] . '(!(createtimestamp>=' . gmdate('YmdHis', $addressBookSyncToken) . 'Z)))';
-        $data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $filter, ['entryuuid'], strtolower($addressBookConfig['scope']));
+				$data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $filter, ['entryuuid', 'modifytimestamp'], strtolower($addressBookConfig['scope']));
         
         if($data === false)
          throw new SabreDAVException\ServiceUnavailable();
@@ -1889,13 +1889,15 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         {
           while($data['entryIns']) 
 					{
-						if(!isset($data['data']['entryUUID'][0]))
+						if(!isset($data['data']['entryUUID'][0]) || !isset($data['data']['modifyTimestamp'][0]))
 						{
 							error_log("Read access to required operational attributes in LDAP not present. Cannot continue. Quitting. ".__METHOD__." at line no ".__LINE__);
         			throw new SabreDAVException\ServiceUnavailable();
 						}
 						
             $backendId = $data['data']['entryUUID'][0];
+						$cardModifiedTimestamp = strtotime($data['data']['modifyTimestamp'][0]);
+						$cardUID = null;
             $cardUri = null;
           
             $query = 'SELECT card_uri, card_uid FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?';
@@ -1912,19 +1914,17 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
               $sql = $this->pdo->prepare($query);
               $sql->execute([$cardUri, $cardUID, $addressBookId, $backendId, $syncDbUserId]);
             }
-            else
-              $cardUri = $row['card_uri'];
+						else {
+							$cardUID = $row['card_uid'];
+							$cardUri = $row['card_uri'];
+						}
             
-						$cardValues = false;
-				  	$cardValues = $this->getCard($addressBookId, $cardUri);
-				  	
-				  	if($cardValues === false)
-				  		continue;
-				  		
-						unset($cardValues['carddata']);
-          
-            $backendContactsUriList[] = $cardValues['uri'];
-            $cards[] = $cardValues;
+            $backendContactsUriList[] = $cardUri;
+						$cards[] = [
+							'id' => $cardUID,
+							'uri' => $cardUri,
+							'lastmodified' => $cardModifiedTimestamp
+						];
             $data = Utility::LdapIterativeQuery($ldapConn, $data['entryIns']);
 					}
 					
