@@ -1918,6 +1918,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							$cardUID = $row['card_uid'];
 							$cardUri = $row['card_uri'];
 						}
+						
+						$cardValues = CacheMaster::decode($cache->get(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri), null));
+						
+						if(isset($cardValues['lastmodified']) && $cardValues['lastmodified'] < $cardModifiedTimestamp)
+							if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri)))
+				    		error_log("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore the error: " . __METHOD__ . " at line no " . __LINE__);
             
             $backendContactsUriList[] = $cardUri;
 						$cards[] = [
