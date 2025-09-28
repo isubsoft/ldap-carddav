@@ -79,10 +79,10 @@ $config['server']['ldap'] = [
 //  $config['cache']['card']['backend'] = 'local_fs';
 //  $config['cache']['principal']['backend'] = 'apcu';
 
-// TTL (in seconds) for 'card' type cache, defaults to 1 hour.
+// TTL (in seconds) for 'card' type cache, defaults to 1 hour. TTL should not be more than 2592000 (30 days).
 //  $config['cache']['card']['ttl'] = 3600;
 
-// TTL (in seconds) for 'principal' type cache, defaults to 1 day.
+// TTL (in seconds) for 'principal' type cache, defaults to 1 day. TTL should not be more than 2592000 (30 days).
 //  $config['cache']['principal']['ttl'] = 86400;
 
 // Configure caching backend below. Currently only memcached backend needs configuration.
