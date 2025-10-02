@@ -12,6 +12,7 @@ use Psr\SimpleCache\CacheInterface;
 class LocalFS implements CacheInterface
 {
     public $basePath = null;
+    private static $noTtlDefault = 86400;
     
     public function __construct(string $basePath)
     {
@@ -35,16 +36,15 @@ class LocalFS implements CacheInterface
     public function get($key, $default = null)
     {
     	$cacheFile = $this->basePath . '/' . $key;
+    	$ttlFile = $this->basePath . '/' . $key . ".ttl";
     	
-    	if(file_exists($cacheFile))
-    	{
-    		$cacheData = file_get_contents($cacheFile);
-    		
-    		if($cacheData !== false)
-    			return $cacheData;
-    	}
-    		
-    	return $default;
+   		$ttl = file_get_contents($ttlFile);
+			$cacheData = file_get_contents($cacheFile);
+   		
+			if($ttl == false || $cacheData == false || time() > (int)$ttl)
+				return $default;
+				
+    	return $cacheData;
     }
 
     /**
@@ -64,13 +64,14 @@ class LocalFS implements CacheInterface
     public function set($key, $value, $ttl = null)
     {
     	$cacheFile = $this->basePath . '/' . $key;
+    	$ttlFile = $this->basePath . '/' . $key . ".ttl";
     	
-    	if(file_put_contents($cacheFile, $value) !== false)
-    		return true;
+	  	if(file_put_contents($ttlFile, ((!is_int($ttl) || $ttl === 0 || $ttl > 2592000)?self::$noTtlDefault:$ttl) + time()) == false || file_put_contents($cacheFile, $value) == false) {
+    		$this->delete($key);
+	  		return false;
+	  	}
     		
-    	$this->delete($key);
-    		
-    	return false;
+    	return true;
     }
 
     /**
@@ -86,8 +87,9 @@ class LocalFS implements CacheInterface
     public function delete($key)
     {
     	$cacheFile = $this->basePath . '/' . $key;
+    	$ttlFile = $this->basePath . '/' . $key . ".ttl";
     	
-			return unlink($cacheFile);
+			return unlink($ttlFile) && unlink($cacheFile);
     }
 
     /**
@@ -97,11 +99,11 @@ class LocalFS implements CacheInterface
      */
     public function clear()
     {
-    	$cacheFilePattern = $this->basePath . '/' . '*';
+    	$filePattern = $this->basePath . '/' . '*';
     	
     	if(file_exists($this->basePath))
-		  	foreach(glob($cacheFilePattern) as $cacheFile)
-		  		if(!unlink($cacheFile))
+		  	foreach(glob($filePattern) as $file)
+		  		if(!unlink($file))
 		  			return false;
     			
     	return true;
