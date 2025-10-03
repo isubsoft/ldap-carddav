@@ -370,16 +370,32 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     function getCards($addressBookId)
     {
+				$syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
+        $cache = $this->cache;
         $result = [];
+				$cardValues = null;
         
         foreach($this->getMappedContacts($addressBookId) as $contact) {
-        	$card = $this->getCard($addressBookId, $contact['card_uri']);
-        	
-        	if($card !== false) {
-        		unset($card['carddata']);
-        		
-        		$result[] = $card;
-        	}
+       		$cardValues = CacheMaster::decode($cache->get(CacheMaster::cardKey($syncDbUserId, $addressBookId, $contact['card_uri']), null));
+       		
+       		if($cardValues == [] || $cardValues == null) {
+		     		if(isset($contact['modified_timestamp']))
+					 		$cardValues = [ 
+					 			'lastmodified'  => $contact['modified_timestamp']
+							];
+						else {
+							$cardValues = $this->getCard($addressBookId, $contact['card_uri']);
+							
+							if($cardValues === false)
+								continue;
+						}
+					}
+					
+      		unset($cardValues['carddata']);
+					
+			    $cardValues['id'] = $contact['card_uid'];
+			    $cardValues['uri'] = $contact['card_uri'];
+      		$result[] = $cardValues;
         }
         
         return $result;
@@ -1921,7 +1937,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						$contacts[] = [
 							'card_uri' => $cardUri,
 							'card_uid' => $cardUID,
-							'backend_id' => $backendId
+							'backend_id' => $backendId,
+							'modified_timestamp' => $cardModifiedTimestamp
 						];
             $data = Utility::LdapIterativeQuery($ldapConn, $data['entryIns']);
 					}
