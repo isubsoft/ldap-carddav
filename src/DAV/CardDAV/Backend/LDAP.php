@@ -125,7 +125,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */    
     private $addressbook = [];
     
-		private static $cacheTtl = 3600;
+		private static $cacheTtl = 86400;
     
     /**
      * Creates the backend.
@@ -474,7 +474,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
           'size'          => strlen($cardData)
 				];
 				
-				if(!$cache->set(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri), CacheMaster::encode($result), (isset($this->config['cache']['card']['ttl']) && is_int($this->config['cache']['card']['ttl']) && $this->config['cache']['card']['ttl'] > 0)?$this->config['cache']['card']['ttl']:self::$cacheTtl))
+				if(!$cache->set(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri), CacheMaster::encode($result), (isset($this->config['cache']['card']['ttl']) && is_int($this->config['cache']['card']['ttl']) && $this->config['cache']['card']['ttl'] >= 0 && $this->config['cache']['card']['ttl'] <= 2592000)?$this->config['cache']['card']['ttl']:self::$cacheTtl))
 			    error_log("Could not set cache data: " . __METHOD__ . " at line no " . __LINE__);
         
         $result['id'] = $cardUID;
