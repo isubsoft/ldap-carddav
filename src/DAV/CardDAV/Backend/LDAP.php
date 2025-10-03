@@ -515,9 +515,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     {
         $result = [];
 
-        foreach($uris as $uri)
-        {
-            $result[] = $this->getCard($addressBookId, $uri);
+        foreach($uris as $uri) {
+            $cardValues = $this->getCard($addressBookId, $uri);
+            
+            if($cardValues === false)
+            	continue;
+            	
+            $result[] = $cardValues;
         }
 
         return $result;
