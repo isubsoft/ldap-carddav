@@ -82,7 +82,7 @@ $config['server']['ldap'] = [
 // TTL (in seconds) for 'card' type cache, defaults to 1 day. Value of 0 disables expiry of cached items. TTL should not be more than 2592000 (30 days) else default value will be used.
 //  $config['cache']['card']['ttl'] = 86400;
 
-// TTL (in seconds) for 'principal' type cache, defaults to 1 day. Value of 0 disables expiry of cached items. TTL should not be more than 2592000 (30 days) else default value will be used.
+// TTL (in seconds) for 'principal' type cache, defaults to 1 day. TTL should not be 0 or more than 2592000 (30 days) else default value will be used.
 //  $config['cache']['principal']['ttl'] = 86400;
 
 // Configure caching backend below. Currently only memcached backend needs configuration.
