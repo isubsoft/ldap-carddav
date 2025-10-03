@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace ISubsoft\Cache\Backend;
 
 use Psr\SimpleCache\CacheInterface;
+use Psr\SimpleCache\InvalidArgumentException;
 
 class LocalFS implements CacheInterface
 {
@@ -35,6 +36,8 @@ class LocalFS implements CacheInterface
      */
     public function get($key, $default = null)
     {
+			self::checkValidKey($key);
+    		
     	$cacheFile = $this->basePath . '/' . $key;
     	$ttlFile = $this->basePath . '/' . $key . ".ttl";
     	
@@ -67,6 +70,8 @@ class LocalFS implements CacheInterface
      */
     public function set($key, $value, $ttl = null)
     {
+			self::checkValidKey($key);
+    		
     	$cacheFile = $this->basePath . '/' . $key;
     	$ttlFile = $this->basePath . '/' . $key . ".ttl";
     	$setTtl = 0;
@@ -96,6 +101,8 @@ class LocalFS implements CacheInterface
      */
     public function delete($key)
     {
+			self::checkValidKey($key);
+    		
     	$cacheFile = $this->basePath . '/' . $key;
     	$ttlFile = $this->basePath . '/' . $key . ".ttl";
     	
@@ -201,8 +208,16 @@ class LocalFS implements CacheInterface
      */
     public function has($key)
     {
+			self::checkValidKey($key);
+			    		
     	$cacheFile = $this->basePath . '/' . $key;
     	
 			return file_exists($cacheFile);
+    }
+    
+    private static function checkValidKey($key)
+    {
+    	if(!is_string($key) || !ctype_print($key) || preg_match('#/#', $key) === 1)
+    		throw InvalidArgumentException();    
     }
 }
