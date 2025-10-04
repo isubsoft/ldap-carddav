@@ -417,7 +417,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     function getCard($addressBookId, $cardUri)
     {
 		    $result = [];
-				$cardUID = null;
+				$cardUid = null;
 				
 				$addressBookConfig = $this->addressbook[$addressBookId]['config'];
 				$syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
@@ -434,7 +434,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		    	if($row === false)
 						return false;
 		    	
-		      	$cardUID = $row['card_uid'];
+		      	$cardUid = $row['card_uid'];
 		      	$backendId = $row['backend_id'];
 		    } catch (\Throwable $th) {
 		      	error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
@@ -448,7 +448,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					$cacheValid = false;
 					
 				if($cacheValid) {
-		      $result['id'] = $cardUID;
+		      $result['id'] = $cardUid;
 		      $result['uri'] = $cardUri;
         	
         	return $result;
@@ -478,7 +478,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 	      }
 	      
 				$cardModifiedTimestamp = strtotime($data[0]['modifytimestamp'][0]);
-      	$cardData = $this->generateVcard($data[0], $addressBookId, $cardUID);
+      	$cardData = $this->generateVcard($data[0], $addressBookId, $cardUid);
       	
 				if(empty($cardData))
 					throw new SabreDAVException\ServiceUnavailable();
@@ -493,7 +493,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				if(!$cache->set(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri), CacheMaster::encode($result), (isset($this->config['cache']['card']['ttl']) && is_int($this->config['cache']['card']['ttl']) && $this->config['cache']['card']['ttl'] >= 0 && $this->config['cache']['card']['ttl'] <= 2592000)?$this->config['cache']['card']['ttl']:self::$cacheTtl))
 			    error_log("Could not set cache data: " . __METHOD__ . " at line no " . __LINE__);
         
-        $result['id'] = $cardUID;
+        $result['id'] = $cardUid;
         $result['uri'] = $cardUri;
 				
         return $result;
@@ -573,10 +573,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				
 				foreach($vcard->validate() as $validationError)
 					if($validationError['level'] >= 3)
-						throw new SabreDAVException\BadRequest("Validation error for card property '" . ($validationError['node'])->name . "'. Make sure card version is mentioned in the card and all data in the card is formatted according to the version mentioned in the card.");
+						throw new SabreDAVException\BadRequest("Validation error for card property '" . ($validationError['node'])->name . "'. Make sure version property is mentioned in the card data and card data is formatted according to the version.");
 					
 				$vcard = $vcard->convert($this->defaultVcardVersion);
-	      $UID = (!isset($vcard->UID) || $vcard->UID == null || $vcard->UID == '')?null:$vcard->UID;
+	      $cardUid = (!isset($vcard->UID) || $vcard->UID == null || $vcard->UID == '')?null:$vcard->UID;
 				
         if($operation == 'CREATE')
         {
@@ -585,7 +585,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		      try {
 		          $query = 'SELECT 1 FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ? AND card_uid = ?';
 		          $stmt = $this->pdo->prepare($query);
-		          $stmt->execute([$syncDbUserId, $addressBookId, $UID]);
+		          $stmt->execute([$syncDbUserId, $addressBookId, $cardUid]);
 		          
 		          if($stmt->fetch(\PDO::FETCH_ASSOC) !== false)
 		          	$cardExists = true;
@@ -605,7 +605,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		      try {
 		          $query = 'SELECT 1 FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ? AND card_uri = ? AND card_uid <> ?';
 		          $stmt = $this->pdo->prepare($query);
-		          $stmt->execute([$syncDbUserId, $addressBookId, $cardUri, $UID]);
+		          $stmt->execute([$syncDbUserId, $addressBookId, $cardUri, $cardUid]);
 		          
 		          if($stmt->fetch(\PDO::FETCH_ASSOC) !== false)
 		          	$cardIdMatch = false;
@@ -915,7 +915,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				    try {
 				        $query = "INSERT INTO `" . self::$backendMapTableName . "` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
 				        $sql = $this->pdo->prepare($query);
-				        $sql->execute([$cardUri, ($UID == null)?$this->guidv4():$UID, $addressBookId, $data[0]['entryuuid'][0], $syncDbUserId]);
+				        $sql->execute([$cardUri, ($cardUid == null)?$this->guidv4():$cardUid, $addressBookId, $data[0]['entryuuid'][0], $syncDbUserId]);
 				    } catch (\Throwable $th) {
 				        error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
 				    }
@@ -1048,9 +1048,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      * @param array $addressBookId
      * @return null or vcard data
      */
-    protected function generateVcard($data, $addressBookId, $cardUID)
+    protected function generateVcard($data, $addressBookId, $cardUid)
     { 
-        if (empty ($data) || empty($addressBookId) || empty($cardUID))
+        if (empty ($data) || empty($addressBookId) || empty($cardUid))
             return null;
         
         $addressBookConfig = $this->addressbook[$addressBookId]['config'];
@@ -1063,7 +1063,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
         
         // build the Vcard
-        $vcard = (new \Sabre\VObject\Component\VCard(['UID' => $cardUID]))->convert($this->defaultVcardVersion);
+        $vcard = (new \Sabre\VObject\Component\VCard(['UID' => $cardUid]))->convert($this->defaultVcardVersion);
         
         $isContactGroup = false;
         $contactGroupMemberFieldName = $addressBookConfig['group_member_map']['MEMBER']['field_name'];
@@ -1631,12 +1631,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
 						if($cardUri == null)
 						{
-								$cardUID = $this->guidv4();
-								$cardUri = $cardUID .'.vcf';
+								$cardUid = $this->guidv4();
+								$cardUri = $cardUid .'.vcf';
 								
 								$query = "INSERT INTO `" . self::$backendMapTableName . "` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
 								$sql = $this->pdo->prepare($query);
-								$sql->execute([$cardUri, $cardUID, $addressBookId, $data['data']['entryUUID'][0], $syncDbUserId]); 
+								$sql->execute([$cardUri, $cardUid, $addressBookId, $data['data']['entryUUID'][0], $syncDbUserId]); 
 						}
 				} catch (\Throwable $th) {
 						error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
@@ -1674,12 +1674,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						
 						if($cardUri == null)
 						{
-								$cardUID = $this->guidv4();
-								$cardUri = $cardUID .'.vcf';
+								$cardUid = $this->guidv4();
+								$cardUri = $cardUid .'.vcf';
 
 								$query = "INSERT INTO `" . self::$backendMapTableName . "` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
 								$sql = $this->pdo->prepare($query);
-								$sql->execute([$cardUri, $cardUID, $addressBookId, $data['data']['entryUUID'][0], $syncDbUserId]);
+								$sql->execute([$cardUri, $cardUid, $addressBookId, $data['data']['entryUUID'][0], $syncDbUserId]);
 								
 								$result['added'][] = $cardUri;
 								
@@ -1909,7 +1909,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						
             $backendId = $data['data']['entryUUID'][0];
 						$cardModifiedTimestamp = strtotime($data['data']['modifyTimestamp'][0]);
-						$cardUID = null;
+						$cardUid = null;
             $cardUri = null;
           
             $query = 'SELECT card_uri, card_uid FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?';
@@ -1919,15 +1919,15 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
           
             if ($row === false) {
           		// Adding contacts present in LDAP with no reference here
-              $cardUID = $this->guidv4();
-              $cardUri = $cardUID .'.vcf';
+              $cardUid = $this->guidv4();
+              $cardUri = $cardUid .'.vcf';
               
               $query = "INSERT INTO `" . self::$backendMapTableName . "` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
               $sql = $this->pdo->prepare($query);
-              $sql->execute([$cardUri, $cardUID, $addressBookId, $backendId, $syncDbUserId]);
+              $sql->execute([$cardUri, $cardUid, $addressBookId, $backendId, $syncDbUserId]);
             }
 						else {
-							$cardUID = $row['card_uid'];
+							$cardUid = $row['card_uid'];
 							$cardUri = $row['card_uri'];
 						}
 						
@@ -1940,7 +1940,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             $backendContactsUriList[] = $cardUri;
 						$contacts[] = [
 							'card_uri' => $cardUri,
-							'card_uid' => $cardUID,
+							'card_uid' => $cardUid,
 							'backend_id' => $backendId,
 							'modified_timestamp' => $cardModifiedTimestamp
 						];
