@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace ISubsoft\Cache\Backend;
 
 use Psr\SimpleCache\CacheInterface;
+use Psr\SimpleCache\InvalidArgumentException;
 
 class LocalFS implements CacheInterface
 {
@@ -35,13 +36,19 @@ class LocalFS implements CacheInterface
      */
     public function get($key, $default = null)
     {
+			self::checkValidKey($key);
+    		
     	$cacheFile = $this->basePath . '/' . $key;
     	$ttlFile = $this->basePath . '/' . $key . ".ttl";
     	
    		$ttl = file_get_contents($ttlFile);
-			$cacheData = file_get_contents($cacheFile);
    		
-			if($ttl == false || $cacheData == false || time() > (int)$ttl)
+			if($ttl === false || ((int)$ttl !== 0 && time() > (int)$ttl))
+				return $default;
+				
+			$cacheData = file_get_contents($cacheFile);
+			
+			if($cacheData === false)
 				return $default;
 				
     	return $cacheData;
@@ -63,10 +70,18 @@ class LocalFS implements CacheInterface
      */
     public function set($key, $value, $ttl = null)
     {
+			self::checkValidKey($key);
+    		
     	$cacheFile = $this->basePath . '/' . $key;
     	$ttlFile = $this->basePath . '/' . $key . ".ttl";
+    	$setTtl = 0;
     	
-	  	if(file_put_contents($ttlFile, ((!is_int($ttl) || $ttl === 0 || $ttl > 2592000)?self::$noTtlDefault:$ttl) + time()) == false || file_put_contents($cacheFile, $value) == false) {
+    	if(!is_int($ttl) || $ttl > 2592000)
+    		$setTtl = self::$noTtlDefault + time();
+    	else if($ttl !== 0)
+    		$setTtl = $ttl + time();
+    	
+	  	if(file_put_contents($ttlFile, $setTtl) == false || file_put_contents($cacheFile, $value) == false) {
     		$this->delete($key);
 	  		return false;
 	  	}
@@ -86,6 +101,8 @@ class LocalFS implements CacheInterface
      */
     public function delete($key)
     {
+			self::checkValidKey($key);
+    		
     	$cacheFile = $this->basePath . '/' . $key;
     	$ttlFile = $this->basePath . '/' . $key . ".ttl";
     	
@@ -191,8 +208,16 @@ class LocalFS implements CacheInterface
      */
     public function has($key)
     {
+			self::checkValidKey($key);
+			    		
     	$cacheFile = $this->basePath . '/' . $key;
     	
 			return file_exists($cacheFile);
+    }
+    
+    private static function checkValidKey($key)
+    {
+    	if(!is_string($key) || !ctype_print($key) || preg_match('#/#', $key) === 1)
+    		throw InvalidArgumentException();    
     }
 }

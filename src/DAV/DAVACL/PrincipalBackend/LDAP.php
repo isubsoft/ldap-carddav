@@ -233,7 +233,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
             
             $principal['__backend_id'] = $data[0]['entryuuid'][0];
             
-						if(!$cache->set(CacheMaster::principalKey($principalId), CacheMaster::encode($principal), (isset($this->config['cache']['principal']['ttl']) && is_int($this->config['cache']['principal']['ttl']) && $this->config['cache']['principal']['ttl'] > 0)?$this->config['cache']['principal']['ttl']:self::$cacheTtl))
+						if(!$cache->set(CacheMaster::principalKey($principalId), CacheMaster::encode($principal), (isset($this->config['cache']['principal']['ttl']) && is_int($this->config['cache']['principal']['ttl']) && $this->config['cache']['principal']['ttl'] > 0 && $this->config['cache']['principal']['ttl'] <= 2592000)?$this->config['cache']['principal']['ttl']:self::$cacheTtl))
 						  error_log("Could not set cache data: " . __METHOD__ . " at line no " . __LINE__);
             
             $principal['id'] = $principalId;

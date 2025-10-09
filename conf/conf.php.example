@@ -38,6 +38,7 @@ $config = [];
 // Default is null which means app internal default value will be used.
 //  $config['app']['max_payload_size'] = null;
 
+// Sync database configuration.
 // The DSN string below can use %datadir as placeholder for the data directory path of the application.
 // Remember %datadir is an absolute directory path. To use %datadir as a literal use %%datadir
 $config['sync_database'] = [
@@ -58,35 +59,40 @@ $config['sync_database'] = [
 												// mysql: SET foreign_key_checks = ON
 ];
 
+
+// LDAP server configuration.
 $config['server']['ldap'] = [
-  'host'         				=> '<hostname>', // If not set then system default LDAP URI will be used
+  'host'         				=> '<hostname>', // If not set then system default LDAP URI will be used.
 	// 'port'          			=> 389, // If not set then default ports for ldap and ldaps schemes will be used.
   // 'ldap_version'  			=> 3, // If not set then LDAPv3 will be used. LDAPv2 or below are not supported.
   'network_timeout' 		=> 10, // The timeout (in seconds) for connect + bind attempts. 
   														 // This is only supported in PHP >= 5.3.0 with OpenLDAP 2.x
-  'connection_security'	=> 'none' 	// none (default): No connection security will be established
-  																	// secure: Use secure (ldaps) protocol to connect to the server
-  																	// starttls: Use starttls protocol for security
+  'connection_security'	=> 'none' 	// none (default): No connection security will be established.
+  																	// secure: Secure (ldaps) protocol will be used to connect to the server.
+  																	// starttls: Starttls protocol will be used to connect to the server.
 ];
 
 // Caching. Allowed backends are mentioned below.
 // memcached: Memcached server
 // local_fs: Local filesystem
 // apcu: APCu cache ( check https://www.php.net/manual/en/book.apcu.php for details )
-// memory: System memory (for testing purpose only, cache is not persisted between requests)
+// memory: System memory (for testing purpose only, cache does not persist between requests)
 
 // Caching backend to enable specific to object type. If not set then caching is disabled.
-//  $config['cache']['card']['backend'] = 'local_fs';
-//  $config['cache']['principal']['backend'] = 'apcu';
+// It is strongly recommended to keep caching enabled in production environment.
+$config['cache']['card']['backend'] = 'local_fs';
+$config['cache']['principal']['backend'] = 'local_fs';
 
-// TTL (in seconds) for 'card' type cache, defaults to 1 hour. TTL should not be more than 2592000 (30 days).
-//  $config['cache']['card']['ttl'] = 3600;
+// TTL (in seconds) for 'card' type cache, defaults to 1 day. TTL should not be 0 or more than 2592000 (30 days) else default value will be used.
+//  $config['cache']['card']['ttl'] = 86400;
 
-// TTL (in seconds) for 'principal' type cache, defaults to 1 day. TTL should not be more than 2592000 (30 days).
+// TTL (in seconds) for 'principal' type cache, defaults to 1 day. TTL should not be 0 or more than 2592000 (30 days) else default value will be used.
 //  $config['cache']['principal']['ttl'] = 86400;
 
-// Configure caching backend below. Currently only memcached backend needs configuration.
+// Configure caching backend below.
 $config['cache']['backend'] = [
+	// local_fs does not have any configurable parameters here. Directory pointed to by 'cachedir' key above need to be setup correctly though.
+	// apcu and memory do not have any configurable parameters here.
 	// 'memcached' => [
 	// 'servers' should be same as $servers parameter to function \Memcached::addServers ( check https://www.php.net/manual/en/memcached.addservers.php for details )
 	// 	'servers' => [
@@ -96,6 +102,9 @@ $config['cache']['backend'] = [
 	// ]
 ];
 
+
+// User authentication. Authentication is performed by a direct bind to the LDAP directory using user credentials provided by the client.
+// Only basic HTTP authentication scheme can be used by a client to provide user credentials.
 $config['auth']['ldap'] = [
 	// Authentication realm. Defaults to 'isubsoft/ldap-carddav'.
 	// 'realm' => '',
@@ -105,19 +114,21 @@ $config['auth']['ldap'] = [
   // %p  - Password sent by client for authentication
   // %dn - DN as returned by LDAP search for bind authentication
   
-  'base_dn'       => 'ou=People,dc=example,dc=org', // Default base DN for searches
+  'base_dn'       => 'ou=People,dc=example,dc=org', // Default base DN for searches.
   'bind_dn'       => '%dn',
   'bind_pass'     => '%p',
   
-  // It's possible to bind to a DN from a search result
+  // It's possible to bind to a DN from a search result.
   'search_base_dn' => '', // Provide a separate base DN for search if different from 'base_dn' above else leave blank.
   'search_filter'  => '(&(objectclass=inetOrgPerson)(uid=%u))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
-  // DN and password to bind as before searching for bind DN, if anonymous search is not allowed
+  // DN and password to bind as before searching for bind DN, if anonymous search is not allowed.
   'search_bind_dn' => 'cn=admin,ou=People,dc=example,dc=org',
   'search_bind_pw' => '<secret>',
   'scope' => 'list' // search mode: sub|base|list
 ];
 
+
+// Principals.
 $config['principal']['ldap'] = [
   // -- The following placeholders are available to be used in 'search_filter'
   // %u  - Username sent by client for authentication
@@ -141,6 +152,8 @@ $config['principal']['ldap'] = [
   							]
 ];
 
+
+// Address book configuration.
 $config['card']['addressbook']['ldap']['me'] = [
 	'name'          	=> 'Me',
   'description'     => 'My contact',
@@ -365,6 +378,8 @@ $config['card']['addressbook']['ldap']['me'] = [
 	 ]
 ];
 
+
+// Address book configuration.
 $config['card']['addressbook']['ldap']['global'] = [
 	'name'          	=> 'Global Address Book',
   'description'     => 'Global address book',
@@ -589,6 +604,8 @@ $config['card']['addressbook']['ldap']['global'] = [
 	 ]
 ];
 
+
+// Address book configuration.
 $config['card']['addressbook']['ldap']['personal'] = [
 	'name'          	=> 'Personal Address Book',
   'description'     => 'Personal address book of the user',
