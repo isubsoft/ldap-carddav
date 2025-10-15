@@ -2,9 +2,10 @@
 
 $config = [];
 
-// Set temporary files directory. This can either be an absolute path or a 
-// path relative to base directory of the application. Use %systempdir as placeholder for 
-// system temp directory path. To use %systempdir as a literal use %%systempdir
+// Set temporary files directory of the application if it is different from default. 
+// This can either be an absolute path or a path relative to base directory of the application. 
+// Use %systempdir as placeholder for system temp directory path. To use %systempdir as a literal
+// use %%systempdir .
 // Remember %systempdir is an absolute path.
 // Defaults to 'tmp' directory relative to base directory of the application.
 //   $config['tmpdir'] = '%systempdir';
@@ -19,31 +20,34 @@ $config = [];
 // Defaults to 'cache' directory relative to base directory of the application.
 //   $config['cachedir'] = '/var/cache/ldap_carddav';
 
-// Base URI for this application. Default is '/server.php'.
+// Base URI for this application.
 // If you have configured clean URLs in your HTTP server configuration then, uncomment the below and update
 // if required.
+// Defaults to '/server.php'.
 //  $config['app']['base_uri'] = '/';
 
 // Set application environment. If set to 'prod' certain application features are turned off which are not suitable
-// or unsafe for production environment. Defaults to null.
+// or unsafe for a production environment.
+// Defaults to null.
 //  $config['app']['env'] = 'prod';
 
 // Few CardDAV clients do not implement WebDAV sync specifications correctly leading to broken WebDAV sync.
-// You can disable WebDAV sync globally if your CardDAV client is known to be non-compliant with WebDAV 
+// You can disable WebDAV sync globally if your CardDAV client(s) is known to be non-compliant with WebDAV 
 // sync specifications and no workarounds are available in the application to make it work.
-// Default is true.
+// Defaults to true.
 //  $config['app']['enable_incremental_sync'] = false;
 
 // Set global maximum size (in bytes) of request payload which can be accepted.
+// Currently this value is not enforced by the application.
 // Default is null which means app internal default value will be used.
 //  $config['app']['max_payload_size'] = null;
 
 // Sync database configuration.
-// The DSN string below can use %datadir as placeholder for the data directory path of the application.
-// Remember %datadir is an absolute directory path. To use %datadir as a literal use %%datadir
 $config['sync_database'] = [
 	// See https://www.php.net/manual/en/pdo.drivers.php for setting 
 	// database driver specific dsn, username, password and options below.
+	// The DSN string below can use %datadir as placeholder for the data directory path of the application.
+	// Remember %datadir is an absolute directory path. To use %datadir as a literal use %%datadir .
 	'dsn' => 'sqlite:%datadir/sync/syncdb/sqlite/cards.db',
 	'username' => '', // Defaults to null.
 	'password' => '', // Defaults to null.
@@ -79,14 +83,13 @@ $config['server']['ldap'] = [
 // memory: System memory (for testing purpose only, cache does not persist between requests)
 
 // Caching backend to enable specific to object type. If not set then caching is disabled.
-// It is strongly recommended to keep caching enabled in production environment.
+// It is strongly recommended to keep caching enabled in a production environment.
 $config['cache']['card']['backend'] = 'local_fs';
 $config['cache']['principal']['backend'] = 'local_fs';
 
-// TTL (in seconds) for 'card' type cache, defaults to 1 day. TTL should not be 0 or more than 2592000 (30 days) else default value will be used.
+// TTL (in seconds) for cached items. TTL should be greater than 0 or less than or equal to 2592000 (30 days) else default value will be used.
+// Defaults to 1 day.
 //  $config['cache']['card']['ttl'] = 86400;
-
-// TTL (in seconds) for 'principal' type cache, defaults to 1 day. TTL should not be 0 or more than 2592000 (30 days) else default value will be used.
 //  $config['cache']['principal']['ttl'] = 86400;
 
 // Configure caching backend below.
@@ -166,13 +169,14 @@ $config['card']['addressbook']['ldap']['me'] = [
 	
 	// Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
 	// of the address book from backend every time they sync their address book. Set the below to 
-	// prevent full address book refresh from backend at least for this interval (in seconds). 
+	// prevent full address book refresh from backend at least for this interval (in seconds).
+	// A larger value will lead to better performance. 
 	// Defaults to four hours.
 	//  'full_refresh_interval' => 14400,
 
-	// For WebDAV sync clients there is no way to know about contacts which are deleted in the backend by 
-	// some other process. Set the below to delete contacts (which are deleted directly in the backend) in 
-	// incremental sync clients at this interval at worst. A larger value will lead to better performance. 
+	// For WebDAV sync clients there is no way to know about contacts which are deleted in the backend but not by 
+	// this application. Set the below to delete those contacts in WebDAV sync clients at this interval at worst. 
+	// A larger value will lead to better performance.
 	// Defaults to a day.
 	//  'force_full_sync_interval' => 86400,
 	
@@ -392,13 +396,14 @@ $config['card']['addressbook']['ldap']['global'] = [
 	
 	// Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
 	// of the address book from backend every time they sync their address book. Set the below to 
-	// prevent full address book refresh from backend at least for this interval (in seconds). 
+	// prevent full address book refresh from backend at least for this interval (in seconds).
+	// A larger value will lead to better performance. 
 	// Defaults to four hours.
 	//  'full_refresh_interval' => 14400,
 
-	// For WebDAV sync clients there is no way to know about contacts which are deleted in the backend by 
-	// some other process. Set the below to delete contacts (which are deleted directly in the backend) in 
-	// incremental sync clients at this interval at worst. A larger value will lead to better performance. 
+	// For WebDAV sync clients there is no way to know about contacts which are deleted in the backend but not by 
+	// this application. Set the below to delete those contacts in WebDAV sync clients at this interval at worst. 
+	// A larger value will lead to better performance.
 	// Defaults to a day.
 	//  'force_full_sync_interval' => 86400,
 	
@@ -618,13 +623,14 @@ $config['card']['addressbook']['ldap']['personal'] = [
 
 	// Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
 	// of the address book from backend every time they sync their address book. Set the below to 
-	// prevent full address book refresh from backend at least for this interval (in seconds). 
+	// prevent full address book refresh from backend at least for this interval (in seconds).
+	// A larger value will lead to better performance. 
 	// Defaults to four hours.
 	//  'full_refresh_interval' => 14400,
 
-	// For WebDAV sync clients there is no way to know about contacts which are deleted in the backend by 
-	// some other process. Set the below to delete contacts (which are deleted directly in the backend) in 
-	// incremental sync clients at this interval at worst. A larger value will lead to better performance. 
+	// For WebDAV sync clients there is no way to know about contacts which are deleted in the backend but not by 
+	// this application. Set the below to delete those contacts in WebDAV sync clients at this interval at worst. 
+	// A larger value will lead to better performance.
 	// Defaults to a day.
 	//  'force_full_sync_interval' => 86400,
 	
