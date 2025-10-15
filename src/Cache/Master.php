@@ -11,7 +11,7 @@ use Sabre\DAV\Exception as SabreDAVException;
 class Master
 {
 	public static $allowedBackends = [
-		'principal' => ['memory', 'apcu', 'memcached'],
+		'principal' => ['memory', 'apcu', 'local_fs', 'memcached'],
 		'card' => ['memory', 'apcu', 'local_fs', 'memcached']
 	];
 
