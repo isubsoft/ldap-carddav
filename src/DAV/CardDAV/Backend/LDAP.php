@@ -913,7 +913,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		      if(!empty($data) && $data['count'] > 0)
 		      {
 				    try {
-				        $query = "INSERT INTO `" . self::$backendMapTableName . "` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
+				        $query = "INSERT INTO " . self::$backendMapTableName . " (card_uri, card_uid, addressbook_id, backend_id, user_id)  VALUES (?, ?, ?, ?, ?)";
 				        $sql = $this->pdo->prepare($query);
 				        $sql->execute([$cardUri, ($cardUid == null)?$this->guidv4():$cardUid, $addressBookId, $data[0]['entryuuid'][0], $syncDbUserId]);
 				    } catch (\Throwable $th) {
@@ -1634,7 +1634,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 								$cardUid = $this->guidv4();
 								$cardUri = $cardUid .'.vcf';
 								
-								$query = "INSERT INTO `" . self::$backendMapTableName . "` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
+								$query = "INSERT INTO " . self::$backendMapTableName . " (card_uri, card_uid, addressbook_id, backend_id, user_id)  VALUES (?, ?, ?, ?, ?)";
 								$sql = $this->pdo->prepare($query);
 								$sql->execute([$cardUri, $cardUid, $addressBookId, $data['data']['entryUUID'][0], $syncDbUserId]); 
 						}
@@ -1677,7 +1677,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 								$cardUid = $this->guidv4();
 								$cardUri = $cardUid .'.vcf';
 
-								$query = "INSERT INTO `" . self::$backendMapTableName . "` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
+								$query = "INSERT INTO " . self::$backendMapTableName . " (card_uri, card_uid, addressbook_id, backend_id, user_id)  VALUES (?, ?, ?, ?, ?)";
 								$sql = $this->pdo->prepare($query);
 								$sql->execute([$cardUri, $cardUid, $addressBookId, $data['data']['entryUUID'][0], $syncDbUserId]);
 								
@@ -1742,12 +1742,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		      try {
 		          $this->pdo->beginTransaction();
 
-		          $query = "DELETE FROM `" . self::$backendMapTableName . "` WHERE addressbook_id = ? AND card_uri = ? AND user_id = ?"; 
+		          $query = "DELETE FROM " . self::$backendMapTableName . " WHERE addressbook_id = ? AND card_uri = ? AND user_id = ?"; 
 		          $sql = $this->pdo->prepare($query);
 		          $sql->execute([$addressBookId, $objectUri, $syncDbUserId]);
 
 
-		          $query = "INSERT INTO `" . self::$deletedCardsTableName . "` (`sync_token` ,`addressbook_id` ,`card_uri`, `user_id`) VALUES (?, ?, ?, ?)"; 
+		          $query = "INSERT INTO " . self::$deletedCardsTableName . " (sync_token ,addressbook_id ,card_uri, user_id) VALUES (?, ?, ?, ?)"; 
 		          $sql = $this->pdo->prepare($query);
 		          $sql->execute([time(), $addressBookId, $objectUri, $syncDbUserId]);
 
@@ -1922,7 +1922,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
               $cardUid = $this->guidv4();
               $cardUri = $cardUid .'.vcf';
               
-              $query = "INSERT INTO `" . self::$backendMapTableName . "` (`card_uri`, `card_uid`, `addressbook_id`, `backend_id`, `user_id`)  VALUES (?, ?, ?, ?, ?)";
+              $query = "INSERT INTO " . self::$backendMapTableName . " (card_uri, card_uid, addressbook_id, backend_id, user_id)  VALUES (?, ?, ?, ?, ?)";
               $sql = $this->pdo->prepare($query);
               $sql->execute([$cardUri, $cardUid, $addressBookId, $backendId, $syncDbUserId]);
             }
@@ -1962,7 +1962,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $mappedContactUri)))
 				    		error_log("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore the error: " . __METHOD__ . " at line no " . __LINE__);
 				    		
-		          $query = "DELETE FROM `" . self::$backendMapTableName . "` WHERE addressbook_id = ? AND card_uri = ? AND user_id = ?"; 
+		          $query = "DELETE FROM " . self::$backendMapTableName . " WHERE addressbook_id = ? AND card_uri = ? AND user_id = ?"; 
 		          $sql = $this->pdo->prepare($query);
 		          $sql->execute([$addressBookId, $mappedContactUri, $syncDbUserId]);
 						}
@@ -1974,13 +1974,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         }
         
         try {
-					$query = "UPDATE `" . self::$fullRefreshTableName . "` SET sync_token = ? WHERE user_id = ? AND addressbook_id = ?"; 
+					$query = "UPDATE " . self::$fullRefreshTableName . " SET sync_token = ? WHERE user_id = ? AND addressbook_id = ?"; 
 					$sql = $this->pdo->prepare($query);
 					$sql->execute([$addressBookSyncToken, $syncDbUserId, $addressBookId]);
 					
 					if(!$sql->rowCount() > 0)
 					{
-						$query = "INSERT INTO `" . self::$fullRefreshTableName . "` (`user_id`, `addressbook_id`, `sync_token`) VALUES (?, ?, ?)"; 
+						$query = "INSERT INTO " . self::$fullRefreshTableName . " (user_id, addressbook_id, sync_token) VALUES (?, ?, ?)"; 
 						$sql = $this->pdo->prepare($query);
 						$sql->execute([$syncDbUserId, $addressBookId, $addressBookSyncToken]);
 					}
@@ -2048,7 +2048,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						$fullSyncToken = (int)$row['sync_token'];
 					else
 					{
-						$query = "INSERT INTO `" . self::$fullSyncTableName . "` (`user_id`, `addressbook_id`, `sync_token`) VALUES (?, ?, ?)"; 
+						$query = "INSERT INTO " . self::$fullSyncTableName . " (user_id, addressbook_id, sync_token) VALUES (?, ?, ?)"; 
 						$stmt = $this->pdo->prepare($query);
 						$stmt->execute([$syncDbUserId, $addressBookId, $addressBookSyncToken]);
 					}
@@ -2060,13 +2060,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 			if($fullSyncToken != null && ($addressBookSyncToken - $fullSyncToken) > $forceInitialSyncInterval)
 			{
 		    try {
-					$query = "UPDATE `" . self::$fullSyncTableName . "` SET sync_token = ? WHERE user_id = ? AND addressbook_id = ?"; 
+					$query = "UPDATE " . self::$fullSyncTableName . " SET sync_token = ? WHERE user_id = ? AND addressbook_id = ?"; 
 					$stmt = $this->pdo->prepare($query);
 					$stmt->execute([$addressBookSyncToken, $syncDbUserId, $addressBookId]);
 					
 					$fullSyncToken = $addressBookSyncToken;
 					
-					$query = "DELETE FROM `" . self::$deletedCardsTableName . "` WHERE user_id = ? AND addressbook_id = ? AND sync_token < ?"; 
+					$query = "DELETE FROM " . self::$deletedCardsTableName . " WHERE user_id = ? AND addressbook_id = ? AND sync_token < ?"; 
 					$stmt = $this->pdo->prepare($query);
 					$stmt->execute([$syncDbUserId, $addressBookId, $fullSyncToken]);
 				} catch (\Throwable $th) {
