@@ -36,7 +36,7 @@ function addAddressBook($addressbookName = null)
 	  	$userSpecific = (!isset($config['card']['addressbook']['ldap'][$addressbookName]['user_specific']) || $config['card']['addressbook']['ldap'][$addressbookName]['user_specific'] === null)?true:(bool)$config['card']['addressbook']['ldap'][$addressbookName]['user_specific'];
 	  	$writable = (!isset($config['card']['addressbook']['ldap'][$addressbookName]['writable']) || $config['card']['addressbook']['ldap'][$addressbookName]['writable'] === null)?true:(bool)$config['card']['addressbook']['ldap'][$addressbookName]['writable'];
 	  
-		$query = 'INSERT INTO '. $addressBooksTableName .' (`addressbook_id`, `user_specific`, `writable`) VALUES (?, ?, ?)';
+		$query = 'INSERT INTO '. $addressBooksTableName .' (addressbook_id, user_specific, writable) VALUES (?, ?, ?)';
 		$stmt = $pdo->prepare($query);
 		$stmt->execute([$addressbookName, (int)$userSpecific, (int)$writable]);
 		echo "\nAddress book '$addressbookName' has been successfully added to sync database.";

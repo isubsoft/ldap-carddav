@@ -26,6 +26,9 @@ sqlite3
 [packages if using mysql as pdo database]
 php-mysql
 
+[packages if using postgresql as pdo database]
+php-pgsql
+
 [packages if using memcached as cache backend]
 php-memcached
 
@@ -48,10 +51,11 @@ This application uses composer dependencies. Please install the dependencies by 
 Copy conf/conf.php.example as conf/conf.php and update the file conf/conf.php according to your environment and need. Configuration keys are documented along side in the conf/conf.php.example file. Check the wiki for more advanced configuration examples.
 
 -- Sync database creation
-1. Create database objects as per sql/<database_product>/ddl.sql file and if required create a database user and issue appropriate grants to it.
+1. Create database objects as per sql/<database_product>/ddl.sql file.
    Example (sqlite): sqlite3 data/sync/syncdb/sqlite/cards.db < sql/sqlite/ddl.sql
-2. Update 'dsn' and credentials appropriately in $config['sync_database'] in conf/conf.php file.
-3. If creating a sqlite database make sure the database file is placed inside the data directory.
+2. The database user to be used by this application should have SELECT, INSERT, UPDATE and DELETE privileges on all tables created in the above step.
+3. Update 'dsn' and credentials appropriately in $config['sync_database'] in conf/conf.php file.
+4. If creating a sqlite database make sure the database file is placed inside the data directory.
 
 -- Initializing sync database
 1. Make sure your address books are configured correctly in the conf file before you perform the next steps.
