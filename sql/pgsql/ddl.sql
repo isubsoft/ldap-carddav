@@ -85,7 +85,7 @@ BEGIN
     -- For BEFORE triggers, you can modify NEW or return NULL to skip the operation.
     -- For AFTER triggers, you typically return NEW or OLD.
     
-  IF NOT NEW.user_specific AND NOT EXISTS (SELECT 1 FROM cards_user WHERE user_id = '__SYS_USER') AND NOT EXISTS (SELECT 1 FROM cards_system_user) THEN
+	IF NOT NEW.user_specific AND NOT EXISTS (SELECT 1 FROM cards_user WHERE user_id = '__SYS_USER') AND NOT EXISTS (SELECT 1 FROM cards_system_user) THEN
 		INSERT INTO cards_user (user_id) VALUES ('__SYS_USER');
 		INSERT INTO cards_system_user (user_id) VALUES ('__SYS_USER');
 	END IF;
@@ -99,7 +99,7 @@ RETURNS TRIGGER
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
-  IF EXISTS (SELECT 1 FROM cards_addressbook WHERE addressbook_id = NEW.addressbook_id AND user_specific) AND NOT EXISTS (SELECT 1 FROM cards_user WHERE user_id = NEW.user_id) THEN
+	IF EXISTS (SELECT 1 FROM cards_addressbook WHERE addressbook_id = NEW.addressbook_id AND user_specific) AND NOT EXISTS (SELECT 1 FROM cards_user WHERE user_id = NEW.user_id) THEN
 		INSERT INTO cards_user (user_id) VALUES (NEW.user_id);
 	END IF;
     
@@ -112,7 +112,7 @@ RETURNS TRIGGER
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
-  IF EXISTS (SELECT 1 FROM cards_addressbook WHERE addressbook_id = NEW.addressbook_id AND user_specific) AND NOT EXISTS (SELECT 1 FROM cards_user WHERE user_id = NEW.user_id) THEN
+	IF EXISTS (SELECT 1 FROM cards_addressbook WHERE addressbook_id = NEW.addressbook_id AND user_specific) AND NOT EXISTS (SELECT 1 FROM cards_user WHERE user_id = NEW.user_id) THEN
 		INSERT INTO cards_user (user_id) VALUES (NEW.user_id);
 	END IF;
     
@@ -125,7 +125,7 @@ RETURNS TRIGGER
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
-  IF EXISTS (SELECT 1 FROM cards_addressbook WHERE addressbook_id = NEW.addressbook_id AND user_specific) AND NOT EXISTS (SELECT 1 FROM cards_user WHERE user_id = NEW.user_id) THEN
+	IF EXISTS (SELECT 1 FROM cards_addressbook WHERE addressbook_id = NEW.addressbook_id AND user_specific) AND NOT EXISTS (SELECT 1 FROM cards_user WHERE user_id = NEW.user_id) THEN
 		INSERT INTO cards_user (user_id) VALUES (NEW.user_id);
 	END IF;
     
