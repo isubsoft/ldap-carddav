@@ -452,7 +452,7 @@ curl --dump-header /dev/stderr --silent --location -u %username:%password --requ
 
 ---------------------------------------------------------------------------------
 
----- Add property to an address book
+---- Add me-card property to an addressbook
 
 -- REQUEST
 curl --dump-header /dev/stderr --silent --location -u %username:%password --request PROPPATCH '%base_url/addressbooks/%principal/' \

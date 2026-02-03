@@ -50,7 +50,16 @@ $aclPlugin->hideNodesFromListings = true;
 $server->addPlugin($aclPlugin);
 
 // Add property storage plugin
-$server->addPlugin(new Sabre\DAV\PropertyStorage\Plugin($propStoreBackend));
+$propStorePlugin = new Sabre\DAV\PropertyStorage\Plugin($propStoreBackend);
+
+$propStorePlugin->pathFilter = function($path) {
+	if (preg_match('#^[^/]+/[^/]+$#', $path) === 1)
+		return true;
+
+	return false;
+};
+
+$server->addPlugin($propStorePlugin);
 
 // Add carddav plugin
 $cardDavPlugin = new ISubsoft\DAV\CardDAV\Plugin();
