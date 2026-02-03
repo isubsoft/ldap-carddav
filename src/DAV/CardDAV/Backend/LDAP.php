@@ -319,7 +319,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     function updateAddressBook($addressBookId, \Sabre\DAV\PropPatch $propPatch)
     {
-			throw new SabreDAVException\MethodNotAllowed("Operation not supported");
+			return;
     }
 
     /**

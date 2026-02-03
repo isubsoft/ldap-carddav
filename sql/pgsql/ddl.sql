@@ -70,6 +70,17 @@ CREATE TABLE cards_full_sync
 	FOREIGN KEY(addressbook_id) REFERENCES cards_addressbook(addressbook_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+CREATE TABLE propertystorage (
+	id SERIAL NOT NULL,
+	path VARCHAR(1024) NOT NULL,
+	name VARCHAR(100) NOT NULL,
+	valuetype INT,
+	value BYTEA,
+	PRIMARY KEY (id),
+);
+CREATE UNIQUE INDEX propertystorage_ukey ON propertystorage (path, name);
+
+
 /**************** Triggers functions ******************/
 
 CREATE OR REPLACE FUNCTION cards_addressbook_before()

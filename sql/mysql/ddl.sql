@@ -70,6 +70,15 @@ CREATE TABLE cards_full_sync
 	CONSTRAINT cards_full_sync_fk02 FOREIGN KEY(addressbook_id) REFERENCES cards_addressbook (addressbook_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+CREATE TABLE propertystorage (
+	id INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+	path VARBINARY(1024) NOT NULL,
+	name VARBINARY(100) NOT NULL,
+	valuetype INT UNSIGNED,
+	value MEDIUMBLOB
+);
+CREATE UNIQUE INDEX path_property ON propertystorage (path(600), name(100));
+
 
 /**************** Triggers ******************/
 
