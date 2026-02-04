@@ -17,4 +17,15 @@ class AddressBookHome extends \Sabre\CardDAV\AddressBookHome
 
         return $objs;
     }
+    
+  public function getACL()
+  {
+		return [
+		  [
+		      'privilege' => '{DAV:}all',
+				  'principal' => '{DAV:}owner',
+		      'protected' => true,
+		  ],
+		];
+  }
 }
