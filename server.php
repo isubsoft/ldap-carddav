@@ -28,7 +28,7 @@ $carddavBackend = new ISubsoft\DAV\CardDAV\Backend\LDAP($config, $pdo, $principa
 
 // Setting up the directory tree //
 $nodes = [
-	new Sabre\DAVACL\PrincipalCollection($principalBackend),
+	new ISubsoft\DAV\DAVACL\PrincipalCollection($principalBackend),
 	new ISubsoft\DAV\CardDAV\AddressBookRoot($principalBackend, $carddavBackend)
 ];
 
@@ -45,6 +45,7 @@ $server->addPlugin(new ISubsoft\DAV\Auth\Plugin($authBackend));
 // Add ACL plugin
 $aclPlugin = new Sabre\DAVACL\Plugin();
 $aclPlugin->allowUnauthenticatedAccess = false;
+$aclPlugin->allowAccessToNodesWithoutACL = false;
 $aclPlugin->hideNodesFromListings = true;
 
 $server->addPlugin($aclPlugin);
@@ -53,7 +54,7 @@ $server->addPlugin($aclPlugin);
 $propStorePlugin = new Sabre\DAV\PropertyStorage\Plugin($propStoreBackend);
 
 $propStorePlugin->pathFilter = function($path) {
-	if (preg_match('#^[^/]+/[^/]+$#', $path) === 1)
+	if (preg_match('#^addressbooks/[^/]+$#', $path) === 1)
 		return true;
 
 	return false;

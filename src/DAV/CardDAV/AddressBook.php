@@ -23,12 +23,15 @@ class AddressBook extends \Sabre\CardDAV\AddressBook
 	
   public function getChildACL()
   {
-      return [
-          [
-              'privilege' => '{DAV:}all',
-				      'principal' => '{DAV:}owner',
-              'protected' => true,
-          ],
-      ];
+		if($this->carddavBackend->isAddressbookWritable($this->getName()) == false)
+			return [
+					[
+					    'privilege' => '{DAV:}read',
+					    'principal' => '{DAV:}owner',
+					    'protected' => true,
+					],
+			];
+			
+			return parent::getChildACL();
   }
 }
