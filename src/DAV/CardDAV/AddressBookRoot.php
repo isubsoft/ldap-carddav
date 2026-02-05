@@ -5,10 +5,25 @@
 
 namespace ISubsoft\DAV\CardDAV;
 
-class AddressBookRoot extends \Sabre\CardDAV\AddressBookRoot
+use Sabre\DAVACL;
+
+class AddressBookRoot extends \Sabre\CardDAV\AddressBookRoot implements DAVACL\IACL
 {
-    public function getChildForPrincipal(array $principal)
-    {
-        return new AddressBookHome($this->carddavBackend, $principal['uri']);
-    }
+	use DAVACL\ACLTrait;
+	
+	public function getChildForPrincipal(array $principal)
+	{
+		  return new AddressBookHome($this->carddavBackend, $principal['uri']);
+	}
+	
+  public function getACL()
+  {
+		return [
+		  [
+		      'privilege' => '{DAV:}read',
+				  'principal' => '{DAV:}authenticated',
+		      'protected' => true,
+		  ],
+		];
+  }
 }
