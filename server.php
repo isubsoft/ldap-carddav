@@ -54,7 +54,9 @@ $server->addPlugin($aclPlugin);
 $propStorePlugin = new Sabre\DAV\PropertyStorage\Plugin($propStoreBackend);
 
 $propStorePlugin->pathFilter = function($path) {
-	if (preg_match('#^addressbooks/[^/]+$#', $path) === 1)
+	$addressbookPathRegexp = '#^addressbooks/[^/]+$#';
+	
+	if (preg_match($addressbookPathRegexp, $path) === 1)
 		return true;
 
 	return false;
