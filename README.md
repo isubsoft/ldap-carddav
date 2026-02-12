@@ -1,4 +1,4 @@
-# ldap-carddav - A CardDAV server with LDAP as authentication and contacts backend
+# ldap-carddav - A CardDAV server with LDAP as contacts and authentication backend
 ![A CardDAV interface to LDAP](https://github.com/user-attachments/assets/e7d0f02a-bfd1-489f-b8a8-e0aef168c035)
 
 ## Features
