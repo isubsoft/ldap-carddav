@@ -1715,15 +1715,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							}
 							else
 							{
-								$query = 'SELECT 1 FROM ' . self::$modifyLogTableName . ' WHERE user_id = ? AND addressbook_id = ? AND card_uri = ? AND  sync_token >= ?';
-								$stmt = $this->pdo->prepare($query);
-								$stmt->execute([$syncDbUserId, $addressBookId, $cardUri, $backendSyncToken]);
-									
-								if($stmt->fetch(\PDO::FETCH_ASSOC) === false) {				
-									$query = "INSERT INTO " . self::$modifyLogTableName . " (user_id, addressbook_id, card_uri, sync_token)  VALUES (?, ?, ?, ?)";
-									$sql = $this->pdo->prepare($query);
-									$sql->execute([$syncDbUserId, $addressBookId, $cardUri, time()]);
-								}
+								$query = "INSERT INTO " . self::$modifyLogTableName . " (user_id, addressbook_id, card_uri, sync_token)  VALUES (?, ?, ?, ?)";
+								$sql = $this->pdo->prepare($query);
+								$sql->execute([$syncDbUserId, $addressBookId, $cardUri, time()]);
 							}
 							
 							$cardValues = CacheMaster::decode($cache->get(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri), null));
@@ -2152,6 +2146,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					$stmt->execute([$addressBookSyncToken, $syncDbUserId, $addressBookId]);
 					
 					$fullSyncToken = $addressBookSyncToken;
+					
+					$query = "DELETE FROM " . self::$modifyLogTableName . " WHERE user_id = ? AND addressbook_id = ? AND sync_token < ?"; 
+					$stmt = $this->pdo->prepare($query);
+					$stmt->execute([$syncDbUserId, $addressBookId, $fullSyncToken]);
 					
 					$query = "DELETE FROM " . self::$deletedCardsTableName . " WHERE user_id = ? AND addressbook_id = ? AND sync_token < ?"; 
 					$stmt = $this->pdo->prepare($query);
