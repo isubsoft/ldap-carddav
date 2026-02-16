@@ -32,12 +32,24 @@ CREATE TABLE cards_backend_map
 	card_uri VARCHAR(255) NOT NULL,
 	card_uid VARCHAR(255) NOT NULL,
 	backend_id VARCHAR(255) NOT NULL,
+	sync_token BIGINT NOT NULL,
 	PRIMARY KEY (user_id, addressbook_id, card_uri),
 	FOREIGN KEY(user_id) REFERENCES cards_user(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
 	FOREIGN KEY(addressbook_id) REFERENCES cards_addressbook(addressbook_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 CREATE UNIQUE INDEX cards_backend_map_uk01 ON cards_backend_map (user_id, addressbook_id, card_uid);
 CREATE UNIQUE INDEX cards_backend_map_uk02 ON cards_backend_map (user_id, addressbook_id, backend_id);
+CREATE INDEX cards_backend_map_idx01 ON cards_backend_map (user_id, addressbook_id, sync_token);
+
+CREATE TABLE cards_modify_log
+(
+	user_id VARCHAR(255) NOT NULL,
+	addressbook_id  VARCHAR(255) NOT NULL,
+	card_uri VARCHAR(255) NOT NULL,
+	sync_token BIGINT NOT NULL,
+	FOREIGN KEY(user_id, addressbook_id, card_uri) REFERENCES cards_backend_map (user_id, addressbook_id, card_uri) ON DELETE CASCADE ON UPDATE CASCADE
+);
+CREATE INDEX cards_modify_log_idx01 ON cards_modify_log (user_id, addressbook_id, sync_token);
 
 CREATE TABLE cards_deleted
 (
@@ -51,6 +63,16 @@ CREATE TABLE cards_deleted
 CREATE INDEX cards_deleted_idx01 ON cards_deleted (user_id, addressbook_id, sync_token);
 
 CREATE TABLE cards_full_refresh
+(
+	user_id VARCHAR(255) NOT NULL,
+	addressbook_id  VARCHAR(255) NOT NULL,
+	sync_token BIGINT NOT NULL,
+	PRIMARY KEY (user_id, addressbook_id),
+	FOREIGN KEY(user_id) REFERENCES cards_user(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
+	FOREIGN KEY(addressbook_id) REFERENCES cards_addressbook(addressbook_id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE cards_backend_sync
 (
 	user_id VARCHAR(255) NOT NULL,
 	addressbook_id  VARCHAR(255) NOT NULL,
@@ -76,7 +98,7 @@ CREATE TABLE propertystorage (
 	name VARCHAR(100) NOT NULL,
 	valuetype INT,
 	value BYTEA,
-	PRIMARY KEY (id),
+	PRIMARY KEY (id)
 );
 CREATE UNIQUE INDEX propertystorage_ukey ON propertystorage (path, name);
 
@@ -131,6 +153,19 @@ BEGIN
 END;
 $$;
 
+CREATE OR REPLACE FUNCTION cards_backend_sync_before()
+RETURNS TRIGGER
+LANGUAGE PLPGSQL
+AS $$
+BEGIN
+	IF EXISTS (SELECT 1 FROM cards_addressbook WHERE addressbook_id = NEW.addressbook_id AND user_specific) AND NOT EXISTS (SELECT 1 FROM cards_user WHERE user_id = NEW.user_id) THEN
+		INSERT INTO cards_user (user_id) VALUES (NEW.user_id);
+	END IF;
+    
+  RETURN NEW;
+END;
+$$;
+
 CREATE OR REPLACE FUNCTION cards_full_sync_before()
 RETURNS TRIGGER
 LANGUAGE PLPGSQL
@@ -157,6 +192,10 @@ EXECUTE FUNCTION cards_backend_map_before();
 DROP TRIGGER IF EXISTS cards_full_refresh_before ON cards_full_refresh;
 CREATE TRIGGER cards_full_refresh_before BEFORE INSERT ON cards_full_refresh FOR EACH ROW
 EXECUTE FUNCTION cards_full_refresh_before();
+
+DROP TRIGGER IF EXISTS cards_backend_sync_before ON cards_backend_sync;
+CREATE TRIGGER cards_backend_sync_before BEFORE INSERT ON cards_backend_sync FOR EACH ROW
+EXECUTE FUNCTION cards_backend_sync_before();
 
 DROP TRIGGER IF EXISTS cards_full_sync_before ON cards_full_sync;
 CREATE TRIGGER cards_full_sync_before BEFORE INSERT ON cards_full_sync FOR EACH ROW
