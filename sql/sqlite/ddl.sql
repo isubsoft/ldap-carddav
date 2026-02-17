@@ -32,35 +32,18 @@ CREATE TABLE cards_backend_map
 	card_uri VARCHAR(255) NOT NULL,
 	card_uid VARCHAR(255) NOT NULL,
 	backend_id VARCHAR(255) NOT NULL,
-	sync_token BIGINT NOT NULL,
+	create_sync_token BIGINT NOT NULL,
+	modify_sync_token BIGINT NULL,
+	delete_sync_token BIGINT NULL,
 	PRIMARY KEY (user_id, addressbook_id, card_uri),
 	FOREIGN KEY(user_id) REFERENCES cards_user(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
 	FOREIGN KEY(addressbook_id) REFERENCES cards_addressbook(addressbook_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 CREATE UNIQUE INDEX cards_backend_map_uk01 ON cards_backend_map (user_id, addressbook_id, card_uid);
 CREATE UNIQUE INDEX cards_backend_map_uk02 ON cards_backend_map (user_id, addressbook_id, backend_id);
-CREATE INDEX cards_backend_map_idx01 ON cards_backend_map (user_id, addressbook_id, sync_token);
-
-CREATE TABLE cards_modify_log
-(
-	user_id VARCHAR(255) NOT NULL,
-	addressbook_id  VARCHAR(255) NOT NULL,
-	card_uri VARCHAR(255) NOT NULL,
-	sync_token BIGINT NOT NULL,
-	FOREIGN KEY(user_id, addressbook_id, card_uri) REFERENCES cards_backend_map (user_id, addressbook_id, card_uri) ON DELETE CASCADE ON UPDATE CASCADE
-);
-CREATE INDEX cards_modify_log_idx01 ON cards_modify_log (user_id, addressbook_id, sync_token);
-
-CREATE TABLE cards_deleted
-(
-	user_id VARCHAR(255) NOT NULL,
-	addressbook_id  VARCHAR(255) NOT NULL,
-	card_uri VARCHAR(255) NOT NULL,
-	sync_token BIGINT NOT NULL,
-	FOREIGN KEY(user_id) REFERENCES cards_user(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
-	FOREIGN KEY(addressbook_id) REFERENCES cards_addressbook(addressbook_id) ON DELETE CASCADE ON UPDATE CASCADE
-);
-CREATE INDEX cards_deleted_idx01 ON cards_deleted (user_id, addressbook_id, sync_token);
+CREATE INDEX cards_backend_map_idx01 ON cards_backend_map (user_id, addressbook_id, create_sync_token);
+CREATE INDEX cards_backend_map_idx02 ON cards_backend_map (user_id, addressbook_id, modify_sync_token);
+CREATE INDEX cards_backend_map_idx03 ON cards_backend_map (user_id, addressbook_id, delete_sync_token);
 
 CREATE TABLE cards_full_refresh
 (
