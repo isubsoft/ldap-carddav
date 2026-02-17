@@ -9,6 +9,8 @@ require_once __DIR__ . '/Bootstrap.php';
 /*database Tables*/
 $addressBooksTableName = 'cards_addressbook';
 $userTableName = 'cards_user';
+$backendMapTableName = 'cards_backend_map';
+$fullSyncTableName = 'cards_full_sync';
 
 $initialized = true;
 
@@ -101,7 +103,25 @@ if(isset($argv[1]) && $argv[1] == 'init')
     }
     
 	echo "\n";    
-    exit;
+  exit;
+}
+elseif(isset($argv[1]) && $argv[1] == 'housekeeping')
+{
+	echo "Housekeeping sync database ...";
+	
+	try {
+		$query = 'DELETE FROM ' . $backendMapTableName . ' AS t1 WHERE t1.delete_sync_token IS NOT NULL AND t1.delete_sync_token < (SELECT t2.sync_token FROM ' . $fullSyncTableName . ' AS t2 WHERE t2.user_id = t1.user_id AND t2.addressbook_id = t1.addressbook_id)';
+		$stmt = $pdo->prepare($query);
+		$stmt->execute([]);
+	} catch (\Throwable $th) {
+		error_log("[ERROR] Some unexpected error occurred in database - ".$th->getMessage());
+		exit(1);
+	}
+	
+	echo "\nComplete";
+	
+	echo "\n";
+	exit;
 }
 
 if(!$initialized)

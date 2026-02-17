@@ -2121,12 +2121,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					$query = "UPDATE " . self::$fullSyncTableName . " SET sync_token = ? WHERE user_id = ? AND addressbook_id = ?"; 
 					$stmt = $this->pdo->prepare($query);
 					$stmt->execute([$addressBookSyncToken, $syncDbUserId, $addressBookId]);
-					
-					$fullSyncToken = $addressBookSyncToken;
-					
-					$query = "DELETE FROM " . self::$backendMapTableName . " WHERE user_id = ? AND addressbook_id = ? AND delete_sync_token IS NOT NULL AND delete_sync_token < ?"; 
-					$stmt = $this->pdo->prepare($query);
-					$stmt->execute([$syncDbUserId, $addressBookId, $fullSyncToken]);
 				} catch (\Throwable $th) {
 						error_log("Database query could not be executed: " . __METHOD__ . " at line no " . __LINE__ . ", " . $th->getMessage());
 				}
