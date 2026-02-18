@@ -20,6 +20,11 @@ $config = [];
 // Defaults to 'cache' directory relative to base directory of the application.
 //   $config['cachedir'] = '/var/cache/ldap_carddav';
 
+// Set the level of error messages to be logged.
+// Should be set similar to 'error_level' parameter described here - https://www.php.net/manual/en/function.error-reporting.php
+// Defaults to server runtime default.
+//  $config['app']['log_level'] = E_ERROR;
+
 // Base URI for this application.
 // If you have configured clean URLs in your HTTP server configuration then, uncomment the below and update
 // if required.

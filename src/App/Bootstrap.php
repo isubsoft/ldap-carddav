@@ -58,6 +58,7 @@ $GLOBALS['environment'] = (isset($config['app']['env']) && $config['app']['env']
 $GLOBALS['enable_incremental_sync'] = (isset($config['app']['enable_incremental_sync']) && is_bool($config['app']['enable_incremental_sync']))?$config['app']['enable_incremental_sync']:true;
 $GLOBALS['max_payload_size'] = (isset($config['app']['max_payload_size']) && is_int($config['app']['max_payload_size']))?$config['app']['max_payload_size']:null;
 $GLOBALS['base_uri'] = (isset($config['app']['base_uri']) && $config['app']['base_uri'] != '')?((preg_match('#^/#', $config['app']['base_uri']) == 1)?$config['app']['base_uri']:'/' . $config['app']['base_uri']):'/server.php';
+$GLOBALS['log_level'] = (isset($config['app']['log_level']) && $config['app']['log_level'] != null)?$config['app']['log_level']:error_reporting();
 
 /* Database */
 
