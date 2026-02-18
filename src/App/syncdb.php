@@ -52,7 +52,7 @@ function addAddressBook($addressbookName = null)
 }
 
 try {
-	$query = 'SELECT * FROM '. $addressBooksTableName .' LIMIT 1' ;
+	$query = 'SELECT * FROM '. $addressBooksTableName;
 	$stmt = $pdo->prepare($query);
 	$stmt->execute([]);
 
@@ -107,18 +107,56 @@ if(isset($argv[1]) && $argv[1] == 'init')
 }
 elseif(isset($argv[1]) && $argv[1] == 'housekeeping')
 {
-	echo "Housekeeping sync database ...";
+	$batchSize = 1000;
+	
+	if(isset($argv[2]) && settype($argv[2], 'integer'))
+			$batchSize = $argv[2];
+			
+	echo "Housekeeping sync database ...\n";
 	
 	try {
-		$query = 'DELETE FROM ' . $backendMapTableName . ' AS t1 WHERE t1.delete_sync_token IS NOT NULL AND t1.delete_sync_token < (SELECT t2.sync_token FROM ' . $fullSyncTableName . ' AS t2 WHERE t2.user_id = t1.user_id AND t2.addressbook_id = t1.addressbook_id)';
-		$stmt = $pdo->prepare($query);
-		$stmt->execute([]);
+		$query1 = 'SELECT t1.user_id, t1.addressbook_id, t1.card_uri FROM ' . $backendMapTableName . ' AS t1 WHERE t1.delete_sync_token IS NOT NULL AND t1.delete_sync_token < (SELECT t2.sync_token FROM ' . $fullSyncTableName . ' AS t2 WHERE t2.user_id = t1.user_id AND t2.addressbook_id = t1.addressbook_id)';
+    $stmt1 = $pdo->prepare($query1);
+    $stmt1->execute();
+    
+    $rowCount = 0;
+		$inTransaction = false;
+    
+    while ($row = $stmt1->fetch(\PDO::FETCH_ASSOC)) {
+		  $syncDbUserId = $row['user_id'];
+		  $addressBookId = $row['addressbook_id'];
+		  $cardUri = $row['card_uri'];
+		  
+			if($batchSize > 1 && !$inTransaction)
+				$pdo->beginTransaction();
+			
+			$query2 = 'DELETE FROM ' . $backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ? AND card_uri = ?';
+			$stmt2 = $pdo->prepare($query2);
+			$stmt2->execute([$syncDbUserId, $addressBookId, $cardUri]);
+			
+			if($batchSize > 1)
+				$inTransaction = true;
+				
+			$rowCount++;
+			
+			if($inTransaction && $rowCount >= $batchSize) {
+				$pdo->commit();
+				$inTransaction = false;
+				$rowCount = 0;
+			}
+    }
+    
+		if($inTransaction)
+			$pdo->commit();
 	} catch (\Throwable $th) {
+		if($inTransaction)
+			$pdo->rollback();
+			
 		error_log("[ERROR] Some unexpected error occurred in database - ".$th->getMessage());
 		exit(1);
 	}
 	
-	echo "\nComplete";
+	echo "Complete";
 	
 	echo "\n";
 	exit;
@@ -219,7 +257,7 @@ else if($options[$operation] == 'addressbook')
 		  	exit(1);
 			}
 			
-			$query = 'SELECT * FROM '. $addressBooksTableName .' WHERE addressbook_id = ? LIMIT 1';
+			$query = 'SELECT * FROM '. $addressBooksTableName .' WHERE addressbook_id = ?';
 			$stmt = $pdo->prepare($query);
 			$stmt->execute([$oldAddressBook]);
 
