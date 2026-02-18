@@ -1739,9 +1739,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				}
 				
 				// Fetch modified contacts
-				$query = 'SELECT card_uri FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ? AND delete_sync_token IS NULL AND modify_sync_token >= ? AND modify_sync_token < ?';
+				$query = 'SELECT card_uri FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ? AND delete_sync_token IS NULL AND create_sync_token < ? AND modify_sync_token IS NOT NULL AND modify_sync_token >= ? AND modify_sync_token < ?';
 				$stmt = $this->pdo->prepare($query);
-				$stmt->execute([$syncDbUserId, $addressBookId, $syncToken, $addressBookSyncToken]);
+				$stmt->execute([$syncDbUserId, $addressBookId, $syncToken, $syncToken, $addressBookSyncToken]);
 					
 				while($row = $stmt->fetch(\PDO::FETCH_ASSOC))
 				{
