@@ -237,9 +237,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         			
 			try 
 			{
-		    $query = 'SELECT user_id FROM ' . self::$systemUsersTableName . ' LIMIT 1';
+		    $query = 'SELECT user_id FROM ' . self::$systemUsersTableName;
 		    $stmt = $this->pdo->prepare($query);
-		    $stmt->execute([]);
+		    $stmt->execute();
 		    
 		    $row = $stmt->fetch(\PDO::FETCH_ASSOC);
 		    
@@ -254,7 +254,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
       	if(!isset($this->addressbook[$addressBookId])) {
 					try 
 					{
-					  $query = 'SELECT addressbook_id, user_specific, writable FROM ' . self::$addressBooksTableName . ' WHERE addressbook_id =? LIMIT 1';
+					  $query = 'SELECT addressbook_id, user_specific, writable FROM ' . self::$addressBooksTableName . ' WHERE addressbook_id =?';
 					  $stmt = $this->pdo->prepare($query);
 					  $stmt->execute([$addressBookId]);
 					  
@@ -702,9 +702,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                                 $stmt = $this->pdo->prepare($query);
                                 $stmt->execute([$addressBookId, $memberCardUID, $syncDbUserId]);
                                 
-                                while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-                                    $backendId = $row['backend_id'];
-                                }
+                                $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+                                
+																if($row !== false)
+                                	$backendId = $row['backend_id'];
                             } catch (\Throwable $th) {
                                 error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
                             }
@@ -1103,9 +1104,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                                     $query = 'SELECT card_uid FROM ' . self::$backendMapTableName . ' WHERE addressbook_id = ? and backend_id = ? and user_id = ? AND delete_sync_token IS NULL';
                                     $stmt = $this->pdo->prepare($query);
                                     $stmt->execute([$addressBookId, $memberData[0]['entryuuid'][0], $syncDbUserId]);
-                                    while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-                                        $memberCardUID = $row['card_uid'];
-                                    }
+                                    
+                                    $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+                                    
+																		if($row !== false)
+                                    	$memberCardUID = $row['card_uid'];
                                 } catch (\Throwable $th) {
                                     error_log("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage());
                                 }
@@ -1636,9 +1639,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							$stmt = $this->pdo->prepare($query);
 							$stmt->execute([$addressBookId, $data['data']['entryUUID'][0], $syncDbUserId]);
 							
-							while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-									$cardUri = $row['card_uri'];
-							}
+							$row = $stmt->fetch(\PDO::FETCH_ASSOC);
+							
+							if($row !== false)
+								$cardUri = $row['card_uri'];
 
 							if($cardUri == null)
 							{
@@ -1678,9 +1682,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							$stmt = $this->pdo->prepare($query);
 							$stmt->execute([$addressBookId, $data['data']['entryUUID'][0], $syncDbUserId]);
 							
-							while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-									$cardUri = $row['card_uri'];
-							}
+							$row = $stmt->fetch(\PDO::FETCH_ASSOC);
+							
+							if($row !== false)
+								$cardUri = $row['card_uri'];
 							
 							if($cardUri == null)
 							{
@@ -2049,7 +2054,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     {
 			try 
 			{
-		    $query = 'SELECT writable FROM ' . self::$addressBooksTableName . ' WHERE addressbook_id =? LIMIT 1';
+		    $query = 'SELECT writable FROM ' . self::$addressBooksTableName . ' WHERE addressbook_id =?';
 		    $stmt = $this->pdo->prepare($query);
 		    $stmt->execute([$addressBookId]);
 		    
