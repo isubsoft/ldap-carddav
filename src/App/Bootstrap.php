@@ -76,7 +76,7 @@ try {
     
     if($pdo_dsn == null)
     {
-			error_log("Sync database connection not defined.");
+			trigger_error("Sync database connection not defined.", E_USER_WARNING);
 			http_response_code(500);
 			exit(1);
     }
@@ -114,7 +114,7 @@ try {
     foreach($applicable_db_init_commands as $stmt)
 			$pdo->exec($stmt);
 } catch (\Throwable $th) {
-    error_log('Could not create sync database connection or execute init commands correctly: '. $th->getMessage());
+    trigger_error('Could not create sync database connection or execute init commands correctly: '. $th->getMessage(), E_USER_WARNING);
     http_response_code(500);
 		exit(1);
 }

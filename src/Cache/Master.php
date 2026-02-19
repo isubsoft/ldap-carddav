@@ -28,7 +28,7 @@ class Master
 			$memcached = new \Memcached();
 			
 			if(!isset($backendConfig['servers']) || !$memcached->addServers($backendConfig['servers'])) {
-				error_log("Caching is disbaled as object for 'memcached' cache backend could not be instantiated. Check your 'memcached' cache backend configuration.  ".__METHOD__." at line no ".__LINE__);
+				trigger_error("Caching is disbaled as object for 'memcached' cache backend could not be instantiated. Check your 'memcached' cache backend configuration.  ".__METHOD__." at line no ".__LINE__, E_USER_WARNING);
 				return $backendObj;
 			}
 			
@@ -50,7 +50,7 @@ class Master
 		$backend = (isset($cacheConfig[$objClass]['backend']) && $cacheConfig[$objClass]['backend'] != '')?$cacheConfig[$objClass]['backend']:null;
 		
 		if($backend != null && !in_array($backend, self::$allowedBackends[$objClass])) {
-			error_log("Caching is disabled as '$backend' is not a valid caching backend for '$objClass'. Check your configuration.  ".__METHOD__." at line no ".__LINE__);
+			trigger_error("Caching is disabled as '$backend' is not a valid caching backend for '$objClass'. Check your configuration.  ".__METHOD__." at line no ".__LINE__, E_USER_WARNING);
 			$backend = null;
 		}
 
@@ -63,7 +63,7 @@ class Master
 		$backend = (isset($cacheConfig[$objClass]['backend']) && $cacheConfig[$objClass]['backend'] != '')?$cacheConfig[$objClass]['backend']:null;
 		
 		if($backend != null && !in_array($backend, self::$allowedBackends[$objClass])) {
-			error_log("Caching is disabled as '$backend' is not a valid caching backend for '$objClass'. Check your configuration.  ".__METHOD__." at line no ".__LINE__);
+			trigger_error("Caching is disabled as '$backend' is not a valid caching backend for '$objClass'. Check your configuration.  ".__METHOD__." at line no ".__LINE__, E_USER_WARNING);
 			$backend = null;
 		}
 
