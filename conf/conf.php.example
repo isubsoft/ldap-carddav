@@ -21,9 +21,10 @@ $config = [];
 //   $config['cachedir'] = '/var/cache/ldap_carddav';
 
 // Set the level of error messages to be logged.
-// Should be set similar to 'error_level' parameter described here - https://www.php.net/manual/en/function.error-reporting.php
+// Should be set to bitwise OR of the constants described here - https://www.php.net/manual/en/errorfunc.constants.php
+// For production environments it is recommended to keep the value as E_ERROR | E_USER_WARNING to capture all important errors.
 // Defaults to server runtime default.
-//  $config['app']['log_level'] = E_ERROR;
+//  $config['app']['log_level'] = E_ERROR | E_USER_WARNING;
 
 // Base URI for this application.
 // If you have configured clean URLs in your HTTP server configuration then, uncomment the below and update
