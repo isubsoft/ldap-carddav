@@ -1983,22 +1983,22 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						else {
 							$cardUid = $row['card_uid'];
 							$cardUri = $row['card_uri'];
-						}
-						
-						$cardValues = CacheMaster::decode($cache->get(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri), null));
-						
-						if(isset($cardValues['lastmodified']))
-						{
-							if($cardValues['lastmodified'] < $cardModifiedTimestamp)
+							
+							$cardValues = CacheMaster::decode($cache->get(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri), null));
+							
+							if(isset($cardValues['lastmodified']))
 							{
-								if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri)))
-						  		trigger_error("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore the error: " . __METHOD__ . " at line no " . __LINE__, E_USER_NOTICE);
-						  
-						  	$this->addChange($addressBookId, $cardUri, 'MODIFY');
+								if($cardValues['lastmodified'] < $cardModifiedTimestamp)
+								{
+									if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri)))
+										trigger_error("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore the error: " . __METHOD__ . " at line no " . __LINE__, E_USER_NOTICE);
+								
+									$this->addChange($addressBookId, $cardUri, 'MODIFY');
+								}
 						  }
-				    }
-				    else
-				    	$this->addChange($addressBookId, $cardUri, 'MODIFY');
+						  else
+						  	$this->addChange($addressBookId, $cardUri, 'MODIFY');
+						}
             
             $backendContactsUriList[] = $cardUri;
 						$contacts[] = [
