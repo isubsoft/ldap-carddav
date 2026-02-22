@@ -221,7 +221,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         {
 		   			if(!isset($data[0]['entryuuid'][0]))
 		   			{
-							error_log("Could not obtain backend id for principal '$principalId' or may not have access to read it in " . __METHOD__ . " at line no " . __LINE__);
+							trigger_error("Could not obtain backend id for principal '$principalId' or may not have access to read it in " . __METHOD__ . " at line no " . __LINE__, E_USER_WARNING);
 		   				throw new SabreDAVException\ServiceUnavailable();
 		   			}
          			
@@ -234,7 +234,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
             $principal['__backend_id'] = $data[0]['entryuuid'][0];
             
 						if(!$cache->set(CacheMaster::principalKey($principalId), CacheMaster::encode($principal), (isset($this->config['cache']['principal']['ttl']) && is_int($this->config['cache']['principal']['ttl']) && $this->config['cache']['principal']['ttl'] > 0 && $this->config['cache']['principal']['ttl'] <= 2592000)?$this->config['cache']['principal']['ttl']:self::$cacheTtl))
-						  error_log("Could not set cache data: " . __METHOD__ . " at line no " . __LINE__);
+						  trigger_error("Could not set cache data: " . __METHOD__ . " at line no " . __LINE__, E_USER_WARNING);
             
             $principal['id'] = $principalId;
             $principal['uri'] = $path;
