@@ -238,7 +238,7 @@ $config['card']['addressbook']['ldap']['me'] = [
 	// Backend contact field acl. By default no access is denied to any backend field.
 	// 'eval' can have following values
 	// r (default) - Evaluate 'list' as read only fields
-	// w           - Evaluate 'list' as writable fields
+	// w           - Evaluate 'list' as writable fields, rest of the fields are treated as read only
 	'field_acl'     => 	[ 
 												'eval' => 'w',
 												'list' => ['displayName', 'homePhone', 'telephoneNumber', 'facsimileTelephoneNumber', 'pager', 'mobile', 'homePostalAddress', 'preferredLanguage']
@@ -368,7 +368,7 @@ $config['card']['addressbook']['ldap']['me'] = [
 	// Backend contact field acl. By default no access is denied to any backend field.
 	// 'eval' can have following values
 	// r (default) - Evaluate 'list' as read only fields
-	// w           - Evaluate 'list' as writable fields
+	// w           - Evaluate 'list' as writable fields, rest of the fields are treated as read only
 	//  'group_field_acl' => 	[ 
 	//													'eval' => 'r',
 	//													'list' => []
@@ -465,7 +465,7 @@ $config['card']['addressbook']['ldap']['global'] = [
 	// Backend contact field acl. By default no access is denied to any backend field.
 	// 'eval' can have following values
 	// r (default) - Evaluate 'list' as read only fields
-	// w           - Evaluate 'list' as writable fields
+	// w           - Evaluate 'list' as writable fields, rest of the fields are treated as read only
 	//  'field_acl'     => 	[ 
 	//												'eval' => 'r',
 	//												'list' => []
@@ -595,7 +595,7 @@ $config['card']['addressbook']['ldap']['global'] = [
 	// Backend contact field acl. By default no access is denied to any backend field.
 	// 'eval' can have following values
 	// r (default) - Evaluate 'list' as read only fields
-	// w           - Evaluate 'list' as writable fields
+	// w           - Evaluate 'list' as writable fields, rest of the fields are treated as read only
 	//  'group_field_acl' => 	[ 
 	//													'eval' => 'r',
 	//													'list' => []
@@ -692,7 +692,7 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	// Backend contact field acl. By default no access is denied to any backend field.
 	// 'eval' can have following values
 	// r (default) - Evaluate 'list' as read only fields
-	// w           - Evaluate 'list' as writable fields
+	// w           - Evaluate 'list' as writable fields, rest of the fields are treated as read only
 	//  'field_acl'     => 	[ 
 	//												'eval' => 'r',
 	//												'list' => []
@@ -822,7 +822,7 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	// Backend contact field acl. By default no access is denied to any backend field.
 	// 'eval' can have following values
 	// r (default) - Evaluate 'list' as read only fields
-	// w           - Evaluate 'list' as writable fields
+	// w           - Evaluate 'list' as writable fields, rest of the fields are treated as read only
 	//  'group_field_acl' => 	[ 
 	//													'eval' => 'r',
 	//													'list' => []
