@@ -1,3 +1,74 @@
+---- Retrieve information of a principal
+
+-- REQUEST
+curl --dump-header /dev/stderr --silent --location -u %username:%password --request PROPFIND '%base_url/principals/%principal' \
+--header 'Content-Type: application/xml' \
+--header 'Depth: 1' \
+--header 'Accept-Charset: utf-8' \
+--data '<d:propfind xmlns:d="DAV:" xmlns:card="urn:ietf:params:xml:ns:carddav" xmlns:cs="http://calendarserver.org/ns/">
+  <d:prop>
+    <d:principal-collection-set />
+    <d:supported-report-set />
+    <d:resource-id />
+    <d:displayname />
+    <cs:email-address-set />
+    <card:addressbook-home-set />
+    <card:directory-gateway />
+  </d:prop>
+</d:propfind>'
+
+-- SAMPLE RESPONSE BODY
+<?xml version="1.0"?>
+<d:multistatus xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns" xmlns:card="urn:ietf:params:xml:ns:carddav">
+    <d:response>
+        <d:href>/principals/PRINCIPAL/</d:href>
+        <d:propstat>
+            <d:prop>
+                <d:principal-collection-set>
+                    <d:href>/principals/</d:href>
+                </d:principal-collection-set>
+                <d:supported-report-set>
+                    <d:supported-report>
+                        <d:report>
+                            <d:expand-property/>
+                        </d:report>
+                    </d:supported-report>
+                    <d:supported-report>
+                        <d:report>
+                            <d:principal-match/>
+                        </d:report>
+                    </d:supported-report>
+                    <d:supported-report>
+                        <d:report>
+                            <d:principal-property-search/>
+                        </d:report>
+                    </d:supported-report>
+                    <d:supported-report>
+                        <d:report>
+                            <d:principal-search-property-set/>
+                        </d:report>
+                    </d:supported-report>
+                </d:supported-report-set>
+                <d:displayname>Principal name</d:displayname>
+                <card:addressbook-home-set>
+                    <d:href>/addressbooks/PRINCIPAL/</d:href>
+                </card:addressbook-home-set>
+            </d:prop>
+            <d:status>HTTP/1.1 200 OK</d:status>
+        </d:propstat>
+        <d:propstat>
+            <d:prop>
+                <d:resource-id/>
+                <x1:email-address-set xmlns:x1="http://calendarserver.org/ns/"/>
+                <card:directory-gateway/>
+            </d:prop>
+            <d:status>HTTP/1.1 404 Not Found</d:status>
+        </d:propstat>
+    </d:response>
+</d:multistatus>
+
+---------------------------------------------------------------------------------
+
 ---- Retrieve information on address books of a principal
 
 -- REQUEST
