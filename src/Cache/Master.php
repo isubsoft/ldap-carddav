@@ -3,6 +3,8 @@
 * Copyright (C) 2023-2025 ISub Softwares (OPC) Private Limited
 **************************************************************/
 
+declare(strict_types=1);
+
 namespace ISubsoft\Cache;
 
 use Sabre\Cache as SabreCacheBackend;
@@ -82,15 +84,55 @@ class Master
 		return self::getKey([$objClass, $syncDbUserId, $addressBookId, $uri]);
 	}
 	
-  public static function encode(array $values)
-  {
+	private static function recursive_encode(array $values)
+	{
 		$cacheValues = [];			
 		
 		foreach($values as $key => $value)
-			$cacheValues[$key] = base64_encode($value);
+		{
+			if(is_scalar($value))
+				$cacheValues[$key] = base64_encode((string)$value);
+			elseif($value === null)
+				$cacheValues[$key] = null;
+			elseif(is_array($value))
+				$cacheValues[$key] = self::recursive_encode($value);
+			else
+				throw new \UnexpectedValueException();
+		}
 		
-		return json_encode($cacheValues);
+		return $cacheValues;
+	}
+	
+  public static function encode(array $values)
+  {
+		$cacheValues = '[]';
+
+		try {
+			$cacheValues = json_encode(self::recursive_encode($values));
+		} catch(Exception $e) {
+			trigger_error("Encountered an invalid value/datatype.", E_USER_WARNING);
+			return null;
+		}
+		
+		return $cacheValues;
   }
+  
+	private static function recursive_decode(array $values)
+	{
+		$cacheValues = [];			
+		
+		foreach($values as $key => $value)
+		{
+			if(is_scalar($value))
+				$cacheValues[$key] = base64_decode($value);
+			elseif($value === null)
+				$cacheValues[$key] = null;
+			elseif(is_array($value))
+				$cacheValues[$key] = self::recursive_decode($value);
+		}
+		
+		return $cacheValues;
+	}
   
   public static function decode($value)
   {
@@ -99,9 +141,6 @@ class Master
 		if(!is_string($value))
 			return $cardValues;
 		
-		foreach(json_decode($value, true) as $key => $value)
-			$cardValues[$key] = base64_decode($value);
-  
-  	return $cardValues;
+		return self::recursive_decode(json_decode($value, true));
   }
 }
