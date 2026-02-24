@@ -39,7 +39,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      * @var cache
      */
     private $cache;
-    
+
     /**
      * A list of additional fields to support
      *
@@ -50,17 +50,24 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         /**
          * This property can be used to display the users' real name.
          */
-        '{DAV:}displayname' => [
-            'dbField' => 'displayname',
-        ],
+			'{DAV:}displayname' => 'display_name',
 
         /**
          * This is the users' primary email-address.
          */
-        '{http://sabredav.org/ns}email-address' => [
-            'dbField' => 'mail',
-        ]
-    ];
+			'{http://sabredav.org/ns}email-address' => 'mail_primary',
+
+			'{http://calendarserver.org/NS}email-address-set' => [
+				'{http://calendarserver.org/NS}email-address' => 'mail'
+			]
+		];
+
+    /**
+     * A list of properties which are mandatory
+     *
+     * @var array
+     */    
+    private static $mandatoryProperties = ['id'];
     
     private $systemUsersTableName = 'cards_system_user';
     
@@ -95,6 +102,44 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
     	
     	return;
     }
+    
+    private static function getLeafValues(array $tree, array &$result)
+    {
+  		foreach($tree as $value) {
+				if(is_array($value))
+  				self::getLeafValues($value, $result);
+				else
+					$result[] = $value;
+  		}
+    		
+   		return $result;
+    }
+    
+    private static function setPrincipalProperty($propNs, $propDef, &$configFieldMap, $principalBackendData)
+    {
+			$principalPropValue = null;
+			
+			if(is_string($propDef) && $propDef !== '') {
+				if(isset($configFieldMap[$propDef]) && is_string($configFieldMap[$propDef]) && $configFieldMap[$propDef] !== '') {
+					$principalPropValue = [];
+					$backendAttr = $configFieldMap[$propDef];
+					
+					if(isset($principalBackendData[$backendAttr])) {
+						if($propNs == null)
+							$principalPropValue = $principalBackendData[$backendAttr][0];
+						else
+							for($index=0; $index<$principalBackendData[$backendAttr]['count']; $index++)
+								$principalPropValue[][$propNs] = $principalBackendData[$backendAttr][$index];
+					}
+				}
+			}
+			elseif(is_array($propDef)) {
+				foreach($propDef as $key => $value)
+					$principalPropValue = self::setPrincipalProperty($key, $value, $configFieldMap, $principalBackendData);
+			}
+					
+			return $principalPropValue;
+    }
 
     /**
      * Returns a list of principals based on a prefix.
@@ -122,6 +167,15 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
             $principals[] = ['uri' => $prefixPath. '/' . $currentUserPrincipalId];
             return $principals;
         }
+        
+        $configFieldMap = (isset($this->config['principal']['ldap']['fieldmap']) && is_array($this->config['principal']['ldap']['fieldmap']))?$this->config['principal']['ldap']['fieldmap']:[];
+        
+    		foreach(self::$mandatoryProperties as $value) {
+    			if(!isset($configFieldMap[$value]) || !is_string($configFieldMap[$value]) || $configFieldMap[$value] === '') {
+    				trigger_error("Mandatory property '$value' for principals not mapped. Check configuration.", E_USER_WARNING);
+        		throw new SabreDAVException\ServiceUnavailable();
+    			}
+    		}
 
 				$this->setPrincipalBackendProperties();
 				$ldapConn = $this->ldapConn;
@@ -132,22 +186,27 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
         $filter = Utility::replacePlaceholders($this->config['principal']['ldap']['search_filter'], ['%u' => ldap_escape($currentUserPrincipalId, "", LDAP_ESCAPE_FILTER)]);
         
-        foreach($this->config['principal']['ldap']['fieldmap'] as $key => $value)
-        {
-					$attributes[] = $value;
-        }
+        $tmp = [];
+				$attributes = [];
+				
+    		foreach(self::$mandatoryProperties as $value)
+					$attributes[] = $configFieldMap[$value];
+				
+        foreach(self::getLeafValues($this->fieldMap, $tmp) as $value) {
+        	if(isset($configFieldMap[$value]) && is_string($configFieldMap[$value]) && $configFieldMap[$value] !== '')
+						$attributes[] = $configFieldMap[$value];
+				}
         
         $data = Utility::LdapQuery($ldapConn, $ldaptree, $filter, $attributes, strtolower($this->config['principal']['ldap']['scope']));
                     
         if($data['count'] > 0)
         {
             for ($i=0; $i < $data['count']; $i++) {
-            		$principalId = $data[$i][$this->config['principal']['ldap']['fieldmap']['id']][0];
+            		$principalId = $data[$i][$configFieldMap['id']][0];
             		
                 foreach ($this->fieldMap as $key => $value) {
-                    if ( isset($data[$i][$this->config['principal']['ldap']['fieldmap'][$value['dbField']]])) {
-                        $principal[$key] = $data[$i][$this->config['principal']['ldap']['fieldmap'][$value['dbField']]][0];
-                    }
+                	$principal[$key] = null;
+                	$principal[$key] = self::setPrincipalProperty(null, $value, $configFieldMap, $data[$i]);
                 }
                 
 				        $principal['id'] = $principalId;
@@ -197,6 +256,15 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
 				}
 				
 				$principal == [];
+				
+        $configFieldMap = (isset($this->config['principal']['ldap']['fieldmap']) && is_array($this->config['principal']['ldap']['fieldmap']))?$this->config['principal']['ldap']['fieldmap']:[];
+        
+    		foreach(self::$mandatoryProperties as $value) {
+    			if(!isset($configFieldMap[$value]) || !is_string($configFieldMap[$value]) || $configFieldMap[$value] === '') {
+    				trigger_error("Mandatory property '$value' for principals not mapped. Check configuration.", E_USER_WARNING);
+        		throw new SabreDAVException\ServiceUnavailable();
+    			}
+    		}
 
 				$this->setPrincipalBackendProperties();
 				$ldapConn = $this->ldapConn;
@@ -205,13 +273,19 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         	throw new SabreDAVException\ServiceUnavailable();
           
         $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
-        $principalIdAttribute = $this->config['principal']['ldap']['fieldmap']['id'];
+        $principalIdAttribute = $configFieldMap['id'];
         $filter = Utility::replacePlaceholders('(&' . $this->config['principal']['ldap']['search_filter'] . '(' . $principalIdAttribute . '=' . '%u' . '))', ['%u' => ldap_escape($principalId, "", LDAP_ESCAPE_FILTER)]);
         
-        foreach($this->config['principal']['ldap']['fieldmap'] as $key => $value)
-        {
-					$attributes[] = $value;
-        }
+        $tmp = [];
+				$attributes = [];
+				
+    		foreach(self::$mandatoryProperties as $value)
+					$attributes[] = $configFieldMap[$value];
+				
+        foreach(self::getLeafValues($this->fieldMap, $tmp) as $value) {
+        	if(isset($configFieldMap[$value]) && is_string($configFieldMap[$value]) && $configFieldMap[$value] !== '')
+						$attributes[] = $configFieldMap[$value];
+				}
         
         $attributes[] = 'entryuuid';
 
@@ -224,11 +298,10 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
 							trigger_error("Could not obtain backend id for principal '$principalId' or may not have access to read it in " . __METHOD__ . " at line no " . __LINE__, E_USER_WARNING);
 		   				throw new SabreDAVException\ServiceUnavailable();
 		   			}
-         			
+		   			
             foreach ($this->fieldMap as $key => $value) {
-                if ( isset($data[0][$this->config['principal']['ldap']['fieldmap'][$value['dbField']]])) {
-                    $principal[$key] = $data[0][$this->config['principal']['ldap']['fieldmap'][$value['dbField']]][0];
-                }
+		        	$principal[$key] = null;
+		        	$principal[$key] = self::setPrincipalProperty(null, $value, $configFieldMap, $data[0]);
             }
             
             $principal['__backend_id'] = $data[0]['entryuuid'][0];
