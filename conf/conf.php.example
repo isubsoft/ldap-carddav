@@ -153,11 +153,20 @@ $config['principal']['ldap'] = [
   'search_bind_pw' => '<secret>',
   'scope' => 'list', // search mode: sub|base|list
 
-	// Principal property => LDAP user attribute field map (Use primary name of backend field only and not their alias name here)
-  'fieldmap' => [	'id' => 'uid', 					// 'id' is equal to the username used by the principal during authentication.
-  															 					// Make sure it is mapped to an appropriate user attribute in LDAP.
-  								'displayname' => 'cn', 	// 'displayname' is a commonly used name of the principal.
-  								'mail' => 'mail' 				// 'mail' is an email id of the principal.
+	// Principal property => LDAP attribute field map (Use primary name of backend field only and not their alias name here)
+	//
+  // The following properties can be mapped
+  //  id: Authentication username (cardinality 1*)
+  //  display_name: Display name (cardinality *1)
+  //  mail_primary: Primary e-mail address (cardinality *1)
+  //  mail: E-mail address (cardinality *)
+  //
+  // If multiple values for an attribute are returned from LDAP where maximum cardinality is 1
+  // then only the first value is used.
+  'fieldmap' => [	'id' => 'uid',
+  								'display_name' => 'cn',
+  								'mail_primary' => 'mail',
+  								'mail' => 'mail'
   							]
 ];
 
