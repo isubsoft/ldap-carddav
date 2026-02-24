@@ -234,13 +234,13 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         $cache = $this->cache;
         $principal = [];
 
-        if(!isset($this->config['principal']['ldap']['search_bind_dn']) || $this->config['principal']['ldap']['search_bind_dn'] == '')
-        {  
-            if(strtolower($principalId) == strtolower($currentUserPrincipalId))
-            	$principal = [ 'id'=> $principalId, 'uri' => $path];
-            	
-            return $principal;
-        }
+        if(strtolower($principalId) != strtolower($currentUserPrincipalId))
+  				throw new SabreDAVException\Forbidden("User does not have access to this path");
+        
+			  if(!isset($this->config['principal']['ldap']['search_bind_dn']) || $this->config['principal']['ldap']['search_bind_dn'] == '') {
+			  	$principal = [ 'id'=> $principalId, 'uri' => $path];
+			    return $principal;
+			  }
         
 				$cacheValid = true; // If false then cache need to be refreshed
 				$principal = CacheMaster::decode($cache->get(CacheMaster::principalKey($principalId), null));
