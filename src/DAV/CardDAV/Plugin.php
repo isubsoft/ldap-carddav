@@ -37,4 +37,9 @@ class Plugin extends \Sabre\CardDAV\Plugin
 			
 		return;
 	}
+	
+	public function publicGetAddressbookHomeForPrincipal($principal)
+	{
+		return $this->getAddressbookHomeForPrincipal($principal);
+	}
 }
