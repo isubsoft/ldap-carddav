@@ -407,4 +407,58 @@ class LDAP {
 				
 			return new SabreDAVException\ServiceUnavailable();
 		}
+		
+		/**
+		* Get leaf values as a list for an array
+		*
+		* @param array $tree
+		* @param array &$result
+    * @return array
+		**/
+    public static function getLeafValues(array $tree, array &$result)
+    {
+  		foreach($tree as $value) {
+				if(is_array($value))
+  				self::getLeafValues($value, $result);
+				else
+					$result[] = $value;
+  		}
+    		
+   		return $result;
+    }
+    
+		/**
+		* Set property array from property definition array and backend values
+		*
+		* @param array $propNs
+		* @param array $propDef
+		* @param array &$configFieldMap
+		* @param array &$backendData
+    * @return array
+		**/
+    public static function setPrincipalProperty($propNs, array $propDef, &$configFieldMap, &$backendData)
+    {
+			$principalPropValue = null;
+			
+				foreach($propDef as $key => $value) {
+					if(is_string($value) && $value !== '') {
+						if(isset($configFieldMap[$value]) && is_string($configFieldMap[$value]) && $configFieldMap[$value] !== '') {
+							$principalPropValue[$key] = [];
+							$backendAttr = $configFieldMap[$value];
+							
+							if(isset($backendData[$backendAttr])) {
+								if($propNs == null)
+									$principalPropValue[$key] = $backendData[$backendAttr][0];
+								else
+									for($index=0; $index<$backendData[$backendAttr]['count']; $index++)
+										$principalPropValue[$key][][$propNs] = $backendData[$backendAttr][$index];
+							}
+						}
+					}
+					elseif(is_array($value))
+						$principalPropValue[$key] = self::setPrincipalProperty($key, $value, $configFieldMap, $backendData);
+				}
+					
+			return $principalPropValue;
+    }
 }

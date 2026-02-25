@@ -103,44 +103,6 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
     	return;
     }
     
-    private static function getLeafValues(array $tree, array &$result)
-    {
-  		foreach($tree as $value) {
-				if(is_array($value))
-  				self::getLeafValues($value, $result);
-				else
-					$result[] = $value;
-  		}
-    		
-   		return $result;
-    }
-    
-    private static function setPrincipalProperty($propNs, array $propDef, &$configFieldMap, &$principalBackendData)
-    {
-			$principalPropValue = null;
-			
-				foreach($propDef as $key => $value) {
-					if(is_string($value) && $value !== '') {
-						if(isset($configFieldMap[$value]) && is_string($configFieldMap[$value]) && $configFieldMap[$value] !== '') {
-							$principalPropValue[$key] = [];
-							$backendAttr = $configFieldMap[$value];
-							
-							if(isset($principalBackendData[$backendAttr])) {
-								if($propNs == null)
-									$principalPropValue[$key] = $principalBackendData[$backendAttr][0];
-								else
-									for($index=0; $index<$principalBackendData[$backendAttr]['count']; $index++)
-										$principalPropValue[$key][][$propNs] = $principalBackendData[$backendAttr][$index];
-							}
-						}
-					}
-					elseif(is_array($value))
-						$principalPropValue[$key] = self::setPrincipalProperty($key, $value, $configFieldMap, $principalBackendData);
-				}
-					
-			return $principalPropValue;
-    }
-
     /**
      * Returns a list of principals based on a prefix.
      *
@@ -192,7 +154,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
     		foreach(self::$mandatoryProperties as $value)
 					$attributes[] = $configFieldMap[$value];
 				
-        foreach(self::getLeafValues($this->fieldMap, $tmp) as $value) {
+        foreach(Utility::getLeafValues($this->fieldMap, $tmp) as $value) {
         	if(isset($configFieldMap[$value]) && is_string($configFieldMap[$value]) && $configFieldMap[$value] !== '')
 						$attributes[] = $configFieldMap[$value];
 				}
@@ -203,7 +165,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         {
             for ($i=0; $i < $data['count']; $i++) {
             		$principalId = $data[$i][$configFieldMap['id']][0];
-               	$principal = self::setPrincipalProperty(null, $this->fieldMap, $configFieldMap, $data[$i]);
+               	$principal = Utility::setPrincipalProperty(null, $this->fieldMap, $configFieldMap, $data[$i]);
 				        $principal['id'] = $principalId;
 				        $principal['uri'] = $prefixPath. '/' . $principalId;
                 $principals[] = $principal;
@@ -276,7 +238,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
     		foreach(self::$mandatoryProperties as $value)
 					$attributes[] = $configFieldMap[$value];
 				
-        foreach(self::getLeafValues($this->fieldMap, $tmp) as $value) {
+        foreach(Utility::getLeafValues($this->fieldMap, $tmp) as $value) {
         	if(isset($configFieldMap[$value]) && is_string($configFieldMap[$value]) && $configFieldMap[$value] !== '')
 						$attributes[] = $configFieldMap[$value];
 				}
@@ -293,7 +255,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
 		   				throw new SabreDAVException\ServiceUnavailable();
 		   			}
 		   			
-	        	$principal = self::setPrincipalProperty(null, $this->fieldMap, $configFieldMap, $data[0]);
+	        	$principal = Utility::setPrincipalProperty(null, $this->fieldMap, $configFieldMap, $data[0]);
             $principal['__backend_id'] = $data[0]['entryuuid'][0];
             
 						if(!$cache->set(CacheMaster::principalKey($principalId), CacheMaster::encode($principal), (isset($this->config['cache']['principal']['ttl']) && is_int($this->config['cache']['principal']['ttl']) && $this->config['cache']['principal']['ttl'] > 0 && $this->config['cache']['principal']['ttl'] <= 2592000)?$this->config['cache']['principal']['ttl']:self::$cacheTtl))
