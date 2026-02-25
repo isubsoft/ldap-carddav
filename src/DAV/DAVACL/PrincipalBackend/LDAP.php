@@ -57,8 +57,8 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
          */
 			'{http://sabredav.org/ns}email-address' => 'mail_primary',
 
-			'{http://calendarserver.org/NS}email-address-set' => [
-				'{http://calendarserver.org/NS}email-address' => 'mail'
+			'{http://calendarserver.org/ns/}email-address-set' => [
+				'{http://calendarserver.org/ns/}email-address' => 'mail'
 			]
 		];
 

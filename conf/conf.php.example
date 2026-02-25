@@ -182,6 +182,10 @@ $config['card']['addressbook']['ldap']['me'] = [
 	'user_specific' 	=> true, // If this is true username placeholder can be used in applicable places
 	'writable'     	 	=> true, // If true (default) then new contacts can be created and existing ones can be updated and deleted
 	
+	// Use this address book as a directory (i.e. for lookups only) for Apple devices
+	// Defaults to false
+	//  'directory'				=> true,
+	
 	// Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
 	// of the address book from backend every time they sync their address book. Set the below to 
 	// prevent full address book refresh from backend at least for this interval (in seconds).
@@ -409,6 +413,10 @@ $config['card']['addressbook']['ldap']['global'] = [
 	'user_specific' 	=> false, // If this is true username placeholder can be used in applicable places
 	'writable'     	 	=> false, // If true (default) then new contacts can be created and existing ones can be updated and deleted
 	
+	// Use this address book as a directory (i.e. for lookups only) for Apple devices
+	// Defaults to false
+	//  'directory'				=> true,
+	
 	// Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
 	// of the address book from backend every time they sync their address book. Set the below to 
 	// prevent full address book refresh from backend at least for this interval (in seconds).
@@ -635,6 +643,10 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	// lead to this application not processing requests for this address book.
 	'user_specific' 	=> true, 	// If this is true username placeholder can be used in applicable places
 	'writable'     	 	=> true, 	// If true (default) then new contacts can be created and existing ones can be updated and deleted
+	
+	// Use this address book as a directory (i.e. for lookups only) for Apple devices
+	// Defaults to false
+	//  'directory'				=> true,
 
 	// Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
 	// of the address book from backend every time they sync their address book. Set the below to 

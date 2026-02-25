@@ -20,6 +20,7 @@ require_once __BASE_DIR__ . '/vendor/autoload.php';
 // Set log level
 error_reporting($GLOBALS['log_level']);
 
+$GLOBALS['currentUserPrincipalUri'] = null;
 $GLOBALS['currentUserPrincipalId'] = null;
 $GLOBALS['currentUserPrincipalLdapConn'] = null;
 
@@ -68,7 +69,7 @@ $propStorePlugin->pathFilter = function($path) {
 $server->addPlugin($propStorePlugin);
 
 // Add carddav plugin
-$cardDavPlugin = new ISubsoft\DAV\CardDAV\Plugin();
+$cardDavPlugin = new ISubsoft\DAV\CardDAV\Plugin($carddavBackend);
 
 if($GLOBALS['max_payload_size'] != null)
 	$cardDavPlugin->setResourceSize($GLOBALS['max_payload_size']);

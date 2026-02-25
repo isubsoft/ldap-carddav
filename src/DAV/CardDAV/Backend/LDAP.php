@@ -2088,6 +2088,15 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
       throw new SabreDAVException\ServiceUnavailable();
     }
     
+    function isAddressbookDirectory($addressBookId)
+    {
+      $addressBookConfig = $this->addressbook[$addressBookId]['config'];
+      
+      if(isset($addressBookConfig['directory']) && $addressBookConfig['directory'] === true)
+      	return true;
+      	
+      return false;
+    }
     
     private function housekeeping($addressBookId)
     {
