@@ -115,28 +115,28 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
    		return $result;
     }
     
-    private static function setPrincipalProperty($propNs, $propDef, &$configFieldMap, &$principalBackendData)
+    private static function setPrincipalProperty($propNs, array $propDef, &$configFieldMap, &$principalBackendData)
     {
 			$principalPropValue = null;
 			
-			if(is_string($propDef) && $propDef !== '') {
-				if(isset($configFieldMap[$propDef]) && is_string($configFieldMap[$propDef]) && $configFieldMap[$propDef] !== '') {
-					$principalPropValue = [];
-					$backendAttr = $configFieldMap[$propDef];
-					
-					if(isset($principalBackendData[$backendAttr])) {
-						if($propNs == null)
-							$principalPropValue = $principalBackendData[$backendAttr][0];
-						else
-							for($index=0; $index<$principalBackendData[$backendAttr]['count']; $index++)
-								$principalPropValue[][$propNs] = $principalBackendData[$backendAttr][$index];
+				foreach($propDef as $key => $value) {
+					if(is_string($value) && $value !== '') {
+						if(isset($configFieldMap[$value]) && is_string($configFieldMap[$value]) && $configFieldMap[$value] !== '') {
+							$principalPropValue[$key] = [];
+							$backendAttr = $configFieldMap[$value];
+							
+							if(isset($principalBackendData[$backendAttr])) {
+								if($propNs == null)
+									$principalPropValue[$key] = $principalBackendData[$backendAttr][0];
+								else
+									for($index=0; $index<$principalBackendData[$backendAttr]['count']; $index++)
+										$principalPropValue[$key][][$propNs] = $principalBackendData[$backendAttr][$index];
+							}
+						}
 					}
+					elseif(is_array($value))
+						$principalPropValue[$key] = self::setPrincipalProperty($key, $value, $configFieldMap, $principalBackendData);
 				}
-			}
-			elseif(is_array($propDef)) {
-				foreach($propDef as $key => $value)
-					$principalPropValue = self::setPrincipalProperty($key, $value, $configFieldMap, $principalBackendData);
-			}
 					
 			return $principalPropValue;
     }
@@ -203,15 +203,9 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         {
             for ($i=0; $i < $data['count']; $i++) {
             		$principalId = $data[$i][$configFieldMap['id']][0];
-            		
-                foreach ($this->fieldMap as $key => $value) {
-                	$principal[$key] = null;
-                	$principal[$key] = self::setPrincipalProperty(null, $value, $configFieldMap, $data[$i]);
-                }
-                
+               	$principal = self::setPrincipalProperty(null, $this->fieldMap, $configFieldMap, $data[$i]);
 				        $principal['id'] = $principalId;
 				        $principal['uri'] = $prefixPath. '/' . $principalId;
-                
                 $principals[] = $principal;
             }
         }
@@ -299,11 +293,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
 		   				throw new SabreDAVException\ServiceUnavailable();
 		   			}
 		   			
-            foreach ($this->fieldMap as $key => $value) {
-		        	$principal[$key] = null;
-		        	$principal[$key] = self::setPrincipalProperty(null, $value, $configFieldMap, $data[0]);
-            }
-            
+	        	$principal = self::setPrincipalProperty(null, $this->fieldMap, $configFieldMap, $data[0]);
             $principal['__backend_id'] = $data[0]['entryuuid'][0];
             
 						if(!$cache->set(CacheMaster::principalKey($principalId), CacheMaster::encode($principal), (isset($this->config['cache']['principal']['ttl']) && is_int($this->config['cache']['principal']['ttl']) && $this->config['cache']['principal']['ttl'] > 0 && $this->config['cache']['principal']['ttl'] <= 2592000)?$this->config['cache']['principal']['ttl']:self::$cacheTtl))
