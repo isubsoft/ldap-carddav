@@ -115,7 +115,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
    		return $result;
     }
     
-    private static function setPrincipalProperty($propNs, $propDef, &$configFieldMap, $principalBackendData)
+    private static function setPrincipalProperty($propNs, $propDef, &$configFieldMap, &$principalBackendData)
     {
 			$principalPropValue = null;
 			
