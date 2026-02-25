@@ -54,20 +54,6 @@ $aclPlugin->hideNodesFromListings = true;
 
 $server->addPlugin($aclPlugin);
 
-// Add property storage plugin
-$propStorePlugin = new Sabre\DAV\PropertyStorage\Plugin($propStoreBackend);
-
-$propStorePlugin->pathFilter = function($path) {
-	$addressbookPathRegexp = '#^addressbooks/[^/]+$#';
-	
-	if (preg_match($addressbookPathRegexp, $path) === 1)
-		return true;
-
-	return false;
-};
-
-$server->addPlugin($propStorePlugin);
-
 // Add carddav plugin
 $cardDavPlugin = new ISubsoft\DAV\CardDAV\Plugin($carddavBackend);
 
@@ -75,6 +61,9 @@ if($GLOBALS['max_payload_size'] != null)
 	$cardDavPlugin->setResourceSize($GLOBALS['max_payload_size']);
 
 $server->addPlugin($cardDavPlugin);
+
+// Add property storage plugin
+$server->addPlugin(new ISubsoft\DAV\PropertyStorage\Plugin($propStoreBackend));
 
 // Add webdav sync plugin
 if($GLOBALS['enable_incremental_sync'])
