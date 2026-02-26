@@ -1996,8 +1996,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 									$this->addChange($addressBookId, $cardUri, 'MODIFY');
 								}
 						  }
-						  else
-						  	$this->addChange($addressBookId, $cardUri, 'MODIFY');
 						}
             
             $backendContactsUriList[] = $cardUri;
