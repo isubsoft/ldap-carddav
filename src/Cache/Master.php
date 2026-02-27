@@ -17,14 +17,23 @@ class Master
 		'card' => ['memory', 'apcu', 'local_fs', 'memcached']
 	];
 
-	private static function getKey(array $key)
+	public static function getKey(array $key)
 	{
-		return strtolower(md5(implode(".", $key)));
+		return strtolower(md5(implode("/", $key)));
 	}	                          
 
-	private static function getBackend($backend, $backendConfig)
+	public static function getBackend($entityName, $cacheConfig)
 	{
 		$backendObj = new Backend\Dummy();
+		
+		$backend = (isset($cacheConfig[$entityName]['backend']) && is_string($cacheConfig[$entityName]['backend']) && $cacheConfig[$entityName]['backend'] != '')?$cacheConfig[$entityName]['backend']:null;
+		
+		if($backend != null && !in_array($backend, self::$allowedBackends[$entityName])) {
+			trigger_error("Caching is disabled as '$backend' is not a valid caching backend for '$entityName'. Check your configuration.  ".__METHOD__." at line no ".__LINE__, E_USER_WARNING);
+			$backend = null;
+		}
+		
+		$backendConfig = !isset($cacheConfig['backend'][$backend])?null:$cacheConfig['backend'][$backend];
 		
 		if($backend == 'memcached') {
 			$memcached = new \Memcached();
@@ -44,44 +53,6 @@ class Master
 			$backendObj = new SabreCacheBackend\Memory();
 		
 		return $backendObj;
-	}
-	
-	public static function getPrincipalBackend(array $cacheConfig)
-	{
-		$objClass = 'principal';
-		$backend = (isset($cacheConfig[$objClass]['backend']) && $cacheConfig[$objClass]['backend'] != '')?$cacheConfig[$objClass]['backend']:null;
-		
-		if($backend != null && !in_array($backend, self::$allowedBackends[$objClass])) {
-			trigger_error("Caching is disabled as '$backend' is not a valid caching backend for '$objClass'. Check your configuration.  ".__METHOD__." at line no ".__LINE__, E_USER_WARNING);
-			$backend = null;
-		}
-
-		return self::getBackend($backend, !isset($cacheConfig['backend'][$backend])?null:$cacheConfig['backend'][$backend]);
-	}
-
-	public static function getCardBackend(array $cacheConfig)
-	{
-		$objClass = 'card';
-		$backend = (isset($cacheConfig[$objClass]['backend']) && $cacheConfig[$objClass]['backend'] != '')?$cacheConfig[$objClass]['backend']:null;
-		
-		if($backend != null && !in_array($backend, self::$allowedBackends[$objClass])) {
-			trigger_error("Caching is disabled as '$backend' is not a valid caching backend for '$objClass'. Check your configuration.  ".__METHOD__." at line no ".__LINE__, E_USER_WARNING);
-			$backend = null;
-		}
-
-		return self::getBackend($backend, !isset($cacheConfig['backend'][$backend])?null:$cacheConfig['backend'][$backend]);
-	}
-	
-	public static function principalKey(string $principalId)
-	{
-		$objClass = 'principal';
-		return self::getKey([$objClass, $principalId]);
-	}
-
-	public static function cardKey(string $syncDbUserId, string $addressBookId, string $uri)
-	{
-		$objClass = 'card';
-		return self::getKey([$objClass, $syncDbUserId, $addressBookId, $uri]);
 	}
 	
 	private static function recursive_encode(array $values)
