@@ -27,9 +27,9 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
     private $ldapConn = false;
     
     /**
-     * Store ldap directory access credentials
+     * PDO connection handle
      *
-     * @var array
+     * @var \PDO
      */
     public $pdo;
     
@@ -92,7 +92,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
     public function __construct(array $config, \PDO $pdo) { 
         $this->config = $config;
         $this->pdo = $pdo;
-				$this->cache = CacheMaster::getBackend(self::$cacheEntityName, $config['cache']);
+				$this->cache = (new CacheMaster($config, $pdo))->getBackend(self::$cacheEntityName);
     }
     
     private function setPrincipalBackendProperties()
@@ -198,7 +198,6 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
     {
         $principalId = basename($path);
         $currentUserPrincipalId = $GLOBALS['currentUserPrincipalId'];
-        $cache = $this->cache;
         $principal = [];
 
         if(strtolower($principalId) != strtolower($currentUserPrincipalId))
@@ -210,7 +209,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
 			  }
         
 				$cacheValid = true; // If false then cache need to be refreshed
-				$principal = CacheMaster::decode($cache->get(CacheMaster::getKey(self::getCacheKey($principalId)), null));
+				$principal = CacheMaster::decode($this->cache->get(CacheMaster::getKey(self::getCacheKey($principalId)), null));
 				
        	if($principal == [] || $principal == null)
 					$cacheValid = false;
@@ -269,7 +268,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
 	        	$principal = Utility::setPrincipalProperty(null, $this->fieldMap, $configFieldMap, $data[0]);
             $principal['__backend_id'] = $data[0]['entryuuid'][0];
             
-						if(!$cache->set(CacheMaster::getKey(self::getCacheKey($principalId)), CacheMaster::encode($principal), (isset($this->config['cache']['principal']['ttl']) && is_int($this->config['cache']['principal']['ttl']) && $this->config['cache']['principal']['ttl'] > 0 && $this->config['cache']['principal']['ttl'] <= 2592000)?$this->config['cache']['principal']['ttl']:self::$cacheTtl))
+						if(!$this->cache->set(CacheMaster::getKey(self::getCacheKey($principalId)), CacheMaster::encode($principal), (isset($this->config['cache']['principal']['ttl']) && is_int($this->config['cache']['principal']['ttl']) && $this->config['cache']['principal']['ttl'] > 0 && $this->config['cache']['principal']['ttl'] <= 2592000)?$this->config['cache']['principal']['ttl']:self::$cacheTtl))
 						  trigger_error("Could not set cache data: " . __METHOD__ . " at line no " . __LINE__, E_USER_WARNING);
             
             $principal['id'] = $principalId;
