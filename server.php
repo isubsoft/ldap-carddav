@@ -36,6 +36,9 @@ $nodes = [
 	new ISubsoft\DAV\CardDAV\AddressBookRoot($principalBackend, $carddavBackend)
 ];
 
+// Manage cache before processing the request
+$carddavBackend->manageCache();
+
 // The object tree needs in turn to be passed to the server class
 $server = new Sabre\DAV\Server($nodes);
 

@@ -85,6 +85,12 @@ CREATE TABLE propertystorage (
 );
 CREATE UNIQUE INDEX propertystorage_ukey ON propertystorage (path, name);
 
+CREATE TABLE entity_cache (
+	entity_id VARCHAR(255) NOT NULL,
+	backend_id VARCHAR(255),
+	PRIMARY KEY (entity_id)
+);
+
 
 /**************** Triggers functions ******************/
 

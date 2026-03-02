@@ -90,8 +90,8 @@ $config['server']['ldap'] = [
 
 // Caching backend to enable specific to object type. If not set then caching is disabled.
 // It is strongly recommended to keep caching enabled in a production environment.
-$config['cache']['card']['backend'] = 'local_fs';
 $config['cache']['principal']['backend'] = 'local_fs';
+$config['cache']['card']['backend'] = 'local_fs';
 
 // TTL (in seconds) for cached items. TTL should be greater than 0 or less than or equal to 2592000 (30 days) else default value will be used.
 // Defaults to 1 day.

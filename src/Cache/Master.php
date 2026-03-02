@@ -12,30 +12,89 @@ use Sabre\DAV\Exception as SabreDAVException;
 
 class Master
 {
+  /**
+   * PDO connection handle
+   *
+   * @var \PDO
+   */
+  private $pdo;
+    
+	private static $entityCacheTableName = 'entity_cache';
+	private $config;
+	
 	public static $allowedBackends = [
 		'principal' => ['memory', 'apcu', 'local_fs', 'memcached'],
 		'card' => ['memory', 'apcu', 'local_fs', 'memcached']
 	];
-
-	public static function getKey(array $key)
+	
+  public function __construct(array $config, \PDO $pdo) {
+  	$this->config = $config['cache'];
+  	$this->pdo = $pdo;
+  }
+	
+	public function getLastBackendId($entityId)
 	{
-		return strtolower(md5(implode("/", $key)));
-	}	                          
-
-	public static function getBackend($entityName, $cacheConfig)
-	{
-		$backendObj = new Backend\Dummy();
+		$backendId = null;
 		
-		$backend = (isset($cacheConfig[$entityName]['backend']) && is_string($cacheConfig[$entityName]['backend']) && $cacheConfig[$entityName]['backend'] != '')?$cacheConfig[$entityName]['backend']:null;
-		
-		if($backend != null && !in_array($backend, self::$allowedBackends[$entityName])) {
-			trigger_error("Caching is disabled as '$backend' is not a valid caching backend for '$entityName'. Check your configuration.  ".__METHOD__." at line no ".__LINE__, E_USER_WARNING);
-			$backend = null;
+		try {
+				$query = 'SELECT backend_id FROM ' . self::$entityCacheTableName . ' WHERE backend_id IS NOT NULL AND entity_id = ?';
+				$stmt = $this->pdo->prepare($query);
+				$stmt->execute([$entityId]);
+				
+				$row = $stmt->fetch(\PDO::FETCH_ASSOC);
+				
+				if($row !== false)
+					$backendId = $row['backend_id'];
+		} 
+		catch (\Throwable $th) {
+			trigger_error("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage(), E_USER_WARNING);
 		}
 		
-		$backendConfig = !isset($cacheConfig['backend'][$backend])?null:$cacheConfig['backend'][$backend];
+		return $backendId;
+	}
+	
+	public function getBackendId($entityId)
+	{
+		return (isset($this->config[$entityId]['backend']) && is_string($this->config[$entityId]['backend']) && $this->config[$entityId]['backend'] != '')?$this->config[$entityId]['backend']:null;
+	}
+	
+	public function setLastBackendId($entityId)
+	{
+		if($this->getBackendId($entityId) != $this->getLastBackendId($entityId)) {		
+			try {
+					$query = 'UPDATE ' . self::$entityCacheTableName . ' SET backend_id = ? WHERE entity_id = ?';
+					$stmt = $this->pdo->prepare($query);
+					$stmt->execute([$this->getBackendId($entityId), $entityId]);
+					
+					if(!$stmt->rowCount() > 0) {
+						$query = 'INSERT INTO ' . self::$entityCacheTableName . ' (entity_id, backend_id) VALUES (?, ?)';
+						$stmt = $this->pdo->prepare($query);
+						$stmt->execute([$entityId, $this->getBackendId($entityId)]);
+					}
+			}
+			catch (\Throwable $th) {
+				trigger_error("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage(), E_USER_WARNING);
+
+				return false;
+			}
+		}
 		
-		if($backend == 'memcached') {
+		return true;
+	}
+
+	public function getBackend($entityId)
+	{
+		$backendObj = new Backend\Dummy();
+		$backendId = $this->getBackendId($entityId);
+		
+		if($backendId != null && !in_array($backendId, self::$allowedBackends[$entityId])) {
+			trigger_error("Caching is disabled as '$backendId' is not a valid caching backend for '$entityId'. Check your configuration.  ".__METHOD__." at line no ".__LINE__, E_USER_WARNING);
+			$backendId = null;
+		}
+		
+		$backendConfig = !isset($this->config['backend'][$backendId])?null:$this->config['backend'][$backendId];
+		
+		if($backendId == 'memcached') {
 			$memcached = new \Memcached();
 			
 			if(!isset($backendConfig['servers']) || !$memcached->addServers($backendConfig['servers'])) {
@@ -45,14 +104,19 @@ class Master
 			
 			$backendObj = new SabreCacheBackend\Memcached($memcached);
 		}
-		else if($backend == 'local_fs')
+		else if($backendId == 'local_fs')
 			$backendObj = new Backend\LocalFS(__CACHE_DIR__);
-		else if($backend == 'apcu')
+		else if($backendId == 'apcu')
 			$backendObj = new SabreCacheBackend\Apcu();
-		else if($backend == 'memory')
+		else if($backendId == 'memory')
 			$backendObj = new SabreCacheBackend\Memory();
 		
 		return $backendObj;
+	}
+	
+	public static function getKey(array $key)
+	{
+		return strtolower(md5(implode("/", $key)));
 	}
 	
 	private static function recursive_encode(array $values)
