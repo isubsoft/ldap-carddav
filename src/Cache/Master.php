@@ -47,7 +47,7 @@ class Master
 					$backendId = $row['backend_id'];
 		} 
 		catch (\Throwable $th) {
-			trigger_error("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage(), E_USER_WARNING);
+			trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 		}
 		
 		return $backendId;
@@ -73,7 +73,7 @@ class Master
 					}
 			}
 			catch (\Throwable $th) {
-				trigger_error("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage(), E_USER_WARNING);
+				trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 
 				return false;
 			}
@@ -88,7 +88,7 @@ class Master
 		$backendId = $this->getBackendId($entityId);
 		
 		if($backendId != null && !in_array($backendId, self::$allowedBackends[$entityId])) {
-			trigger_error("Caching is disabled as '$backendId' is not a valid caching backend for '$entityId'. Check your configuration.  ".__METHOD__." at line no ".__LINE__, E_USER_WARNING);
+			trigger_error("Caching is disabled as '$backendId' is not a valid caching backend for '$entityId'. Check configuration.", E_USER_WARNING);
 			$backendId = null;
 		}
 		
@@ -98,14 +98,20 @@ class Master
 			$memcached = new \Memcached();
 			
 			if(!isset($backendConfig['servers']) || !$memcached->addServers($backendConfig['servers'])) {
-				trigger_error("Caching is disbaled as object for 'memcached' cache backend could not be instantiated. Check your 'memcached' cache backend configuration.  ".__METHOD__." at line no ".__LINE__, E_USER_WARNING);
+				trigger_error("Caching is disbaled as '$backendId' cache backend could not be initialized. Check '$backendId' cache backend configuration.", E_USER_WARNING);
 				return $backendObj;
 			}
 			
 			$backendObj = new SabreCacheBackend\Memcached($memcached);
 		}
-		else if($backendId == 'local_fs')
+		else if($backendId == 'local_fs') {
+			if(!file_exists(__CACHE_DIR__)) {
+				trigger_error("Caching is disbaled as '$backendId' cache backend could not be initialized. Check your '$backendId' cache backend configuration.", E_USER_WARNING);
+				return $backendObj;
+			}
+			
 			$backendObj = new Backend\LocalFS(__CACHE_DIR__);
+		}
 		else if($backendId == 'apcu')
 			$backendObj = new SabreCacheBackend\Apcu();
 		else if($backendId == 'memory')

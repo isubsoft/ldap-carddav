@@ -38,7 +38,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      *
      * @var string
      */
-    public static $cacheEntityName = 'principal';
+    public static $cacheEntityId = 'principal';
     
     /**
      * Cache object.
@@ -76,7 +76,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      */    
     private static $mandatoryProperties = ['id'];
     
-    private $systemUsersTableName = 'cards_system_user';
+    private $userTableName = 'cards_user';
     
     private static $cacheTtl = 86400;
 
@@ -92,7 +92,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
     public function __construct(array $config, \PDO $pdo) { 
         $this->config = $config;
         $this->pdo = $pdo;
-				$this->cache = (new CacheMaster($config, $pdo))->getBackend(self::$cacheEntityName);
+				$this->cache = (new CacheMaster($config, $pdo))->getBackend(self::$cacheEntityId);
     }
     
     private function setPrincipalBackendProperties()
@@ -111,7 +111,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
     }
     
     private static function getCacheKey($principalId) {
-    	return [self::$cacheEntityName, $principalId];
+    	return [self::$cacheEntityId, $principalId];
     }
     
     /**
@@ -261,7 +261,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         {
 		   			if(!isset($data[0]['entryuuid'][0]))
 		   			{
-							trigger_error("Could not obtain backend id for principal '$principalId' or may not have access to read it in " . __METHOD__ . " at line no " . __LINE__, E_USER_WARNING);
+							trigger_error("Could not obtain backend id for principal '$principalId'. Check access privileges in backend.", E_USER_WARNING);
 		   				throw new SabreDAVException\ServiceUnavailable();
 		   			}
 		   			
@@ -269,7 +269,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
             $principal['__backend_id'] = $data[0]['entryuuid'][0];
             
 						if(!$this->cache->set(CacheMaster::getKey(self::getCacheKey($principalId)), CacheMaster::encode($principal), (isset($this->config['cache']['principal']['ttl']) && is_int($this->config['cache']['principal']['ttl']) && $this->config['cache']['principal']['ttl'] > 0 && $this->config['cache']['principal']['ttl'] <= 2592000)?$this->config['cache']['principal']['ttl']:self::$cacheTtl))
-						  trigger_error("Could not set cache data: " . __METHOD__ . " at line no " . __LINE__, E_USER_WARNING);
+						  trigger_error("Could not set cache", E_USER_WARNING);
             
             $principal['id'] = $principalId;
             $principal['uri'] = $path;
@@ -392,4 +392,21 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
     {
         return null;
     }
+    
+		public function cacheResetRequired()
+		{
+			$cacheMaster = new CacheMaster($this->config, $this->pdo);
+			$cacheLastBackendId = $cacheMaster->getLastBackendId(self::$cacheEntityId);
+			$cacheBackendId = $cacheMaster->getBackendId(self::$cacheEntityId);
+
+			if($cacheBackendId != $cacheLastBackendId)
+				return true;
+				
+			return false;
+		}
+    
+		public function resetCache()
+		{
+			return $this->cache->clear() && (new CacheMaster($this->config, $this->pdo))->setLastBackendId(self::$cacheEntityId);
+		}
 }

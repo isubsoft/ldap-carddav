@@ -36,8 +36,19 @@ $nodes = [
 	new ISubsoft\DAV\CardDAV\AddressBookRoot($principalBackend, $carddavBackend)
 ];
 
-// Manage cache before processing the request
-$carddavBackend->manageCache();
+// Check cache before processing the request
+$entityBackend = [
+	'principal' => $principalBackend, 
+	'card' => $carddavBackend
+];
+
+foreach($entityBackend as $key => $value) {
+	if($value->cacheResetRequired() && !$value->resetCache()) {
+		trigger_error("Cache could not be reset for object type '$key'.", E_USER_WARNING);
+		http_response_code(503);
+		exit(1);
+	}
+}
 
 // The object tree needs in turn to be passed to the server class
 $server = new Sabre\DAV\Server($nodes);
