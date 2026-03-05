@@ -1709,7 +1709,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							{ 
 								if($cardValues['lastmodified'] < strtotime($data['data']['modifyTimestamp'][0]))
 								{
-									if(!$this->cache->set(CacheMaster::getKey(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri)), null -60))
+									if(!$this->cache->set(CacheMaster::getKey(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri)), null, -60))
 			    					trigger_error("Could not expire cache", E_USER_WARNING);
 										
 									$this->addChange($addressBookId, $cardUri, 'MODIFY');
