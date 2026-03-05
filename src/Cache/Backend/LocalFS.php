@@ -14,13 +14,34 @@ class LocalFS implements CacheInterface
 {
     public $basePath = null;
     private static $noTtlDefault = 86400;
+    public static $globalTtlFileName = '__global.ttl';
     
     public function __construct(string $basePath)
     {
     	$this->basePath = $basePath;
+    	$globalTtlFile = $this->basePath . '/' . self::$globalTtlFileName;
     	
-   		if(!file_exists($this->basePath))
-    		mkdir($this->basePath, 0755, true);
+	  	if(!file_exists($globalTtlFile) && file_put_contents($globalTtlFile, time()) === false) {
+	  		unlink($globalTtlFile);
+	  	}
+    }
+    
+    private function isExpired($key)
+    {
+			self::checkValidKey($key);
+			
+    	$globalTtlFile = $this->basePath . '/' . self::$globalTtlFileName;
+    	$ttlFile = $this->basePath . '/' . $key . ".ttl";
+    	$cacheFile = $this->basePath . '/' . $key;
+			
+    	$globalTtl = file_get_contents($globalTtlFile);
+    	$cacheFileMTime = filemtime($cacheFile);
+    	$ttl = file_get_contents($ttlFile);
+    	
+			if(($globalTtl !== false && $cacheFileMTime !== false && (int)$globalTtl !== 0 && $cacheFileMTime < (int)$globalTtl) || $ttl === false || ((int)$ttl !== 0 && time() > (int)$ttl))
+				return true;
+				
+			return false;
     }
 
     /**
@@ -37,15 +58,11 @@ class LocalFS implements CacheInterface
     public function get($key, $default = null)
     {
 			self::checkValidKey($key);
+			
+			if($this->isExpired($key))
+				return $default;
     		
     	$cacheFile = $this->basePath . '/' . $key;
-    	$ttlFile = $this->basePath . '/' . $key . ".ttl";
-    	
-   		$ttl = file_get_contents($ttlFile);
-   		
-			if($ttl === false || ((int)$ttl !== 0 && time() > (int)$ttl))
-				return $default;
-				
 			$cacheData = file_get_contents($cacheFile);
 			
 			if($cacheData === false)
@@ -72,8 +89,8 @@ class LocalFS implements CacheInterface
     {
 			self::checkValidKey($key);
     		
-    	$cacheFile = $this->basePath . '/' . $key;
     	$ttlFile = $this->basePath . '/' . $key . ".ttl";
+    	$cacheFile = $this->basePath . '/' . $key;
     	$setTtl = 0;
     	
     	if(!is_int($ttl) || $ttl > 2592000)
@@ -81,7 +98,7 @@ class LocalFS implements CacheInterface
     	else if($ttl !== 0)
     		$setTtl = $ttl + time();
     	
-	  	if(file_put_contents($ttlFile, $setTtl) == false || file_put_contents($cacheFile, $value) == false) {
+	  	if(file_put_contents($ttlFile, $setTtl) === false || file_put_contents($cacheFile, $value) === false) {
     		$this->delete($key);
 	  		return false;
 	  	}
@@ -103,8 +120,8 @@ class LocalFS implements CacheInterface
     {
 			self::checkValidKey($key);
     		
-    	$cacheFile = $this->basePath . '/' . $key;
     	$ttlFile = $this->basePath . '/' . $key . ".ttl";
+    	$cacheFile = $this->basePath . '/' . $key;
     	
 			return unlink($ttlFile) && unlink($cacheFile);
     }
@@ -116,13 +133,13 @@ class LocalFS implements CacheInterface
      */
     public function clear()
     {
-    	$filePattern = $this->basePath . '/' . '*';
+    	$globalTtlFile = $this->basePath . '/' . self::$globalTtlFileName;
     	
-    	if(file_exists($this->basePath))
-		  	foreach(glob($filePattern) as $file)
-		  		if(!unlink($file))
-		  			return false;
-    			
+	  	if(file_put_contents($globalTtlFile, time()) === false) {
+	  		unlink($globalTtlFile);
+	  		return false;
+	  	}
+	  	
     	return true;
     }
 
@@ -165,7 +182,7 @@ class LocalFS implements CacheInterface
     public function setMultiple($values, $ttl = null)
     {
     	foreach($values as $key => $value)
-    		if(!$this->set($key, $value))
+    		if(!$this->set($key, $value, $ttl))
     			return false;
     		
     	return true;
@@ -209,10 +226,10 @@ class LocalFS implements CacheInterface
     public function has($key)
     {
 			self::checkValidKey($key);
-			    		
+			
     	$cacheFile = $this->basePath . '/' . $key;
     	
-			return file_exists($cacheFile);
+			return !$this->isExpired($key) && file_exists($cacheFile);
     }
     
     private static function checkValidKey($key)
