@@ -298,7 +298,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      */
     function updatePrincipal($path, \Sabre\DAV\PropPatch $propPatch)
     {
-			throw new SabreDAVException\MethodNotAllowed("Operation not supported");
+			return;
     }
 
     /**
