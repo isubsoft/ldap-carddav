@@ -55,25 +55,22 @@ class Master
   	$this->cache = [];
   }
 	
-	private function wasBackendActive($backendId)
+	public function cacheResetRequired($entityId, $setBackendId)
 	{
-		if($backendId == self::$dummyBackend)
-			return true;
+		$backendId = ($setBackendId == self::$dummyBackend)?null:$setBackendId;
 		
 		try {
-				$query = 'SELECT 1 FROM ' . self::$entityCacheTableName . ' WHERE backend_id IS NOT NULL AND backend_id = ?';
+				$query = 'SELECT backend_id FROM ' . self::$entityCacheTableName . ' WHERE entity_id = ?';
 				$stmt = $this->pdo->prepare($query);
-				$stmt->execute([$backendId]);
+				$stmt->execute([$entityId]);
 				
 				$row = $stmt->fetch(\PDO::FETCH_ASSOC);
 				
-				if($row !== false)
+				if($row === false || $backendId != $row['backend_id'])
 					return true;
 		} 
 		catch (\Throwable $th) {
 			trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
-			
-			return true;
 		}
 		
 		return false;
@@ -236,12 +233,4 @@ class Master
 		
 		return self::recursive_decode(json_decode($value, true));
   }
-  
-	public function cacheResetRequired($backendId)
-	{
-		if(!$this->wasBackendActive($backendId))
-			return true;
-			
-		return false;
-	}
 }

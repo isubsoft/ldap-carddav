@@ -26,14 +26,13 @@ if(isset($argv[1]) && $argv[1] == 'housekeeping')
 	
 	// Cached entities
 	$cachedEntities = ['principal', 'card'];
-
-	// Reset cache if required
 	$cacheMaster = new ISubsoft\Cache\Master($config, $pdo);
 
+	// Create object for cache backends
 	foreach($cachedEntities as $entityId)
 		$cacheBackendId = $cacheMaster->getBackendId($entityId);
 	
-	// Delete stale cache once from each file cache backend
+	// Delete stale cache from each managed cache backend
 	foreach($cacheMaster->cache as $backendId => $cache) {
 		if($cache instanceof ISubsoft\Cache\Backend\ManagedInterface) {
 			if(!$cache->evictStale($batchSize)) {
