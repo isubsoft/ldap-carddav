@@ -143,11 +143,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      * @param array $config
      * @return void
      */
-    function __construct(array $config, \PDO $pdo, $principalBackend) {
+    function __construct(array $config, \PDO $pdo, $principalBackend, $cache) {
     	$this->principalBackend = $principalBackend;
 			$this->config = $config;
 			$this->pdo = $pdo;
-			$this->cache = (new CacheMaster($config, $pdo))->getBackend(self::$cacheEntityId);
+			$this->cache = $cache;
     }
     
 
@@ -2159,21 +2159,4 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 			
 			return;
     }
-
-		public function cacheResetRequired()
-		{
-			$cacheMaster = new CacheMaster($this->config, $this->pdo);
-			$cacheLastBackendId = $cacheMaster->getLastBackendId(self::$cacheEntityId);
-			$cacheBackendId = $cacheMaster->getBackendId(self::$cacheEntityId);
-
-			if($cacheBackendId != $cacheLastBackendId)
-				return true;
-				
-			return false;
-		}
-    
-		public function resetCache()
-		{
-			return $this->cache->clear() && (new CacheMaster($this->config, $this->pdo))->setLastBackendId(self::$cacheEntityId);
-		}
 }

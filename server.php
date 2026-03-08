@@ -24,31 +24,41 @@ $GLOBALS['currentUserPrincipalUri'] = null;
 $GLOBALS['currentUserPrincipalId'] = null;
 $GLOBALS['currentUserPrincipalLdapConn'] = null;
 
+// Cached entities
+$cachedEntities = ['principal', 'card'];
+
+// Reset cache if required
+$cacheMaster = new ISubsoft\Cache\Master($config, $pdo);
+$entityCache = [];
+
+foreach($cachedEntities as $entityId) {
+	$cacheBackendId = $cacheMaster->getBackendId($entityId);
+	$entityCache[$entityId] = $cacheMaster->cache[$cacheBackendId];
+	
+	if($cacheMaster->cacheResetRequired($cacheBackendId) && !$cacheMaster->cache[$cacheBackendId]->clear()) {
+		trigger_error("Cache could not be reset for backend '$cacheBackendId'.", E_USER_WARNING);
+		http_response_code(503);
+		exit(1);
+	}
+	
+	if(!$cacheMaster->setActiveBackend($entityId, $cacheBackendId)) {
+		trigger_error("Cache backend '$cacheBackendId' could not be set for $entityId.", E_USER_WARNING);
+		http_response_code(503);
+		exit(1);
+	}
+}
+
 // Backends
 $authBackend = new ISubsoft\DAV\Auth\Backend\LDAP($config);
-$principalBackend = new ISubsoft\DAV\DAVACL\PrincipalBackend\LDAP($config, $pdo);
+$principalBackend = new ISubsoft\DAV\DAVACL\PrincipalBackend\LDAP($config, $pdo, $entityCache['principal']);
 $propStoreBackend = new Sabre\DAV\PropertyStorage\Backend\PDO($pdo);
-$carddavBackend = new ISubsoft\DAV\CardDAV\Backend\LDAP($config, $pdo, $principalBackend);
+$carddavBackend = new ISubsoft\DAV\CardDAV\Backend\LDAP($config, $pdo, $principalBackend, $entityCache['card']);
 
 // Setting up the directory tree //
 $nodes = [
 	new ISubsoft\DAV\DAVACL\PrincipalCollection($principalBackend),
 	new ISubsoft\DAV\CardDAV\AddressBookRoot($principalBackend, $carddavBackend)
 ];
-
-// Check cache before processing the request
-$entityBackend = [
-	'principal' => $principalBackend, 
-	'card' => $carddavBackend
-];
-
-foreach($entityBackend as $key => $value) {
-	if($value->cacheResetRequired() && !$value->resetCache()) {
-		trigger_error("Cache could not be reset for object type '$key'.", E_USER_WARNING);
-		http_response_code(503);
-		exit(1);
-	}
-}
 
 // The object tree needs in turn to be passed to the server class
 $server = new Sabre\DAV\Server($nodes);

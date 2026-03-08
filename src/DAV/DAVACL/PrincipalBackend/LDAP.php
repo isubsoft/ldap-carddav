@@ -89,10 +89,10 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      * @param array $this->config
      * @return void
      */
-    public function __construct(array $config, \PDO $pdo) { 
+    public function __construct(array $config, \PDO $pdo, $cache) { 
         $this->config = $config;
         $this->pdo = $pdo;
-				$this->cache = (new CacheMaster($config, $pdo))->getBackend(self::$cacheEntityId);
+				$this->cache = $cache;
     }
     
     private function setPrincipalBackendProperties()
@@ -392,21 +392,4 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
     {
         return null;
     }
-    
-		public function cacheResetRequired()
-		{
-			$cacheMaster = new CacheMaster($this->config, $this->pdo);
-			$cacheLastBackendId = $cacheMaster->getLastBackendId(self::$cacheEntityId);
-			$cacheBackendId = $cacheMaster->getBackendId(self::$cacheEntityId);
-
-			if($cacheBackendId != $cacheLastBackendId)
-				return true;
-				
-			return false;
-		}
-    
-		public function resetCache()
-		{
-			return $this->cache->clear() && (new CacheMaster($this->config, $this->pdo))->setLastBackendId(self::$cacheEntityId);
-		}
 }

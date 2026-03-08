@@ -10,7 +10,7 @@ namespace ISubsoft\Cache\Backend;
 use Psr\SimpleCache\CacheInterface;
 use Psr\SimpleCache\InvalidArgumentException;
 
-class LocalFS implements CacheInterface
+class LocalFS implements CacheInterface, ManagedInterface
 {
     public $basePath = null;
     private static $noTtlDefault = 86400;
@@ -237,4 +237,41 @@ class LocalFS implements CacheInterface
     	if(!is_string($key) || !ctype_print($key) || preg_match('#/#', $key) === 1)
     		throw InvalidArgumentException();    
     }
+    
+    /**
+     * Delete stale items in cache.
+     *
+     * @param int $batchSize Maximum number of items to be deleted, value of 0 means no limit.
+     *
+     * @return bool
+     */
+		public function evictStale(int $batchSize = 0)
+		{
+			$count = 0;
+			
+			$dirHandle = opendir($this->basePath);
+			
+			if($dirHandle === false)
+				return false;
+			
+			while(($filename = readdir($dirHandle)) !== false) 
+			{
+				if(!is_file($this->basePath . '/' . $filename) || preg_match('#\.ttl$#', $filename) === 1)
+					continue;
+					
+				if($this->isExpired($filename)) {
+					if(!$this->delete($filename))
+						return false;
+
+					$count++;
+				}
+					
+				if($batchSize > 0 && $count >= $batchSize)
+					return true;
+			}
+			
+			closedir($dirHandle);
+			
+			return true;
+		}
 }
