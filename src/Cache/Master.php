@@ -13,6 +13,13 @@ use Sabre\DAV\Exception as SabreDAVException;
 class Master
 {
   /**
+   * Cache config
+   *
+   * @array
+   */
+	private $config;
+	
+  /**
    * PDO connection handle
    *
    * @var \PDO
@@ -20,104 +27,149 @@ class Master
   private $pdo;
     
 	private static $entityCacheTableName = 'entity_cache';
-	private $config;
 	
-	public static $allowedBackends = [
-		'principal' => ['memory', 'apcu', 'local_fs', 'memcached'],
-		'card' => ['memory', 'apcu', 'local_fs', 'memcached']
-	];
+  /**
+   * Dummy cache backend id
+   *
+   * @string
+   */
+	public static $dummyBackend = '__dummy__';
+	
+  /**
+   * Allowed cache backends
+   *
+   * @array
+   */
+	public static $allowedBackends = ['memory', 'apcu', 'local_fs', 'memcached'];
+
+  /**
+   * Backend object indexed by backend id
+   *
+   * @array
+   */	
+	public $cache;
 	
   public function __construct(array $config, \PDO $pdo) {
   	$this->config = $config['cache'];
   	$this->pdo = $pdo;
+  	$this->cache = [];
   }
 	
-	public function getLastBackendId($entityId)
+	private function wasBackendActive($backendId)
 	{
-		$backendId = null;
+		if($backendId == self::$dummyBackend)
+			return true;
 		
 		try {
-				$query = 'SELECT backend_id FROM ' . self::$entityCacheTableName . ' WHERE backend_id IS NOT NULL AND entity_id = ?';
+				$query = 'SELECT 1 FROM ' . self::$entityCacheTableName . ' WHERE backend_id IS NOT NULL AND backend_id = ?';
 				$stmt = $this->pdo->prepare($query);
-				$stmt->execute([$entityId]);
+				$stmt->execute([$backendId]);
 				
 				$row = $stmt->fetch(\PDO::FETCH_ASSOC);
 				
 				if($row !== false)
-					$backendId = $row['backend_id'];
+					return true;
 		} 
 		catch (\Throwable $th) {
 			trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
+			
+			return true;
 		}
 		
-		return $backendId;
+		return false;
 	}
 	
-	public function getBackendId($entityId)
+	public function setActiveBackend($entityId, $setBackendId)
 	{
-		return (isset($this->config[$entityId]['backend']) && is_string($this->config[$entityId]['backend']) && $this->config[$entityId]['backend'] != '')?$this->config[$entityId]['backend']:null;
-	}
-	
-	public function setLastBackendId($entityId)
-	{
-		if($this->getBackendId($entityId) != $this->getLastBackendId($entityId)) {		
-			try {
-					$query = 'UPDATE ' . self::$entityCacheTableName . ' SET backend_id = ? WHERE entity_id = ?';
+		$backendId = ($setBackendId == self::$dummyBackend)?null:$setBackendId;
+		
+		try {
+				$query = 'UPDATE ' . self::$entityCacheTableName . ' SET backend_id = ? WHERE entity_id = ?';
+				$stmt = $this->pdo->prepare($query);
+				$stmt->execute([$backendId, $entityId]);
+				
+				if(!$stmt->rowCount() > 0) {
+					$query = 'INSERT INTO ' . self::$entityCacheTableName . ' (entity_id, backend_id) VALUES (?, ?)';
 					$stmt = $this->pdo->prepare($query);
-					$stmt->execute([$this->getBackendId($entityId), $entityId]);
-					
-					if(!$stmt->rowCount() > 0) {
-						$query = 'INSERT INTO ' . self::$entityCacheTableName . ' (entity_id, backend_id) VALUES (?, ?)';
-						$stmt = $this->pdo->prepare($query);
-						$stmt->execute([$entityId, $this->getBackendId($entityId)]);
-					}
-			}
-			catch (\Throwable $th) {
-				trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
+					$stmt->execute([$entityId, $backendId]);
+				}
+		}
+		catch (\Throwable $th) {
+			trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 
-				return false;
-			}
+			return false;
 		}
 		
 		return true;
 	}
 
-	public function getBackend($entityId)
+	public function getBackendId($entityId)
 	{
-		$backendObj = new Backend\Dummy();
-		$backendId = $this->getBackendId($entityId);
+		$configuredBackendId = (isset($this->config[$entityId]['backend']) && is_string($this->config[$entityId]['backend']) && $this->config[$entityId]['backend'] != '')?$this->config[$entityId]['backend']:null;
 		
-		if($backendId != null && !in_array($backendId, self::$allowedBackends[$entityId])) {
-			trigger_error("Caching is disabled as '$backendId' is not a valid caching backend for '$entityId'. Check configuration.", E_USER_WARNING);
-			$backendId = null;
+		if($configuredBackendId != null && !in_array($configuredBackendId, self::$allowedBackends)) {
+			trigger_error("Caching is disabled as '$configuredBackendId' is not a valid caching backend. Check configuration.", E_USER_WARNING);
+			
+			$backendId = self::$dummyBackend;
+			
+			if(!isset($this->cache[$backendId]))
+				$this->cache[$backendId] = new Backend\Dummy();
+			
+			return $backendId;
 		}
 		
-		$backendConfig = !isset($this->config['backend'][$backendId])?null:$this->config['backend'][$backendId];
+		$backendConfig = !isset($this->config['backend'][$configuredBackendId])?null:$this->config['backend'][$configuredBackendId];
 		
-		if($backendId == 'memcached') {
+		if($configuredBackendId == null) {
+			$backendId = self::$dummyBackend;
+			
+			if(!isset($this->cache[$backendId]))
+				$this->cache[$backendId] = new Backend\Dummy();
+				
+				return $backendId;		
+		}
+		else if($configuredBackendId == 'memcached') {
 			$memcached = new \Memcached();
 			
 			if(!isset($backendConfig['servers']) || !$memcached->addServers($backendConfig['servers'])) {
-				trigger_error("Caching is disbaled as '$backendId' cache backend could not be initialized. Check '$backendId' cache backend configuration.", E_USER_WARNING);
-				return $backendObj;
+				trigger_error("Caching is disbaled as '$configuredBackendId' cache backend could not be initialized. Check '$configuredBackendId' cache backend configuration.", E_USER_WARNING);
+				
+				$backendId = self::$dummyBackend;
+				
+				if(!isset($this->cache[$backendId]))
+					$this->cache[$backendId] = new Backend\Dummy();
+				
+				return $backendId;
 			}
 			
-			$backendObj = new SabreCacheBackend\Memcached($memcached);
+			if(!isset($this->cache[$configuredBackendId]))
+				$this->cache[$configuredBackendId] = new SabreCacheBackend\Memcached($memcached);
 		}
-		else if($backendId == 'local_fs') {
+		else if($configuredBackendId == 'local_fs') {
 			if(!file_exists(__CACHE_DIR__)) {
-				trigger_error("Caching is disbaled as '$backendId' cache backend could not be initialized. Check your '$backendId' cache backend configuration.", E_USER_WARNING);
-				return $backendObj;
+				trigger_error("Caching is disbaled as '$configuredBackendId' cache backend could not be initialized. Check your '$configuredBackendId' cache backend configuration.", E_USER_WARNING);
+
+				$backendId = self::$dummyBackend;
+				
+				if(!isset($this->cache[$backendId]))
+					$this->cache[$backendId] = new Backend\Dummy();
+				
+				return $backendId;
 			}
 			
-			$backendObj = new Backend\LocalFS(__CACHE_DIR__);
+			if(!isset($this->cache[$configuredBackendId]))
+				$this->cache[$configuredBackendId] = new Backend\LocalFS(__CACHE_DIR__);
 		}
-		else if($backendId == 'apcu')
-			$backendObj = new SabreCacheBackend\Apcu();
-		else if($backendId == 'memory')
-			$backendObj = new SabreCacheBackend\Memory();
+		else if($configuredBackendId == 'apcu') {
+			if(!isset($this->cache[$configuredBackendId]))
+				$this->cache[$configuredBackendId] = new SabreCacheBackend\Apcu();
+		}
+		else if($configuredBackendId == 'memory') {
+			if(!isset($this->cache[$configuredBackendId]))
+				$this->cache[$configuredBackendId] = new SabreCacheBackend\Memory();
+		}
 		
-		return $backendObj;
+		return $configuredBackendId;
 	}
 	
 	public static function getKey(array $key)
@@ -184,4 +236,12 @@ class Master
 		
 		return self::recursive_decode(json_decode($value, true));
   }
+  
+	public function cacheResetRequired($backendId)
+	{
+		if(!$this->wasBackendActive($backendId))
+			return true;
+			
+		return false;
+	}
 }

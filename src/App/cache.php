@@ -1,0 +1,58 @@
+<?php 
+/**************************************************************
+* Copyright (C) 2023-2025 ISub Softwares (OPC) Private Limited
+**************************************************************/
+
+/*import database connection*/
+require_once __DIR__ . '/Bootstrap.php';
+
+/* load classes */
+require_once __BASE_DIR__ . '/vendor/autoload.php';
+
+if(isset($argv[1]) && $argv[1] == 'housekeeping')
+{
+	$exitCode = 0;
+	$batchSize = 0;
+	
+	if(isset($argv[2]))
+		$batchSize = $argv[2];
+			
+	if(!settype($argv[2], 'integer') || $batchSize < 0) {
+		trigger_error("Invalid batch size provided. Cannot continue. Quitting.", E_USER_WARNING);
+		exit(1);
+	}
+			
+	echo "Housekeeping cache ...\n";
+	
+	// Cached entities
+	$cachedEntities = ['principal', 'card'];
+
+	// Reset cache if required
+	$cacheMaster = new ISubsoft\Cache\Master($config, $pdo);
+
+	foreach($cachedEntities as $entityId)
+		$cacheBackendId = $cacheMaster->getBackendId($entityId);
+	
+	// Delete stale cache once from each file cache backend
+	foreach($cacheMaster->cache as $backendId => $cache) {
+		if($cache instanceof ISubsoft\Cache\Backend\ManagedInterface) {
+			if(!$cache->evictStale($batchSize)) {
+				$exitCode = 1;
+				
+				trigger_error("Could not complete eviction of stale items for backend '$backendId'", E_USER_WARNING);
+			}
+		}
+	}
+	
+	if($exitCode === 0)
+		echo "Complete\n";
+		
+	exit($exitCode);
+}
+else
+{
+	error_log("No valid argument provided. Nothing to do. Quitting.\n");
+	exit;
+}
+
+exit;
