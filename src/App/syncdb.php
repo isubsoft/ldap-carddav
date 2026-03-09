@@ -9,22 +9,28 @@
 
 function printHelp($argv)
 {
-	error_log("");
 	error_log("Usage: " . $argv[0] . " action [parameters]");
 	error_log("");
-	error_log("Actions - init, manage (default), housekeeping.");
+	error_log("-- Actions");
+	error_log("help:             Print this help and exit.");
+	error_log("init:             Initialize sync database.");
+	error_log("manage (default): Manage entities in sync database.");
+	error_log("housekeeping:     Physically delete logically deleted records.");
 	error_log("");
-	error_log("Parameters for action init.");
-	error_log("-- none --");
+	error_log("-- Parameter(s) for action help.");
+	error_log("none");
 	error_log("");
-	error_log("Parameters for action manage.");
+	error_log("-- Parameter(s) for action init.");
+	error_log("none");
+	error_log("");
+	error_log("-- Parameter(s) for action manage.");
 	error_log("entity (string): Entity to act upon. Valid values are user, addressbook.");
 	error_log("");
-	error_log("Parameters for entity user.");
+	error_log("-- Parameter(s) for entity user.");
 	error_log("operation (optional, string): Perform this operation on the entity. Valid value is delete.");
 	error_log("user id (string): entryUUID of the user from backend.");
 	error_log("");
-	error_log("Parameters for action housekeeping.");
+	error_log("-- Parameter(s) for action housekeeping.");
 	error_log("batch size (optional, integer): Restrict action to maximum of these many items. Should be >= 1, Defaults to 1000. Since actions can be time consuming set this parameter to a value in range 1000 to 10000 to be efficient. Avoid setting this to a very large value as it may cause performance issues.");
 	
 	return;
@@ -198,6 +204,7 @@ elseif(isset($argv[1]) && $argv[1] == 'housekeeping')
 if(!$initialized)
 {
   	error_log("[NOTE] Sync database has not been initialized. Initialize it first.");
+  	error_log("");
 		printHelp($argv);
   	exit(1);
 }
@@ -237,6 +244,7 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 			else
 			{
 				error_log("[ERROR] User id not provided.");
+  			error_log("");
 				printHelp($argv);
 				exit(1);
 			}
@@ -250,10 +258,16 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 				error_log("[ERROR] User id not provided.");
 				exit(1);
 			}
+			
+			$option = readline("\nAre you sure you want to proceed (y/N): ");
+			
+			if($option == '' || ($option != 'Y' && $option != 'y'))
+				exit;
 		}
 		else
 		{
 			error_log("[ERROR] '$argv[3]' is not a valid operation. Quitting.");
+  		error_log("");
 			printHelp($argv);
 			exit(1);
 		}
@@ -332,6 +346,11 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 			}
 			else if($options[$operation] == 'add')
 			{
+				$option = readline("\nAre you sure you want to proceed (y/N): ");
+				
+				if($option == '' || ($option != 'Y' && $option != 'y'))
+					exit;
+  	
 				if(addAddressBook($oldAddressBook) == false)
 					exit(1);
 			}
@@ -343,6 +362,11 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 			  		error_log("[ERROR] Address book '$oldAddressBook' has not been renamed to '$newAddressbook' in the configuration file. Rename it in the configuration file and try again.");
 						exit(1);
 					}
+					
+					$option = readline("\nAre you sure you want to proceed (y/N): ");
+					
+					if($option == '' || ($option != 'Y' && $option != 'y'))
+						exit;
 
 				  $query = 'UPDATE '. $addressBooksTableName. ' SET addressbook_id = ? WHERE addressbook_id = ?';
 				  $stmt = $pdo->prepare($query);
@@ -363,6 +387,11 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 			  		error_log("[ERROR] Address book '$oldAddressBook' is present in the configuration file. Delete it from configuration file and try again.");
 						exit(1);
 					}
+					
+					$option = readline("\nAre you sure you want to proceed (y/N): ");
+					
+					if($option == '' || ($option != 'Y' && $option != 'y'))
+						exit;
 							
 				  $query = 'DELETE FROM '. $addressBooksTableName .' WHERE addressbook_id = ?';
 				  $stmt = $pdo->prepare($query);
@@ -387,6 +416,7 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 else
 {
 	error_log("[ERROR] '$argv[1]' is not a valid action. Quitting.");
+ 	error_log("");
 	printHelp($argv);
 	exit(1);
 }
