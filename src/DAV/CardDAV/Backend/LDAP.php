@@ -270,12 +270,14 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					  
 					  $row = $stmt->fetch(\PDO::FETCH_ASSOC);
 					  
-					  if($row === false)
+					  if($row === false) {
+							trigger_error("Address book '$addressBookId' is not present in sync database. Excluded.", E_USER_NOTICE);
 					  	continue;
+					  }
 					  	
 						if($addressBookConfig['user_specific'] != $row['user_specific'] || $addressBookConfig['writable'] != $row['writable'])
 						{
-							trigger_error("Configuration properties do not match that of sync database for address book '$addressBookId'. Excluded.", E_USER_WARNING);
+							trigger_error("Configuration properties do not match that of sync database for address book '$addressBookId'. Excluded.", E_USER_NOTICE);
 							continue;
 						}
 						
