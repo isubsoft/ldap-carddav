@@ -8,7 +8,7 @@ class Principal extends \Sabre\DAVACL\Principal
 	{
 		return [
 		  [
-		      'privilege' => '{DAV:}read',
+		      'privilege' => '{DAV:}all',
 		      'principal' => '{DAV:}owner',
 		      'protected' => true,
 		  ],

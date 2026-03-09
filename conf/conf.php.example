@@ -90,8 +90,8 @@ $config['server']['ldap'] = [
 
 // Caching backend to enable specific to object type. If not set then caching is disabled.
 // It is strongly recommended to keep caching enabled in a production environment.
-$config['cache']['card']['backend'] = 'local_fs';
 $config['cache']['principal']['backend'] = 'local_fs';
+$config['cache']['card']['backend'] = 'local_fs';
 
 // TTL (in seconds) for cached items. TTL should be greater than 0 or less than or equal to 2592000 (30 days) else default value will be used.
 // Defaults to 1 day.
@@ -153,11 +153,20 @@ $config['principal']['ldap'] = [
   'search_bind_pw' => '<secret>',
   'scope' => 'list', // search mode: sub|base|list
 
-	// Principal property => LDAP user attribute field map (Use primary name of backend field only and not their alias name here)
-  'fieldmap' => [	'id' => 'uid', 					// 'id' is equal to the username used by the principal during authentication.
-  															 					// Make sure it is mapped to an appropriate user attribute in LDAP.
-  								'displayname' => 'cn', 	// 'displayname' is a commonly used name of the principal.
-  								'mail' => 'mail' 				// 'mail' is an email id of the principal.
+	// Principal property => LDAP attribute field map (Use primary name of backend field only and not their alias name here)
+	//
+  // The following properties can be mapped
+  //  id: Authentication username (cardinality 1*)
+  //  display_name: Display name (cardinality *1)
+  //  mail_primary: Primary e-mail address (cardinality *1)
+  //  mail: E-mail address (cardinality *)
+  //
+  // If multiple values for an attribute are returned from LDAP where maximum cardinality is 1
+  // then only the first value is used.
+  'fieldmap' => [	'id' => 'uid',
+  								'display_name' => 'cn',
+  								'mail_primary' => 'mail',
+  								'mail' => 'mail'
   							]
 ];
 
@@ -172,6 +181,10 @@ $config['card']['addressbook']['ldap']['me'] = [
 	// lead to this application not processing requests for this address book.
 	'user_specific' 	=> true, // If this is true username placeholder can be used in applicable places
 	'writable'     	 	=> true, // If true (default) then new contacts can be created and existing ones can be updated and deleted
+	
+	// Use this address book as a directory (i.e. for lookups only) for Apple devices
+	// Defaults to false
+	//  'directory'				=> true,
 	
 	// Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
 	// of the address book from backend every time they sync their address book. Set the below to 
@@ -400,6 +413,10 @@ $config['card']['addressbook']['ldap']['global'] = [
 	'user_specific' 	=> false, // If this is true username placeholder can be used in applicable places
 	'writable'     	 	=> false, // If true (default) then new contacts can be created and existing ones can be updated and deleted
 	
+	// Use this address book as a directory (i.e. for lookups only) for Apple devices
+	// Defaults to false
+	//  'directory'				=> true,
+	
 	// Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
 	// of the address book from backend every time they sync their address book. Set the below to 
 	// prevent full address book refresh from backend at least for this interval (in seconds).
@@ -626,6 +643,10 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	// lead to this application not processing requests for this address book.
 	'user_specific' 	=> true, 	// If this is true username placeholder can be used in applicable places
 	'writable'     	 	=> true, 	// If true (default) then new contacts can be created and existing ones can be updated and deleted
+	
+	// Use this address book as a directory (i.e. for lookups only) for Apple devices
+	// Defaults to false
+	//  'directory'				=> true,
 
 	// Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
 	// of the address book from backend every time they sync their address book. Set the below to 

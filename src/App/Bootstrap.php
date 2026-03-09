@@ -76,8 +76,8 @@ try {
     
     if($pdo_dsn == null)
     {
-			trigger_error("Sync database connection not defined.", E_USER_WARNING);
-			http_response_code(500);
+			trigger_error("Sync database connection not defined. Check configuration.", E_USER_WARNING);
+			http_response_code(503);
 			exit(1);
     }
     

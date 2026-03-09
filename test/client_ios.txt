@@ -1,3 +1,81 @@
+---- Retrieve information of a principal
+
+-- REQUEST
+curl --dump-header /dev/stderr --silent --location -u %username:%password --request PROPFIND '%base_url/principals/%principal' \
+--header 'Content-Type: application/xml' \
+--header 'Depth: 1' \
+--header 'Accept-Charset: utf-8' \
+--data '<d:propfind xmlns:d="DAV:" xmlns:card="urn:ietf:params:xml:ns:carddav" xmlns:cs="http://calendarserver.org/ns/">
+  <d:prop>
+    <d:principal-collection-set />
+    <d:supported-report-set />
+    <d:resource-id />
+    <d:displayname />
+    <cs:email-address-set />
+    <card:addressbook-home-set />
+    <card:directory-gateway />
+  </d:prop>
+</d:propfind>'
+
+-- SAMPLE RESPONSE BODY
+<?xml version="1.0"?>
+<d:multistatus xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns" xmlns:card="urn:ietf:params:xml:ns:carddav">
+    <d:response>
+        <d:href>/principals/PRINCIPAL/</d:href>
+        <d:propstat>
+            <d:prop>
+                <d:principal-collection-set>
+                    <d:href>/principals/</d:href>
+                </d:principal-collection-set>
+                <d:supported-report-set>
+                    <d:supported-report>
+                        <d:report>
+                            <d:expand-property/>
+                        </d:report>
+                    </d:supported-report>
+                    <d:supported-report>
+                        <d:report>
+                            <d:principal-match/>
+                        </d:report>
+                    </d:supported-report>
+                    <d:supported-report>
+                        <d:report>
+                            <d:principal-property-search/>
+                        </d:report>
+                    </d:supported-report>
+                    <d:supported-report>
+                        <d:report>
+                            <d:principal-search-property-set/>
+                        </d:report>
+                    </d:supported-report>
+                </d:supported-report-set>
+                <d:displayname>Principal name</d:displayname>
+                <x1:email-address-set xmlns:x1="http://calendarserver.org/ns/">
+                    <x1:email-address xmlns:x1="http://calendarserver.org/ns/">
+                        <x1:email-address-set xmlns:x1="http://calendarserver.org/ns/">emailid@example.org</x1:email-address-set>
+                        <x1:email-address-set xmlns:x1="http://calendarserver.org/ns/">emailid@example.org</x1:email-address-set>
+                    </x1:email-address>
+                </x1:email-address-set>
+                <card:addressbook-home-set>
+                    <d:href>/addressbooks/PRINCIPAL/</d:href>
+                </card:addressbook-home-set>
+                <card:directory-gateway>
+                    <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK</d:href>
+                </card:directory-gateway>
+            </d:prop>
+            <d:status>HTTP/1.1 200 OK</d:status>
+        </d:propstat>
+        <d:propstat>
+            <d:prop>
+                <d:resource-id/>
+            </d:prop>
+            <d:status>HTTP/1.1 404 Not Found</d:status>
+        </d:propstat>
+    </d:response>
+</d:multistatus>
+
+---------------------------------------------------------------------------------
+
 ---- Retrieve information on address books of a principal
 
 -- REQUEST
@@ -69,6 +147,9 @@ curl --dump-header /dev/stderr --silent --location -u %username:%password --requ
                         <d:read-current-user-privilege-set/>
                     </d:privilege>
                 </d:current-user-privilege-set>
+                <x1:me-card xmlns:x1="http://calendarserver.org/ns/">
+                    <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK/CARD_URI</d:href>
+                </x1:me-card>
                 <d:owner>
                     <d:href>/principals/PRINCIPAL/</d:href>
                 </d:owner>
@@ -103,13 +184,12 @@ curl --dump-header /dev/stderr --silent --location -u %username:%password --requ
         <d:propstat>
             <d:prop>
                 <d:add-member/>
-                <x1:bulk-requests xmlns:x1="http://me.com/_namespace/"/>
+                <x2:bulk-requests xmlns:x2="http://me.com/_namespace/"/>
                 <d:displayname/>
                 <card:max-image-size/>
                 <card:max-resource-size/>
-                <x2:me-card xmlns:x2="http://calendarserver.org/ns/"/>
-                <x2:push-transports xmlns:x2="http://calendarserver.org/ns/"/>
-                <x2:pushkey xmlns:x2="http://calendarserver.org/ns/"/>
+                <x1:push-transports xmlns:x1="http://calendarserver.org/ns/"/>
+                <x1:pushkey xmlns:x1="http://calendarserver.org/ns/"/>
                 <d:quota-available-bytes/>
                 <d:quota-used-bytes/>
                 <d:resource-id/>
@@ -157,7 +237,7 @@ curl --dump-header /dev/stderr --silent --location -u %username:%password --requ
                         <d:read-current-user-privilege-set/>
                     </d:privilege>
                 </d:current-user-privilege-set>
-                <d:displayname>Test Address Book</d:displayname>
+                <d:displayname>Address book name</d:displayname>
                 <card:max-resource-size>10000000</card:max-resource-size>
                 <d:owner>
                     <d:href>/principals/PRINCIPAL/</d:href>
@@ -210,11 +290,11 @@ curl --dump-header /dev/stderr --silent --location -u %username:%password --requ
         <d:propstat>
             <d:prop>
                 <d:add-member/>
-                <x1:bulk-requests xmlns:x1="http://me.com/_namespace/"/>
+                <x2:bulk-requests xmlns:x2="http://me.com/_namespace/"/>
                 <card:max-image-size/>
-                <x2:me-card xmlns:x2="http://calendarserver.org/ns/"/>
-                <x2:push-transports xmlns:x2="http://calendarserver.org/ns/"/>
-                <x2:pushkey xmlns:x2="http://calendarserver.org/ns/"/>
+                <x1:me-card xmlns:x1="http://calendarserver.org/ns/"/>
+                <x1:push-transports xmlns:x1="http://calendarserver.org/ns/"/>
+                <x1:pushkey xmlns:x1="http://calendarserver.org/ns/"/>
                 <d:quota-available-bytes/>
                 <d:quota-used-bytes/>
                 <d:resource-id/>
@@ -237,7 +317,7 @@ curl --dump-header /dev/stderr --silent --location -u %username:%password --requ
                         <d:read-current-user-privilege-set/>
                     </d:privilege>
                 </d:current-user-privilege-set>
-                <d:displayname>Test Address Book</d:displayname>
+                <d:displayname>Address book name</d:displayname>
                 <card:max-resource-size>10000000</card:max-resource-size>
                 <d:owner>
                     <d:href>/principals/PRINCIPAL/</d:href>
@@ -245,6 +325,7 @@ curl --dump-header /dev/stderr --silent --location -u %username:%password --requ
                 <d:resourcetype>
                     <d:collection/>
                     <card:addressbook/>
+                    <card:directory/>
                 </d:resourcetype>
                 <d:supported-report-set>
                     <d:supported-report>
@@ -290,11 +371,11 @@ curl --dump-header /dev/stderr --silent --location -u %username:%password --requ
         <d:propstat>
             <d:prop>
                 <d:add-member/>
-                <x1:bulk-requests xmlns:x1="http://me.com/_namespace/"/>
+                <x2:bulk-requests xmlns:x2="http://me.com/_namespace/"/>
                 <card:max-image-size/>
-                <x2:me-card xmlns:x2="http://calendarserver.org/ns/"/>
-                <x2:push-transports xmlns:x2="http://calendarserver.org/ns/"/>
-                <x2:pushkey xmlns:x2="http://calendarserver.org/ns/"/>
+                <x1:me-card xmlns:x1="http://calendarserver.org/ns/"/>
+                <x1:push-transports xmlns:x1="http://calendarserver.org/ns/"/>
+                <x1:pushkey xmlns:x1="http://calendarserver.org/ns/"/>
                 <d:quota-available-bytes/>
                 <d:quota-used-bytes/>
                 <d:resource-id/>
@@ -341,7 +422,7 @@ curl --dump-header /dev/stderr --silent --location -u %username:%password --requ
                         <d:read-current-user-privilege-set/>
                     </d:privilege>
                 </d:current-user-privilege-set>
-                <d:displayname>Test Address Book</d:displayname>
+                <d:displayname>Address book name</d:displayname>
                 <card:max-resource-size>10000000</card:max-resource-size>
                 <d:owner>
                     <d:href>/principals/PRINCIPAL/</d:href>
@@ -394,11 +475,11 @@ curl --dump-header /dev/stderr --silent --location -u %username:%password --requ
         <d:propstat>
             <d:prop>
                 <d:add-member/>
-                <x1:bulk-requests xmlns:x1="http://me.com/_namespace/"/>
+                <x2:bulk-requests xmlns:x2="http://me.com/_namespace/"/>
                 <card:max-image-size/>
-                <x2:me-card xmlns:x2="http://calendarserver.org/ns/"/>
-                <x2:push-transports xmlns:x2="http://calendarserver.org/ns/"/>
-                <x2:pushkey xmlns:x2="http://calendarserver.org/ns/"/>
+                <x1:me-card xmlns:x1="http://calendarserver.org/ns/"/>
+                <x1:push-transports xmlns:x1="http://calendarserver.org/ns/"/>
+                <x1:pushkey xmlns:x1="http://calendarserver.org/ns/"/>
                 <d:quota-available-bytes/>
                 <d:quota-used-bytes/>
                 <d:resource-id/>
@@ -436,6 +517,16 @@ curl --dump-header /dev/stderr --silent --location -u %username:%password --requ
                 <d:sync-token>http://sabre.io/ns/sync/SYNC_TOKEN</d:sync-token>
             </d:prop>
             <d:status>HTTP/1.1 200 OK</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK/CARD_URI</d:href>
+        <d:propstat>
+            <d:prop>
+                <x1:getctag xmlns:x1="http://calendarserver.org/ns/"/>
+                <d:sync-token/>
+            </d:prop>
+            <d:status>HTTP/1.1 404 Not Found</d:status>
         </d:propstat>
     </d:response>
     <d:response>

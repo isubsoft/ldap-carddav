@@ -20,14 +20,48 @@ require_once __BASE_DIR__ . '/vendor/autoload.php';
 // Set log level
 error_reporting($GLOBALS['log_level']);
 
+$GLOBALS['currentUserPrincipalUri'] = null;
 $GLOBALS['currentUserPrincipalId'] = null;
 $GLOBALS['currentUserPrincipalLdapConn'] = null;
 
+// Cache
+$cachedEntities = ['principal', 'card'];
+
+// Create object for cache backends. Clear cache where required.
+$entityCache = [];
+
+$cacheMaster = new ISubsoft\Cache\Master($config, $pdo);
+$resetCache = [];
+
+foreach($cachedEntities as $entityId) {
+	$cacheBackendId = $cacheMaster->getBackendId($entityId);
+	$entityCache[$entityId] = $cacheMaster->cache[$cacheBackendId];
+	
+	if($cacheMaster->cacheResetRequired($entityId, $cacheBackendId))
+		$resetCache[$cacheBackendId] = $cacheMaster->cache[$cacheBackendId];
+	
+	if(!$cacheMaster->setActiveBackend($entityId, $cacheBackendId)) {
+		trigger_error("Cache backend '$cacheBackendId' could not be set for $entityId.", E_USER_WARNING);
+		http_response_code(503);
+		exit(1);
+	}
+}
+
+foreach($resetCache as $cacheBackendId => $cache)
+	if(!$cache->clear()) {
+		trigger_error("Cache could not be cleared for backend '$cacheBackendId'.", E_USER_WARNING);
+		http_response_code(503);
+		exit(1);
+	}
+	
+// Destroy what is no longer required.
+unset($cacheMaster, $resetCache);
+
 // Backends
 $authBackend = new ISubsoft\DAV\Auth\Backend\LDAP($config);
-$principalBackend = new ISubsoft\DAV\DAVACL\PrincipalBackend\LDAP($config, $pdo);
+$principalBackend = new ISubsoft\DAV\DAVACL\PrincipalBackend\LDAP($config, $pdo, $entityCache['principal']);
 $propStoreBackend = new Sabre\DAV\PropertyStorage\Backend\PDO($pdo);
-$carddavBackend = new ISubsoft\DAV\CardDAV\Backend\LDAP($config, $pdo, $principalBackend);
+$carddavBackend = new ISubsoft\DAV\CardDAV\Backend\LDAP($config, $pdo, $principalBackend, $entityCache['card']);
 
 // Setting up the directory tree //
 $nodes = [
@@ -53,27 +87,16 @@ $aclPlugin->hideNodesFromListings = true;
 
 $server->addPlugin($aclPlugin);
 
-// Add property storage plugin
-$propStorePlugin = new Sabre\DAV\PropertyStorage\Plugin($propStoreBackend);
-
-$propStorePlugin->pathFilter = function($path) {
-	$addressbookPathRegexp = '#^addressbooks/[^/]+$#';
-	
-	if (preg_match($addressbookPathRegexp, $path) === 1)
-		return true;
-
-	return false;
-};
-
-$server->addPlugin($propStorePlugin);
-
 // Add carddav plugin
-$cardDavPlugin = new ISubsoft\DAV\CardDAV\Plugin();
+$cardDavPlugin = new ISubsoft\DAV\CardDAV\Plugin($carddavBackend);
 
 if($GLOBALS['max_payload_size'] != null)
 	$cardDavPlugin->setResourceSize($GLOBALS['max_payload_size']);
 
 $server->addPlugin($cardDavPlugin);
+
+// Add property storage plugin
+$server->addPlugin(new ISubsoft\DAV\PropertyStorage\Plugin($propStoreBackend));
 
 // Add webdav sync plugin
 if($GLOBALS['enable_incremental_sync'])
