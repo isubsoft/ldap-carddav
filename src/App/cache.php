@@ -3,6 +3,19 @@
 * Copyright (C) 2023-2025 ISub Softwares (OPC) Private Limited
 **************************************************************/
 
+/**
+* This script is used to manage application cache.
+**/
+
+function print_help($argv)
+{
+	echo "\n";
+	echo "Usage: " . $argv[0] . " action [parameters]\n";
+	echo "\n";
+	echo "Parameters for action housekeeping.\n";
+	echo "batch size (optional, integer >= 0, 0 means no limit, defaults to no limit): Restrict action to maximum of these many items. Since actions can be time consuming set this parameter to a small value like 1000 to finish early. Useful when used from a scheduler.\n";
+}
+
 /*import database connection*/
 require_once __DIR__ . '/Bootstrap.php';
 
@@ -18,7 +31,8 @@ if(isset($argv[1]) && $argv[1] == 'housekeeping')
 		$batchSize = $argv[2];
 			
 	if(!settype($argv[2], 'integer') || $batchSize < 0) {
-		trigger_error("Invalid batch size provided. Cannot continue. Quitting.", E_USER_WARNING);
+		error_log("Invalid batch size provided. Cannot continue. Quitting.");
+		print_help($argv);
 		exit(1);
 	}
 			
@@ -38,7 +52,7 @@ if(isset($argv[1]) && $argv[1] == 'housekeeping')
 			if(!$cache->evictStale($batchSize)) {
 				$exitCode = 1;
 				
-				trigger_error("Could not complete eviction of stale items for backend '$backendId'", E_USER_WARNING);
+				error_log("Could not complete eviction of stale items for backend '$backendId'.");
 			}
 		}
 	}
@@ -50,7 +64,8 @@ if(isset($argv[1]) && $argv[1] == 'housekeeping')
 }
 else
 {
-	error_log("No valid argument provided. Nothing to do. Quitting.\n");
+	error_log("No valid argument provided. Nothing to do. Quitting.");
+	print_help($argv);
 	exit;
 }
 
