@@ -3,12 +3,47 @@
 * Copyright (C) 2023-2025 ISub Softwares (OPC) Private Limited
 **************************************************************/
 
+/**
+* This script is used to manage sync database.
+**/
+
+function printHelp($argv)
+{
+	error_log("Usage: " . $argv[0] . " action [parameters]");
+	error_log("");
+	error_log("-- Actions");
+	error_log("help:             Print this help and exit.");
+	error_log("init:             Initialize sync database.");
+	error_log("manage (default): Manage entities in sync database.");
+	error_log("housekeeping:     Physically delete logically deleted records.");
+	error_log("");
+	error_log("-- Parameter(s) for action help.");
+	error_log("none");
+	error_log("");
+	error_log("-- Parameter(s) for action init.");
+	error_log("none");
+	error_log("");
+	error_log("-- Parameter(s) for action manage.");
+	error_log("entity (string): Entity to act upon. Valid values are user, addressbook.");
+	error_log("");
+	error_log("-- Parameter(s) for entity user.");
+	error_log("operation (optional, string): Perform this operation on the entity. Valid value is delete.");
+	error_log("user id (string): entryUUID of the user from backend.");
+	error_log("");
+	error_log("-- Parameter(s) for action housekeeping.");
+	error_log("batch size (optional, integer): Restrict action to maximum of these many items. Should be >= 1, Defaults to 1000. Since actions can be time consuming set this parameter to a value in range 1000 to 10000 to be efficient. Avoid setting this to a very large value as it may cause performance issues.");
+	
+	return;
+}
+
 /*import database connection*/
 require_once __DIR__ . '/Bootstrap.php';
 
 /*database Tables*/
 $addressBooksTableName = 'cards_addressbook';
 $userTableName = 'cards_user';
+$backendMapTableName = 'cards_backend_map';
+$fullSyncTableName = 'cards_full_sync';
 
 $initialized = true;
 
@@ -21,7 +56,7 @@ function addAddressBook($addressbookName = null)
 	
 	if($addressbookName == null)
 	{
-		echo "[ERROR] Address book name not provided.";
+		error_log("[ERROR] Address book name not provided.");
 		return false;
 	}
 		
@@ -29,7 +64,7 @@ function addAddressBook($addressbookName = null)
 	{
 		if(!isset($config['card']['addressbook']['ldap'][$addressbookName]))
 		{
-				echo "[ERROR] Address book is not configured in configuration file.";
+				error_log("[ERROR] Address book '$addressbookName' is not present in the configuration file. Add it to configuration file and try again.");
 				return false;    	
 		}
     
@@ -39,18 +74,18 @@ function addAddressBook($addressbookName = null)
 		$query = 'INSERT INTO '. $addressBooksTableName .' (addressbook_id, user_specific, writable) VALUES (?, ?, ?)';
 		$stmt = $pdo->prepare($query);
 		$stmt->execute([$addressbookName, (int)$userSpecific, (int)$writable]);
-		echo "\nAddress book '$addressbookName' has been successfully added to sync database.";
+		echo "Address book '$addressbookName' has been successfully added to sync database.\n";
     
   	} catch (\Throwable $th) {
-    	error_log("[ERROR] Some unexpected error occurred while executing database operation - ".$th->getMessage());
-		return false;
+    	trigger_error("Some unexpected error occurred while executing database operation - ".$th->getMessage(), E_USER_WARNING);
+			return false;
   }
 	
 	return true;
 }
 
 try {
-	$query = 'SELECT * FROM '. $addressBooksTableName .' LIMIT 1' ;
+	$query = 'SELECT * FROM '. $addressBooksTableName;
 	$stmt = $pdo->prepare($query);
 	$stmt->execute([]);
 
@@ -60,20 +95,23 @@ try {
 		$initialized = false;
 }
 catch (\Throwable $th) {
-    error_log("[ERROR] Some unexpected error occurred in database - ".$th->getMessage());
+    trigger_error("Some unexpected error occurred in database - ".$th->getMessage(), E_USER_WARNING);
     exit(1);
 }
 
-if(isset($argv[1]) && $argv[1] == 'init')
+if(isset($argv[1]) && $argv[1] == 'help')
 {
-		echo "Initializing sync database ...";
+	printHelp($argv);
+	exit;
+}
+else if(isset($argv[1]) && $argv[1] == 'init')
+{
+		echo "Initializing sync database ...\n";
 		
 		if($initialized)
 		{
-			echo "\n[INFO] Sync database has already been initialized";
-		  
-			echo "\n";
-		  	exit;
+			error_log("[NOTE] Sync database has already been initialized");
+		  exit;
 		}
 		
     try {
@@ -83,204 +121,289 @@ if(isset($argv[1]) && $argv[1] == 'init')
           	{
           		if(addAddressBook($addressBooksName) == false)
           		{
-          			echo "\n[ERROR] Failed to add address book '$addressBooksName'. Sync database initialization failed. Reverting changes.";
+          			error_log("[ERROR] Failed to add address book '$addressBooksName'. Sync database initialization failed. Reverting changes.");
           		
-					$query = 'DELETE * FROM '. $addressBooksTableName;
-					$stmt = $pdo->prepare($query);
-					$stmt->execute([]);
-					exit(1);
+								$query = 'DELETE * FROM '. $addressBooksTableName;
+								$stmt = $pdo->prepare($query);
+								$stmt->execute([]);
+								exit(1);
           		}
           	}
       	}
       
-      	echo "\nAddress book(s) successfully imported.";
+      	echo "Address book(s) successfully imported.\n";
 
     } catch (\Throwable $th) {
-        error_log("[ERROR] Some unexpected error occurred in database - ".$th->getMessage());
+        trigger_error("Some unexpected error occurred in database - ".$th->getMessage(), E_USER_WARNING);
         exit(1);
     }
     
-	echo "\n";    
-    exit;
+  exit;
+}
+elseif(isset($argv[1]) && $argv[1] == 'housekeeping')
+{
+	$batchSize = 1000;
+	
+	if(isset($argv[2]))
+			$batchSize = $argv[2];
+			
+	if(!settype($batchSize, 'integer') || $batchSize < 1) {
+		error_log("[ERROR] Invalid batch size provided. Cannot continue. Quitting.");
+		print_help($argv);
+		exit(1);
+	}
+			
+	echo "Housekeeping sync database ...\n";
+	
+	try {
+		$query1 = 'SELECT t1.user_id, t1.addressbook_id, t1.card_uri FROM ' . $backendMapTableName . ' AS t1 WHERE t1.delete_sync_token IS NOT NULL AND t1.delete_sync_token < (SELECT t2.sync_token FROM ' . $fullSyncTableName . ' AS t2 WHERE t2.user_id = t1.user_id AND t2.addressbook_id = t1.addressbook_id)';
+    $stmt1 = $pdo->prepare($query1);
+    $stmt1->execute();
+    
+    $rowCount = 0;
+		$inTransaction = false;
+    
+    while ($row = $stmt1->fetch(\PDO::FETCH_ASSOC)) {
+		  $syncDbUserId = $row['user_id'];
+		  $addressBookId = $row['addressbook_id'];
+		  $cardUri = $row['card_uri'];
+		  
+			if($batchSize > 1 && !$inTransaction)
+				$pdo->beginTransaction();
+			
+			$query2 = 'DELETE FROM ' . $backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ? AND card_uri = ?';
+			$stmt2 = $pdo->prepare($query2);
+			$stmt2->execute([$syncDbUserId, $addressBookId, $cardUri]);
+			
+			if($batchSize > 1)
+				$inTransaction = true;
+				
+			$rowCount++;
+			
+			if($inTransaction && $rowCount >= $batchSize) {
+				$pdo->commit();
+				$inTransaction = false;
+				$rowCount = 0;
+			}
+    }
+    
+		if($inTransaction)
+			$pdo->commit();
+	} catch (\Throwable $th) {
+		if($inTransaction)
+			$pdo->rollback();
+			
+		trigger_error("Some unexpected error occurred in database - ".$th->getMessage(), E_USER_WARNING);
+		exit(1);
+	}
+	
+	echo "Complete\n";
+	exit;
 }
 
 if(!$initialized)
 {
-  	echo "\n[ERROR] Sync database has not been initialized. Initialize it first.";
-  
-	echo "\n";
+  	error_log("[NOTE] Sync database has not been initialized. Initialize it first.");
+  	error_log("");
+		printHelp($argv);
   	exit(1);
 }
 
-$options = [0 => 'addressbook', 1 => 'user'];
-
-if(isset($argv[1]) && $argv[1] !== '')
+if(!isset($argv[1]) || $argv[1] == 'manage')
 {
-	if(!in_array($argv[1], $options))
-	{
-		echo '[ERROR] Please enter correct entry you want to operate upon.';
-		echo "\n";
-		exit(1);
-	}
-	$operation = array_search($argv[1], $options);
-}
-else
-{
-	$operation = readline("Choose the entity you want to operate upon. Enter 0 for $options[0] and 1 for $options[1]: ");
-	if(!array_key_exists($operation, $options))
-	{
-		echo '[ERROR] Please enter correct option.';
-		
-		echo "\n";
-		exit(1);
-	}
-}
-
-
-if($options[$operation] == 'user')
-{
+	$options = [0 => 'addressbook', 1 => 'user'];
+	
 	if(isset($argv[2]) && $argv[2] !== '')
 	{
-		$oldUserId = $argv[2];
+		if(!in_array($argv[2], $options))
+		{
+			error_log('[ERROR] Please enter correct entry you want to operate upon.');
+			exit(1);
+		}
+		$operation = array_search($argv[2], $options);
 	}
 	else
 	{
-		$oldUserId = readline("\nEnter the backend user id to delete: ");
-		if($oldUserId == null || $oldUserId == '')
+		$operation = readline("Choose the entity you want to manage. Enter 0 for $options[0] and 1 for $options[1]: ");
+		if(!array_key_exists($operation, $options))
 		{
-			echo "[ERROR] User id not provided.";
-			echo "\n";
+			error_log('[ERROR] Please enter correct option.');
 			exit(1);
 		}
 	}
-	
-	try {
-		$query = 'DELETE FROM '. $userTableName .' AS user_tab WHERE user_tab.user_id = ? AND NOT EXISTS (SELECT 1 FROM cards_system_user AS sys_user_tab WHERE sys_user_tab.user_id = user_tab.user_id)';
-		$stmt = $pdo->prepare($query);
-		$stmt->execute([$oldUserId]);
-		
-		if(!$stmt->rowCount() > 0)
-		{
-    		echo "\n[ERROR] User having user id '$oldUserId' does not exist.";
-			echo "\n";
-    		exit(1);
-		}
 
-		echo "\nUser having user id '$oldUserId' has been deleted.";
-	} catch (\Throwable $th) {
-		error_log("[ERROR] Some unexpected error occurred in database - ".$th->getMessage());
-		echo "\n";
-		exit(1);
-	}
-}
-else if($options[$operation] == 'addressbook')
-{
-	$options = [0 => 'list', 1 => 'add', 2 => 'rename', 3 => 'delete'];
 
-	$operation = readline("Enter the operation to perform on address book. Enter 0 to $options[0], 1 to $options[1], 2 to $options[2] and 3 to $options[3]: ");
-
-	if(!array_key_exists($operation, $options))
+	if($options[$operation] == 'user')
 	{
-		echo '[ERROR] Please enter correct option.';
-		
-		echo "\n";
-		exit(1);
-	}
-
-	try {
-		if($options[$operation] != 'list')
+		if(isset($argv[3]) && $argv[3] == 'delete') 
 		{
-			$oldAddressBook = readline("\nEnter name of the address book to ". $options[$operation].": ");
-
-			if($oldAddressBook == null || $oldAddressBook == '')
+			if(isset($argv[4]) && $argv[4] !== '')
 			{
-				echo "[ERROR] Address book name not provided.";
-				echo "\n";
-		  	exit(1);
+				$oldUserId = $argv[4];
+			}
+			else
+			{
+				error_log("[ERROR] User id not provided.");
+  			error_log("");
+				printHelp($argv);
+				exit(1);
+			}
+		}
+		else if(!isset($argv[3]))
+		{
+			$oldUserId = readline("\nEnter the backend user id to delete: ");
+			
+			if($oldUserId == null || $oldUserId == '')
+			{
+				error_log("[ERROR] User id not provided.");
+				exit(1);
 			}
 			
-			$query = 'SELECT * FROM '. $addressBooksTableName .' WHERE addressbook_id = ? LIMIT 1';
-			$stmt = $pdo->prepare($query);
-			$stmt->execute([$oldAddressBook]);
-
-			$row = $stmt->fetch(\PDO::FETCH_ASSOC);
-				
-			if($row === false && $options[$operation] != 'add')
-			{
-				echo "[ERROR] Addressbook '". $oldAddressBook. "' is not present in sync database.";
-				
-				echo "\n";
-				exit(1);
-			}
-			else if($row !== false && $options[$operation] == 'add')
-			{
-				echo "[ERROR] Addressbook '". $oldAddressBook. "' is already present in sync database.";
-				
-				echo "\n";
-				exit(1);
-			}
+			$option = readline("\nAre you sure you want to proceed (y/N): ");
+			
+			if($option == '' || ($option != 'Y' && $option != 'y'))
+				exit;
 		}
-
-		if($options[$operation] == 'list')
+		else
 		{
-			$query = 'SELECT * FROM '. $addressBooksTableName;
+			error_log("[ERROR] '$argv[3]' is not a valid operation. Quitting.");
+  		error_log("");
+			printHelp($argv);
+			exit(1);
+		}
+		
+		try {
+			$query = 'DELETE FROM '. $userTableName .' AS user_tab WHERE user_tab.user_id = ? AND NOT EXISTS (SELECT 1 FROM cards_system_user AS sys_user_tab WHERE sys_user_tab.user_id = user_tab.user_id)';
 			$stmt = $pdo->prepare($query);
-			$stmt->execute();
-
-      fwrite(STDERR,"-- Address books --");
-      
-      while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-          echo "\n" . $row['addressbook_id'] . "\t" . json_encode($row, JSON_NUMERIC_CHECK);
-      }
-		}
-		else if($options[$operation] == 'add')
-		{
-			if(addAddressBook($oldAddressBook) == false)
+			$stmt->execute([$oldUserId]);
+			
+			if(!$stmt->rowCount() > 0)
 			{
-				echo "\n";
-				exit(1);
+		  		error_log("[ERROR] User having user id '$oldUserId' does not exist.");
+		  		exit(1);
 			}
-		}
-		else if($options[$operation] == 'rename')
-		{	
-		    $newAddressbook = readline("\nEnter new address book name: ");
 
-		    $query = 'UPDATE '. $addressBooksTableName. ' SET addressbook_id = ? WHERE addressbook_id = ?';
-		    $stmt = $pdo->prepare($query);
-				$stmt->execute([$newAddressbook, $oldAddressBook]);
-				
-				if(!$stmt->rowCount() > 0)
+			echo "User having user id '$oldUserId' has been deleted.\n";
+			echo "[NOTE] After this action sync database table(s) '$backendMapTableName' may need optimization. Use native database command(s) to achieve the same.\n";
+			echo "[NOTE] After this action sync database table(s) '$userTableName' may need optimization (if you have deleted a large number of '$options[$operation]' entities). Use native database command(s) to achieve the same.\n";
+		} catch (\Throwable $th) {
+			trigger_error("Some unexpected error occurred in database - ".$th->getMessage(), E_USER_WARNING);
+			exit(1);
+		}
+	}
+	else if($options[$operation] == 'addressbook')
+	{
+		$options = [0 => 'list', 1 => 'add', 2 => 'rename', 3 => 'delete'];
+
+		$operation = readline("Enter the operation to perform on address book. Enter 0 to $options[0], 1 to $options[1], 2 to $options[2] and 3 to $options[3]: ");
+
+		if(!array_key_exists($operation, $options))
+		{
+			error_log('[ERROR] Please enter correct option.');
+			exit(1);
+		}
+
+		try {
+			if($options[$operation] != 'list')
+			{
+				$oldAddressBook = readline("\nEnter name of the address book to ". $options[$operation].": ");
+
+				if($oldAddressBook == null || $oldAddressBook == '')
 				{
-		    	echo "\n[ERROR] Address book '$oldAddressBook' does not exist.";
-					echo "\n";
-		    	exit(1);
+					error_log("[ERROR] Address book name not provided.");
+					exit(1);
 				}
+				
+				$query = 'SELECT * FROM '. $addressBooksTableName .' WHERE addressbook_id = ?';
+				$stmt = $pdo->prepare($query);
+				$stmt->execute([$oldAddressBook]);
 
-		    echo "\nAddress book '$oldAddressBook' has been renamed to '$newAddressbook'.";
-		}
-		else if($options[$operation] == 'delete')
-		{   
-		    $query = 'DELETE FROM '. $addressBooksTableName .' WHERE addressbook_id = ?';
-		    $stmt = $pdo->prepare($query);
-		    $stmt->execute([$oldAddressBook]);
+				$row = $stmt->fetch(\PDO::FETCH_ASSOC);
+					
+				if($row === false && $options[$operation] != 'add')
+				{
+					error_log("[ERROR] Addressbook '". $oldAddressBook. "' is not present in sync database.");
+					exit(1);
+				}
+				else if($row !== false && $options[$operation] == 'add')
+				{
+					error_log("[ERROR] Addressbook '". $oldAddressBook. "' is already present in sync database.");
+					exit(1);
+				}
+			}
+
+			if($options[$operation] == 'list')
+			{
+				$query = 'SELECT * FROM '. $addressBooksTableName;
+				$stmt = $pdo->prepare($query);
+				$stmt->execute();
+
+		    echo "-- Address books --\n";
 		    
-				if(!$stmt->rowCount() > 0)
-				{
-		    	echo "\n[ERROR] Address book '$oldAddressBook' does not exist.";
-					echo "\n";
-		    	exit(1);
-				}
+		    while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+		        echo $row['addressbook_id'] . "\t" . json_encode($row, JSON_NUMERIC_CHECK) . "\n";
+		    }
+			}
+			else if($options[$operation] == 'add')
+			{
+				if(addAddressBook($oldAddressBook) == false)
+					exit(1);
+			}
+			else if($options[$operation] == 'rename')
+			{
+				  $newAddressbook = readline("\nEnter new address book name: ");
+				  
+					if(!isset($config['card']['addressbook']['ldap'][$newAddressbook])) {
+			  		error_log("[ERROR] Address book '$oldAddressBook' has not been renamed to '$newAddressbook' in the configuration file. Rename it in the configuration file and try again.");
+						exit(1);
+					}
+					
+				  $query = 'UPDATE '. $addressBooksTableName. ' SET addressbook_id = ? WHERE addressbook_id = ?';
+				  $stmt = $pdo->prepare($query);
+					$stmt->execute([$newAddressbook, $oldAddressBook]);
+					
+					if(!$stmt->rowCount() > 0)
+					{
+				  	error_log("[ERROR] Address book '$oldAddressBook' does not exist.");
+				  	exit(1);
+					}
 
-		    echo "\nAddress book '". $oldAddressBook ."' has been deleted.";
+				  echo "Address book '$oldAddressBook' has been renamed to '$newAddressbook'.\n";
+				  echo "[NOTE] After this action sync database table(s) '$backendMapTableName' may need optimization. Use native database command(s) to achieve the same.\n";
+			}
+			else if($options[$operation] == 'delete')
+			{
+					if(isset($config['card']['addressbook']['ldap'][$oldAddressBook])) {
+			  		error_log("[ERROR] Address book '$oldAddressBook' is present in the configuration file. Delete it from configuration file and try again.");
+						exit(1);
+					}
+					
+				  $query = 'DELETE FROM '. $addressBooksTableName .' WHERE addressbook_id = ?';
+				  $stmt = $pdo->prepare($query);
+				  $stmt->execute([$oldAddressBook]);
+				  
+					if(!$stmt->rowCount() > 0)
+					{
+				  	error_log("[ERROR] Address book '$oldAddressBook' does not exist.");
+				  	exit(1);
+					}
+
+				  echo "Address book '". $oldAddressBook ."' has been deleted.\n";
+				  echo "[NOTE] After this action sync database table(s) '$backendMapTableName' may need optimization. Use native database command(s) to achieve the same.\n";
+			}
+
+		} catch (\Throwable $th) {
+				trigger_error("Some unexpected error occurred in database - " . $th->getMessage(), E_USER_WARNING);
+				exit(1);
 		}
-
-	} catch (\Throwable $th) {
-		  error_log("[ERROR] Some unexpected error occurred in database - ".$th->getMessage());
-			echo "\n";
-		  exit(1);
 	}
 }
+else
+{
+	error_log("[ERROR] '$argv[1]' is not a valid action. Quitting.");
+ 	error_log("");
+	printHelp($argv);
+	exit(1);
+}
 
-
-echo "\n";
 exit;

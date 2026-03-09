@@ -51,10 +51,10 @@ class LDAP {
 	          {
 	          	if(!ldap_start_tls($ldapConn))
 	          	{
-          			error_log("Start TLS connection security could not be established in " . __METHOD__ . " at line " . __LINE__);
+          			trigger_error("Start TLS connection security could not be established.", E_USER_WARNING);
           			
 	          		if(!ldap_close($ldapConn))
-          				error_log("Server connection could not be closed in " . __METHOD__ . " at line " . __LINE__);
+          				trigger_error("Server connection could not be closed.", E_USER_WARNING);
 	          		
 	          		return false;
 	          	}
@@ -66,11 +66,11 @@ class LDAP {
             	ldap_set_option($ldapConn, LDAP_OPT_PROTOCOL_VERSION, $ldapVersion);
             else
             {
-		    			error_log("LDAP version less than 3 is not supported " . __METHOD__ . " at line " . __LINE__);
+		    			trigger_error("LDAP version less than 3 is not supported.", E_USER_WARNING);
 		    			
 		      		if(!ldap_close($ldapConn))
 		      		{
-		    				error_log("Server connection could not be closed in " . __METHOD__ . " at line " . __LINE__);
+		    				trigger_error("Server connection could not be closed.", E_USER_WARNING);
 		      		}
 		      		
 		      		return false;
@@ -88,8 +88,8 @@ class LDAP {
             	return false;
 
         } catch (\Throwable $th) {  
-            error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage()); 
-            throw new SabreDAVException\ServiceUnavailable();
+					trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
+					throw new SabreDAVException\ServiceUnavailable();
         }        
 
         return $ldapConn;
@@ -125,7 +125,7 @@ class LDAP {
             }
 
         } catch (\Throwable $th) {
-            error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
+						trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
             throw new SabreDAVException\ServiceUnavailable();
         }    
 
@@ -151,8 +151,8 @@ class LDAP {
                         $data['data'] = ldap_get_attributes($args[0], $data['entryIns']);
                        
                     } catch (\Throwable $th) {
-                        error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
-                        throw new SabreDAVException\ServiceUnavailable();
+											trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
+		                  throw new SabreDAVException\ServiceUnavailable();
                     }
                     
                     return $data;
@@ -187,8 +187,8 @@ class LDAP {
                         $data['data'] = ldap_get_attributes($args[0], $data['entryIns']);
                         
                     } catch (\Throwable $th) {
-                        error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
-                        throw new SabreDAVException\ServiceUnavailable();
+											trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
+											throw new SabreDAVException\ServiceUnavailable();
                     }
                     
                     return $data;
@@ -266,7 +266,7 @@ class LDAP {
     public static function encodeStringToHex($string, array $char = []) {
     		if(count($char) > 8)
     		{
-    			error_log("Number of characters to be encoded exceeds limit in " . __METHOD__ . '. No encodings performed.');
+    			trigger_error("Number of characters to be encoded exceeds limit. No encodings performed.", E_USER_WARNING);
     			return $string;
     		}
     		
@@ -407,4 +407,58 @@ class LDAP {
 				
 			return new SabreDAVException\ServiceUnavailable();
 		}
+		
+		/**
+		* Get leaf values as a list for an array
+		*
+		* @param array $tree
+		* @param array &$result
+    * @return array
+		**/
+    public static function getLeafValues(array $tree, array &$result)
+    {
+  		foreach($tree as $value) {
+				if(is_array($value))
+  				self::getLeafValues($value, $result);
+				else
+					$result[] = $value;
+  		}
+    		
+   		return $result;
+    }
+    
+		/**
+		* Set property array from property definition array and backend values
+		*
+		* @param array $propNs
+		* @param array $propDef
+		* @param array &$configFieldMap
+		* @param array &$backendData
+    * @return array
+		**/
+    public static function setPrincipalProperty($propNs, array $propDef, &$configFieldMap, &$backendData)
+    {
+			$principalPropValue = null;
+			
+				foreach($propDef as $key => $value) {
+					if(is_string($value) && $value !== '') {
+						if(isset($configFieldMap[$value]) && is_string($configFieldMap[$value]) && $configFieldMap[$value] !== '') {
+							$principalPropValue[$key] = [];
+							$backendAttr = $configFieldMap[$value];
+							
+							if(isset($backendData[$backendAttr])) {
+								if($propNs == null)
+									$principalPropValue[$key] = $backendData[$backendAttr][0];
+								else
+									for($index=0; $index<$backendData[$backendAttr]['count']; $index++)
+										$principalPropValue[$key][][$propNs] = $backendData[$backendAttr][$index];
+							}
+						}
+					}
+					elseif(is_array($value))
+						$principalPropValue[$key] = self::setPrincipalProperty($key, $value, $configFieldMap, $backendData);
+				}
+					
+			return $principalPropValue;
+    }
 }

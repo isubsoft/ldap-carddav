@@ -58,6 +58,7 @@ $GLOBALS['environment'] = (isset($config['app']['env']) && $config['app']['env']
 $GLOBALS['enable_incremental_sync'] = (isset($config['app']['enable_incremental_sync']) && is_bool($config['app']['enable_incremental_sync']))?$config['app']['enable_incremental_sync']:true;
 $GLOBALS['max_payload_size'] = (isset($config['app']['max_payload_size']) && is_int($config['app']['max_payload_size']))?$config['app']['max_payload_size']:null;
 $GLOBALS['base_uri'] = (isset($config['app']['base_uri']) && $config['app']['base_uri'] != '')?((preg_match('#^/#', $config['app']['base_uri']) == 1)?$config['app']['base_uri']:'/' . $config['app']['base_uri']):'/server.php';
+$GLOBALS['log_level'] = (isset($config['app']['log_level']) && $config['app']['log_level'] != null)?$config['app']['log_level']:error_reporting();
 
 /* Database */
 
@@ -75,8 +76,8 @@ try {
     
     if($pdo_dsn == null)
     {
-			error_log("Sync database connection not defined.");
-			http_response_code(500);
+			trigger_error("Sync database connection not defined. Check configuration.", E_USER_WARNING);
+			http_response_code(503);
 			exit(1);
     }
     
@@ -113,7 +114,7 @@ try {
     foreach($applicable_db_init_commands as $stmt)
 			$pdo->exec($stmt);
 } catch (\Throwable $th) {
-    error_log('Could not create sync database connection or execute init commands correctly: '. $th->getMessage());
+    trigger_error('Could not create sync database connection or execute init commands correctly: '. $th->getMessage(), E_USER_WARNING);
     http_response_code(500);
 		exit(1);
 }
