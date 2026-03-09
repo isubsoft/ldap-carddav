@@ -12,6 +12,8 @@ function printHelp($argv)
 	error_log("");
 	error_log("Usage: " . $argv[0] . " action [parameters]");
 	error_log("");
+	error_log("Actions - init, manage (default), housekeeping.");
+	error_log("");
 	error_log("Parameters for action init.");
 	error_log("-- none --");
 	error_log("");
@@ -56,7 +58,7 @@ function addAddressBook($addressbookName = null)
 	{
 		if(!isset($config['card']['addressbook']['ldap'][$addressbookName]))
 		{
-				error_log("Address book is not configured in configuration file.");
+				error_log("Address book '$addressbookName' is not present in the configuration file. Add it to configuration file and try again.");
 				return false;    	
 		}
     
