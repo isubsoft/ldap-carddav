@@ -9,22 +9,28 @@
 
 function printHelp($argv)
 {
-	error_log("");
 	error_log("Usage: " . $argv[0] . " action [parameters]");
 	error_log("");
-	error_log("Actions - init, manage (default), housekeeping.");
+	error_log("-- Actions");
+	error_log("help:             Print this help and exit.");
+	error_log("init:             Initialize sync database.");
+	error_log("manage (default): Manage entities in sync database.");
+	error_log("housekeeping:     Physically delete logically deleted records.");
 	error_log("");
-	error_log("Parameters for action init.");
-	error_log("-- none --");
+	error_log("-- Parameter(s) for action help.");
+	error_log("none");
 	error_log("");
-	error_log("Parameters for action manage.");
+	error_log("-- Parameter(s) for action init.");
+	error_log("none");
+	error_log("");
+	error_log("-- Parameter(s) for action manage.");
 	error_log("entity (string): Entity to act upon. Valid values are user, addressbook.");
 	error_log("");
-	error_log("Parameters for entity user.");
+	error_log("-- Parameter(s) for entity user.");
 	error_log("operation (optional, string): Perform this operation on the entity. Valid value is delete.");
 	error_log("user id (string): entryUUID of the user from backend.");
 	error_log("");
-	error_log("Parameters for action housekeeping.");
+	error_log("-- Parameter(s) for action housekeeping.");
 	error_log("batch size (optional, integer): Restrict action to maximum of these many items. Should be >= 1, Defaults to 1000. Since actions can be time consuming set this parameter to a value in range 1000 to 10000 to be efficient. Avoid setting this to a very large value as it may cause performance issues.");
 	
 	return;
@@ -50,7 +56,7 @@ function addAddressBook($addressbookName = null)
 	
 	if($addressbookName == null)
 	{
-		error_log("Address book name not provided.");
+		error_log("[ERROR] Address book name not provided.");
 		return false;
 	}
 		
@@ -58,7 +64,7 @@ function addAddressBook($addressbookName = null)
 	{
 		if(!isset($config['card']['addressbook']['ldap'][$addressbookName]))
 		{
-				error_log("Address book '$addressbookName' is not present in the configuration file. Add it to configuration file and try again.");
+				error_log("[ERROR] Address book '$addressbookName' is not present in the configuration file. Add it to configuration file and try again.");
 				return false;    	
 		}
     
@@ -104,7 +110,7 @@ else if(isset($argv[1]) && $argv[1] == 'init')
 		
 		if($initialized)
 		{
-			error_log("Sync database has already been initialized");
+			error_log("[NOTE] Sync database has already been initialized");
 		  exit;
 		}
 		
@@ -115,12 +121,12 @@ else if(isset($argv[1]) && $argv[1] == 'init')
           	{
           		if(addAddressBook($addressBooksName) == false)
           		{
-          			error_log("Failed to add address book '$addressBooksName'. Sync database initialization failed. Reverting changes.");
+          			error_log("[ERROR] Failed to add address book '$addressBooksName'. Sync database initialization failed. Reverting changes.");
           		
-					$query = 'DELETE * FROM '. $addressBooksTableName;
-					$stmt = $pdo->prepare($query);
-					$stmt->execute([]);
-					exit(1);
+								$query = 'DELETE * FROM '. $addressBooksTableName;
+								$stmt = $pdo->prepare($query);
+								$stmt->execute([]);
+								exit(1);
           		}
           	}
       	}
@@ -142,7 +148,7 @@ elseif(isset($argv[1]) && $argv[1] == 'housekeeping')
 			$batchSize = $argv[2];
 			
 	if(!settype($batchSize, 'integer') || $batchSize < 1) {
-		error_log("Invalid batch size provided. Cannot continue. Quitting.");
+		error_log("[ERROR] Invalid batch size provided. Cannot continue. Quitting.");
 		print_help($argv);
 		exit(1);
 	}
@@ -197,7 +203,8 @@ elseif(isset($argv[1]) && $argv[1] == 'housekeeping')
 
 if(!$initialized)
 {
-  	error_log("Sync database has not been initialized. Initialize it first.");
+  	error_log("[NOTE] Sync database has not been initialized. Initialize it first.");
+  	error_log("");
 		printHelp($argv);
   	exit(1);
 }
@@ -210,7 +217,7 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 	{
 		if(!in_array($argv[2], $options))
 		{
-			error_log('Please enter correct entry you want to operate upon.');
+			error_log('[ERROR] Please enter correct entry you want to operate upon.');
 			exit(1);
 		}
 		$operation = array_search($argv[2], $options);
@@ -220,7 +227,7 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 		$operation = readline("Choose the entity you want to manage. Enter 0 for $options[0] and 1 for $options[1]: ");
 		if(!array_key_exists($operation, $options))
 		{
-			error_log('Please enter correct option.');
+			error_log('[ERROR] Please enter correct option.');
 			exit(1);
 		}
 	}
@@ -236,7 +243,8 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 			}
 			else
 			{
-				error_log("User id not provided.");
+				error_log("[ERROR] User id not provided.");
+  			error_log("");
 				printHelp($argv);
 				exit(1);
 			}
@@ -247,13 +255,19 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 			
 			if($oldUserId == null || $oldUserId == '')
 			{
-				error_log("User id not provided.");
+				error_log("[ERROR] User id not provided.");
 				exit(1);
 			}
+			
+			$option = readline("\nAre you sure you want to proceed (y/N): ");
+			
+			if($option == '' || ($option != 'Y' && $option != 'y'))
+				exit;
 		}
 		else
 		{
-			error_log("'$argv[3]' is not a valid operation.");
+			error_log("[ERROR] '$argv[3]' is not a valid operation. Quitting.");
+  		error_log("");
 			printHelp($argv);
 			exit(1);
 		}
@@ -265,7 +279,7 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 			
 			if(!$stmt->rowCount() > 0)
 			{
-		  		error_log("User having user id '$oldUserId' does not exist.");
+		  		error_log("[ERROR] User having user id '$oldUserId' does not exist.");
 		  		exit(1);
 			}
 
@@ -285,7 +299,7 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 
 		if(!array_key_exists($operation, $options))
 		{
-			error_log('Please enter correct option.');
+			error_log('[ERROR] Please enter correct option.');
 			exit(1);
 		}
 
@@ -296,7 +310,7 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 
 				if($oldAddressBook == null || $oldAddressBook == '')
 				{
-					error_log("Address book name not provided.");
+					error_log("[ERROR] Address book name not provided.");
 					exit(1);
 				}
 				
@@ -308,12 +322,12 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 					
 				if($row === false && $options[$operation] != 'add')
 				{
-					error_log("Addressbook '". $oldAddressBook. "' is not present in sync database.");
+					error_log("[ERROR] Addressbook '". $oldAddressBook. "' is not present in sync database.");
 					exit(1);
 				}
 				else if($row !== false && $options[$operation] == 'add')
 				{
-					error_log("Addressbook '". $oldAddressBook. "' is already present in sync database.");
+					error_log("[ERROR] Addressbook '". $oldAddressBook. "' is already present in sync database.");
 					exit(1);
 				}
 			}
@@ -336,16 +350,21 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 					exit(1);
 			}
 			else if($options[$operation] == 'rename')
-			{	
+			{
 				  $newAddressbook = readline("\nEnter new address book name: ");
-
+				  
+					if(!isset($config['card']['addressbook']['ldap'][$newAddressbook])) {
+			  		error_log("[ERROR] Address book '$oldAddressBook' has not been renamed to '$newAddressbook' in the configuration file. Rename it in the configuration file and try again.");
+						exit(1);
+					}
+					
 				  $query = 'UPDATE '. $addressBooksTableName. ' SET addressbook_id = ? WHERE addressbook_id = ?';
 				  $stmt = $pdo->prepare($query);
 					$stmt->execute([$newAddressbook, $oldAddressBook]);
 					
 					if(!$stmt->rowCount() > 0)
 					{
-				  	error_log("Address book '$oldAddressBook' does not exist.");
+				  	error_log("[ERROR] Address book '$oldAddressBook' does not exist.");
 				  	exit(1);
 					}
 
@@ -353,14 +372,19 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 				  echo "[NOTE] After this action sync database table(s) '$backendMapTableName' may need optimization. Use native database command(s) to achieve the same.\n";
 			}
 			else if($options[$operation] == 'delete')
-			{   
+			{
+					if(isset($config['card']['addressbook']['ldap'][$oldAddressBook])) {
+			  		error_log("[ERROR] Address book '$oldAddressBook' is present in the configuration file. Delete it from configuration file and try again.");
+						exit(1);
+					}
+					
 				  $query = 'DELETE FROM '. $addressBooksTableName .' WHERE addressbook_id = ?';
 				  $stmt = $pdo->prepare($query);
 				  $stmt->execute([$oldAddressBook]);
 				  
 					if(!$stmt->rowCount() > 0)
 					{
-				  	error_log("Address book '$oldAddressBook' does not exist.");
+				  	error_log("[ERROR] Address book '$oldAddressBook' does not exist.");
 				  	exit(1);
 					}
 
@@ -376,7 +400,8 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 }
 else
 {
-	error_log("'$argv[1]' is not a valid action. Quitting.");
+	error_log("[ERROR] '$argv[1]' is not a valid action. Quitting.");
+ 	error_log("");
 	printHelp($argv);
 	exit(1);
 }
