@@ -346,11 +346,6 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 			}
 			else if($options[$operation] == 'add')
 			{
-				$option = readline("\nAre you sure you want to proceed (y/N): ");
-				
-				if($option == '' || ($option != 'Y' && $option != 'y'))
-					exit;
-  	
 				if(addAddressBook($oldAddressBook) == false)
 					exit(1);
 			}
@@ -363,11 +358,6 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 						exit(1);
 					}
 					
-					$option = readline("\nAre you sure you want to proceed (y/N): ");
-					
-					if($option == '' || ($option != 'Y' && $option != 'y'))
-						exit;
-
 				  $query = 'UPDATE '. $addressBooksTableName. ' SET addressbook_id = ? WHERE addressbook_id = ?';
 				  $stmt = $pdo->prepare($query);
 					$stmt->execute([$newAddressbook, $oldAddressBook]);
@@ -388,11 +378,6 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 						exit(1);
 					}
 					
-					$option = readline("\nAre you sure you want to proceed (y/N): ");
-					
-					if($option == '' || ($option != 'Y' && $option != 'y'))
-						exit;
-							
 				  $query = 'DELETE FROM '. $addressBooksTableName .' WHERE addressbook_id = ?';
 				  $stmt = $pdo->prepare($query);
 				  $stmt->execute([$oldAddressBook]);
