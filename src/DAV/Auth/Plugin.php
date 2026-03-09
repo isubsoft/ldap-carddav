@@ -5,12 +5,21 @@
 
 namespace ISubsoft\DAV\Auth;
 
+use Sabre\DAV\Server;
+
 class Plugin extends \Sabre\DAV\Auth\Plugin
 {
-	public function check(\Sabre\HTTP\RequestInterface $request, \Sabre\HTTP\ResponseInterface $response)
+	function initialize(Server $server){
+		parent::initialize($server);
+		$server->on('beforeMethod:*', [$this, 'beforeMethod'], 10);
+		$server->on('beforeMethod:*', [$this, 'appBeforeMethod'], 15);
+	}
+
+	public function appBeforeMethod()
 	{
-		$returnValue = parent::check($request, $response);
+		$GLOBALS['currentUserPrincipalUri'] = $this->getCurrentPrincipal();
 		$GLOBALS['currentUserPrincipalId'] = basename($this->getCurrentPrincipal());
-		return $returnValue;
+		
+		return;
 	}
 }

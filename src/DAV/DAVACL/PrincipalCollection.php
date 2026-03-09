@@ -28,6 +28,11 @@ class PrincipalCollection extends \Sabre\DAVACL\PrincipalCollection
 		      'principal' => '{DAV:}authenticated',
 		      'protected' => true,
 		  ],
+		  [
+		      'privilege' => '{DAV:}all',
+		      'principal' => '{DAV:}owner',
+		      'protected' => true,
+		  ],
 		];
 	}
 }

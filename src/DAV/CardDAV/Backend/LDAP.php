@@ -29,6 +29,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     protected $pdo;
     
     /**
+     * Cache entity name.
+     *
+     * @var string
+     */
+    public static $cacheEntityId = 'card';
+    
+    /**
      * Cache object.
      *
      * @var cache
@@ -136,11 +143,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      * @param array $config
      * @return void
      */
-    function __construct(array $config, \PDO $pdo, $principalBackend) {
+    function __construct(array $config, \PDO $pdo, $principalBackend, $cache) {
     	$this->principalBackend = $principalBackend;
 			$this->config = $config;
 			$this->pdo = $pdo;
-			$this->cache = CacheMaster::getCardBackend($config['cache']);
+			$this->cache = $cache;
     }
     
 
@@ -163,7 +170,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
           $this->addressbook[$addressBookId]['LdapConnection'] = $GLOBALS['currentUserPrincipalLdapConn'];
         else
         {
-		      trigger_error("No available connections to backend for address book '$addressBookId'." . __METHOD__ . " at line no " . __LINE__ . ". Check configuration.", E_USER_WARNING);
+		      trigger_error("No available connections to backend for address book '$addressBookId'. Check configuration.", E_USER_WARNING);
 					throw new SabreDAVException\ServiceUnavailable();
         }
           
@@ -180,7 +187,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             }
             else
             {
-				      trigger_error("Address book DN search returned no result or more than one result " . __METHOD__ . " at line no " . __LINE__ . " for address book '$addressBookId'. Check configuration.", E_USER_WARNING);
+				      trigger_error("Address book DN search returned no result or more than one result for address book '$addressBookId'. Check configuration.", E_USER_WARNING);
 							throw new SabreDAVException\ServiceUnavailable();
             }
           }
@@ -193,6 +200,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         return;
     }
     
+    private function getCacheKey($syncDbUserId, $addressBookId, $cardUri) {
+    	return [self::$cacheEntityId, $syncDbUserId, $addressBookId, $cardUri];
+    }
+        
     
     /**
      * Returns the list of addressbooks for a specific user.
@@ -215,7 +226,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     {
 			$systemUser = null;
       $addressBooks = [];
-			
       $currentUserPrincipalId = $GLOBALS['currentUserPrincipalId'];
       $principal = $this->principalBackend->getPrincipalByPath($principalUri);
       
@@ -247,7 +257,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		    	$systemUser = $row['user_id'];
 		    
 		  } catch (\Throwable $th) {
-				trigger_error("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage(), E_USER_WARNING);
+				trigger_error("Database query could not be executed. Error message: " . $th->getMessage(), E_USER_WARNING);
 		  }
       
       foreach ($this->config['card']['addressbook']['ldap'] as $addressBookId => $addressBookConfig) {
@@ -273,7 +283,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					  $addressBookConfig['writable'] = $row['writable'];
 					  
 					} catch (\Throwable $th) {
-						trigger_error("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage(), E_USER_WARNING);
+						trigger_error("Database query could not be executed. Error message: " . $th->getMessage(), E_USER_WARNING);
 						throw new SabreDAVException\ServiceUnavailable();
 					}
 					
@@ -297,7 +307,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             '{http://sabredav.org/ns}sync-token'                          => (!$addressBookSyncToken == null) ? $addressBookSyncToken : 0
         ];
       }
-
+      
       return $addressBooks;
     }
 
@@ -371,12 +381,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     function getCards($addressBookId)
     {
 				$syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
-        $cache = $this->cache;
         $result = [];
 				$cardValues = null;
         
         foreach($this->getMappedContacts($addressBookId) as $contact) {
-       		$cardValues = CacheMaster::decode($cache->get(CacheMaster::cardKey($syncDbUserId, $addressBookId, $contact['card_uri']), null));
+       		$cardValues = CacheMaster::decode($this->cache->get(CacheMaster::getKey(self::getCacheKey($syncDbUserId, $addressBookId, $contact['card_uri'])), null));
        		
        		if($cardValues == [] || $cardValues == null) {
 		     		if(isset($contact['modified_timestamp']))
@@ -418,10 +427,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     {
 		    $result = [];
 				$cardUid = null;
-				
 				$addressBookConfig = $this->addressbook[$addressBookId]['config'];
 				$syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
-        $cache = $this->cache;
         
 				try 
 				{
@@ -437,12 +444,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		      	$cardUid = $row['card_uid'];
 		      	$backendId = $row['backend_id'];
 		    } catch (\Throwable $th) {
-					trigger_error("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage(), E_USER_WARNING);
+					trigger_error("Database query could not be executed. Error message: " . $th->getMessage(), E_USER_WARNING);
 					throw new SabreDAVException\ServiceUnavailable();
 		    }
             
 				$cacheValid = true; // If false then cache need to be refreshed
-       	$result = CacheMaster::decode($cache->get(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri), null));
+       	$result = CacheMaster::decode($this->cache->get(CacheMaster::getKey(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri)), null));
        	
        	if($result == [] || $result == null)
 					$cacheValid = false;
@@ -467,13 +474,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 	      	return false;
 					
 	      if($data['count'] > 1) {
-					trigger_error("Multiple backend contacts found. Check configuration. ".__METHOD__." at line no ".__LINE__, E_USER_WARNING);
+					trigger_error("Multiple backend contacts found. Check configuration.", E_USER_WARNING);
 					throw new SabreDAVException\ServiceUnavailable();
 	      }
 	      	
 	      if(!isset($data[0]['modifytimestamp'][0]))
 	      {
-					trigger_error("Read access to some operational attributes in LDAP not present. ".__METHOD__." at line no ".__LINE__, E_USER_WARNING);
+					trigger_error("Read access to some operational attributes in LDAP not present.", E_USER_WARNING);
 					throw new SabreDAVException\ServiceUnavailable();
 	      }
 	      
@@ -490,8 +497,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
           'size'          => strlen($cardData)
 				];
 				
-				if(!$cache->set(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri), CacheMaster::encode($result), (isset($this->config['cache']['card']['ttl']) && is_int($this->config['cache']['card']['ttl']) && $this->config['cache']['card']['ttl'] > 0 && $this->config['cache']['card']['ttl'] <= 2592000)?$this->config['cache']['card']['ttl']:self::$cacheTtl))
-			    trigger_error("Could not set cache data: " . __METHOD__ . " at line no " . __LINE__, E_USER_WARNING);
+				if(!$this->cache->set(CacheMaster::getKey(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri)), CacheMaster::encode($result), (isset($this->config['cache']['card']['ttl']) && is_int($this->config['cache']['card']['ttl']) && $this->config['cache']['card']['ttl'] > 0 && $this->config['cache']['card']['ttl'] <= 2592000)?$this->config['cache']['card']['ttl']:self::$cacheTtl))
+			    trigger_error("Could not set cache", E_USER_WARNING);
         
         $result['id'] = $cardUid;
         $result['uri'] = $cardUri;
@@ -559,7 +566,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
         $writableAddressBook = (!isset($addressBookConfig['writable']))?true:$addressBookConfig['writable'];
         $maxContactSize = $this->addressbook[$addressBookId]['contactMaxSize'];
-        $cache = $this->cache;
         
         $this->setAddressbookBackendProperties($addressBookId);
         
@@ -590,7 +596,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		          if($stmt->fetch(\PDO::FETCH_ASSOC) !== false)
 		          	$cardExists = true;
 		      } catch (\Throwable $th) {
-						trigger_error("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage(), E_USER_WARNING);
+						trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 						throw new SabreDAVException\ServiceUnavailable();
 		      }
 		      
@@ -610,7 +616,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		          if($stmt->fetch(\PDO::FETCH_ASSOC) !== false)
 		          	$cardIdMatch = false;
 		      } catch (\Throwable $th) {
-						trigger_error("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage(), E_USER_WARNING);
+						trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 						throw new SabreDAVException\ServiceUnavailable();
 		      }
 		      
@@ -707,7 +713,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 																if($row !== false)
                                 	$backendId = $row['backend_id'];
                             } catch (\Throwable $th) {
-                                trigger_error("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage(), E_USER_WARNING);
+															trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
                             }
                             
                             if(isset($backendId) && $backendId != null)
@@ -859,12 +865,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
 					if(!$componentOldLdapTree)
 					{
-						trigger_error("Unknown error in " . __METHOD__ . " at line " . __LINE__, E_USER_WARNING);
+						trigger_error("Unknown error", E_USER_WARNING);
 						throw new SabreDAVException\ServiceUnavailable();
 					}
 					
-					if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri)))
-						  trigger_error("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore the error: " . __METHOD__ . " at line no " . __LINE__, E_USER_NOTICE);
+					if(!$this->cache->set(CacheMaster::getKey(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri)), null, -60))
+			    	trigger_error("Could not expire cache", E_USER_WARNING);
 					
 					$oldLdapRdn = $componentOldLdapTree[0];
 					$parentOldLdapTree = "";
@@ -920,7 +926,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				        $sql = $this->pdo->prepare($query);
 				        $sql->execute([$cardUri, ($cardUid == null)?$this->guidv4():$cardUid, $addressBookId, $data[0]['entryuuid'][0], $syncDbUserId, time()]);
 				    } catch (\Throwable $th) {
-							trigger_error("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage(), E_USER_WARNING);
+							trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 				    }
 		      }						
 				}
@@ -1000,7 +1006,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $addressBookConfig = $this->addressbook[$addressBookId]['config'];
         $syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
         $writableAddressBook = (!isset($addressBookConfig['writable']))?true:$addressBookConfig['writable'];
-        $cache = $this->cache;
         
         $this->setAddressbookBackendProperties($addressBookId);
         
@@ -1015,12 +1020,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					throw new SabreDAVException\ServiceUnavailable();
 					
 	      if($data['count'] > 1) {
-					trigger_error("Multiple backend contacts found. Check configuration. ".__METHOD__." at line no ".__LINE__, E_USER_WARNING);
+					trigger_error("Multiple backend contacts found. Check configuration.", E_USER_WARNING);
 					throw new SabreDAVException\ServiceUnavailable();
 	      }
 	      
-				if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri)))
-		      trigger_error("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore the error: " . __METHOD__ . " at line no " . __LINE__, E_USER_NOTICE);
+				if(!$this->cache->delete(CacheMaster::getKey(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri))))
+		      trigger_error("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore the error.", E_USER_NOTICE);
 					
 	      if($data['count'] === 0) {
 					$this->addChange($addressBookId, $cardUri);
@@ -1034,7 +1039,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             if(!ldap_delete($ldapConn, $ldapTree))
 	            return false;
         } catch (\Throwable $th) {
-            trigger_error("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage(), E_USER_WARNING);
+						trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
             throw new SabreDAVException\ServiceUnavailable();
         }
 
@@ -1110,7 +1115,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 																		if($row !== false)
                                     	$memberCardUID = $row['card_uid'];
                                 } catch (\Throwable $th) {
-                                    trigger_error("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage(), E_USER_WARNING);
+																	trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
                                 }
                                 
                                 $memberValue = Reader::memberValueConversion($memberCardUID, $vCardKey);
@@ -1508,7 +1513,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 			$addressBookConfig = $this->addressbook[$addressBookId]['config'];
 			$addressBookSyncToken = $this->addressbook[$addressBookId]['syncToken'];
 			$syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
-      $cache = $this->cache;
       
 			$result = [
 					'syncToken' => $addressBookSyncToken,
@@ -1541,7 +1545,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					if($row !== false)
 						$fullSyncToken = (int)$row['sync_token'];
 			} catch (\Throwable $th) {
-				trigger_error("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage(), E_USER_WARNING);
+				trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 			}
 			
 			// Perform initial sync
@@ -1628,7 +1632,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				{
 					if(!isset($data['data']['entryUUID'][0]))
 					{
-						trigger_error("Read access to required operational attributes in LDAP not present. Cannot continue. Quitting. ".__METHOD__." at line no ".__LINE__, E_USER_WARNING);
+						trigger_error("Read access to required operational attributes in LDAP not present.", E_USER_WARNING);
 						throw new SabreDAVException\ServiceUnavailable();
 					}
 					
@@ -1654,7 +1658,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 									$sql->execute([$cardUri, $cardUid, $addressBookId, $data['data']['entryUUID'][0], $syncDbUserId, time()]); 
 							}
 					} catch (\Throwable $th) {
-						trigger_error("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage(), E_USER_WARNING);
+						trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 						throw new SabreDAVException\ServiceUnavailable();
 					}
 					
@@ -1671,7 +1675,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				{
 					if(!isset($data['data']['entryUUID'][0]) || !isset($data['data']['modifyTimestamp'][0]))
 					{
-						trigger_error("Read access to required operational attributes in LDAP not present. Cannot continue. Quitting. ".__METHOD__." at line no ".__LINE__, E_USER_WARNING);
+						trigger_error("Read access to required operational attributes in LDAP not present.", E_USER_WARNING);
 						throw new SabreDAVException\ServiceUnavailable();
 					}
 					
@@ -1699,14 +1703,14 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 									continue;
 							}
 							
-							$cardValues = CacheMaster::decode($cache->get(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri), null));
+							$cardValues = CacheMaster::decode($this->cache->get(CacheMaster::getKey(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri)), null));
 							
 							if(isset($cardValues['lastmodified']))
 							{ 
 								if($cardValues['lastmodified'] < strtotime($data['data']['modifyTimestamp'][0]))
 								{
-									if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri)))
-										trigger_error("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore the error: " . __METHOD__ . " at line no " . __LINE__, E_USER_NOTICE);
+									if(!$this->cache->set(CacheMaster::getKey(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri)), null, -60))
+			    					trigger_error("Could not expire cache", E_USER_WARNING);
 										
 									$this->addChange($addressBookId, $cardUri, 'MODIFY');
 								}
@@ -1714,7 +1718,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							else
 								$this->addChange($addressBookId, $cardUri, 'MODIFY');
 					} catch (\Throwable $th) {
-						trigger_error("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage(), E_USER_WARNING);
+						trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 						throw new SabreDAVException\ServiceUnavailable();
 					}
 						
@@ -1726,7 +1730,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					$sql = $this->pdo->prepare($query);
 					$sql->execute([$addressBookSyncToken, $syncDbUserId, $addressBookId]);
 				} catch (\Throwable $th) {
-					trigger_error("Database query could not be executed: " . __METHOD__ . " at line no " . __LINE__ . ", " . $th->getMessage(), E_USER_WARNING);
+					trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 					throw new SabreDAVException\ServiceUnavailable();
 				}
 			}
@@ -1767,7 +1771,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					$result['deleted'][] = $cardUri;
 				}
 			} catch (\Throwable $th) {
-				trigger_error("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage(), E_USER_WARNING);
+				trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 				throw new SabreDAVException\ServiceUnavailable();
 			}
 
@@ -1795,7 +1799,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		        $sql = $this->pdo->prepare($query);
 		        $sql->execute([time(), $addressBookId, $objectUri, $syncDbUserId]);
 		      } catch (\Throwable $th) {
-						trigger_error("Database query could not be executed: " . __METHOD__ . " at line no " . __LINE__ . ", " . $th->getMessage(), E_USER_WARNING);
+						trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 						return false;
 		      }
         }
@@ -1806,7 +1810,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		        $sql = $this->pdo->prepare($query);
 		        $sql->execute([time(), $addressBookId, $objectUri, $syncDbUserId]);
 		      } catch (\Throwable $th) {
-						trigger_error("Database query could not be executed: " . __METHOD__ . " at line no " . __LINE__ . ", " . $th->getMessage(), E_USER_WARNING);
+						trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 						return false;
 		      }        
         }
@@ -1870,7 +1874,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             	
             $backendId = $row['backend_id'];
         } catch (\Throwable $th) {
-					trigger_error("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage(), E_USER_WARNING);
+					trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
         }
              
         return $this->fetchLdapContactDataById($addressBookId, $backendId, $attributes, $attributesOnly);
@@ -1888,7 +1892,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $addressBookConfig = $this->addressbook[$addressBookId]['config'];
         $addressBookSyncToken = $this->addressbook[$addressBookId]['syncToken'];
         $syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
-        $cache = $this->cache;
 				$contacts = [];
 
 				$fullRefreshSyncToken = null;
@@ -1904,7 +1907,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							$fullRefreshSyncToken = (int)$row['sync_token'];
 
 				} catch (\Throwable $th) {
-					trigger_error("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage(), E_USER_WARNING);
+					trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 				}
 				
 				$fullRefreshInterval = (isset($addressBookConfig['full_refresh_interval']) && is_int($addressBookConfig['full_refresh_interval']) && $addressBookConfig['full_refresh_interval'] > 0)?$addressBookConfig['full_refresh_interval']:self::$defaultFullRefreshInterval;
@@ -1923,7 +1926,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							'backend_id' => $row['backend_id']
 							];
 					} catch (\Throwable $th) {
-						trigger_error("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage(), E_USER_WARNING);
+						trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 						throw new SabreDAVException\ServiceUnavailable();
 					}
 					
@@ -1957,7 +1960,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					{
 						if(!isset($data['data']['entryUUID'][0]) || !isset($data['data']['modifyTimestamp'][0]))
 						{
-							trigger_error("Read access to required operational attributes in LDAP not present. Cannot continue. Quitting. ".__METHOD__." at line no ".__LINE__, E_USER_WARNING);
+							trigger_error("Read access to required operational attributes in LDAP not present.", E_USER_WARNING);
         			throw new SabreDAVException\ServiceUnavailable();
 						}
 						
@@ -1984,20 +1987,18 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							$cardUid = $row['card_uid'];
 							$cardUri = $row['card_uri'];
 							
-							$cardValues = CacheMaster::decode($cache->get(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri), null));
+							$cardValues = CacheMaster::decode($this->cache->get(CacheMaster::getKey(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri)), null));
 							
 							if(isset($cardValues['lastmodified']))
 							{
 								if($cardValues['lastmodified'] < $cardModifiedTimestamp)
 								{
-									if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $cardUri)))
-										trigger_error("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore the error: " . __METHOD__ . " at line no " . __LINE__, E_USER_NOTICE);
+									if(!$this->cache->set(CacheMaster::getKey(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri)), null, -60))
+			    					trigger_error("Could not expire cache", E_USER_WARNING);
 								
 									$this->addChange($addressBookId, $cardUri, 'MODIFY');
 								}
 						  }
-						  else
-						  	$this->addChange($addressBookId, $cardUri, 'MODIFY');
 						}
             
             $backendContactsUriList[] = $cardUri;
@@ -2022,15 +2023,15 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					
 					foreach($mappedContactsUriList as $mappedContactUri) {
 						if(!in_array($mappedContactUri, $backendContactsUriList)) {
-							if(!$cache->delete(CacheMaster::cardKey($syncDbUserId, $addressBookId, $mappedContactUri)))
-				    		trigger_error("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore the error: " . __METHOD__ . " at line no " . __LINE__, E_USER_NOTICE);
+							if(!$this->cache->delete(CacheMaster::getKey(self::getCacheKey($syncDbUserId, $addressBookId, $mappedContactUri))))
+				    		trigger_error("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore this error.", E_USER_NOTICE);
 				    		
 		          $this->addChange($addressBookId, $mappedContactUri);
 						}
 					}
 
         } catch (\Throwable $th) {
-					trigger_error("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage(), E_USER_WARNING);
+					trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 					throw new SabreDAVException\ServiceUnavailable();
         }
         
@@ -2046,7 +2047,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						$sql->execute([$syncDbUserId, $addressBookId, $addressBookSyncToken]);
 					}
 				} catch (\Throwable $th) {
-					trigger_error("Database query could not be executed: " . __METHOD__ . " at line no " . __LINE__ . ", " . $th->getMessage(), E_USER_WARNING);
+					trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 				}
 
         return $contacts;
@@ -2082,12 +2083,21 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		    return $row['writable'];
 		  } 
 		  catch (\Throwable $th) {
-				trigger_error("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage(), E_USER_WARNING);
+				trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 		  }
 		  
       throw new SabreDAVException\ServiceUnavailable();
     }
     
+    function isAddressbookDirectory($addressBookId)
+    {
+      $addressBookConfig = $this->addressbook[$addressBookId]['config'];
+      
+      if(isset($addressBookConfig['directory']) && $addressBookConfig['directory'] === true)
+      	return true;
+      	
+      return false;
+    }
     
     private function housekeeping($addressBookId)
     {
@@ -2111,7 +2121,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					}
 
 			} catch (\Throwable $th) {
-				trigger_error("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage(), E_USER_WARNING);
+				trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 			}
 
 			$fullSyncToken = null;
@@ -2133,7 +2143,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					}
 
 			} catch (\Throwable $th) {
-				trigger_error("Database query could not be executed: ".__METHOD__." at line no ".__LINE__.", ".$th->getMessage(), E_USER_WARNING);
+				trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 			}
 			
 			if($fullSyncToken != null && ($addressBookSyncToken - $fullSyncToken) > $forceInitialSyncInterval)
@@ -2143,7 +2153,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					$stmt = $this->pdo->prepare($query);
 					$stmt->execute([$addressBookSyncToken, $syncDbUserId, $addressBookId]);
 				} catch (\Throwable $th) {
-					trigger_error("Database query could not be executed: " . __METHOD__ . " at line no " . __LINE__ . ", " . $th->getMessage(), E_USER_WARNING);
+					trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 				}
 			}
 			
