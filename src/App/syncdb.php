@@ -23,7 +23,7 @@ function printHelp($argv)
 	error_log("user id (string): entryUUID of the user from backend.");
 	error_log("");
 	error_log("Parameters for action housekeeping.");
-	error_log("batch size (optional, integer): Restrict action to maximum of these many items. Should be >= 0, 0 (default) means no limit. Since actions can be time consuming set this parameter to a small value like 1000 to finish early. Useful when used from a scheduler.");
+	error_log("batch size (optional, integer): Restrict action to maximum of these many items. Should be >= 1, Defaults to 1000. Since actions can be time consuming set this parameter to a value in range 1000 to 10000 to be efficient. Avoid setting this to a very large value as it may cause performance issues.");
 	
 	return;
 }
@@ -91,7 +91,12 @@ catch (\Throwable $th) {
     exit(1);
 }
 
-if(isset($argv[1]) && $argv[1] == 'init')
+if(isset($argv[1]) && $argv[1] == 'help')
+{
+	printHelp($argv);
+	exit;
+}
+else if(isset($argv[1]) && $argv[1] == 'init')
 {
 		echo "Initializing sync database ...\n";
 		
@@ -131,8 +136,14 @@ elseif(isset($argv[1]) && $argv[1] == 'housekeeping')
 {
 	$batchSize = 1000;
 	
-	if(isset($argv[2]) && settype($argv[2], 'integer'))
+	if(isset($argv[2]))
 			$batchSize = $argv[2];
+			
+	if(!settype($batchSize, 'integer') || $batchSize < 1) {
+		error_log("Invalid batch size provided. Cannot continue. Quitting.");
+		print_help($argv);
+		exit(1);
+	}
 			
 	echo "Housekeeping sync database ...\n";
 	
@@ -359,7 +370,7 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 }
 else
 {
-	error_log("'$argv[1]' is not a valid action.");
+	error_log("'$argv[1]' is not a valid action. Quitting.");
 	printHelp($argv);
 	exit(1);
 }
