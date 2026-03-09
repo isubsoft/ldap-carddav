@@ -7,13 +7,16 @@
 * This script is used to manage application cache.
 **/
 
-function print_help($argv)
+function printHelp($argv)
 {
-	echo "\n";
-	echo "Usage: " . $argv[0] . " action [parameters]\n";
-	echo "\n";
-	echo "Parameters for action housekeeping.\n";
-	echo "batch size (optional, integer >= 0, 0 means no limit, defaults to no limit): Restrict action to maximum of these many items. Since actions can be time consuming set this parameter to a small value like 1000 to finish early. Useful when used from a scheduler.\n";
+	error_log("");
+	error_log("Usage: " . $argv[0] . " action [parameters]");
+	error_log("");
+	error_log("Parameters for action housekeeping.");
+	error_log("batch size (optional, integer): Restrict action to maximum of these many items. Should be >= 0, 0 (default) means no limit. Since actions can be time consuming set this parameter to a small value like 1000 to finish early. Useful when used from a scheduler.");
+	error_log("");
+	
+	return;
 }
 
 /*import database connection*/
@@ -22,7 +25,12 @@ require_once __DIR__ . '/Bootstrap.php';
 /* load classes */
 require_once __BASE_DIR__ . '/vendor/autoload.php';
 
-if(isset($argv[1]) && $argv[1] == 'housekeeping')
+if(isset($argv[1]) && $argv[1] == 'help')
+{
+	printHelp($argv);
+	exit;
+}
+else if(isset($argv[1]) && $argv[1] == 'housekeeping')
 {
 	$exitCode = 0;
 	$batchSize = 0;
@@ -30,9 +38,9 @@ if(isset($argv[1]) && $argv[1] == 'housekeeping')
 	if(isset($argv[2]))
 		$batchSize = $argv[2];
 			
-	if(!settype($argv[2], 'integer') || $batchSize < 0) {
+	if(!settype($batchSize, 'integer') || $batchSize < 0) {
 		error_log("Invalid batch size provided. Cannot continue. Quitting.");
-		print_help($argv);
+		printHelp($argv);
 		exit(1);
 	}
 			
@@ -64,9 +72,9 @@ if(isset($argv[1]) && $argv[1] == 'housekeeping')
 }
 else
 {
-	error_log("No valid argument provided. Nothing to do. Quitting.");
-	print_help($argv);
-	exit;
+	error_log("'$argv[1]' is not a valid action. Quitting.");
+	printHelp($argv);
+	exit(1);
 }
 
 exit;
