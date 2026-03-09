@@ -268,6 +268,8 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 			}
 
 			echo "User having user id '$oldUserId' has been deleted.\n";
+			echo "[NOTE] After this action sync database table(s) '$backendMapTableName' may need optimization. Use native database command(s) to achieve the same.\n";
+			echo "[NOTE] After this action sync database table(s) '$userTableName' may need optimization (if you have deleted a large number of '$options[$operation]' entities). Use native database command(s) to achieve the same.\n";
 		} catch (\Throwable $th) {
 			trigger_error("Some unexpected error occurred in database - ".$th->getMessage(), E_USER_WARNING);
 			exit(1);
@@ -346,6 +348,7 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 					}
 
 				  echo "Address book '$oldAddressBook' has been renamed to '$newAddressbook'.\n";
+				  echo "[NOTE] After this action sync database table(s) '$backendMapTableName' may need optimization. Use native database command(s) to achieve the same.\n";
 			}
 			else if($options[$operation] == 'delete')
 			{   
@@ -360,6 +363,7 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 					}
 
 				  echo "Address book '". $oldAddressBook ."' has been deleted.\n";
+				  echo "[NOTE] After this action sync database table(s) '$backendMapTableName' may need optimization. Use native database command(s) to achieve the same.\n";
 			}
 
 		} catch (\Throwable $th) {
