@@ -17,21 +17,21 @@ function printHelp($argv)
 	error_log("manage (default): Manage entities in sync database.");
 	error_log("housekeeping:     Physically delete logically deleted records.");
 	error_log("");
-	error_log("-- Parameter(s) for action help.");
+	error_log("-- Parameter(s) for action help");
 	error_log("none");
 	error_log("");
-	error_log("-- Parameter(s) for action init.");
+	error_log("-- Parameter(s) for action init");
 	error_log("none");
 	error_log("");
-	error_log("-- Parameter(s) for action manage.");
+	error_log("-- Parameter(s) for action manage");
 	error_log("entity (string): Entity to act upon. Valid values are user, addressbook.");
 	error_log("");
-	error_log("-- Parameter(s) for entity user.");
+	error_log("-- Parameter(s) for entity user");
 	error_log("operation (optional, string): Perform this operation on the entity. Valid value is delete.");
 	error_log("user id (string): entryUUID of the user from backend.");
 	error_log("");
-	error_log("-- Parameter(s) for action housekeeping.");
-	error_log("batch size (optional, integer): Restrict action to maximum of these many items. Should be >= 1, Defaults to 1000. Since actions can be time consuming set this parameter to a value in range 1000 to 10000 to be efficient. Avoid setting this to a very large value as it may cause performance issues.");
+	error_log("-- Parameter(s) for action housekeeping");
+	error_log("batch size (optional, integer): Restrict action to maximum of these many items. Should be >= 1, defaults to 1000. Since this action can be time consuming set this parameter to a value in range 1000 to 10000 to be efficient. Avoid setting this to a very small or very large value as it may cause performance issues.");
 	
 	return;
 }

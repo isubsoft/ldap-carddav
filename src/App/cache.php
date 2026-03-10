@@ -23,7 +23,7 @@ function printHelp($argv)
 	error_log("none");
 	error_log("");
 	error_log("-- Parameter(s) for housekeeping");
-	error_log("batch size (optional, integer): Restrict action to maximum of these many items. Should be >= 0, 0 (default) means no limit. Since actions can be time consuming set this parameter to a small value like 1000 to finish early. Useful when used from a scheduler.");
+	error_log("batch size (optional, integer): Restrict action to maximum of these many items. Should be >= 0, 0 (default) means no limit. Since this action can be time consuming set this parameter to a small value like 1000 to finish early. Useful when used from a scheduler.");
 	
 	return;
 }
