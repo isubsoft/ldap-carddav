@@ -13,7 +13,7 @@ function printHelp($argv)
 	error_log("");
 	error_log("-- Actions");
 	error_log("help:         Print this help and exit.");
-	error_log("clear:        Clear cache.");
+	error_log("clear:        Clear cache. WARNING: This will delete/invalidate all items in the cache including ones set by other applications.");
 	error_log("housekeeping: Evict stale cache from managed caches.");
 	error_log("");
 	error_log("-- Parameter(s) for help");
@@ -61,15 +61,17 @@ else if(isset($argv[1]) && $argv[1] == 'clear')
 		echo $backendId . "\t" . json_encode($entityList, JSON_NUMERIC_CHECK) . "\n";
 		
   echo "\n";
-		
-  $cachedBackend = readline("\nEnter the backend you want to clear: ");
+  
+  $cachedBackend = readline("Enter the backend you want to clear: ");
   
   if($cachedBackend == '' || !isset($cachedBackendEntity[$cachedBackend])) {
 		error_log("[ERROR] Invalid cache backend provided.");
 		exit(1);
   }
   
-  $option = readline("\nAre you sure you want to proceed (y/N): ");
+  echo "WARNING: This will delete/invalidate all items in the cache including ones set by other applications.";
+  
+  $option = readline(" Are you sure you want to proceed (y/N): ");
   
   if($option == '' || ($option != 'Y' && $option != 'y'))
   	exit;
