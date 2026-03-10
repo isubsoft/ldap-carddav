@@ -27,18 +27,14 @@ $GLOBALS['currentUserPrincipalLdapConn'] = null;
 // Cache
 $cachedEntities = ['principal', 'card'];
 
-// Create object for cache backends. Clear cache where required.
+// Create object for cache backends.
 $entityCache = [];
 
 $cacheMaster = new ISubsoft\Cache\Master($config, $pdo);
-$resetCache = [];
 
 foreach($cachedEntities as $entityId) {
 	$cacheBackendId = $cacheMaster->getBackendId($entityId);
 	$entityCache[$entityId] = $cacheMaster->cache[$cacheBackendId];
-	
-	if($cacheMaster->cacheResetRequired($entityId, $cacheBackendId))
-		$resetCache[$cacheBackendId] = $cacheMaster->cache[$cacheBackendId];
 	
 	if(!$cacheMaster->setActiveBackend($entityId, $cacheBackendId)) {
 		trigger_error("Cache backend '$cacheBackendId' could not be set for $entityId.", E_USER_WARNING);
@@ -46,16 +42,9 @@ foreach($cachedEntities as $entityId) {
 		exit(1);
 	}
 }
-
-foreach($resetCache as $cacheBackendId => $cache)
-	if(!$cache->clear()) {
-		trigger_error("Cache could not be cleared for backend '$cacheBackendId'.", E_USER_WARNING);
-		http_response_code(503);
-		exit(1);
-	}
 	
 // Destroy what is no longer required.
-unset($cacheMaster, $resetCache);
+unset($cacheMaster);
 
 // Backends
 $authBackend = new ISubsoft\DAV\Auth\Backend\LDAP($config);
