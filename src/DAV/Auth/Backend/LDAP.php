@@ -47,7 +47,7 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
     {      
         if($username == null || $username == '' || $password == null)
         {
-		    	error_log("Invalid credentials provided in " . __METHOD__ . " at line " . __LINE__);
+		    	trigger_error("Invalid credentials provided.", E_USER_NOTICE);
         	return false;
         }
         	
@@ -62,7 +62,7 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
 						// verify binding
             if($ldapBindConn === false)
             {
-		          error_log("Could not establish bind connection to backend server in " . __METHOD__ . " at line " . __LINE__);
+		          trigger_error("Could not establish bind connection to backend server.", E_USER_WARNING);
 		          throw new ServiceUnavailable();
             }
             
@@ -73,7 +73,7 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
 
             if(empty($data))
             {
-            	error_log("Could not execute backend search: ".__METHOD__.", ".$th->getMessage());
+            	trigger_error("Could not execute backend search.", E_USER_WARNING);
             	throw new ServiceUnavailable();
             }
             
@@ -88,8 +88,8 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
                 if(!$ldapUserBind)
                 	return false;
             } catch (\Throwable $th) {
-                error_log("Unknown LDAP error: ".__METHOD__.", ".$th->getMessage());
-                throw new ServiceUnavailable();
+							trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
+							throw new ServiceUnavailable();
             }
             
             $GLOBALS['currentUserPrincipalLdapConn'] = $ldapBindConn;
@@ -105,7 +105,7 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
 
             if($ldapBindConn === false)
             {
-		          error_log("Could not establish bind connection to backend server in " . __METHOD__ . " at line " . __LINE__);
+		          trigger_error("Could not establish bind connection to backend server.", E_USER_WARNING);
 		          throw new ServiceUnavailable();
             }
 

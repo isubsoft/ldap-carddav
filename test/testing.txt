@@ -1,3 +1,44 @@
+---- Get principals (returns only current principal due to ACL, given here for sake of completeness)
+
+-- REQUEST
+curl --dump-header /dev/stderr --silent --location -u %username:%password --request PROPFIND '%base_url' \
+--header 'Content-Type: application/xml' \
+--header 'Accept-Charset: utf-8' \
+--header 'Depth: 1' \
+--data '<d:propfind xmlns:d="DAV:">
+  <d:prop>
+     <d:principal-collection-set />
+  </d:prop>
+</d:propfind>'
+
+-- SAMPLE RESPONSE BODY
+<?xml version="1.0"?>
+<d:multistatus xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns" xmlns:card="urn:ietf:params:xml:ns:carddav">
+    <d:response>
+        <d:href>/principals/</d:href>
+        <d:propstat>
+            <d:prop>
+                <d:principal-collection-set>
+                    <d:href>/principals/</d:href>
+                </d:principal-collection-set>
+            </d:prop>
+            <d:status>HTTP/1.1 200 OK</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:href>/principals/PRINCIPAL/</d:href>
+        <d:propstat>
+            <d:prop>
+                <d:principal-collection-set>
+                    <d:href>/principals/</d:href>
+                </d:principal-collection-set>
+            </d:prop>
+            <d:status>HTTP/1.1 200 OK</d:status>
+        </d:propstat>
+    </d:response>
+</d:multistatus>
+
+----------------------------------------------------------------------------------
 
 ---- Get current principal 
 

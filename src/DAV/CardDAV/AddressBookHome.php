@@ -7,14 +7,29 @@ namespace ISubsoft\DAV\CardDAV;
 
 class AddressBookHome extends \Sabre\CardDAV\AddressBookHome
 {
-    public function getChildren()
-    {
-        $addressbooks = $this->carddavBackend->getAddressBooksForUser($this->principalUri);
-        $objs = [];
-        foreach ($addressbooks as $addressbook) {
-            $objs[] = new AddressBook($this->carddavBackend, $addressbook);
-        }
+  public function getChildren()
+  {
+		$addressbooks = $this->carddavBackend->getAddressBooksForUser($this->principalUri);
+		$objs = [];
+		
+		foreach ($addressbooks as $addressbook) {
+			if($this->carddavBackend->isAddressbookDirectory($addressbook['id']))
+				$objs[] = new AddressBookDirectory($this->carddavBackend, $addressbook);
+			else
+				$objs[] = new AddressBook($this->carddavBackend, $addressbook);
+		}
 
-        return $objs;
-    }
+		return $objs;
+  }
+    
+  public function getACL()
+  {
+		return [
+		  [
+		      'privilege' => '{DAV:}all',
+				  'principal' => '{DAV:}owner',
+		      'protected' => true,
+		  ],
+		];
+  }
 }

@@ -3,12 +3,14 @@
     "description" : "This is a ISubsoft CardDAV server providing support for contacts stored in LDAP",
     "require" : {
         "sabre/dav" : "~4.0.3",
-        "sabre/vobject" : "~4.5"
+        "sabre/vobject" : "~4.5",
+        "sabre/cache" : "~2.0.2"
     },
     "autoload" : {
         "psr-4" : {
             "ISubsoft\\DAV\\" : "src/DAV",
-            "ISubsoft\\VObject\\" : "src/VObject"
+            "ISubsoft\\VObject\\" : "src/VObject",
+            "ISubsoft\\Cache\\" : "src/Cache"
         }
     }
 }
