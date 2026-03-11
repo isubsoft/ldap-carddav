@@ -29,19 +29,16 @@ function printHelp($argv)
 }
 
 /*import database connection*/
-require_once __DIR__ . '/Bootstrap.php';
+require_once __DIR__ . '/include/bootstrap.php';
 
 /* load classes */
 require_once __BASE_DIR__ . '/vendor/autoload.php';
 
-// Cached entities
-$cachedEntities = ['principal', 'card'];
+// Create object for active cache backends
 $cacheMaster = new ISubsoft\Cache\Master($config, $pdo);
-
-// Create object for cache backends
 $cachedBackendEntity = [];
 
-foreach($cachedEntities as $entityId) {
+foreach(CACHED_ENTITIES as $entityId) {
 	$cacheBackendId = $cacheMaster->getBackendId($entityId);
 	
 	if($cacheBackendId != ISubsoft\Cache\Master::$dummyBackend)

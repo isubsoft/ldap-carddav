@@ -37,7 +37,7 @@ function printHelp($argv)
 }
 
 /*import database connection*/
-require_once __DIR__ . '/Bootstrap.php';
+require_once __DIR__ . '/include/bootstrap.php';
 
 /*database Tables*/
 $addressBooksTableName = 'cards_addressbook';

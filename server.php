@@ -12,7 +12,7 @@
 *********************************************************************************/
 
 // Initialize
-require_once __DIR__ . '/src/App/Bootstrap.php';
+require_once __DIR__ . '/src/App/include/bootstrap.php';
 
 // Loader
 require_once __BASE_DIR__ . '/vendor/autoload.php';
@@ -25,26 +25,30 @@ $GLOBALS['currentUserPrincipalId'] = null;
 $GLOBALS['currentUserPrincipalLdapConn'] = null;
 
 // Cache
-$cachedEntities = ['principal', 'card'];
-
-// Create object for cache backends.
 $entityCache = [];
 
+// Create object for active cache backends.
 $cacheMaster = new ISubsoft\Cache\Master($config, $pdo);
+$resetCache = [];
 
-foreach($cachedEntities as $entityId) {
+foreach(CACHED_ENTITIES as $entityId) {
 	$cacheBackendId = $cacheMaster->getBackendId($entityId);
 	$entityCache[$entityId] = $cacheMaster->cache[$cacheBackendId];
 	
-	if(!$cacheMaster->setActiveBackend($entityId, $cacheBackendId)) {
-		trigger_error("Cache backend '$cacheBackendId' could not be set for $entityId.", E_USER_WARNING);
-		http_response_code(503);
-		exit(1);
+	if($cacheMaster->wasBackendNotActive($entityId, $cacheBackendId)) {
+		if($cacheBackendId != ISubsoft\Cache\Master::$dummyBackend)
+			$resetCache[$cacheBackendId] = true;
+		
+		if(!$cacheMaster->setActiveBackend($entityId, $cacheBackendId))
+			trigger_error("Cache backend '$cacheBackendId' could not be set active for $entityId.", E_USER_WARNING);
 	}
 }
+
+foreach($resetCache as $backendId => $value)
+	trigger_error("Cache backend '$backendId' was not used before. Make sure that this cache backend does not contain any previous cache from this application as it may contain data which is inconsistent with current application state.", E_USER_WARNING);
 	
 // Destroy what is no longer required.
-unset($cacheMaster);
+unset($cacheMaster, $resetCache);
 
 // Backends
 $authBackend = new ISubsoft\DAV\Auth\Backend\LDAP($config);
