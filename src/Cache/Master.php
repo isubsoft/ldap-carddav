@@ -55,7 +55,7 @@ class Master
   	$this->cache = [];
   }
 	
-	public function cacheResetRequired($entityId, $setBackendId)
+	public function wasBackendNotActive($entityId, $setBackendId)
 	{
 		$backendId = ($setBackendId == self::$dummyBackend)?null:$setBackendId;
 		

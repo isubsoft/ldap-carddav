@@ -39,7 +39,9 @@ function replacePlaceholder(string $placeholder, string $replacement, string $su
 
 
 // Define constants
-define('__BASE_DIR__', __DIR__ . '/../..');
+const CACHED_ENTITIES = ['principal', 'card'];
+
+define('__BASE_DIR__', __DIR__ . '/../../..');
 define('__CONF_DIR__', __BASE_DIR__ . '/conf');
 
 require __CONF_DIR__ . '/conf.php';
