@@ -201,7 +201,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     }
     
     private function getCacheKey($syncDbUserId, $addressBookId, $cardUri) {
-    	return [self::$cacheEntityId, $syncDbUserId, $addressBookId, $cardUri];
+    	return CacheMaster::getKey([self::$cacheEntityId, $syncDbUserId, $addressBookId, $cardUri]);
     }
         
     
@@ -387,7 +387,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				$cardValues = null;
         
         foreach($this->getMappedContacts($addressBookId) as $contact) {
-       		$cardValues = CacheMaster::decode($this->cache->get(CacheMaster::getKey(self::getCacheKey($syncDbUserId, $addressBookId, $contact['card_uri'])), null));
+       		$cardValues = CacheMaster::decode($this->cache->get(self::getCacheKey($syncDbUserId, $addressBookId, $contact['card_uri'])), null);
        		
        		if($cardValues == [] || $cardValues == null) {
 		     		if(isset($contact['modified_timestamp']))
@@ -451,7 +451,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		    }
             
 				$cacheValid = true; // If false then cache need to be refreshed
-       	$result = CacheMaster::decode($this->cache->get(CacheMaster::getKey(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri)), null));
+       	$result = CacheMaster::decode($this->cache->get(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri)), null);
        	
        	if($result == [] || $result == null)
 					$cacheValid = false;
@@ -499,7 +499,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
           'size'          => strlen($cardData)
 				];
 				
-				if(!$this->cache->set(CacheMaster::getKey(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri)), CacheMaster::encode($result), (isset($this->config['cache']['card']['ttl']) && is_int($this->config['cache']['card']['ttl']) && $this->config['cache']['card']['ttl'] > 0 && $this->config['cache']['card']['ttl'] <= 2592000)?$this->config['cache']['card']['ttl']:self::$cacheTtl))
+				if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), CacheMaster::encode($result), (isset($this->config['cache']['card']['ttl']) && is_int($this->config['cache']['card']['ttl']) && $this->config['cache']['card']['ttl'] > 0 && $this->config['cache']['card']['ttl'] <= 2592000)?$this->config['cache']['card']['ttl']:self::$cacheTtl))
 			    trigger_error("Could not set cache", E_USER_WARNING);
         
         $result['id'] = $cardUid;
@@ -871,7 +871,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						throw new SabreDAVException\ServiceUnavailable();
 					}
 					
-					if(!$this->cache->set(CacheMaster::getKey(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri)), null, -60))
+					if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null, -60))
 			    	trigger_error("Could not expire cache", E_USER_WARNING);
 					
 					$oldLdapRdn = $componentOldLdapTree[0];
@@ -1026,7 +1026,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					throw new SabreDAVException\ServiceUnavailable();
 	      }
 	      
-				if(!$this->cache->delete(CacheMaster::getKey(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri))))
+				if(!$this->cache->delete(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri)))
 		      trigger_error("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore the error.", E_USER_NOTICE);
 					
 	      if($data['count'] === 0) {
@@ -1705,13 +1705,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 									continue;
 							}
 							
-							$cardValues = CacheMaster::decode($this->cache->get(CacheMaster::getKey(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri)), null));
+							$cardValues = CacheMaster::decode($this->cache->get(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null));
 							
 							if(isset($cardValues['lastmodified']))
 							{ 
 								if($cardValues['lastmodified'] < strtotime($data['data']['modifyTimestamp'][0]))
 								{
-									if(!$this->cache->set(CacheMaster::getKey(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri)), null, -60))
+									if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null, -60))
 			    					trigger_error("Could not expire cache", E_USER_WARNING);
 										
 									$this->addChange($addressBookId, $cardUri, 'MODIFY');
@@ -1989,13 +1989,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							$cardUid = $row['card_uid'];
 							$cardUri = $row['card_uri'];
 							
-							$cardValues = CacheMaster::decode($this->cache->get(CacheMaster::getKey(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri)), null));
+							$cardValues = CacheMaster::decode($this->cache->get(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null));
 							
 							if(isset($cardValues['lastmodified']))
 							{
 								if($cardValues['lastmodified'] < $cardModifiedTimestamp)
 								{
-									if(!$this->cache->set(CacheMaster::getKey(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri)), null, -60))
+									if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null, -60))
 			    					trigger_error("Could not expire cache", E_USER_WARNING);
 								
 									$this->addChange($addressBookId, $cardUri, 'MODIFY');
@@ -2025,7 +2025,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					
 					foreach($mappedContactsUriList as $mappedContactUri) {
 						if(!in_array($mappedContactUri, $backendContactsUriList)) {
-							if(!$this->cache->delete(CacheMaster::getKey(self::getCacheKey($syncDbUserId, $addressBookId, $mappedContactUri))))
+							if(!$this->cache->delete(self::getCacheKey($syncDbUserId, $addressBookId, $mappedContactUri)))
 				    		trigger_error("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore this error.", E_USER_NOTICE);
 				    		
 		          $this->addChange($addressBookId, $mappedContactUri);
