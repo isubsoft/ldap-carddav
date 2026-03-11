@@ -77,7 +77,7 @@ function addAddressBook($addressbookName = null)
 		echo "Address book '$addressbookName' has been successfully added to sync database.\n";
     
   	} catch (\Throwable $th) {
-    	trigger_error("Some unexpected error occurred while executing database operation - ".$th->getMessage(), E_USER_WARNING);
+			trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 			return false;
   }
 	
@@ -95,8 +95,8 @@ try {
 		$initialized = false;
 }
 catch (\Throwable $th) {
-    trigger_error("Some unexpected error occurred in database - ".$th->getMessage(), E_USER_WARNING);
-    exit(1);
+	trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
+  exit(1);
 }
 
 if(isset($argv[1]) && $argv[1] == 'help')
@@ -134,8 +134,8 @@ else if(isset($argv[1]) && $argv[1] == 'init')
       	echo "Address book(s) successfully imported.\n";
 
     } catch (\Throwable $th) {
-        trigger_error("Some unexpected error occurred in database - ".$th->getMessage(), E_USER_WARNING);
-        exit(1);
+			trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
+      exit(1);
     }
     
   exit;
@@ -193,7 +193,7 @@ elseif(isset($argv[1]) && $argv[1] == 'housekeeping')
 		if($inTransaction)
 			$pdo->rollback();
 			
-		trigger_error("Some unexpected error occurred in database - ".$th->getMessage(), E_USER_WARNING);
+		trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 		exit(1);
 	}
 	
@@ -287,7 +287,7 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 			echo "[NOTE] After this action sync database table(s) '$backendMapTableName' may need optimization. Use native database command(s) to achieve the same.\n";
 			echo "[NOTE] After this action sync database table(s) '$userTableName' may need optimization (if you have deleted a large number of '$options[$operation]' entities). Use native database command(s) to achieve the same.\n";
 		} catch (\Throwable $th) {
-			trigger_error("Some unexpected error occurred in database - ".$th->getMessage(), E_USER_WARNING);
+			trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 			exit(1);
 		}
 	}
@@ -393,8 +393,8 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 			}
 
 		} catch (\Throwable $th) {
-				trigger_error("Some unexpected error occurred in database - " . $th->getMessage(), E_USER_WARNING);
-				exit(1);
+			trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
+			exit(1);
 		}
 	}
 }
