@@ -13,7 +13,7 @@ function printHelp($argv)
 	error_log("");
 	error_log("-- Actions");
 	error_log("help:         Print this help and exit.");
-	error_log("clear:        Clear cache.");
+	error_log("clear:        Clear cache. WARNING: This will delete/invalidate all items in the cache including ones set by other applications.");
 	error_log("housekeeping: Evict stale cache from managed caches.");
 	error_log("");
 	error_log("-- Parameter(s) for help");
@@ -23,25 +23,22 @@ function printHelp($argv)
 	error_log("none");
 	error_log("");
 	error_log("-- Parameter(s) for housekeeping");
-	error_log("batch size (optional, integer): Restrict action to maximum of these many items. Should be >= 0, 0 (default) means no limit. Since actions can be time consuming set this parameter to a small value like 1000 to finish early. Useful when used from a scheduler.");
+	error_log("batch size (optional, integer): Restrict action to maximum of these many items. Should be >= 0, 0 (default) means no limit. Since this action can be time consuming set this parameter to a small value like 1000 to finish early. Useful when used from a scheduler.");
 	
 	return;
 }
 
 /*import database connection*/
-require_once __DIR__ . '/Bootstrap.php';
+require_once __DIR__ . '/include/bootstrap.php';
 
 /* load classes */
 require_once __BASE_DIR__ . '/vendor/autoload.php';
 
-// Cached entities
-$cachedEntities = ['principal', 'card'];
+// Create object for active cache backends
 $cacheMaster = new ISubsoft\Cache\Master($config, $pdo);
-
-// Create object for cache backends
 $cachedBackendEntity = [];
 
-foreach($cachedEntities as $entityId) {
+foreach(CACHED_ENTITIES as $entityId) {
 	$cacheBackendId = $cacheMaster->getBackendId($entityId);
 	
 	if($cacheBackendId != ISubsoft\Cache\Master::$dummyBackend)
@@ -61,15 +58,17 @@ else if(isset($argv[1]) && $argv[1] == 'clear')
 		echo $backendId . "\t" . json_encode($entityList, JSON_NUMERIC_CHECK) . "\n";
 		
   echo "\n";
-		
-  $cachedBackend = readline("\nEnter the backend you want to clear: ");
+  
+  $cachedBackend = readline("Enter the backend you want to clear: ");
   
   if($cachedBackend == '' || !isset($cachedBackendEntity[$cachedBackend])) {
 		error_log("[ERROR] Invalid cache backend provided.");
 		exit(1);
   }
   
-  $option = readline("\nAre you sure you want to proceed (y/N): ");
+  echo "WARNING: This will delete/invalidate all items in the cache including ones set by other applications.";
+  
+  $option = readline(" Are you sure you want to proceed (y/N): ");
   
   if($option == '' || ($option != 'Y' && $option != 'y'))
   	exit;
