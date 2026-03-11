@@ -116,7 +116,7 @@ try {
     foreach($applicable_db_init_commands as $stmt)
 			$pdo->exec($stmt);
 } catch (\Throwable $th) {
-    trigger_error('Could not create sync database connection or execute init commands correctly: '. $th->getMessage(), E_USER_WARNING);
+		trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
     http_response_code(500);
 		exit(1);
 }

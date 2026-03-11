@@ -257,7 +257,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		    	$systemUser = $row['user_id'];
 		    
 		  } catch (\Throwable $th) {
-				trigger_error("Database query could not be executed. Error message: " . $th->getMessage(), E_USER_WARNING);
+				trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 		  }
       
       foreach ($this->config['card']['addressbook']['ldap'] as $addressBookId => $addressBookConfig) {
@@ -285,7 +285,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					  $addressBookConfig['writable'] = $row['writable'];
 					  
 					} catch (\Throwable $th) {
-						trigger_error("Database query could not be executed. Error message: " . $th->getMessage(), E_USER_WARNING);
+						trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 						throw new SabreDAVException\ServiceUnavailable();
 					}
 					
@@ -446,7 +446,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		      	$cardUid = $row['card_uid'];
 		      	$backendId = $row['backend_id'];
 		    } catch (\Throwable $th) {
-					trigger_error("Database query could not be executed. Error message: " . $th->getMessage(), E_USER_WARNING);
+					trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 					throw new SabreDAVException\ServiceUnavailable();
 		    }
             

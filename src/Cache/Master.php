@@ -199,8 +199,8 @@ class Master
 
 		try {
 			$cacheValues = json_encode(self::recursive_encode($values));
-		} catch(Exception $e) {
-			trigger_error("Encountered an invalid value/datatype.", E_USER_WARNING);
+		} catch (\Throwable $th) {
+			trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 			return null;
 		}
 		
