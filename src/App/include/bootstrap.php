@@ -39,6 +39,7 @@ function replacePlaceholder(string $placeholder, string $replacement, string $su
 
 
 // Define constants
+const __APP_NAME__ = 'ldap-carddav';
 const CACHED_ENTITIES = ['principal', 'card'];
 
 define('__BASE_DIR__', __DIR__ . '/../../..');

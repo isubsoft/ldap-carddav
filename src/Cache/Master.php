@@ -182,7 +182,7 @@ class Master
 	
 	public static function getKey(array $key)
 	{
-		return strtolower(md5(implode("/", $key)));
+		return strtolower(md5(__APP_NAME__ . '/' . implode("/", $key)));
 	}
 	
 	private static function recursive_encode(array $values)
