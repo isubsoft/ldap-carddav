@@ -387,7 +387,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				$cardValues = null;
         
         foreach($this->getMappedContacts($addressBookId) as $contact) {
-       		$cardValues = CacheMaster::decode($this->cache->get(self::getCacheKey($syncDbUserId, $addressBookId, $contact['card_uri'])), null);
+       		$cardValues = $this->cache->get(self::getCacheKey($syncDbUserId, $addressBookId, $contact['card_uri']), null);
        		
        		if($cardValues == [] || $cardValues == null) {
 		     		if(isset($contact['modified_timestamp']))
@@ -451,7 +451,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		    }
             
 				$cacheValid = true; // If false then cache need to be refreshed
-       	$result = CacheMaster::decode($this->cache->get(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri)), null);
+       	$result = $this->cache->get(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null);
        	
        	if($result == [] || $result == null)
 					$cacheValid = false;
@@ -499,7 +499,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
           'size'          => strlen($cardData)
 				];
 				
-				if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), CacheMaster::encode($result), (isset($this->config['cache']['card']['ttl']) && is_int($this->config['cache']['card']['ttl']) && $this->config['cache']['card']['ttl'] > 0 && $this->config['cache']['card']['ttl'] <= 2592000)?$this->config['cache']['card']['ttl']:self::$cacheTtl))
+				if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), $result, (isset($this->config['cache']['card']['ttl']) && is_int($this->config['cache']['card']['ttl']) && $this->config['cache']['card']['ttl'] > 0 && $this->config['cache']['card']['ttl'] <= 2592000)?$this->config['cache']['card']['ttl']:self::$cacheTtl))
 			    trigger_error("Could not set cache", E_USER_WARNING);
         
         $result['id'] = $cardUid;
@@ -1705,7 +1705,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 									continue;
 							}
 							
-							$cardValues = CacheMaster::decode($this->cache->get(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null));
+							$cardValues = $this->cache->get(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null);
 							
 							if(isset($cardValues['lastmodified']))
 							{ 
@@ -1989,7 +1989,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							$cardUid = $row['card_uid'];
 							$cardUri = $row['card_uri'];
 							
-							$cardValues = CacheMaster::decode($this->cache->get(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null));
+							$cardValues = $this->cache->get(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null);
 							
 							if(isset($cardValues['lastmodified']))
 							{
