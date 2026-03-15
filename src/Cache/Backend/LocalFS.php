@@ -68,7 +68,7 @@ class LocalFS implements CacheInterface, ManagedInterface
 			if($cacheData === false)
 				return $default;
 				
-    	return $cacheData;
+    	return unserialize($cacheData);
     }
 
     /**
@@ -98,7 +98,7 @@ class LocalFS implements CacheInterface, ManagedInterface
     	else if($ttl !== 0)
     		$setTtl = $ttl + time();
     	
-	  	if(file_put_contents($ttlFile, $setTtl) === false || file_put_contents($cacheFile, $value) === false) {
+	  	if(file_put_contents($ttlFile, $setTtl) === false || file_put_contents($cacheFile, serialize($value)) === false) {
     		$this->delete($key);
 	  		return false;
 	  	}
@@ -160,7 +160,7 @@ class LocalFS implements CacheInterface, ManagedInterface
     	$valueList = [];
     	
     	foreach($keys as $key)
-    		$valueList[$key] = $this->get($key);
+    		$valueList[$key] = $this->get($key, $default);
     	
     	return $valueList;
     }

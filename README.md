@@ -17,7 +17,8 @@
 ## Limitations
 1. Does not support anonymous access to the server.
 2. Same LDAP server must be used for authentication as well as for address books.
-3. Following vCard parameters are not stored - PREF.
+3. Unmapped vCard properties to LDAP are not stored.
+4. Following vCard parameter(s) are not stored - PREF.
 
 ## Planned features
 1. Support for more PDO databases.

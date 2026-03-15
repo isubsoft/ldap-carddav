@@ -128,6 +128,17 @@ class Master
 		else if($configuredBackendId == 'memcached') {
 			$memcached = new \Memcached();
 			
+			if(isset($backendConfig['auth']['username']) && isset($backendConfig['auth']['password']) && (!$memcached->setOption(\Memcached::OPT_BINARY_PROTOCOL, true) || !$memcached->setSaslAuthData($backendConfig['auth']['username'], $backendConfig['auth']['password']))) {
+				trigger_error("Caching is disbaled as could not set '$configuredBackendId' cache backend authentication credentials. Check '$configuredBackendId' cache backend configuration.", E_USER_WARNING);
+				
+				$backendId = self::$dummyBackend;
+				
+				if(!isset($this->cache[$backendId]))
+					$this->cache[$backendId] = new Backend\Dummy();
+				
+				return $backendId;
+			}
+
 			if(!isset($backendConfig['servers']) || !$memcached->addServers($backendConfig['servers'])) {
 				trigger_error("Caching is disbaled as '$configuredBackendId' cache backend could not be initialized. Check '$configuredBackendId' cache backend configuration.", E_USER_WARNING);
 				
@@ -171,66 +182,6 @@ class Master
 	
 	public static function getKey(array $key)
 	{
-		return strtolower(md5(implode("/", $key)));
+		return strtolower(md5(__APP_NAME__ . '/' . implode("/", $key)));
 	}
-	
-	private static function recursive_encode(array $values)
-	{
-		$cacheValues = [];			
-		
-		foreach($values as $key => $value)
-		{
-			if(is_scalar($value))
-				$cacheValues[$key] = base64_encode((string)$value);
-			elseif($value === null)
-				$cacheValues[$key] = null;
-			elseif(is_array($value))
-				$cacheValues[$key] = self::recursive_encode($value);
-			else
-				throw new \UnexpectedValueException();
-		}
-		
-		return $cacheValues;
-	}
-	
-  public static function encode(array $values)
-  {
-		$cacheValues = '[]';
-
-		try {
-			$cacheValues = json_encode(self::recursive_encode($values));
-		} catch (\Throwable $th) {
-			trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
-			return null;
-		}
-		
-		return $cacheValues;
-  }
-  
-	private static function recursive_decode(array $values)
-	{
-		$cacheValues = [];			
-		
-		foreach($values as $key => $value)
-		{
-			if(is_scalar($value))
-				$cacheValues[$key] = base64_decode($value);
-			elseif($value === null)
-				$cacheValues[$key] = null;
-			elseif(is_array($value))
-				$cacheValues[$key] = self::recursive_decode($value);
-		}
-		
-		return $cacheValues;
-	}
-  
-  public static function decode($value)
-  {
-		$cardValues = [];
-		
-		if(!is_string($value))
-			return $cardValues;
-		
-		return self::recursive_decode(json_decode($value, true));
-  }
 }

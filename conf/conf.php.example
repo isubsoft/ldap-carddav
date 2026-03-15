@@ -103,7 +103,9 @@ $config['cache']['backend'] = [
 	// local_fs does not have any configurable parameters here. Directory pointed to by 'cachedir' key above need to be setup correctly though.
 	// apcu and memory do not have any configurable parameters here.
 	// 'memcached' => [
-	// 'servers' should be same as $servers parameter to function \Memcached::addServers ( check https://www.php.net/manual/en/memcached.addservers.php for details )
+	// Authentication credentials for memcached server. If not set no authentication credentials will be provided to the server ( check https://www.php.net/manual/en/memcached.setsaslauthdata.php ).
+	//  'auth' => ['username' => '', 'password' => ''],
+	// Set memcached servers. Should be same as $servers parameter to function \Memcached::addServers ( check https://www.php.net/manual/en/memcached.addservers.php for details ).
 	// 	'servers' => [
 	//		['<hostname1>', <port1>, <weight1>],
 	//		['<hostname2>', <port2>, <weight2>]

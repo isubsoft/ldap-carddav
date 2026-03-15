@@ -111,7 +111,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
     }
     
     private static function getCacheKey($principalId) {
-    	return [self::$cacheEntityId, $principalId];
+    	return CacheMaster::getKey([self::$cacheEntityId, $principalId]);
     }
     
     /**
@@ -209,7 +209,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
 			  }
         
 				$cacheValid = true; // If false then cache need to be refreshed
-				$principal = CacheMaster::decode($this->cache->get(CacheMaster::getKey(self::getCacheKey($principalId)), null));
+				$principal = $this->cache->get(self::getCacheKey($principalId), null);
 				
        	if($principal == [] || $principal == null)
 					$cacheValid = false;
@@ -268,7 +268,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
 	        	$principal = Utility::setPrincipalProperty(null, $this->fieldMap, $configFieldMap, $data[0]);
             $principal['__backend_id'] = $data[0]['entryuuid'][0];
             
-						if(!$this->cache->set(CacheMaster::getKey(self::getCacheKey($principalId)), CacheMaster::encode($principal), (isset($this->config['cache']['principal']['ttl']) && is_int($this->config['cache']['principal']['ttl']) && $this->config['cache']['principal']['ttl'] > 0 && $this->config['cache']['principal']['ttl'] <= 2592000)?$this->config['cache']['principal']['ttl']:self::$cacheTtl))
+						if(!$this->cache->set(self::getCacheKey($principalId), $principal, (isset($this->config['cache']['principal']['ttl']) && is_int($this->config['cache']['principal']['ttl']) && $this->config['cache']['principal']['ttl'] > 0 && $this->config['cache']['principal']['ttl'] <= 2592000)?$this->config['cache']['principal']['ttl']:self::$cacheTtl))
 						  trigger_error("Could not set cache", E_USER_WARNING);
             
             $principal['id'] = $principalId;
