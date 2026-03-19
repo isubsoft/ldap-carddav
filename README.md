@@ -7,17 +7,17 @@
 3. Multiple address book support.
 4. Global, shared and private address book support.
 5. Bidirectional sync between LDAP server and CardDAV clients (contacts deleted directly in LDAP are deleted in CardDAV clients asynchronously).
-6. Supports WebDAV sync to get changes from LDAP incrementally.
+6. Supports WebDAV sync.
 7. Fully compatible (and can coexist) with LDAP address book applications.
-8. Extensive and customizable configuration option to map vCard properties to LDAP server attributes including multi-value and composite value properties and attributes.
+8. Extensive and customizable configuration option to map vCard properties to LDAP attributes including multi-value and composite value properties and attributes.
 9. Contact group support.
-10. Media like profile picture support for contacts.
+10. Media (like profile picture) support for contacts.
 11. Caching support using popular backends like Memcached and APCu.
 
 ## Limitations
 1. Does not support anonymous access to the server.
 2. Same LDAP server must be used for authentication as well as for address books.
-3. Unmapped vCard properties to LDAP are not stored.
+3. vCard properties not mapped in conf file are not stored.
 4. Following vCard parameter(s) are not stored - PREF.
 
 ## Planned features
