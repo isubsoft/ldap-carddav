@@ -107,7 +107,6 @@ $config['cache']['backend'] = [
 	//
 	// Memcached configuration.
 	//  'memcached' => [
-	
 	  // Authentication credentials for memcached server. If not set no authentication credentials will be provided to 
 	  // the server ( check https://www.php.net/manual/en/memcached.setsaslauthdata.php ).
 	  //  'auth' => ['username' => '', 'password' => ''],
