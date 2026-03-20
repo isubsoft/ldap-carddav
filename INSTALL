@@ -42,13 +42,13 @@ libapache2-mod-php
 -- Downloading application
 Download the application using any of the below mentioned method and place the application folder in a path suitable to your HTTP server. The application folder path should be set as the document root in your HTTP server configuration file.
 
--- Download using composer
+1. Using composer
 Download latest stable release: composer create-project isubsoft/ldap-carddav --prefer-dist
 Download latest from master branch: composer create-project isubsoft/ldap-carddav --prefer-dist --stability="dev"
 Download latest pre-release: composer create-project isubsoft/ldap-carddav --prefer-dist --stability="beta"
 
--- Download using source code repository
-Go to the source code repository and download the source code archive from a release and extract the archive. Or clone the source code repository and switch to the version you need. Run 'composer update' to install the dependencies.
+2. Using source code repository
+Go to the source code repository and download the source code archive from a release and extract the archive. Alternatively clone the source code repository and switch to the version you need. Run 'composer update' to install the dependencies.
 
 NOTE: This application is compatible with PHP 5.5 and above but PHP 7.1 or above is required for vCard v3.0 interoperability with vCard v4.0 for contact groups and/or when using a caching backend other than 'local_fs'. If you are using a PHP version below 7.1 then manually remove the packages - sabre/vobject, sabre/cache from require in the composer.json file and run 'composer update'.
 
@@ -68,13 +68,13 @@ Copy conf/conf.php.example as conf/conf.php and update the file conf/conf.php ac
 
 -- File permissions
 1. Make sure no application files or folders are initially owned by user www-data.
-2. conf/conf.php MUST NOT be world readable but MUST be readable and preferably not writable by the user executing PHP.
+2. conf/conf.php MUST NOT be world readable but MUST be readable and preferably not writeable by the user executing PHP.
    Equivalent of UNIX command: chmod o-rwx conf/conf.php && chmod g-w conf/conf.php && chgrp www-data conf/conf.php
-3. Data directory need to be writable by the user executing PHP and MUST NOT be world readable. All sub directories of data directory need to be writable by the user executing PHP. Default data directory is data.
+3. Data directory need to be writeable by the user executing PHP and MUST NOT be world readable. All sub directories of data directory need to be writeable by the user executing PHP. Default data directory is data.
    Equivalent of UNIX command: chmod o-rwx data && chown -R www-data:www-data data
-4. Cache directory need to be writable by the user executing PHP and MUST NOT be world readable. All sub directories of cache directory need to be writable by the user executing PHP. Default cache directory is cache.
+4. Cache directory need to be writeable by the user executing PHP and MUST NOT be world readable. All sub directories of cache directory need to be writeable by the user executing PHP. Default cache directory is cache.
    Equivalent of UNIX command: chmod o-rwx cache && chown -R www-data:www-data cache
-5. Temporary files directory need to be writable by the user executing PHP unless system temporary files directory is configured. Default temporary files directory is tmp.
+5. Temporary files directory need to be writeable by the user executing PHP unless system temporary files directory is configured. Default temporary files directory is tmp.
    Equivalent of UNIX command: chmod o-rwx tmp && chown -R www-data:www-data tmp
 
 -- Web server and PHP configuration
