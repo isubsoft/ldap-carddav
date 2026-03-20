@@ -1,9 +1,9 @@
-{ 
-    "name" : "isubsoft/ldap-carddav",
-    "type" : "project",
-    "description" : "A CardDAV server with a LDAP server as contacts and authentication backend",
-    "homepage" : "https://github.com/isubsoft/ldap-carddav",
-    "authors" : [
+{
+    "name": "isubsoft/ldap-carddav",
+    "type": "project",
+    "description": "A CardDAV server with a LDAP server as contacts and authentication backend",
+    "homepage": "https://github.com/isubsoft/ldap-carddav",
+    "authors": [
       {
         "name": "ISub Softwares",
         "email": "admin@isubsoft.com",
@@ -11,26 +11,26 @@
         "role": "developer"
       }
     ],
-    "require" : {
-        "php" : ">=5.5",
-        "sabre/dav" : "~3.2.3 || ~4.0.3",
-        "sabre/vobject" : "~4.5.6",
-        "psr/simple-cache" : "~1.0.1",
-        "sabre/cache" : "~1.0.4 || ~2.0.2"
+    "require": {
+        "php": ">=5.5",
+        "sabre/dav": "~3.2.3 || ~4.0.3",
+        "sabre/vobject": "~4.5.6",
+        "psr/simple-cache": "~1.0.1",
+        "sabre/cache": "~1.0.4 || ~2.0.2"
     },
-    "autoload" : {
-        "psr-4" : {
-            "ISubsoft\\DAV\\" : "src/DAV",
-            "ISubsoft\\VObject\\" : "src/VObject",
-            "ISubsoft\\Cache\\" : "src/Cache"
+    "autoload": {
+        "psr-4": {
+            "ISubsoft\\DAV\\": "src/DAV",
+            "ISubsoft\\VObject\\": "src/VObject",
+            "ISubsoft\\Cache\\": "src/Cache"
         }
     },
-    "minimum-stability" : "stable",
-    "prefer-stable" : true,
-    "keywords" : ["server", "application", "WebDAV", "CardDAV", "LDAP", "interface"],
-    "license" : "GPL-3.0-only",
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "keywords": ["server", "application", "WebDAV", "CardDAV", "LDAP", "interface"],
+    "license": "GPL-3.0-only",
     "support": {
-      "wiki" : "https://github.com/isubsoft/ldap-carddav/wiki",
+      "wiki": "https://github.com/isubsoft/ldap-carddav/wiki",
       "source": "https://github.com/isubsoft/ldap-carddav"
     }
 }
