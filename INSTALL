@@ -50,7 +50,7 @@ Download latest pre-release: composer create-project isubsoft/ldap-carddav --pre
 -- Download using source code repository
 Go to the source code repository and download the source code archive from a release and extract the archive. Or clone the source code repository and switch to the version you need. Run 'composer update' to install the dependencies.
 
-NOTE: This application is compatible with PHP 5.5 and above but PHP 7.1 is required for vCard v3.0 interoperability with vCard v4.0 for contact groups and/or when using a caching backend other than 'local_fs'. If you need PHP 5.5 compatibility manually remove the packages - sabre/vobject, sabre/cache from require in the composer.json file and run 'composer update'.
+NOTE: This application is compatible with PHP 5.5 and above but PHP 7.1 or above is required for vCard v3.0 interoperability with vCard v4.0 for contact groups and/or when using a caching backend other than 'local_fs'. If you are using a PHP version below 7.1 then manually remove the packages - sabre/vobject, sabre/cache from require in the composer.json file and run 'composer update'.
 
 -- Application conf file
 Copy conf/conf.php.example as conf/conf.php and update the file conf/conf.php according to your environment and need. Configuration keys are documented along side in the conf/conf.php.example file. Check the wiki for more advanced configuration examples.
