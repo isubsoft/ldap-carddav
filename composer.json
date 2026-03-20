@@ -17,5 +17,9 @@
     },
     "minimum-stability" : "stable",
     "prefer-stable" : true,
-    "keywords" : ["server", "application", "WebDAV", "CardDAV", "LDAP", "interface"]
+    "keywords" : ["server", "application", "WebDAV", "CardDAV", "LDAP", "interface"],
+    "license" : "GPL-3.0-only",
+    "support": {
+      "source": "https://github.com/isubsoft/ldap-carddav"
+    }
 }
