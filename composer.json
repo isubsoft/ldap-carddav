@@ -1,6 +1,16 @@
 { 
     "name" : "isubsoft/ldap-carddav",
+    "type" : "project",
     "description" : "A CardDAV server with a LDAP server as contacts and authentication backend",
+    "homepage" : "https://github.com/isubsoft/ldap-carddav",
+    "authors" : [
+      {
+        "name": "ISub Softwares",
+        "email": "admin@isubsoft.com",
+        "homepage": "https://github.com/isubsoft",
+        "role": "developer"
+      }
+    ],
     "require" : {
         "php" : ">=5.5",
         "sabre/dav" : "~3.2.3 || ~4.0.3",
@@ -20,6 +30,7 @@
     "keywords" : ["server", "application", "WebDAV", "CardDAV", "LDAP", "interface"],
     "license" : "GPL-3.0-only",
     "support": {
+      "wiki" : "https://github.com/isubsoft/ldap-carddav/wiki",
       "source": "https://github.com/isubsoft/ldap-carddav"
     }
 }

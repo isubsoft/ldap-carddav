@@ -39,13 +39,18 @@ php-apcu
 apache2
 libapache2-mod-php
 
--- Download application
-Download the application files from the repository in an empty folder (henceforth called the application folder) and place the application folder in a path suitable to your HTTP server. The application folder path should be set as the document root in your HTTP server configuration file.
+-- Downloading application
+Download the application using any of the below mentioned method and place the application folder in a path suitable to your HTTP server. The application folder path should be set as the document root in your HTTP server configuration file.
 
--- Go to the application folder path before performing any of the below steps.
+-- Download using composer
+Download latest stable release: composer create-project isubsoft/ldap-carddav --prefer-dist
+Download latest from master branch: composer create-project isubsoft/ldap-carddav --prefer-dist --stability="dev"
+Download latest pre-release: composer create-project isubsoft/ldap-carddav --prefer-dist --stability="beta"
 
--- Composer
-This application uses composer dependencies. Please install the dependencies by running 'composer update'. This application is compatible with PHP 5.5. PHP 7.1 is required for vCard v3.0 interoperability with vCard v4.0 for contact groups and if using a caching backend other than 'local_fs'. If you need PHP 5.5 compatibility remove the following packages from required in the 'composer.json' file - sabre/vobject, sabre/cache.
+-- Download using source code repository
+Go to the source code repository and download the source code archive from a release and extract the archive. Or clone the source code repository and switch to the version you need. Run 'composer update' to install the dependencies.
+
+NOTE: This application is compatible with PHP 5.5 and above. PHP 7.1 is required for vCard v3.0 interoperability with vCard v4.0 for contact groups and if using a caching backend other than 'local_fs'. If you need PHP 5.5 compatibility manually remove the packages - sabre/vobject, sabre/cache from required in the composer.json file and run 'composer update'.
 
 -- Application conf file
 Copy conf/conf.php.example as conf/conf.php and update the file conf/conf.php according to your environment and need. Configuration keys are documented along side in the conf/conf.php.example file. Check the wiki for more advanced configuration examples.
