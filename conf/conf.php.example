@@ -93,29 +93,36 @@ $config['server']['ldap'] = [
 $config['cache']['principal']['backend'] = 'local_fs';
 $config['cache']['card']['backend'] = 'local_fs';
 
-// TTL (in seconds) for cached items. TTL should be greater than 0 or less than or equal to 2592000 (30 days) else default value will be used.
+// TTL (in seconds) for cached items. TTL should be greater than 0 or less than or equal to 2592000 (30 days) else 
+// default value will be used.
 // Defaults to 1 day.
 //  $config['cache']['card']['ttl'] = 86400;
 //  $config['cache']['principal']['ttl'] = 86400;
 
 // Configure caching backend below.
 $config['cache']['backend'] = [
-	// local_fs does not have any configurable parameters here. Directory pointed to by 'cachedir' key above need to be setup correctly though.
-	// apcu and memory do not have any configurable parameters here.
-	// 'memcached' => [
-	// Authentication credentials for memcached server. If not set no authentication credentials will be provided to the server ( check https://www.php.net/manual/en/memcached.setsaslauthdata.php ).
-	//  'auth' => ['username' => '', 'password' => ''],
-	// Set memcached servers. Should be same as $servers parameter to function \Memcached::addServers ( check https://www.php.net/manual/en/memcached.addservers.php for details ).
-	// 	'servers' => [
-	//		['<hostname1>', <port1>, <weight1>],
-	//		['<hostname2>', <port2>, <weight2>]
-	//	]
-	// ]
+	// Local_FS does not have any configurable parameters here. Directory pointed to by 'cachedir' key above need 
+	// to be setup correctly though.
+	// Apcu and Memory do not have any configurable parameters here.
+	//
+	// Memcached configuration.
+	//  'memcached' => [
+	  // Authentication credentials for memcached server. If not set no authentication credentials will be provided to 
+	  // the server ( check https://www.php.net/manual/en/memcached.setsaslauthdata.php ).
+	  //  'auth' => ['username' => '', 'password' => ''],
+
+	  // Set memcached servers. Should be same as $servers parameter to function \Memcached::addServers ( check 
+	  // https://www.php.net/manual/en/memcached.addservers.php ).
+	  //  'servers' => [
+	  //    ['<hostname1>', <port1>, <weight1>],
+	  //    ['<hostname2>', <port2>, <weight2>]
+	  //  ]
+	//  ]
 ];
 
 
-// User authentication. Authentication is performed by a direct bind to the LDAP directory using user credentials provided by the client.
-// Only basic HTTP authentication scheme can be used by a client to provide user credentials.
+// User authentication. Authentication is performed by a direct bind to the LDAP directory using user credentials provided 
+// by the client. Only basic HTTP authentication scheme can be used by a client to provide user credentials.
 $config['auth']['ldap'] = [
 	// Authentication realm. Defaults to 'isubsoft/ldap-carddav'.
 	// 'realm' => '',
