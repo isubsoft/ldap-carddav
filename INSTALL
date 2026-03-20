@@ -45,7 +45,7 @@ Download the application files from the repository in an empty folder (hencefort
 -- Go to the application folder path before performing any of the below steps.
 
 -- Composer
-This application uses composer dependencies. Please install the dependencies by running 'composer update'. This application is compatible with SabreDAV 3.2 (PHP 5.5) till SabreDAV 4.0.3 (PHP 7.0.0). VObject 4.5 (PHP 7.1) is required for some vCard v3.0 interoperability with vCard v4.0 for contact groups. You may adjust composer.json according to your need/environment.
+This application uses composer dependencies. Please install the dependencies by running 'composer update'. This application is compatible with PHP 5.5. PHP 7.1 is required for vCard v3.0 interoperability with vCard v4.0 for contact groups and if using a caching backend other than 'local_fs'. If you need PHP 5.5 compatibility remove the following packages from required in the 'composer.json' file - sabre/vobject, sabre/cache.
 
 -- Application conf file
 Copy conf/conf.php.example as conf/conf.php and update the file conf/conf.php according to your environment and need. Configuration keys are documented along side in the conf/conf.php.example file. Check the wiki for more advanced configuration examples.

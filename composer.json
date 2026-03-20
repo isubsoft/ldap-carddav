@@ -1,10 +1,12 @@
 { 
     "name" : "isubsoft/ldap-carddav",
-    "description" : "This is a ISubsoft CardDAV server providing support for contacts stored in LDAP",
+    "description" : "A CardDAV server with a LDAP server as contacts and authentication backend",
     "require" : {
-        "sabre/dav" : "~4.0.3",
-        "sabre/vobject" : "~4.5",
-        "sabre/cache" : "~2.0.2"
+        "php" : ">=5.5",
+        "sabre/dav" : "~3.2.3 || ~4.0.3",
+        "sabre/vobject" : "~4.5.6",
+        "psr/simple-cache" : "~1.0.1",
+        "sabre/cache" : "~1.0.4 || ~2.0.2"
     },
     "autoload" : {
         "psr-4" : {
@@ -12,5 +14,8 @@
             "ISubsoft\\VObject\\" : "src/VObject",
             "ISubsoft\\Cache\\" : "src/Cache"
         }
-    }
+    },
+    "minimum-stability" : "stable",
+    "prefer-stable" : true,
+    "keywords" : ["server", "application", "WebDAV", "CardDAV", "LDAP", "interface"]
 }
