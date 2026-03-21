@@ -52,10 +52,10 @@ if(isset($argv[1]) && $argv[1] == 'help')
 }
 else if(isset($argv[1]) && $argv[1] == 'clear')
 {
-	echo "-- Cache backend and entities cached in them --\n";
+	echo "-- Cache info [ backend => object(s) cached ] --\n";
 	
 	foreach($cachedBackendEntity as $backendId => $entityList)
-		echo $backendId . "\t" . json_encode($entityList, JSON_NUMERIC_CHECK) . "\n";
+		echo $backendId . " => " . json_encode($entityList, JSON_NUMERIC_CHECK) . "\n";
 		
   echo "\n";
   
@@ -115,7 +115,7 @@ else if(isset($argv[1]) && $argv[1] == 'housekeeping')
 }
 else
 {
-	error_log("[ERROR] '$argv[1]' is not a valid action. Quitting.");
+	error_log("[ERROR] Not a valid action. Quitting.");
  	error_log("");
 	printHelp($argv);
 	exit(1);

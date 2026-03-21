@@ -129,7 +129,7 @@ class Master
 			$memcached = new \Memcached();
 			
 			if(isset($backendConfig['auth']['username']) && isset($backendConfig['auth']['password']) && (!$memcached->setOption(\Memcached::OPT_BINARY_PROTOCOL, true) || !$memcached->setSaslAuthData($backendConfig['auth']['username'], $backendConfig['auth']['password']))) {
-				trigger_error("Caching is disbaled as could not set '$configuredBackendId' cache backend authentication credentials. Check '$configuredBackendId' cache backend configuration.", E_USER_WARNING);
+				trigger_error("Caching is disbaled as authentication credentials could not be set. Check '$configuredBackendId' cache backend configuration.", E_USER_WARNING);
 				
 				$backendId = self::$dummyBackend;
 				
@@ -155,7 +155,7 @@ class Master
 		}
 		else if($configuredBackendId == 'local_fs') {
 			if(!file_exists(__CACHE_DIR__)) {
-				trigger_error("Caching is disbaled as '$configuredBackendId' cache backend could not be initialized. Check your '$configuredBackendId' cache backend configuration.", E_USER_WARNING);
+				trigger_error("Caching is disbaled as cache directory does not exist. Check your '$configuredBackendId' cache backend configuration.", E_USER_WARNING);
 
 				$backendId = self::$dummyBackend;
 				
