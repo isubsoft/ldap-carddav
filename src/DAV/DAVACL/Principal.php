@@ -11,7 +11,7 @@ class Principal extends \Sabre\DAVACL\Principal
 		      'privilege' => '{DAV:}all',
 		      'principal' => '{DAV:}owner',
 		      'protected' => true,
-		  ],
+		  ]
 		];
 	}
 }

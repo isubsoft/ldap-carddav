@@ -1,7 +1,7 @@
 ---- Retrieve information of a principal
 
 -- REQUEST
-curl --dump-header /dev/stderr --silent --location -u %username:%password --request PROPFIND '%base_url/principals/%principal' \
+curl --dump-header /dev/stderr --silent --location -u %username:%password --request PROPFIND '%base_url/principals/%principal/' \
 --header 'Content-Type: application/xml' \
 --header 'Depth: 1' \
 --header 'Accept-Charset: utf-8' \
@@ -79,7 +79,7 @@ curl --dump-header /dev/stderr --silent --location -u %username:%password --requ
 ---- Retrieve information on address books of a principal
 
 -- REQUEST
-curl --dump-header /dev/stderr --silent --location -u %username:%password --request PROPFIND '%base_url/addressbooks/%principal' \
+curl --dump-header /dev/stderr --silent --location -u %username:%password --request PROPFIND '%base_url/addressbooks/%principal/' \
 --header 'Content-Type: application/xml' \
 --header 'Depth: 1' \
 --header 'Accept-Charset: utf-8' \

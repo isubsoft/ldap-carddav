@@ -148,6 +148,7 @@ class LDAP {
                             return $data;
                         }
                         
+                        $data['dn'] = ldap_get_dn($args[0], $data['entryIns']);
                         $data['data'] = ldap_get_attributes($args[0], $data['entryIns']);
                        
                     } catch (\Throwable $th) {
@@ -184,6 +185,7 @@ class LDAP {
                             return $data;
                         }
                         
+                        $data['dn'] = ldap_get_dn($args[0], $data['entryIns']);
                         $data['data'] = ldap_get_attributes($args[0], $data['entryIns']);
                         
                     } catch (\Throwable $th) {
@@ -436,7 +438,7 @@ class LDAP {
 		* @param array &$backendData
     * @return array
 		**/
-    public static function setPrincipalProperty($propNs, array $propDef, &$configFieldMap, &$backendData)
+    public static function setResourceProperty($propNs, array $propDef, &$configFieldMap, &$backendData)
     {
 			$principalPropValue = null;
 			
@@ -456,7 +458,7 @@ class LDAP {
 						}
 					}
 					elseif(is_array($value))
-						$principalPropValue[$key] = self::setPrincipalProperty($key, $value, $configFieldMap, $backendData);
+						$principalPropValue[$key] = self::setResourceProperty($key, $value, $configFieldMap, $backendData);
 				}
 					
 			return $principalPropValue;

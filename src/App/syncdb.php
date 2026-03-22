@@ -14,24 +14,22 @@ function printHelp($argv)
 	error_log("-- Actions");
 	error_log("help:             Print this help and exit.");
 	error_log("init:             Initialize sync database.");
-	error_log("manage (default): Manage entities in sync database.");
+	error_log("manage (default): Manage objects in sync database.");
 	error_log("housekeeping:     Physically delete logically deleted records.");
 	error_log("");
-	error_log("-- Parameter(s) for action help");
-	error_log("none");
+	error_log("-- Parameter(s) for action manage. Omitting any optional parameter below may turn on interactive mode to obtain it.");
+	error_log("  user: (optional) Manage a user.");
+	error_log("    delete: (optional) Delete a user.");
+	error_log("      <user_id>: (optional) entryUUID of the user from backend.");
 	error_log("");
-	error_log("-- Parameter(s) for action init");
-	error_log("none");
-	error_log("");
-	error_log("-- Parameter(s) for action manage");
-	error_log("entity (string): Entity to act upon. Valid values are user, addressbook.");
-	error_log("");
-	error_log("-- Parameter(s) for entity user");
-	error_log("operation (optional, string): Perform this operation on the entity. Valid value is delete.");
-	error_log("user id (string): entryUUID of the user from backend.");
+	error_log("  addressbook: (optional) Manage an address book.");
+	error_log("    list:   (optional) List address book(s) present in sync database.");
+	error_log("    add:    (optional) Add an address book.");
+	error_log("    rename: (optional) Rename an address book.");
+	error_log("    delete: (optional) Delete an address book.");
 	error_log("");
 	error_log("-- Parameter(s) for action housekeeping");
-	error_log("batch size (optional, integer): Restrict action to maximum of these many items. Should be >= 1, defaults to 1000. Since this action can be time consuming set this parameter to a value in range 1000 to 10000 to be efficient. Avoid setting this to a very small or very large value as it may cause performance issues.");
+	error_log("  <batch_size>: (optional, integer) Restrict action to maximum of these many items. Should be >= 1, defaults to 1000. Since this action can be time consuming set this parameter to a value in range 1000 to 10000 to be efficient. Avoid setting this to a very small or very large value as it may cause performance issues.");
 	
 	return;
 }
@@ -47,11 +45,73 @@ $fullSyncTableName = 'cards_full_sync';
 
 $initialized = true;
 
+function getAddressBooks()
+{
+	$addressBooksTableName = $GLOBALS['addressBooksTableName'];
+	$pdo = $GLOBALS['pdo'];
+	$addressBooks = [];
+	
+	$query = 'SELECT * FROM '. $addressBooksTableName;
+	$stmt = $pdo->prepare($query);
+	$stmt->execute();
+
+  while ($row = $stmt->fetch(\PDO::FETCH_ASSOC))
+  	$addressBooks[$row['addressbook_id']] = ['user_specific' => (bool)$row['user_specific'], 'writable' => (bool)$row['writable']];
+  
+  return $addressBooks;
+}
+
+function getNotImportedAddressBooks()
+{
+	$config = $GLOBALS['config'];
+	$addressBooksTableName = $GLOBALS['addressBooksTableName'];
+	$pdo = $GLOBALS['pdo'];
+	$notImportedAddressBooks = [];
+	
+	foreach($config['card']['addressbook']['ldap'] as $addressbookId => $addressbookConfig)
+	{
+		$query = 'SELECT * FROM '. $addressBooksTableName . ' WHERE addressbook_id = ?';
+		$stmt = $pdo->prepare($query);
+		$stmt->execute([$addressbookId]);
+		
+		$row = $stmt->fetch(\PDO::FETCH_ASSOC);
+		
+		if($row !== false)
+			continue;
+		
+		$name = !isset($addressbookConfig['name']) || !is_string(($addressbookConfig['name']))?'':$addressbookConfig['name'];
+		$userSpecific = !isset($addressbookConfig['user_specific']) || !is_bool(($addressbookConfig['user_specific']))?null:$addressbookConfig['user_specific'];
+		$writable = !isset($addressbookConfig['writable']) || !is_bool($addressbookConfig['writable'])?null:$addressbookConfig['writable'];
+		$description = !isset($addressbookConfig['description']) || !is_string(($addressbookConfig['description']))?'':$addressbookConfig['description'];
+
+		$notImportedAddressBooks[$addressbookId] = ['name' => $name, 'user_specific' => $userSpecific, 'writable' => $writable, 'description' => $description];
+	}
+  
+  return $notImportedAddressBooks;
+}
+
+function getConfiguredAddressBooks()
+{
+	$config = $GLOBALS['config'];
+	$configuredAddressBooks = [];
+	
+	foreach($config['card']['addressbook']['ldap'] as $addressbookId => $addressbookConfig)
+	{
+		$name = !isset($addressbookConfig['name']) || !is_string(($addressbookConfig['name']))?'':$addressbookConfig['name'];
+		$userSpecific = !isset($addressbookConfig['user_specific']) || !is_bool(($addressbookConfig['user_specific']))?null:$addressbookConfig['user_specific'];
+		$writable = !isset($addressbookConfig['writable']) || !is_bool($addressbookConfig['writable'])?null:$addressbookConfig['writable'];
+		$description = !isset($addressbookConfig['description']) || !is_string(($addressbookConfig['description']))?'':$addressbookConfig['description'];
+
+		$configuredAddressBooks[$addressbookId] = ['name' => $name, 'user_specific' => $userSpecific, 'writable' => $writable, 'description' => $description];
+	}
+  
+  return $configuredAddressBooks;
+}
+
 function addAddressBook($addressbookName = null)
 {
 	$config = $GLOBALS['config'];
 	$addressBooksTableName = $GLOBALS['addressBooksTableName'];
-	$userTableName = $GLOBALS['userTableName'];
 	$pdo = $GLOBALS['pdo'];
 	
 	if($addressbookName == null)
@@ -65,15 +125,20 @@ function addAddressBook($addressbookName = null)
 		if(!isset($config['card']['addressbook']['ldap'][$addressbookName]))
 		{
 				error_log("[ERROR] Address book '$addressbookName' is not present in the configuration file. Add it to configuration file and try again.");
-				return false;    	
+				return false;
 		}
     
-	  	$userSpecific = (!isset($config['card']['addressbook']['ldap'][$addressbookName]['user_specific']) || $config['card']['addressbook']['ldap'][$addressbookName]['user_specific'] === null)?true:(bool)$config['card']['addressbook']['ldap'][$addressbookName]['user_specific'];
-	  	$writable = (!isset($config['card']['addressbook']['ldap'][$addressbookName]['writable']) || $config['card']['addressbook']['ldap'][$addressbookName]['writable'] === null)?true:(bool)$config['card']['addressbook']['ldap'][$addressbookName]['writable'];
+  	$userSpecific = !isset($config['card']['addressbook']['ldap'][$addressbookName]['user_specific']) || !is_bool(($config['card']['addressbook']['ldap'][$addressbookName]['user_specific']))?null:$config['card']['addressbook']['ldap'][$addressbookName]['user_specific'];
+  	$writable = !isset($config['card']['addressbook']['ldap'][$addressbookName]['writable']) || !is_bool($config['card']['addressbook']['ldap'][$addressbookName]['writable'])?null:$config['card']['addressbook']['ldap'][$addressbookName]['writable'];
+	  	
+	  if($userSpecific === null || $writable === null) {
+			error_log("[ERROR] 'user_specific' and/or 'writable' keys for address book '$addressbookName' are not configured correctly. Fix and try again.");
+			return false;
+	  }
 	  
 		$query = 'INSERT INTO '. $addressBooksTableName .' (addressbook_id, user_specific, writable) VALUES (?, ?, ?)';
 		$stmt = $pdo->prepare($query);
-		$stmt->execute([$addressbookName, (int)$userSpecific, (int)$writable]);
+		$stmt->execute([$addressbookName, $userSpecific, $writable]);
 		echo "Address book '$addressbookName' has been successfully added to sync database.\n";
     
   	} catch (\Throwable $th) {
@@ -198,6 +263,7 @@ elseif(isset($argv[1]) && $argv[1] == 'housekeeping')
 	}
 	
 	echo "Complete\n";
+	echo "[NOTE] After this action sync database table(s) '$backendMapTableName' may need optimization (re-indexing/re-build). Use native database command(s) to achieve the same.\n";
 	exit;
 }
 
@@ -211,7 +277,7 @@ if(!$initialized)
 
 if(!isset($argv[1]) || $argv[1] == 'manage')
 {
-	$options = [0 => 'addressbook', 1 => 'user'];
+	$options = [1 => 'user', 2 => 'addressbook'];
 	
 	if(isset($argv[2]) && $argv[2] !== '')
 	{
@@ -220,12 +286,20 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 			error_log('[ERROR] Please enter correct entry you want to operate upon.');
 			exit(1);
 		}
-		$operation = array_search($argv[2], $options);
+		$choice = array_search($argv[2], $options);
 	}
 	else
 	{
-		$operation = readline("Choose the entity you want to manage. Enter 0 for $options[0] and 1 for $options[1]: ");
-		if(!array_key_exists($operation, $options))
+		echo "-- Choose the object you want to manage --\n";
+		
+		foreach($options as $key => $value)
+			echo $key . " for " . $value . "\n";
+			
+		$choice = readline("Enter choice: ");
+		
+		echo "\n";
+		
+		if(!array_key_exists($choice, $options))
 		{
 			error_log('[ERROR] Please enter correct option.');
 			exit(1);
@@ -233,7 +307,7 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 	}
 
 
-	if($options[$operation] == 'user')
+	if($options[$choice] == 'user')
 	{
 		if(isset($argv[3]) && $argv[3] == 'delete') 
 		{
@@ -259,9 +333,9 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 				exit(1);
 			}
 			
-			$option = readline("\nAre you sure you want to proceed (y/N): ");
+			$confirm = readline("\nAre you sure you want to proceed (y/N): ");
 			
-			if($option == '' || ($option != 'Y' && $option != 'y'))
+			if($confirm == '' || ($confirm != 'Y' && $confirm != 'y'))
 				exit;
 		}
 		else
@@ -284,79 +358,126 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 			}
 
 			echo "User having user id '$oldUserId' has been deleted.\n";
-			echo "[NOTE] After this action sync database table(s) '$backendMapTableName' may need optimization. Use native database command(s) to achieve the same.\n";
-			echo "[NOTE] After this action sync database table(s) '$userTableName' may need optimization (if you have deleted a large number of '$options[$operation]' entities). Use native database command(s) to achieve the same.\n";
+			echo "[NOTE] After this action sync database table(s) '$backendMapTableName' may need optimization (re-indexing/re-build). Use native database command(s) to achieve the same.\n";
+			echo "[NOTE] After this action sync database table(s) '$userTableName' may need optimization (re-indexing/re-build) (if you have deleted a large number of '$options[$choice]' objects). Use native database command(s) to achieve the same.\n";
 		} catch (\Throwable $th) {
 			trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 			exit(1);
 		}
 	}
-	else if($options[$operation] == 'addressbook')
+	else if($options[$choice] == 'addressbook')
 	{
 		$options = [0 => 'list', 1 => 'add', 2 => 'rename', 3 => 'delete'];
-
-		$operation = readline("Enter the operation to perform on address book. Enter 0 to $options[0], 1 to $options[1], 2 to $options[2] and 3 to $options[3]: ");
-
-		if(!array_key_exists($operation, $options))
+		
+		if(isset($argv[3]) && $argv[3] !== '')
 		{
-			error_log('[ERROR] Please enter correct option.');
-			exit(1);
+			if(!in_array($argv[3], $options))
+			{
+				error_log('[ERROR] Please enter correct entry you want to operate upon.');
+				exit(1);
+			}
+			$choice = array_search($argv[3], $options);
+		}
+		else
+		{
+			echo "-- Choose the operation to perform on a address book --\n";
+			
+			foreach($options as $key => $value)
+				echo $key . " to " . $value . "\n";
+				
+			$choice = readline("Enter choice: ");
+			
+			echo "\n";
+			
+			if(!array_key_exists($choice, $options))
+			{
+				error_log('[ERROR] Please enter correct option.');
+				exit(1);
+			}
 		}
 
 		try {
-			if($options[$operation] != 'list')
-			{
-				$oldAddressBook = readline("\nEnter name of the address book to ". $options[$operation].": ");
+			if($options[$choice] != 'add') {
+				$addressBooks = getAddressBooks();
 
-				if($oldAddressBook == null || $oldAddressBook == '')
-				{
-					error_log("[ERROR] Address book name not provided.");
-					exit(1);
+				if(count($addressBooks) < 1) {
+					echo "[INFO] No address book present in sync database. Quitting.\n";
+					exit;
 				}
 				
-				$query = 'SELECT * FROM '. $addressBooksTableName .' WHERE addressbook_id = ?';
-				$stmt = $pdo->prepare($query);
-				$stmt->execute([$oldAddressBook]);
-
-				$row = $stmt->fetch(\PDO::FETCH_ASSOC);
+				echo "-- Address books present in sync database [ id => info ] --\n";
+				
+				foreach($addressBooks as $addressbookId => $addressbookConfig)
+					echo $addressbookId . " => " . json_encode($addressbookConfig, JSON_NUMERIC_CHECK) . "\n";
 					
-				if($row === false && $options[$operation] != 'add')
-				{
-					error_log("[ERROR] Addressbook '". $oldAddressBook. "' is not present in sync database.");
-					exit(1);
+				echo "\n";
+			}
+			
+			if($options[$choice] == 'list')
+				exit;
+			
+			if($options[$choice] == 'add') {
+				$notImportedAddressBooks = getNotImportedAddressBooks();
+				
+				if(count($notImportedAddressBooks) < 1) {
+					echo "[INFO] No address book available to " . $options[$choice] . ". Quitting.\n";
+					exit;
 				}
-				else if($row !== false && $options[$operation] == 'add')
-				{
-					error_log("[ERROR] Addressbook '". $oldAddressBook. "' is already present in sync database.");
-					exit(1);
-				}
+				
+			  echo "-- Address books available in configuration file to " . $options[$choice] . " [ id => info ] --\n";
+
+				foreach($notImportedAddressBooks as $addressbookId => $addressbookConfig)
+					echo $addressbookId . " => " . json_encode($addressbookConfig, JSON_NUMERIC_CHECK) . "\n";
+					
+				echo "\n";
+			}
+			
+			$oldAddressBook = readline("\nEnter id of the address book to " . $options[$choice] . ": ");
+
+			if($oldAddressBook == null || $oldAddressBook == '')
+			{
+				error_log("[ERROR] Address book id not provided.");
+				exit(1);
 			}
 
-			if($options[$operation] == 'list')
+			if($options[$choice] == 'add')
 			{
-				$query = 'SELECT * FROM '. $addressBooksTableName;
-				$stmt = $pdo->prepare($query);
-				$stmt->execute();
+				if(!array_key_exists($oldAddressBook, getNotImportedAddressBooks())) {
+					error_log("[ERROR] Invalid address book id provided.");
+					exit(1);
+				}
 
-		    echo "-- Address books --\n";
-		    
-		    while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-		        echo $row['addressbook_id'] . "\t" . json_encode($row, JSON_NUMERIC_CHECK) . "\n";
-		    }
-			}
-			else if($options[$operation] == 'add')
-			{
+				$confirm = readline("\nAre you sure you want to proceed (y/N): ");
+				
+				if($confirm == '' || ($confirm != 'Y' && $confirm != 'y'))
+					exit;
+				
 				if(addAddressBook($oldAddressBook) == false)
 					exit(1);
 			}
-			else if($options[$operation] == 'rename')
+			else if($options[$choice] == 'rename')
 			{
-				  $newAddressbook = readline("\nEnter new address book name: ");
-				  
-					if(!isset($config['card']['addressbook']['ldap'][$newAddressbook])) {
-			  		error_log("[ERROR] Address book '$oldAddressBook' has not been renamed to '$newAddressbook' in the configuration file. Rename it in the configuration file and try again.");
+					if(!array_key_exists($oldAddressBook, getAddressBooks())) {
+						error_log("[ERROR] Invalid address book id provided.");
 						exit(1);
 					}
+					
+				  $newAddressbook = readline("\nEnter new address book id: ");
+				  
+					if(array_key_exists($newAddressbook, getAddressBooks())) {
+			  		error_log("[ERROR] Address book '$newAddressbook' is already present in sync database.");
+						exit(1);
+					}
+				  
+					if(!array_key_exists($newAddressbook, getConfiguredAddressBooks())) {
+			  		error_log("[ERROR] Address book '$newAddressbook' does not exist in configuration file. Rename address book '$oldAddressBook' to '$newAddressbook' in the configuration file and try again.");
+						exit(1);
+					}
+					
+					$confirm = readline("\nAre you sure you want to proceed (y/N): ");
+					
+					if($confirm == '' || ($confirm != 'Y' && $confirm != 'y'))
+						exit;
 					
 				  $query = 'UPDATE '. $addressBooksTableName. ' SET addressbook_id = ? WHERE addressbook_id = ?';
 				  $stmt = $pdo->prepare($query);
@@ -369,14 +490,24 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 					}
 
 				  echo "Address book '$oldAddressBook' has been renamed to '$newAddressbook'.\n";
-				  echo "[NOTE] After this action sync database table(s) '$backendMapTableName' may need optimization. Use native database command(s) to achieve the same.\n";
+				  echo "[NOTE] After this action sync database table(s) '$backendMapTableName' may need optimization (re-indexing/re-build). Use native database command(s) to achieve the same.\n";
 			}
-			else if($options[$operation] == 'delete')
+			else if($options[$choice] == 'delete')
 			{
-					if(isset($config['card']['addressbook']['ldap'][$oldAddressBook])) {
+					if(!array_key_exists($oldAddressBook, getAddressBooks())) {
+						error_log("[ERROR] Invalid address book id provided.");
+						exit(1);
+					}
+					
+					if(array_key_exists($oldAddressBook, getConfiguredAddressBooks())) {
 			  		error_log("[ERROR] Address book '$oldAddressBook' is present in the configuration file. Delete it from configuration file and try again.");
 						exit(1);
 					}
+					
+					$confirm = readline("\nAre you sure you want to proceed (y/N): ");
+					
+					if($confirm == '' || ($confirm != 'Y' && $confirm != 'y'))
+						exit;
 					
 				  $query = 'DELETE FROM '. $addressBooksTableName .' WHERE addressbook_id = ?';
 				  $stmt = $pdo->prepare($query);
@@ -389,7 +520,7 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 					}
 
 				  echo "Address book '". $oldAddressBook ."' has been deleted.\n";
-				  echo "[NOTE] After this action sync database table(s) '$backendMapTableName' may need optimization. Use native database command(s) to achieve the same.\n";
+				  echo "[NOTE] After this action sync database table(s) '$backendMapTableName' may need optimization (re-indexing/re-build). Use native database command(s) to achieve the same.\n";
 			}
 
 		} catch (\Throwable $th) {
