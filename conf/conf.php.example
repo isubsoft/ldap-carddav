@@ -128,8 +128,13 @@ $config['cache']['backend'] = [
 ];
 
 
-// User authentication. Authentication is performed by a direct bind to the LDAP directory using user credentials provided 
-// by the client. Only basic HTTP authentication scheme can be used by a client to provide user credentials.
+// User authentication. 
+//
+// Authentication is performed by a direct bind to the LDAP directory using user credentials provided 
+// by the client.
+//
+// Only basic HTTP authentication scheme can be used by a client to provide user credentials.
+//
 $config['auth']['ldap'] = [
 	// Authentication realm. Defaults to 'isubsoft/ldap-carddav'.
 	// 'realm' => '',
@@ -145,7 +150,7 @@ $config['auth']['ldap'] = [
   
   // It's possible to bind to a DN from a search result.
   'search_base_dn' => '', // Provide a separate base DN for search if different from 'base_dn' above else leave blank.
-  'search_filter'  => '(&(objectclass=inetOrgPerson)(uid=%u))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
+  'search_filter'  => '(&(objectclass=inetOrgPerson)(employeeNumber=*)(uid=%u))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
 	'search_scope'         => 'list',   // Scope of search
 	                                    //  sub: Subtree
 	                                    // list: Immediate children
@@ -158,6 +163,9 @@ $config['auth']['ldap'] = [
 
 
 // Principals.
+//
+// Should be able to return a few mandatory properties defined in the field map.
+//
 $config['principal']['ldap'] = [
   // The following placeholders are available to be used in 'search_filter'
   // %u  - Username sent by client for authentication
@@ -166,7 +174,7 @@ $config['principal']['ldap'] = [
   
   // It's possible to search for principal DN(s)
   'search_base_dn' => '', // Provide a separate base DN for search if different from 'base_dn' above else leave blank.
-  'search_filter'  => '(&(objectclass=inetOrgPerson)(uid=*))',   // Filter criteria for valid principals.
+  'search_filter'  => '(&(objectclass=inetOrgPerson)(employeeNumber=*))',   // Filter criteria for valid principals.
 	'search_scope'         => 'list',   // Scope of search
 	                                    //  sub: Subtree
 	                                    // list: Immediate children
@@ -181,10 +189,10 @@ $config['principal']['ldap'] = [
 	// Use primary name of the backend field here not it's alias.
 	//
   // The following properties can be mapped.
-  // id:            Username used in authentication (cardinality 1*).
-  // display_name:  Display name (cardinality *1)
-  // mail_primary:  Primary e-mail address (cardinality *1)
-  // mail:          E-mail address (cardinality *)
+  // id            - Username used in authentication (cardinality 1*).
+  // display_name  - Display name (cardinality 1)
+  // mail_primary  - Primary e-mail address (cardinality *1)
+  // mail          - E-mail address (cardinality *)
   //
   // If multiple values for an attribute are returned from LDAP where maximum cardinality is 1
   // then only the first value is used.
@@ -196,7 +204,7 @@ $config['principal']['ldap'] = [
 ];
 
 
-// Address book configuration.
+// Address book.
 $config['card']['addressbook']['ldap']['me'] = [
 	'name'          	=> 'Me',
   'description'     => 'My contact',
@@ -446,7 +454,7 @@ $config['card']['addressbook']['ldap']['me'] = [
 ];
 
 
-// Address book configuration.
+// Address book.
 $config['card']['addressbook']['ldap']['global'] = [
 	'name'          	=> 'Global Address Book',
   'description'     => 'Global address book',
@@ -696,7 +704,7 @@ $config['card']['addressbook']['ldap']['global'] = [
 ];
 
 
-// Address book configuration.
+// Address book.
 $config['card']['addressbook']['ldap']['personal'] = [
 	'name'          	=> 'Personal Address Book',
   'description'     => 'Personal address book of the user',
