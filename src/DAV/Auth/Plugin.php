@@ -11,7 +11,6 @@ class Plugin extends \Sabre\DAV\Auth\Plugin
 {
 	function initialize(Server $server){
 		parent::initialize($server);
-		$server->on('beforeMethod:*', [$this, 'beforeMethod'], 10);
 		$server->on('beforeMethod:*', [$this, 'appBeforeMethod'], 15);
 	}
 
