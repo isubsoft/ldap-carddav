@@ -176,14 +176,15 @@ $config['principal']['ldap'] = [
   'search_bind_dn' => 'cn=admin,ou=People,dc=example,dc=org',
   'search_bind_pw' => '<secret>',
 
-	// Principal property => LDAP principal field map.
-	// Use primary name of the field only not it's alias.
+	// Principal property => LDAP field map.
 	//
-  // The following properties can be mapped
-  //  id: Authentication username (cardinality 1*)
-  //  display_name: Display name (cardinality *1)
-  //  mail_primary: Primary e-mail address (cardinality *1)
-  //  mail: E-mail address (cardinality *)
+	// Use primary name of the backend field here not it's alias.
+	//
+  // The following properties can be mapped.
+  // id:            Username used in authentication (cardinality 1*).
+  // display_name:  Display name (cardinality *1)
+  // mail_primary:  Primary e-mail address (cardinality *1)
+  // mail:          E-mail address (cardinality *)
   //
   // If multiple values for an attribute are returned from LDAP where maximum cardinality is 1
   // then only the first value is used.
@@ -291,12 +292,15 @@ $config['card']['addressbook']['ldap']['me'] = [
 												'list' => ['displayName', 'homePhone', 'telephoneNumber', 'facsimileTelephoneNumber', 'pager', 'mobile', 'homePostalAddress', 'preferredLanguage']
 											],
 
-	// vCard    => LDAP contact field map
-	// Use primary name of the field only not it's alias.
+	// vCard    => LDAP field map
+	//
+	// Use primary name of the field only and not it's alias.
 	//
 	// To map a composite value property to individual backend fields check conf/vcard_metadata.json for 
 	// logical names of the components of a composite value.
+	//
 	// vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only.
+	//
 	// Currently only 'TYPE' vCard parameter match is supported.
   'fieldmap'      => [
     'FN'            => ['field_name' => 'cn'],
@@ -426,10 +430,14 @@ $config['card']['addressbook']['ldap']['me'] = [
 	// Backend field which points to the contact which is member of this contact group  
 	'group_member_map'          => [ 'MEMBER'      => [ 'field_name' => 'member' ] ],
 	
-	// vCard    => LDAP contact field map (Use primary name of backend field and not their alias name here)
+	// vCard    => LDAP field map
+	//
+	// Use primary name of the backend field here not it's alias.
+	//
 	// To map a composite value property to an individual backend field check conf/vcard_metadata.json for logical 
-	// names of the components of a composite value
-	// vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only
+	// names of the components of a composite value.
+	//
+	// vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only.
 	'group_fieldmap'            => [     
 		 'FN'          => [	'field_name' => 'cn'],
 	 	
@@ -534,12 +542,15 @@ $config['card']['addressbook']['ldap']['global'] = [
 	//												'list' => []
 	//											],
 
-	// vCard    => LDAP contact field map (Use primary name of backend field and not their alias name here)
-	// Use primary name of the field only not it's alias.
+	// vCard    => LDAP field map
+	//
+	// Use primary name of the backend field here not it's alias.
 	//
 	// To map a composite value property to individual backend fields check conf/vcard_metadata.json for 
 	// logical names of the components of a composite value.
+	//
 	// vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only.
+	//
 	// Currently only 'TYPE' vCard parameter match is supported.
   'fieldmap'      => [
     'FN'            => ['field_name' => 'cn'],
@@ -669,10 +680,14 @@ $config['card']['addressbook']['ldap']['global'] = [
 	// Backend field which points to the contact which is member of this contact group  
 	'group_member_map'          => [ 'MEMBER'      => [ 'field_name' => 'member' ] ],
 	
-	// vCard    => LDAP contact field map (Use primary name of backend field and not their alias name here)
+	// vCard    => LDAP field map
+	//
+	// Use primary name of the backend field here not it's alias.
+	//
 	// To map a composite value property to an individual backend field check conf/vcard_metadata.json for logical 
-	// names of the components of a composite value
-	// vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only
+	// names of the components of a composite value.
+	//
+	// vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only.
 	'group_fieldmap'            => [     
 		 'FN'          => [	'field_name' => 'cn'],
 	 	
@@ -777,12 +792,15 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	//												'list' => []
 	//											],
 	
-	// vCard    => LDAP contact field map (Use primary name of backend field and not their alias name here)
-	// Use primary name of the field only not it's alias.
+	// vCard    => LDAP field map
+	//
+	// Use primary name of the backend field here not it's alias.
 	//
 	// To map a composite value property to individual backend fields check conf/vcard_metadata.json for 
 	// logical names of the components of a composite value.
+	//
 	// vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only.
+	//
 	// Currently only 'TYPE' vCard parameter match is supported.
   'fieldmap'      => [
     'FN'            => ['field_name' => 'cn'],
@@ -912,10 +930,14 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	// Backend field which points to the contact which is member of this contact group  
 	'group_member_map'          => [ 'MEMBER'      => [ 'field_name' => 'member' ] ],
 	
-	// vCard    => LDAP contact field map (Use primary name of backend field and not their alias name here)
+	// vCard    => LDAP field map
+	//
+	// Use primary name of the backend field here not it's alias.
+	//
 	// To map a composite value property to an individual backend field check conf/vcard_metadata.json for logical 
-	// names of the components of a composite value
-	// vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only
+	// names of the components of a composite value.
+	//
+	// vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only.
 	'group_fieldmap'            => [     
 		 'FN'          => [	'field_name' => 'cn'],
 	 	
