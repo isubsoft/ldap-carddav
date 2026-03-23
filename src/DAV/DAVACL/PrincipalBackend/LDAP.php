@@ -235,8 +235,6 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
 					return $principal;
 				}
 				
-				$principal == [];
-				
         $configFieldMap = self::normalizePropFieldMap((isset($this->config['principal']['ldap']['fieldmap']) && is_array($this->config['principal']['ldap']['fieldmap']))?$this->config['principal']['ldap']['fieldmap']:[]);
         
     		foreach(self::$mandatoryProperties as $value) {
@@ -245,6 +243,9 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         		throw new SabreDAVException\ServiceUnavailable();
     			}
     		}
+    		
+    		// Reset principal
+    		$principal = [];
 
 				$this->setPrincipalBackendProperties();
 				$ldapConn = $this->ldapConn;
@@ -253,8 +254,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         	throw new SabreDAVException\ServiceUnavailable();
           
         $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
-        $principalIdAttribute = $configFieldMap['id'];
-        $filter = Utility::replacePlaceholders('(&' . $this->config['principal']['ldap']['search_filter'] . '(' . $principalIdAttribute . '=' . '%u' . '))', ['%u' => ldap_escape($principalId, "", LDAP_ESCAPE_FILTER)]);
+        $filter = Utility::replacePlaceholders('(&' . $this->config['principal']['ldap']['search_filter'] . '(' . $configFieldMap['id'] . '=' . ldap_escape($principalId, "", LDAP_ESCAPE_FILTER) . '))', ['%u' => ldap_escape($currentUserPrincipalId, "", LDAP_ESCAPE_FILTER)]);
         
         $tmp = [];
 				$attributes = [];
