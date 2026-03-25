@@ -74,7 +74,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      *
      * @var array
      */    
-    private static $mandatoryProperties = ['id'];
+    private static $mandatoryProperties = ['id', 'display_name'];
     
     private $userTableName = 'cards_user';
     
@@ -114,6 +114,27 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
     	return CacheMaster::getKey([self::$cacheEntityId, $principalId]);
     }
     
+		/**
+		* Convert mapped string values in a field map to lower case.
+		*
+    * @param array $values
+    * @return array
+    **/
+		private static function normalizePropFieldMap(array $values)
+		{
+			$normalizedValues = [];			
+			
+			foreach($values as $key => $value)
+			{
+				if(is_string($value))
+					$normalizedValues[$key] = strtolower($value);
+				elseif(is_array($value))
+					$normalizedValues[$key] = self::normalizePropFieldMap($value);
+			}
+			
+			return $normalizedValues;
+		}
+    
     /**
      * Returns a list of principals based on a prefix.
      *
@@ -132,58 +153,14 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      */
     function getPrincipalsByPrefix($prefixPath)
     {
-    		$currentUserPrincipalId = $GLOBALS['currentUserPrincipalId'];
-    		$principals = [];
-    		
-        if(!isset($this->config['principal']['ldap']['search_bind_dn']) || $this->config['principal']['ldap']['search_bind_dn'] == '')
-        {  
-            $principals[] = ['uri' => $prefixPath. '/' . $currentUserPrincipalId];
-            return $principals;
-        }
-        
-        $configFieldMap = (isset($this->config['principal']['ldap']['fieldmap']) && is_array($this->config['principal']['ldap']['fieldmap']))?$this->config['principal']['ldap']['fieldmap']:[];
-        
-    		foreach(self::$mandatoryProperties as $value) {
-    			if(!isset($configFieldMap[$value]) || !is_string($configFieldMap[$value]) || $configFieldMap[$value] === '') {
-    				trigger_error("Mandatory property '$value' for principals not mapped. Check configuration.", E_USER_WARNING);
-        		throw new SabreDAVException\ServiceUnavailable();
-    			}
-    		}
-
-				$this->setPrincipalBackendProperties();
-				$ldapConn = $this->ldapConn;
-        
-        if($ldapConn === false)
-        	throw new SabreDAVException\ServiceUnavailable();
-  
-        $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
-        $filter = Utility::replacePlaceholders($this->config['principal']['ldap']['search_filter'], ['%u' => ldap_escape($currentUserPrincipalId, "", LDAP_ESCAPE_FILTER)]);
-        
-        $tmp = [];
-				$attributes = [];
-				
-    		foreach(self::$mandatoryProperties as $value)
-					$attributes[] = $configFieldMap[$value];
-				
-        foreach(Utility::getLeafValues($this->fieldMap, $tmp) as $value) {
-        	if(isset($configFieldMap[$value]) && is_string($configFieldMap[$value]) && $configFieldMap[$value] !== '')
-						$attributes[] = $configFieldMap[$value];
-				}
-        
-        $data = Utility::LdapQuery($ldapConn, $ldaptree, $filter, $attributes, strtolower($this->config['principal']['ldap']['scope']));
-                    
-        if($data['count'] > 0)
-        {
-            for ($i=0; $i < $data['count']; $i++) {
-            		$principalId = $data[$i][$configFieldMap['id']][0];
-               	$principal = Utility::setPrincipalProperty(null, $this->fieldMap, $configFieldMap, $data[$i]);
-				        $principal['id'] = $principalId;
-				        $principal['uri'] = $prefixPath. '/' . $principalId;
-                $principals[] = $principal;
-            }
-        }
-                    
-        return $principals;
+  		$currentUserPrincipalId = $GLOBALS['currentUserPrincipalId'];
+  		
+  		$principal = $this->getPrincipalByPath($prefixPath. '/' . $currentUserPrincipalId);
+  		
+  		if($principal == [])
+  			return [];
+  		
+      return [$principal];
     }
 
     /**
@@ -221,9 +198,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
 					return $principal;
 				}
 				
-				$principal == [];
-				
-        $configFieldMap = (isset($this->config['principal']['ldap']['fieldmap']) && is_array($this->config['principal']['ldap']['fieldmap']))?$this->config['principal']['ldap']['fieldmap']:[];
+        $configFieldMap = self::normalizePropFieldMap((isset($this->config['principal']['ldap']['fieldmap']) && is_array($this->config['principal']['ldap']['fieldmap']))?$this->config['principal']['ldap']['fieldmap']:[]);
         
     		foreach(self::$mandatoryProperties as $value) {
     			if(!isset($configFieldMap[$value]) || !is_string($configFieldMap[$value]) || $configFieldMap[$value] === '') {
@@ -231,6 +206,9 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         		throw new SabreDAVException\ServiceUnavailable();
     			}
     		}
+    		
+    		// Reset principal
+    		$principal = [];
 
 				$this->setPrincipalBackendProperties();
 				$ldapConn = $this->ldapConn;
@@ -239,8 +217,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         	throw new SabreDAVException\ServiceUnavailable();
           
         $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
-        $principalIdAttribute = $configFieldMap['id'];
-        $filter = Utility::replacePlaceholders('(&' . $this->config['principal']['ldap']['search_filter'] . '(' . $principalIdAttribute . '=' . '%u' . '))', ['%u' => ldap_escape($principalId, "", LDAP_ESCAPE_FILTER)]);
+        $filter = Utility::replacePlaceholders('(&' . $this->config['principal']['ldap']['search_filter'] . '(' . $configFieldMap['id'] . '=' . ldap_escape($principalId, "", LDAP_ESCAPE_FILTER) . '))', ['%u' => ldap_escape($currentUserPrincipalId, "", LDAP_ESCAPE_FILTER)]);
         
         $tmp = [];
 				$attributes = [];
@@ -249,32 +226,38 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
 					$attributes[] = $configFieldMap[$value];
 				
         foreach(Utility::getLeafValues($this->fieldMap, $tmp) as $value) {
-        	if(isset($configFieldMap[$value]) && is_string($configFieldMap[$value]) && $configFieldMap[$value] !== '')
+        	if(isset($configFieldMap[$value]) && is_string($configFieldMap[$value]) && $configFieldMap[$value] !== '' && !in_array($configFieldMap[$value], $attributes))
 						$attributes[] = $configFieldMap[$value];
 				}
         
         $attributes[] = 'entryuuid';
 
-        $data = Utility::LdapQuery($ldapConn, $ldaptree, $filter, $attributes, strtolower($this->config['principal']['ldap']['scope']));
+        $data = Utility::LdapQuery($ldapConn, $ldaptree, $filter, $attributes, strtolower($this->config['principal']['ldap']['search_scope']));
                     
         if(!empty($data) && $data['count'] === 1)
         {
-		   			if(!isset($data[0]['entryuuid'][0]))
-		   			{
-							trigger_error("Could not obtain backend id for principal '$principalId'. Check access privileges in backend.", E_USER_WARNING);
-		   				throw new SabreDAVException\ServiceUnavailable();
-		   			}
-		   			
-	        	$principal = Utility::setPrincipalProperty(null, $this->fieldMap, $configFieldMap, $data[0]);
-            $principal['__backend_id'] = $data[0]['entryuuid'][0];
-            
-						if(!$this->cache->set(self::getCacheKey($principalId), $principal, (isset($this->config['cache']['principal']['ttl']) && is_int($this->config['cache']['principal']['ttl']) && $this->config['cache']['principal']['ttl'] > 0 && $this->config['cache']['principal']['ttl'] <= 2592000)?$this->config['cache']['principal']['ttl']:self::$cacheTtl))
-						  trigger_error("Could not set cache", E_USER_WARNING);
-            
-            $principal['id'] = $principalId;
-            $principal['uri'] = $path;
-            
-            return $principal;
+		 			if(!isset($data[0]['entryuuid'][0]))
+		 			{
+						trigger_error("Could not obtain backend id for principal '$principalId'. Check access privileges in backend.", E_USER_WARNING);
+		 				throw new SabreDAVException\ServiceUnavailable();
+		 			}
+		 			
+					foreach(self::$mandatoryProperties as $value)
+						if(!isset($data[0][$configFieldMap[$value]][0])) {
+							trigger_error("Mandatory property '$value' value for principal having backend id '" . $data[0]['entryuuid'][0] . "' not present. Check configuration or access privileges in backend.", E_USER_WARNING);
+		 					throw new SabreDAVException\ServiceUnavailable();
+						}
+		 			
+		    	$principal = Utility::setResourceProperty(null, $this->fieldMap, $configFieldMap, $data[0]);
+		      $principal['__backend_id'] = $data[0]['entryuuid'][0];
+		      
+					if(!$this->cache->set(self::getCacheKey($principalId), $principal, (isset($this->config['cache']['principal']['ttl']) && is_int($this->config['cache']['principal']['ttl']) && $this->config['cache']['principal']['ttl'] > 0 && $this->config['cache']['principal']['ttl'] <= 2592000)?$this->config['cache']['principal']['ttl']:self::$cacheTtl))
+						trigger_error("Could not set cache", E_USER_WARNING);
+		      
+		      $principal['id'] = $principalId;
+		      $principal['uri'] = $path;
+		      
+		      return $principal;
         }
 
         return [];

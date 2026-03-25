@@ -148,6 +148,7 @@ class LDAP {
                             return $data;
                         }
                         
+                        $data['dn'] = ldap_get_dn($args[0], $data['entryIns']);
                         $data['data'] = ldap_get_attributes($args[0], $data['entryIns']);
                        
                     } catch (\Throwable $th) {
@@ -184,6 +185,7 @@ class LDAP {
                             return $data;
                         }
                         
+                        $data['dn'] = ldap_get_dn($args[0], $data['entryIns']);
                         $data['data'] = ldap_get_attributes($args[0], $data['entryIns']);
                         
                     } catch (\Throwable $th) {
@@ -426,37 +428,56 @@ class LDAP {
     		
    		return $result;
     }
+
+		/**
+		* Returns true if array has nesting
+		*
+		* @param array $value
+		*
+    * @return bool
+		**/
+		public static function hasChildren(array $value)
+		{
+			foreach($value as $child)
+				if(is_array($child))
+					return true;
+					
+			return false;
+		}
     
 		/**
 		* Set property array from property definition array and backend values
 		*
-		* @param array $propNs
+		* @param null|string $propParentNs
 		* @param array $propDef
 		* @param array &$configFieldMap
 		* @param array &$backendData
     * @return array
 		**/
-    public static function setPrincipalProperty($propNs, array $propDef, &$configFieldMap, &$backendData)
+    public static function setResourceProperty($propParentNs, array $propDef, &$configFieldMap, &$backendData)
     {
-			$principalPropValue = null;
+			$principalPropValue = [];
+			$type = 'object';
+			
+			if($propParentNs != null && !self::hasChildren($propDef))
+				$type = 'array';
 			
 				foreach($propDef as $key => $value) {
 					if(is_string($value) && $value !== '') {
 						if(isset($configFieldMap[$value]) && is_string($configFieldMap[$value]) && $configFieldMap[$value] !== '') {
-							$principalPropValue[$key] = [];
 							$backendAttr = $configFieldMap[$value];
 							
 							if(isset($backendData[$backendAttr])) {
-								if($propNs == null)
+								if($type == 'object')
 									$principalPropValue[$key] = $backendData[$backendAttr][0];
-								else
+								elseif($type == 'array')
 									for($index=0; $index<$backendData[$backendAttr]['count']; $index++)
-										$principalPropValue[$key][][$propNs] = $backendData[$backendAttr][$index];
+										$principalPropValue[][$key] = $backendData[$backendAttr][$index];
 							}
 						}
 					}
 					elseif(is_array($value))
-						$principalPropValue[$key] = self::setPrincipalProperty($key, $value, $configFieldMap, $backendData);
+						$principalPropValue[$key] = self::setResourceProperty($key, $value, $configFieldMap, $backendData);
 				}
 					
 			return $principalPropValue;

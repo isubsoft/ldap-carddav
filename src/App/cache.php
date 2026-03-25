@@ -12,18 +12,13 @@ function printHelp($argv)
 	error_log("Usage: " . $argv[0] . " action [parameters]");
 	error_log("");
 	error_log("-- Actions");
-	error_log("help:         Print this help and exit.");
-	error_log("clear:        Clear cache. WARNING: This will delete/invalidate all items in the cache including ones set by other applications.");
-	error_log("housekeeping: Evict stale cache from managed caches.");
-	error_log("");
-	error_log("-- Parameter(s) for help");
-	error_log("none");
-	error_log("");
-	error_log("-- Parameter(s) for clear");
-	error_log("none");
+	error_log("help:           Print this help and exit.");
+	error_log("info (default): Print cache information.");
+	error_log("clear:          Clear cache. WARNING: This will delete/invalidate all items in the cache including the ones set by other application(s).");
+	error_log("housekeeping:   Evict stale cache from managed caches.");
 	error_log("");
 	error_log("-- Parameter(s) for housekeeping");
-	error_log("batch size (optional, integer): Restrict action to maximum of these many items. Should be >= 0, 0 (default) means no limit. Since this action can be time consuming set this parameter to a small value like 1000 to finish early. Useful when used from a scheduler.");
+	error_log("  batch size: (optional, integer) Restrict action to maximum of these many items. Should be >= 0, 0 (default) means no limit. Since this action can be time consuming set this parameter to a small value like 1000 to finish early. Useful when used from a scheduler.");
 	
 	return;
 }
@@ -50,23 +45,42 @@ if(isset($argv[1]) && $argv[1] == 'help')
 	printHelp($argv);
 	exit;
 }
-else if(isset($argv[1]) && $argv[1] == 'clear')
+else if(!isset($argv[1]) || $argv[1] == 'info')
 {
+	if(count($cachedBackendEntity) < 1) {
+		echo "[INFO] No cache backend is active. Quitting.\n";
+		exit;
+	}
+
 	echo "-- Cache info [ backend => object(s) cached ] --\n";
 	
 	foreach($cachedBackendEntity as $backendId => $entityList)
 		echo $backendId . " => " . json_encode($entityList, JSON_NUMERIC_CHECK) . "\n";
 		
-  echo "\n";
-  
+	exit;
+}
+else if(isset($argv[1]) && $argv[1] == 'clear')
+{
+	if(count($cachedBackendEntity) < 1) {
+		echo "[INFO] No cache backend is active. Quitting.\n";
+		exit;
+	}
+	
+	echo "-- Cache info [ backend => object(s) cached ] --\n";
+	
+	foreach($cachedBackendEntity as $backendId => $entityList)
+		echo $backendId . " => " . json_encode($entityList, JSON_NUMERIC_CHECK) . "\n";
+		
+	echo "\n";
+		
   $cachedBackend = readline("Enter the backend you want to clear: ");
   
-  if($cachedBackend == '' || !isset($cachedBackendEntity[$cachedBackend])) {
+  if($cachedBackend == '' || !isset($cacheMaster->cache[$cachedBackend])) {
 		error_log("[ERROR] Invalid cache backend provided.");
 		exit(1);
   }
   
-  echo "WARNING: This will delete/invalidate all items in the cache including ones set by other applications.";
+  echo "WARNING: This will delete/invalidate all items in the cache including the ones set by other application(s).";
   
   $option = readline(" Are you sure you want to proceed (y/N): ");
   

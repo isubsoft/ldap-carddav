@@ -264,7 +264,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
       	if(!isset($this->addressbook[$addressBookId])) {
 					try 
 					{
-					  $query = 'SELECT addressbook_id, user_specific, writable FROM ' . self::$addressBooksTableName . ' WHERE addressbook_id =?';
+					  $query = 'SELECT user_specific, writable FROM ' . self::$addressBooksTableName . ' WHERE addressbook_id =?';
 					  $stmt = $this->pdo->prepare($query);
 					  $stmt->execute([$addressBookId]);
 					  
@@ -275,9 +275,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					  	continue;
 					  }
 					  	
-						if($addressBookConfig['user_specific'] != $row['user_specific'] || $addressBookConfig['writable'] != $row['writable'])
+						if(!isset($addressBookConfig['user_specific']) || $addressBookConfig['user_specific'] !== (bool)$row['user_specific'] || !isset($addressBookConfig['writable']) || $addressBookConfig['writable'] !== (bool)$row['writable'])
 						{
-							trigger_error("Configuration properties do not match that of sync database for address book '$addressBookId'. Excluded.", E_USER_NOTICE);
+							trigger_error("Configured values do not match that of sync database for address book '$addressBookId'. Address book excluded.", E_USER_NOTICE);
 							continue;
 						}
 						

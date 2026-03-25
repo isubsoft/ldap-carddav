@@ -24,15 +24,10 @@ class PrincipalCollection extends \Sabre\DAVACL\PrincipalCollection
 	{
 		return [
 		  [
-		      'privilege' => '{DAV:}read',
-		      'principal' => '{DAV:}authenticated',
-		      'protected' => true,
-		  ],
-		  [
 		      'privilege' => '{DAV:}all',
 		      'principal' => '{DAV:}owner',
 		      'protected' => true,
-		  ],
+		  ]
 		];
 	}
 }

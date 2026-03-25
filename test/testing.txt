@@ -1,7 +1,60 @@
+---- Get resource urls (given here for sake of completeness and discovery)
+
+-- REQUEST
+curl --dump-header /dev/stderr --silent --location -u %username:%password --request PROPFIND '%base_url/' \
+--header 'Content-Type: application/xml' \
+--header 'Accept-Charset: utf-8' \
+--header 'Depth: 1' \
+--data '<d:propfind xmlns:d="DAV:">
+  <d:prop>
+     <d:resourcetype />
+  </d:prop>
+</d:propfind>'
+
+-- SAMPLE RESPONSE BODY
+<?xml version="1.0"?>
+<d:multistatus xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns" xmlns:card="urn:ietf:params:xml:ns:carddav">
+    <d:response>
+        <d:href>/</d:href>
+        <d:propstat>
+            <d:prop>
+                <d:resourcetype>
+                    <d:collection/>
+                </d:resourcetype>
+            </d:prop>
+            <d:status>HTTP/1.1 200 OK</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:href>/principals/</d:href>
+        <d:propstat>
+            <d:prop>
+                <d:resourcetype>
+                    <d:collection/>
+                </d:resourcetype>
+            </d:prop>
+            <d:status>HTTP/1.1 200 OK</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:href>/addressbooks/</d:href>
+        <d:propstat>
+            <d:prop>
+                <d:resourcetype>
+                    <d:collection/>
+                </d:resourcetype>
+            </d:prop>
+            <d:status>HTTP/1.1 200 OK</d:status>
+        </d:propstat>
+    </d:response>
+</d:multistatus>
+
+----------------------------------------------------------------------------------
+
 ---- Get principals (returns only current principal due to ACL, given here for sake of completeness)
 
 -- REQUEST
-curl --dump-header /dev/stderr --silent --location -u %username:%password --request PROPFIND '%base_url' \
+curl --dump-header /dev/stderr --silent --location -u %username:%password --request PROPFIND '%base_url/principals/' \
 --header 'Content-Type: application/xml' \
 --header 'Accept-Charset: utf-8' \
 --header 'Depth: 1' \
@@ -43,7 +96,7 @@ curl --dump-header /dev/stderr --silent --location -u %username:%password --requ
 ---- Get current principal 
 
 -- REQUEST
-curl --dump-header /dev/stderr --silent --location -u %username:%password --request PROPFIND '%base_url' \
+curl --dump-header /dev/stderr --silent --location -u %username:%password --request PROPFIND '%base_url/' \
 --header 'Content-Type: application/xml' \
 --header 'Accept-Charset: utf-8' \
 --header 'Depth: 0' \
@@ -74,7 +127,7 @@ curl --dump-header /dev/stderr --silent --location -u %username:%password --requ
 ---- Get addressbook home of a principal - 
 
 -- REQUEST
-curl --dump-header /dev/stderr --silent --location -u %username:%password --request PROPFIND '%base_url/principals/%principal' \
+curl --dump-header /dev/stderr --silent --location -u %username:%password --request PROPFIND '%base_url/principals/%principal/' \
 --header 'Content-Type: application/xml' \
 --header 'Accept-Charset: utf-8' \
 --header 'Depth: 0' \
@@ -105,7 +158,7 @@ curl --dump-header /dev/stderr --silent --location -u %username:%password --requ
 ---- Get list of addressbooks of a principal
 
 -- REQUEST
-curl --dump-header /dev/stderr --silent --location -u %username:%password --request PROPFIND '%base_url/addressbooks/%principal' \
+curl --dump-header /dev/stderr --silent --location -u %username:%password --request PROPFIND '%base_url/addressbooks/%principal/' \
 --header 'Content-Type: application/xml' \
 --header 'Accept-Charset: utf-8' \
 --header 'Depth: 1' \
@@ -253,7 +306,7 @@ END:VCARD
 ---- Fetch contacts data with multiget
 
 -- REQUEST
-curl --dump-header /dev/stderr --silent --location -u %username:%password --request REPORT '%base_url/addressbooks/%principal/%addressbook/%card_uri' \
+curl --dump-header /dev/stderr --silent --location -u %username:%password --request REPORT '%base_url/addressbooks/%principal/%addressbook/' \
 --header 'Content-Type: application/xml' \
 --header 'Depth: 1' \
 --header 'Accept-Charset: utf-8' \
@@ -358,7 +411,7 @@ HTTP/1.1 204 No Content
 ---- Get First Sync Token
 
 -- REQUEST
-curl --dump-header /dev/stderr --silent --location -u %username:%password --request PROPFIND '%base_url/addressbooks/%principal/%addressbook' \
+curl --dump-header /dev/stderr --silent --location -u %username:%password --request PROPFIND '%base_url/addressbooks/%principal/%addressbook/' \
 --header 'Content-Type: application/xml' \
 --header 'Accept-Charset: utf-8' \
 --header 'Depth: 0' \
@@ -396,7 +449,7 @@ curl --dump-header /dev/stderr --silent --location -u %username:%password --requ
 12. Get changes for addressbook
 
 -- REQUEST
-curl --dump-header /dev/stderr --silent --location -u %username:%password --request REPORT '%base_url/addressbooks/%principal/%addressbook' \
+curl --dump-header /dev/stderr --silent --location -u %username:%password --request REPORT '%base_url/addressbooks/%principal/%addressbook/' \
 --header 'Content-Type: application/xml' \
 --header 'Accept-Charset: utf-8' \
 --header 'Depth: 0' \
