@@ -51,16 +51,14 @@ curl --dump-header /dev/stderr --silent --location -u %username:%password --requ
                 </d:supported-report-set>
                 <d:displayname>Principal name</d:displayname>
                 <x1:email-address-set xmlns:x1="http://calendarserver.org/ns/">
-                    <x1:email-address xmlns:x1="http://calendarserver.org/ns/">
-                        <x1:email-address-set xmlns:x1="http://calendarserver.org/ns/">emailid@example.org</x1:email-address-set>
-                        <x1:email-address-set xmlns:x1="http://calendarserver.org/ns/">emailid@example.org</x1:email-address-set>
-                    </x1:email-address>
+                    <x1:email-address xmlns:x1="http://calendarserver.org/ns/">email_id@example.org</x1:email-address>
+                    <x1:email-address xmlns:x1="http://calendarserver.org/ns/">email_id@example.org</x1:email-address>
                 </x1:email-address-set>
                 <card:addressbook-home-set>
                     <d:href>/addressbooks/PRINCIPAL/</d:href>
                 </card:addressbook-home-set>
                 <card:directory-gateway>
-                    <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK</d:href>
+                    <d:href>/addressbooks/PRINCIPAL/ADDRESSBOOK/</d:href>
                 </card:directory-gateway>
             </d:prop>
             <d:status>HTTP/1.1 200 OK</d:status>
