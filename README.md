@@ -24,6 +24,7 @@
 1. Support for more PDO databases.
 2. Compatibility to as many vCard data types as possible.
 3. Custom vCard property support.
+4. User groups.
 
 ## Installation
 Check INSTALL file.
