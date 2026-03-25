@@ -226,7 +226,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
 					$attributes[] = $configFieldMap[$value];
 				
         foreach(Utility::getLeafValues($this->fieldMap, $tmp) as $value) {
-        	if(isset($configFieldMap[$value]) && is_string($configFieldMap[$value]) && $configFieldMap[$value] !== '')
+        	if(isset($configFieldMap[$value]) && is_string($configFieldMap[$value]) && $configFieldMap[$value] !== '' && !in_array($configFieldMap[$value], $attributes))
 						$attributes[] = $configFieldMap[$value];
 				}
         
