@@ -1,0 +1,111 @@
+// Field map for standard vCard properties to LDAP inetOrgPerson object class
+
+'FN'            => ['field_name' => 'cn'],
+
+'N'							=> ['field_name' => [
+																			'last_name' 	=> 'sn', 
+																			'first_name' 	=> 'givenName'
+																		]
+									 ],
+
+'EMAIL'         => ['field_name' => 'mail'],
+
+'ORG'         	=> ['field_name' => [
+																			'org_name' 			=> 'o', 
+																			'org_unit_name' => 'ou'
+																		]
+									 ],
+
+'TITLE'         => ['field_name' => 'title'],
+
+'ROLE'        	=> ['field_name' => 'employeeType'],
+
+'NICKNAME'      => ['field_name' => 'displayName'],
+
+'PHOTO'         => 	[
+											// Mapping profile picture
+											'field_name' => 'jpegPhoto',
+	                  	'field_data_format' => 'binary',
+	                  	'field_data_mediatype' => ['image/jpeg', 'image/png'], // List of mediatype which a 
+	                  																												 // binary backend field will accept
+                   	],
+                   	
+'NOTE'        	=> 	['field_name' => 'description'],
+
+'TEL'						=> 	[
+											// Mapping pager number
+		                  [	
+		                  	'field_name' => 'pager',
+				                'parameters' => ['TYPE' => 'pager']
+		                  ],
+		                  
+											// Mapping fax number
+                      [
+                      	'field_name' => 'facsimileTelephoneNumber',
+                        'parameters' => [
+                        									['TYPE' => ['fax', 'work']],
+                        									['TYPE' => 'fax'],
+                        								],
+                    	],
+                    	
+											// Mapping mobile number
+		                  [
+		                  	'field_name' => 'mobile',
+		                    'parameters' => ['TYPE' => 'cell']
+		                  ],
+		                  
+											// Mapping home telephone number
+											[
+  											'field_name' => 'homePhone',
+                        'parameters' => ['TYPE' => 'home']
+                      ],
+                      
+											// Mapping work telephone number
+                      [	
+                      	'field_name' => 'telephoneNumber',
+                        'parameters' => [ 
+                                          ['TYPE' => 'work']
+                                          null // Default to this field
+                                        ]
+                      ],
+                 ],
+                 
+'ADR'         => [
+										// Mapping home postal address
+  									[
+											'field_name' => 'homePostalAddress',
+	                    'parameters' => ['TYPE' => 'home'],
+	                    'map_component_separator' => '$'
+                    ],
+                    
+										// Mapping other postal address
+  									[
+											'field_name' => 'postalAddress',
+	                    'parameters' => [null], // Default to this field
+	                    'map_component_separator' => '$'
+                    ],
+
+										// Mapping location
+                    [
+   										'field_name' => [
+   																			'po_box'			=> 'postOfficeBox',
+   																			'street' 			=> 'street',
+   																			'locality' 		=> 'l',
+   																			'province' 		=> 'st', 
+   																			'postal_code' => 'postalCode'
+   																		],
+                      'parameters' => ['TYPE' => 'work']
+                    ]
+                 ],
+
+'LANG'        => ['field_name' => 'preferredLanguage']
+
+
+// Field map alternative to be considered if using an appropriate LDAP object class
+
+'N'						=> ['field_name' => [ 'last_name' => 'sn', 'first_name' => 'givenName', 'prefix' => 'personalTitle' ],
+
+'X-EVENT-TIME' => [
+										'field_name' => 'customEventTime',
+										'field_data_format' => 'timestamp',
+									],
