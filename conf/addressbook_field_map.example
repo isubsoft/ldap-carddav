@@ -105,6 +105,24 @@
 
 'N'						=> ['field_name' => [ 'last_name' => 'sn', 'first_name' => 'givenName', 'prefix' => 'personalTitle' ],
 
+'PHOTO'         => 	[
+											// Mapping a picture
+											[
+												'field_name' => 'photo',
+		                  	'field_data_format' => 'binary',
+		                  	'field_data_mediatype' => ['image/g3fax'], // List of mediatype which a 
+		                  																						 // binary backend field will accept
+		                  ],
+		                  
+											// Mapping profile picture
+											[
+												'field_name' => 'jpegPhoto',
+		                  	'field_data_format' => 'binary',
+		                  	'field_data_mediatype' => ['image/jpeg', 'image/png'], // List of mediatype which a 
+		                  																												 // binary backend field will accept
+		                  ]
+                   	],
+
 'X-EVENT-TIME' => [
 										'field_name' => 'customEventTime',
 										'field_data_format' => 'timestamp',
