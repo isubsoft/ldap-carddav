@@ -24,7 +24,7 @@ class Plugin extends \Sabre\CardDAV\Plugin
 	{
 		foreach($this->carddavBackend->getAddressBooksForUser($GLOBALS['currentUserPrincipalUri']) as $addressbook) {
 			if($this->carddavBackend->isAddressbookDirectory($addressbook['id']))
-				$this->directories[] = $this->getAddressbookHomeForPrincipal($GLOBALS['currentUserPrincipalUri']) . '/' . $addressbook['id'];
+				$this->directories[] = $this->getAddressbookHomeForPrincipal($GLOBALS['currentUserPrincipalUri']) . '/' . $addressbook['id'] . '/';
 		}
 		
 		return;
