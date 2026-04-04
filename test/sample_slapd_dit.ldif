@@ -1,0 +1,39 @@
+# Add domain to DIT
+dn: dc=example,dc=org
+objectClass: domain
+o: Example Inc.
+
+# Organization unit for person
+dn: ou=People,dc=example,dc=org
+objectClass: organizationalUnit
+
+# Admin for organization person
+dn: cn=admin,ou=People,dc=example,dc=org
+objectClass: organizationalRole
+description: People Administrator
+
+# User for CardDAV sync
+dn: cn=carddavsync,ou=People,dc=example,dc=org
+objectClass: organizationalRole
+description: User for CardDAV sync
+
+# Organization person
+dn: uid=person01,ou=People,dc=example,dc=org
+objectClass: inetOrgPerson
+givenName: Person
+surname: 01
+cn: Person 01
+mail: person01@example.org
+
+# Personal address book of a person
+dn: ou=Address Book,uid=person01,ou=People,dc=example,dc=org
+objectClass: organizationalUnit
+description: Private Address Book
+
+# A personal contact
+dn: cn=Contact 01,ou=Address Book,uid=person01,ou=People,dc=example,dc=org
+objectClass: inetOrgPerson
+givenName: Contact
+surname: 01
+cn: Contact 01
+mail: contact01.person01@example.org
