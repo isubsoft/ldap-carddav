@@ -22,13 +22,17 @@ class Plugin extends \Sabre\CardDAV\Plugin
 	
 	public function appBeforeMethod()
 	{
-		$path = parse_url($this->server->getRequestUri())['path'];
-		$properties = $this->server->getProperties($path, ['{DAV:}owner']);
+		$requestUrlPath = parse_url($this->server->getRequestUri(), PHP_URL_PATH);
+		
+		if($requestUrlPath === false || $requestUrlPath === null)
+			return;
+		
+		$properties = $this->server->getProperties($requestUrlPath, ['{DAV:}owner']);
 
 		if (isset($properties['{DAV:}owner'])) {
 			$principalPath = $properties['{DAV:}owner']->getHref();
 				
-			if($principalPath != '/' && $principalPath != '')
+			if(preg_match('#^/+$#', $principalPath) === 0 && $principalPath != '')
 				foreach($this->carddavBackend->getAddressBooksForUser($principalPath) as $addressbook) {
 					if($this->carddavBackend->isAddressbookDirectory($addressbook['id']))
 						$this->directories[] = $this->getAddressbookHomeForPrincipal($principalPath) . '/' . $addressbook['id'] . '/';
