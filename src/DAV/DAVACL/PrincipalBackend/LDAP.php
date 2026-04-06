@@ -300,9 +300,9 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
 							
 							if(!empty($memberData)) {
 								if(isset($memberData[0][$configGroupFieldMap[$groupMemberProperty]]) && isset($memberData[0][$configGroupFieldMap['id']]))
-									$principal['__extra_info'][$groupMemberProperty][] = $prefixPath . '/' . rawurlencode($memberData[0][$configGroupFieldMap['id']][0]);
+									$principal['__extra_info'][$groupMemberProperty][] = $prefixPath . '/' . $memberData[0][$configGroupFieldMap['id']][0];
 								else if(isset($memberData[0][$configFieldMap['id']]))
-									$principal['__extra_info'][$groupMemberProperty][] = $prefixPath . '/' . rawurlencode($memberData[0][$configFieldMap['id']][0]);
+									$principal['__extra_info'][$groupMemberProperty][] = $prefixPath . '/' . $memberData[0][$configFieldMap['id']][0];
 							}
 						}
 					}
@@ -314,7 +314,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
 						trigger_error("Could not set cache", E_USER_WARNING);
 		      
 		      $principal['id'] = $principalId;
-		      $principal['uri'] = $prefixPath . '/' . rawurlencode($principalId);
+		      $principal['uri'] = $path;
 		      
 		      return $principal;
         }
