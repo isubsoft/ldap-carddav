@@ -1103,7 +1103,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
                             $memberData = Utility::LdapQuery($ldapConn, $value, $addressBookConfig['filter'], ['entryuuid'], 'base');
                      
-                            if(! empty($memberData) && $memberData['count'] > 0)
+                            if(! empty($memberData) && $memberData['count'] > 0 && isset($memberData[0]['entryuuid']))
                             { 
                                 $memberCardUID = null;
 
