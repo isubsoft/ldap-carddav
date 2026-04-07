@@ -37,3 +37,23 @@ givenName: Contact
 surname: 01
 cn: Contact 01
 mail: contact01.person01@example.org
+
+# Organization person group
+dn: cn=group01,ou=People,dc=example,dc=org
+objectClass: groupOfNames
+description: Group 01
+ou: Project Team
+member: uid=person01,ou=People,dc=example,dc=org
+
+# Personal address book of a person group
+dn: ou=Address Book,cn=group01,ou=People,dc=example,dc=org
+objectClass: organizationalUnit
+description: Private Address Book
+
+# A personal contact
+dn: cn=Contact 01,ou=Address Book,cn=group01,ou=People,dc=example,dc=org
+objectClass: inetOrgPerson
+givenName: Contact
+surname: 01
+cn: Contact 01
+mail: contact01.group01@example.org

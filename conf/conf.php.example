@@ -150,7 +150,7 @@ $config['auth']['ldap'] = [
   
   // It's possible to bind to a DN from a search result.
   'search_base_dn' => '', // Provide a separate base DN for search if different from 'base_dn' above else leave blank.
-  'search_filter'  => '(|(&(objectclass=inetOrgPerson)(employeeNumber=*)(uid=%u))(&(objectclass=groupOfNames)(cn=%u)))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
+  'search_filter'  => '(&(objectClass=inetOrgPerson)(employeeNumber=*)(uid=%u))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
 	'search_scope'         => 'list',   // Scope of search
 	                                    //  sub: Subtree
 	                                    // list: Immediate children
@@ -174,7 +174,7 @@ $config['principal']['ldap'] = [
   
   // It's possible to search for principal DN(s)
   'search_base_dn' => '', // Provide a separate base DN for search if different from 'base_dn' above else leave blank.
-  'search_filter'  => '(|(&(objectclass=inetOrgPerson)(employeeNumber=*))(objectclass=groupOfNames))',   // Filter criteria for valid principals.
+  'search_filter'  => '(|(&(objectClass=inetOrgPerson)(employeeNumber=*))(objectClass=groupOfNames))',   // Filter criteria for valid principals.
 	'search_scope'         => 'list',   // Scope of search
 	                                    //  sub: Subtree
 	                                    // list: Immediate children
@@ -263,7 +263,7 @@ $config['card']['addressbook']['ldap']['me'] = [
 															// and as parent DN for new contacts).
 	
 	// LDAP filter to be used to search for contacts
-	'filter'        	=> '(objectClass=inetOrgPerson)',
+	'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
 	
 	// Bind user to search/read/write contacts. If 'bind_dn' and 'bind_pass' values are not provided below 
 	// and if this address book is marked as 'user_specific' then 'bind_dn' and 'bind_pass' values provided 
@@ -287,7 +287,7 @@ $config['card']['addressbook']['ldap']['me'] = [
 	
   // It's possible to find the base of an address book DN from a search result. Useful only if the address book is user specific.
   'search_base_dn' => 'ou=People,dc=example,dc=org',
-  'search_filter'  => '(&(objectclass=inetOrgPerson)(uid=%u))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
+  'search_filter'  => '(|(&(objectClass=inetOrgPerson)(uid=%u))(&(objectClass=groupOfNames)(cn=%u)))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
 	'search_scope'   => 'list',  // Scope of search
 	                             //  sub: Subtree
 	                             // list: Immediate children
@@ -537,7 +537,7 @@ $config['card']['addressbook']['ldap']['global'] = [
 	
   // It's possible to find the base of an address book DN from a search result. Useful only if the address book is user specific.
   //  'search_base_dn' => 'ou=People,dc=example,dc=org',
-  //  'search_filter'  => '(&(objectclass=inetOrgPerson)(uid=%u))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
+  //  'search_filter'  => '(&(objectClass=inetOrgPerson)(uid=%u))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
 	//  'search_scope'   => 'list',  // Scope of search
 	                             //  sub: Subtree
 	                             // list: Immediate children
@@ -787,7 +787,7 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	
   // It's possible to find the base of an address book DN from a search result. Useful only if the address book is user specific.
   'search_base_dn' => 'ou=People,dc=example,dc=org',
-  'search_filter'  => '(&(objectclass=inetOrgPerson)(uid=%u))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
+  'search_filter'  => '(|(&(objectClass=inetOrgPerson)(uid=%u))(&(objectClass=groupOfNames)(cn=%u)))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
 	'search_scope'   => 'list',  // Scope of search
 	                             //  sub: Subtree
 	                             // list: Immediate children

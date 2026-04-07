@@ -17,12 +17,17 @@ class Plugin extends \Sabre\CardDAV\Plugin
 
 	function initialize(Server $server){
 		parent::initialize($server);
-		$server->on('beforeMethod:*', [$this, 'appBeforeMethod']);
+		$server->on('beforeMethod:*', [$this, 'beforeMethodSetDirectory'], 900);
 	}
 	
-	public function appBeforeMethod()
+	public function beforeMethodSetDirectory(\Sabre\HTTP\RequestInterface $request, \Sabre\HTTP\ResponseInterface $response)
 	{
-		$requestUrlPath = parse_url($this->server->getRequestUri(), PHP_URL_PATH);
+		$requestMethod = $request->getMethod();
+		
+		if(strtolower($requestMethod) != 'get' && strtolower($requestMethod) != 'propfind') // GET method is needed for browser plugin
+			return;
+		
+		$requestUrlPath = parse_url($request->getPath(), PHP_URL_PATH);
 		
 		if($requestUrlPath === false || $requestUrlPath === null)
 			return;

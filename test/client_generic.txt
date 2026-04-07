@@ -124,6 +124,199 @@ curl --dump-header /dev/stderr --silent --location -u %username:%password --requ
 
 ----------------------------------------------------------------------------------
 
+---- Get extended information about a principal 
+
+-- REQUEST
+curl --dump-header /dev/stderr --silent --location -u %username:%password --request PROPFIND '%base_url/principals/%principal/' \
+--header 'Content-Type: application/xml' \
+--header 'Accept-Charset: utf-8' \
+--header 'Depth: 0' \
+--data '<d:propfind xmlns:d="DAV:" xmlns:card="urn:ietf:params:xml:ns:carddav" xmlns:cs="http://calendarserver.org/ns/">
+  <d:prop>
+		<d:alternate-URI-set />
+		<d:principal-URL />
+		<d:group-member-set />
+		<d:group-membership />
+		<d:supported-privilege-set />
+		<d:current-user-privilege-set />
+    <d:current-user-principal />
+		<d:acl />
+		<d:owner />
+		<d:resourcetype />
+    <d:principal-collection-set />
+    <d:supported-report-set />
+    <d:resource-id />
+    <d:displayname />
+    <cs:email-address-set />
+    <card:addressbook-home-set />
+    <card:directory-gateway />
+  </d:prop>
+</d:propfind>'
+
+-- SAMPLE RESPONSE BODY
+<?xml version="1.0"?>
+<d:multistatus xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns" xmlns:card="urn:ietf:params:xml:ns:carddav">
+    <d:response>
+        <d:href>/principals/PRINCIPAL/</d:href>
+        <d:propstat>
+            <d:prop>
+                <d:alternate-URI-set>
+                    <d:href>mailto:emailid@example.org</d:href>
+                </d:alternate-URI-set>
+                <d:principal-URL>
+                    <d:href>/principals/PRINCIPAL/</d:href>
+                </d:principal-URL>
+                <d:group-member-set/>
+                <d:group-membership>
+                    <d:href>/principals/GROUP_PRINCIPAL/</d:href>
+                </d:group-membership>
+                <d:supported-privilege-set>
+                    <d:supported-privilege>
+                        <d:privilege>
+                            <d:all/>
+                        </d:privilege>
+                        <d:supported-privilege>
+                            <d:privilege>
+                                <d:read/>
+                            </d:privilege>
+                            <d:supported-privilege>
+                                <d:privilege>
+                                    <d:read-acl/>
+                                </d:privilege>
+                            </d:supported-privilege>
+                            <d:supported-privilege>
+                                <d:privilege>
+                                    <d:read-current-user-privilege-set/>
+                                </d:privilege>
+                            </d:supported-privilege>
+                        </d:supported-privilege>
+                        <d:supported-privilege>
+                            <d:privilege>
+                                <d:write/>
+                            </d:privilege>
+                            <d:supported-privilege>
+                                <d:privilege>
+                                    <d:write-properties/>
+                                </d:privilege>
+                            </d:supported-privilege>
+                            <d:supported-privilege>
+                                <d:privilege>
+                                    <d:write-content/>
+                                </d:privilege>
+                            </d:supported-privilege>
+                            <d:supported-privilege>
+                                <d:privilege>
+                                    <d:unlock/>
+                                </d:privilege>
+                            </d:supported-privilege>
+                            <d:supported-privilege>
+                                <d:privilege>
+                                    <d:write-acl/>
+                                </d:privilege>
+                            </d:supported-privilege>
+                        </d:supported-privilege>
+                    </d:supported-privilege>
+                </d:supported-privilege-set>
+                <d:current-user-privilege-set>
+                    <d:privilege>
+                        <d:all/>
+                    </d:privilege>
+                    <d:privilege>
+                        <d:read/>
+                    </d:privilege>
+                    <d:privilege>
+                        <d:write/>
+                    </d:privilege>
+                    <d:privilege>
+                        <d:write-properties/>
+                    </d:privilege>
+                    <d:privilege>
+                        <d:write-content/>
+                    </d:privilege>
+                    <d:privilege>
+                        <d:unlock/>
+                    </d:privilege>
+                    <d:privilege>
+                        <d:write-acl/>
+                    </d:privilege>
+                    <d:privilege>
+                        <d:read-acl/>
+                    </d:privilege>
+                    <d:privilege>
+                        <d:read-current-user-privilege-set/>
+                    </d:privilege>
+                </d:current-user-privilege-set>
+                <d:current-user-principal>
+                    <d:href>/principals/PRINCIPAL/</d:href>
+                </d:current-user-principal>
+                <d:acl>
+                    <d:ace>
+                        <d:principal>
+                            <d:href>/{DAV:}owner/</d:href>
+                        </d:principal>
+                        <d:grant>
+                            <d:privilege>
+                                <d:all/>
+                            </d:privilege>
+                        </d:grant>
+                        <d:protected/>
+                    </d:ace>
+                </d:acl>
+                <d:owner>
+                    <d:href>/principals/PRINCIPAL/</d:href>
+                </d:owner>
+                <d:resourcetype>
+                    <d:principal/>
+                </d:resourcetype>
+                <d:principal-collection-set>
+                    <d:href>/principals/</d:href>
+                </d:principal-collection-set>
+                <d:supported-report-set>
+                    <d:supported-report>
+                        <d:report>
+                            <d:expand-property/>
+                        </d:report>
+                    </d:supported-report>
+                    <d:supported-report>
+                        <d:report>
+                            <d:principal-match/>
+                        </d:report>
+                    </d:supported-report>
+                    <d:supported-report>
+                        <d:report>
+                            <d:principal-property-search/>
+                        </d:report>
+                    </d:supported-report>
+                    <d:supported-report>
+                        <d:report>
+                            <d:principal-search-property-set/>
+                        </d:report>
+                    </d:supported-report>
+                </d:supported-report-set>
+                <d:displayname>Principal name</d:displayname>
+                <x1:email-address-set xmlns:x1="http://calendarserver.org/ns/">
+                    <x1:email-address xmlns:x1="http://calendarserver.org/ns/">PRINCIPAL@example.org</x1:email-address>
+                </x1:email-address-set>
+                <card:addressbook-home-set>
+                    <d:href>/addressbooks/PRINCIPAL/</d:href>
+                </card:addressbook-home-set>
+                <card:directory-gateway>
+                    <d:href>/addressbooks/PRINCIPAL/public/</d:href>
+                </card:directory-gateway>
+            </d:prop>
+            <d:status>HTTP/1.1 200 OK</d:status>
+        </d:propstat>
+        <d:propstat>
+            <d:prop>
+                <d:resource-id/>
+            </d:prop>
+            <d:status>HTTP/1.1 404 Not Found</d:status>
+        </d:propstat>
+    </d:response>
+</d:multistatus>
+
+----------------------------------------------------------------------------------
+
 ---- Get addressbook home of a principal - 
 
 -- REQUEST
