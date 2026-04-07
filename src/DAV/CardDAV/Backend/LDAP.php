@@ -241,10 +241,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     	
     	$this->principalBackendId = $principal['__extra_info']['backend_id'];
   		
-  		// We do not know how to deal with a principal who is different from logged in user principal
-  		if(strtolower($this->principalId) != strtolower($currentUserPrincipalId))
-  			throw new SabreDAVException\Forbidden("User does not have access to this path");
-        			
 			try 
 			{
 		    $query = 'SELECT user_id FROM ' . self::$systemUsersTableName;
@@ -1109,16 +1105,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
                             $memberData = Utility::LdapQuery($ldapConn, $value, $addressBookConfig['filter'], ['entryuuid'], 'base');
                      
-                            if(!empty($memberData) && $memberData['count'] > 0)
+                            if(!empty($memberData) && $memberData['count'] > 0 && isset($memberData[0]['entryuuid'][0]))
                             { 
                                 $memberCardUID = null;
                                 
-																if(!isset($memberData[0]['entryuuid'][0]))
-																{
-																	trigger_error("Read access to required operational attributes in LDAP not present.", E_USER_WARNING);
-																	throw new SabreDAVException\ServiceUnavailable();
-																}
-
                                 try {
                                     $query = 'SELECT card_uid FROM ' . self::$backendMapTableName . ' WHERE addressbook_id = ? and backend_id = ? and user_id = ? AND delete_sync_token IS NULL';
                                     $stmt = $this->pdo->prepare($query);
