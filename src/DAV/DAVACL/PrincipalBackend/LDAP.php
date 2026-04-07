@@ -176,6 +176,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
 				$prefixPath = dirname($path);
         $principalId = basename($path);
         $currentUserPrincipalId = $GLOBALS['currentUserPrincipalId'];
+				$groupMembershipProperty = 'group';
       	$groupMemberProperty = 'member';
 		    $groupMandatoryProperties = self::$mandatoryProperties;
 		    $groupMandatoryProperties[] = $groupMemberProperty;
@@ -289,6 +290,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
 				  	$principal = Utility::setResourceProperty(null, $this->fieldMap, $configGroupFieldMap, $data[0]);
 						$principal['__extra_info'][$groupMemberProperty] = [];
 				  	
+ 						// Adding members
 						for($index=0; $index<$data[0][$configGroupFieldMap[$groupMemberProperty]]['count']; $index++) {
 							$memberDn = $data[0][$configGroupFieldMap[$groupMemberProperty]][$index];
 							$filter = Utility::replacePlaceholders($this->config['principal']['ldap']['search_filter'], ['%u' => ldap_escape($currentUserPrincipalId, "", LDAP_ESCAPE_FILTER)]);
@@ -304,8 +306,22 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
 						}
 					}
 					
+					// Adding group memberships
+					$filter = Utility::replacePlaceholders('(&' . $this->config['principal']['ldap']['search_filter'] . '(' . $configGroupFieldMap[$groupMemberProperty] . '=' . ldap_escape($data[0]['dn'], "", LDAP_ESCAPE_FILTER) . '))', ['%u' => ldap_escape($currentUserPrincipalId, "", LDAP_ESCAPE_FILTER)]);
+					$attributes = [$configGroupFieldMap['id']];
+					
+					$groupData = Utility::LdapQuery($ldapConn, $ldaptree, $filter, $attributes, strtolower($this->config['principal']['ldap']['search_scope']));
+					            
+					if(!empty($groupData))
+					{
+						$principal['__extra_info'][$groupMembershipProperty] = [];
+						
+						for($index=0; $index<$groupData['count']; $index++)
+							if(isset($groupData[$index][$configGroupFieldMap['id']]))
+								$principal['__extra_info'][$groupMembershipProperty][] = $prefixPath . '/' . $groupData[$index][$configGroupFieldMap['id']][0];
+					}
+					
 					$principal['__extra_info']['backend_id'] = $data[0]['entryuuid'][0];
-					$principal['__extra_info']['is_group'] = $isGroupPrincipal;
 					
 					if(!$this->cache->set(self::getCacheKey($principalId), $principal, (isset($this->config['cache']['principal']['ttl']) && is_int($this->config['cache']['principal']['ttl']) && $this->config['cache']['principal']['ttl'] > 0 && $this->config['cache']['principal']['ttl'] <= 2592000)?$this->config['cache']['principal']['ttl']:self::$cacheTtl))
 						trigger_error("Could not set cache", E_USER_WARNING);
@@ -407,7 +423,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
 			$groupMemberProperty = 'member';
     	$groupPrincipal = $this->getPrincipalByPath($principal);
     	
-    	if(isset($groupPrincipal['__extra_info']['is_group']) && $groupPrincipal['__extra_info']['is_group'] == true && count($groupPrincipal['__extra_info'][$groupMemberProperty]) > 0)
+    	if(isset($groupPrincipal['__extra_info'][$groupMemberProperty]) && is_array($groupPrincipal['__extra_info'][$groupMemberProperty]))
     		return $groupPrincipal['__extra_info'][$groupMemberProperty];
     		
       return [];
@@ -421,60 +437,12 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      */
     function getGroupMembership($principal)
     {
-    	$prefixPath = dirname($principal);
-      $currentUserPrincipalId = $GLOBALS['currentUserPrincipalId'];
-      $groupMandatoryProperties = self::$mandatoryProperties;
-      $groupMemberProperty = 'member';
-      $groupMandatoryProperties[] = $groupMemberProperty;
-			$memberPrincipal = $this->getPrincipalByPath($principal);
-			$groupPrincipals = [];
-			
-			if(!isset($memberPrincipal['__extra_info']['backend_id'])) {
-				trigger_error("Backend id of member principal uri '$principal' does not exist. Could not return group membership. Check backend privileges.", E_USER_WARNING);
-				return [];
-			}
-			
-      $configFieldMap = self::normalizePropFieldMap((isset($this->config['principal']['ldap']['group_fieldmap']) && is_array($this->config['principal']['ldap']['group_fieldmap']))?$this->config['principal']['ldap']['group_fieldmap']:[]);
-      
-			if($configFieldMap == [])
-				return [];
-			
-			foreach($groupMandatoryProperties as $value) {
-				if(!isset($configFieldMap[$value]) || !is_string($configFieldMap[$value]) || $configFieldMap[$value] === '') {
-					trigger_error("Mandatory property '$value' for principal groups not mapped. Check configuration.", E_USER_WARNING);
-	    		throw new SabreDAVException\ServiceUnavailable();
-				}
-			}
+			$groupMembershipProperty = 'group';
+    	$groupPrincipal = $this->getPrincipalByPath($principal);
+    	
+    	if(isset($groupPrincipal['__extra_info'][$groupMembershipProperty]) && is_array($groupPrincipal['__extra_info'][$groupMembershipProperty]))
+    		return $groupPrincipal['__extra_info'][$groupMembershipProperty];
     		
-			$this->setPrincipalBackendProperties();
-			$ldapConn = $this->ldapConn;
-      
-      if($ldapConn === false)
-      	throw new SabreDAVException\ServiceUnavailable();
-        
-      $ldaptree = ($this->config['principal']['ldap']['search_base_dn'] !== '') ? $this->config['principal']['ldap']['search_base_dn'] : $this->config['principal']['ldap']['base_dn'];
-      $filter = Utility::replacePlaceholders('(&' . $this->config['principal']['ldap']['search_filter'] . '(entryUUID=' . ldap_escape($memberPrincipal['__extra_info']['backend_id'], "", LDAP_ESCAPE_FILTER) . '))', ['%u' => ldap_escape($currentUserPrincipalId, "", LDAP_ESCAPE_FILTER)]);
-			$attributes[] = 'dn';
-      
-      $data = Utility::LdapQuery($ldapConn, $ldaptree, $filter, $attributes, strtolower($this->config['principal']['ldap']['search_scope']));
-                  
-      if(!empty($data) && $data['count'] === 1)
-      {
-		    $filter = Utility::replacePlaceholders('(&' . $this->config['principal']['ldap']['search_filter'] . '(' . $configFieldMap[$groupMemberProperty] . '=' . ldap_escape($data[0]['dn'], "", LDAP_ESCAPE_FILTER) . '))', ['%u' => ldap_escape($currentUserPrincipalId, "", LDAP_ESCAPE_FILTER)]);
-				$attributes = [$configFieldMap['id']];
-				
-		    $groupPrincipalData = Utility::LdapQuery($ldapConn, $ldaptree, $filter, $attributes, strtolower($this->config['principal']['ldap']['search_scope']));
-		                
-		    if(!empty($groupPrincipalData))
-		    {
-		    	for($index=0; $index<$groupPrincipalData['count']; $index++)
-		    		if(isset($groupPrincipalData[$index][$configFieldMap['id']]))
-		    			$groupPrincipals[] = $prefixPath . '/' . $groupPrincipalData[$index][$configFieldMap['id']][0];
-		    	
-		    	return $groupPrincipals;
-		    }
-      }
-        
     	return [];
     }
 
