@@ -23,7 +23,7 @@ class Plugin extends \Sabre\DAV\PropertyStorage\Plugin
 		$this->server = $server;
 		
 		$this->pathFilter = function($path) {
-			$addressbookPathRegexp = '#^' . $this->server->getPlugin('carddav')->publicGetAddressbookHomeForPrincipal($GLOBALS['currentUserPrincipalUri']) . '$|^' . $GLOBALS['currentUserPrincipalUri'] . '$#';
+			$addressbookPathRegexp = '#^' . preg_quote($this->server->getPlugin('carddav')->publicGetAddressbookHomeForPrincipal($GLOBALS['currentUserPrincipalUri']), '#') . '$|^' . preg_quote($GLOBALS['currentUserPrincipalUri'], '#') . '$#';
 			
 			if (preg_match($addressbookPathRegexp, $path) === 1)
 				return true;
