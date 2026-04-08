@@ -166,7 +166,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         {
         	$this->addressbook[$addressBookId]['LdapConnection'] = Utility::LdapBindConnection(['bindDn' => $addressBookConfig['bind_dn'], 'bindPass' => isset($addressBookConfig['bind_pass'])?$addressBookConfig['bind_pass']:null], $this->config['server']['ldap']);
         }
-        else if($addressBookConfig['user_specific'] == true)
+        elseif($addressBookConfig['user_specific'] == true)
           $this->addressbook[$addressBookId]['LdapConnection'] = $GLOBALS['currentUserPrincipalLdapConn'];
         else
         {
@@ -234,12 +234,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
       	
   		$this->principalId = $principal['id'];
 
-			if(!isset($principal['__extra_info']['backend_id'])) {
+			if(!isset($principal['__extra_properties']['backend_id'])) {
 				trigger_error("Could not obtain backend id for principal uri '" . $principalUri . "'. Check principal configuration.", E_USER_WARNING);
 				throw new SabreDAVException\ServiceUnavailable();
 			}
     	
-    	$this->principalBackendId = $principal['__extra_info']['backend_id'];
+    	$this->principalBackendId = $principal['__extra_properties']['backend_id'];
   		
 			try 
 			{
@@ -1136,7 +1136,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             
             $multiAllowedStatus = Reader::multiAllowedStatus($vCardKey);
             $compositeAttrStatus = Reader::compositeAttrStatus($vCardKey);
-            $iterativeArr = Utility::isMultidimensional($ldapKey);
+            $iterativeArr = Utility::isListOfArray($ldapKey);
 
             if($multiAllowedStatus['status'] && !$compositeAttrStatus['status'] && !$iterativeArr)
             {
@@ -1156,7 +1156,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                     }
                 }
             }
-            else if($compositeAttrStatus['status'] && !$iterativeArr)  
+            elseif($compositeAttrStatus['status'] && !$iterativeArr)  
             {
                 if(!is_array($ldapKey['field_name']) && isset($ldapKey['map_component_separator']))
                 {
@@ -1277,7 +1277,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                     }  
                 }                  
             }
-            else if($iterativeArr)
+            elseif($iterativeArr)
             {
                 foreach($ldapKey as $ldapKeyInfo)
                 {

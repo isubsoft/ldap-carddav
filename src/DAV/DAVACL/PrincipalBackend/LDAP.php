@@ -288,7 +288,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
 							}
 							
 				  	$principal = Utility::setResourceProperty(null, $this->fieldMap, $configGroupFieldMap, $data[0]);
-						$principal['__extra_info'][$groupMemberProperty] = [];
+						$principal['__extra_properties'][$groupMemberProperty] = [];
 				  	
  						// Adding members
 						for($index=0; $index<$data[0][$configGroupFieldMap[$groupMemberProperty]]['count']; $index++) {
@@ -299,9 +299,9 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
 							
 							if(!empty($memberData)) {
 								if(isset($memberData[0][$configGroupFieldMap[$groupMemberProperty]]) && isset($memberData[0][$configGroupFieldMap['id']]))
-									$principal['__extra_info'][$groupMemberProperty][] = $prefixPath . '/' . $memberData[0][$configGroupFieldMap['id']][0];
-								else if(isset($memberData[0][$configFieldMap['id']]))
-									$principal['__extra_info'][$groupMemberProperty][] = $prefixPath . '/' . $memberData[0][$configFieldMap['id']][0];
+									$principal['__extra_properties'][$groupMemberProperty][] = $prefixPath . '/' . $memberData[0][$configGroupFieldMap['id']][0];
+								elseif(isset($memberData[0][$configFieldMap['id']]))
+									$principal['__extra_properties'][$groupMemberProperty][] = $prefixPath . '/' . $memberData[0][$configFieldMap['id']][0];
 							}
 						}
 					}
@@ -314,14 +314,14 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
 					            
 					if(!empty($groupData))
 					{
-						$principal['__extra_info'][$groupMembershipProperty] = [];
+						$principal['__extra_properties'][$groupMembershipProperty] = [];
 						
 						for($index=0; $index<$groupData['count']; $index++)
 							if(isset($groupData[$index][$configGroupFieldMap['id']]))
-								$principal['__extra_info'][$groupMembershipProperty][] = $prefixPath . '/' . $groupData[$index][$configGroupFieldMap['id']][0];
+								$principal['__extra_properties'][$groupMembershipProperty][] = $prefixPath . '/' . $groupData[$index][$configGroupFieldMap['id']][0];
 					}
 					
-					$principal['__extra_info']['backend_id'] = $data[0]['entryuuid'][0];
+					$principal['__extra_properties']['backend_id'] = $data[0]['entryuuid'][0];
 					
 					if(!$this->cache->set(self::getCacheKey($principalId), $principal, (isset($this->config['cache']['principal']['ttl']) && is_int($this->config['cache']['principal']['ttl']) && $this->config['cache']['principal']['ttl'] > 0 && $this->config['cache']['principal']['ttl'] <= 2592000)?$this->config['cache']['principal']['ttl']:self::$cacheTtl))
 						trigger_error("Could not set cache", E_USER_WARNING);
@@ -423,8 +423,8 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
 			$groupMemberProperty = 'member';
     	$groupPrincipal = $this->getPrincipalByPath($principal);
     	
-    	if(isset($groupPrincipal['__extra_info'][$groupMemberProperty]) && is_array($groupPrincipal['__extra_info'][$groupMemberProperty]))
-    		return $groupPrincipal['__extra_info'][$groupMemberProperty];
+    	if(isset($groupPrincipal['__extra_properties'][$groupMemberProperty]) && is_array($groupPrincipal['__extra_properties'][$groupMemberProperty]))
+    		return $groupPrincipal['__extra_properties'][$groupMemberProperty];
     		
       return [];
     }
@@ -440,8 +440,8 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
 			$groupMembershipProperty = 'group';
     	$groupPrincipal = $this->getPrincipalByPath($principal);
     	
-    	if(isset($groupPrincipal['__extra_info'][$groupMembershipProperty]) && is_array($groupPrincipal['__extra_info'][$groupMembershipProperty]))
-    		return $groupPrincipal['__extra_info'][$groupMembershipProperty];
+    	if(isset($groupPrincipal['__extra_properties'][$groupMembershipProperty]) && is_array($groupPrincipal['__extra_properties'][$groupMembershipProperty]))
+    		return $groupPrincipal['__extra_properties'][$groupMembershipProperty];
     		
     	return [];
     }

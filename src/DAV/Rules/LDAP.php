@@ -25,7 +25,7 @@ class LDAP {
     {
         $compositeAttrStatus = Reader::compositeAttrStatus($vCardAttr);
 
-        $iterativeArr = Utility::isMultidimensional($mappLdapConfig);
+        $iterativeArr = Utility::isListOfArray($mappLdapConfig);
         $vCardParams = Utility::getVCardAttrParams($vObj, Reader::getDefaultParams($vCardAttr));
         $vCardParamListsMatch = self::isVcardParamsMatch($mappLdapConfig, $vCardParams, $iterativeArr);
         
@@ -43,7 +43,7 @@ class LDAP {
                     {                    
                         $ldapBackendMap = self::getvCardPropertyMap($vCardAttr, $vObj, $ldapConfigInfo);
                     }
-                    else if($configIndex === $vCardParamListsMatch['configIndex'])
+                    elseif($configIndex === $vCardParamListsMatch['configIndex'])
                     {   
                         $ldapBackendMap = self::getvCardPropertyMap($vCardAttr, $vObj, $ldapConfigInfo);
                     }
@@ -71,9 +71,9 @@ class LDAP {
             		
             		if(isset($ldapKeyInfo['parameters']))
             		{
-									if(!Utility::isMultidimensional($ldapKeyInfo['parameters'], true) && is_array($ldapKeyInfo['parameters']))
+									if(!Utility::isListOfArray($ldapKeyInfo['parameters'], true) && is_array($ldapKeyInfo['parameters']))
 										$fieldmapParams = [$ldapKeyInfo['parameters']];
-									elseif(Utility::isMultidimensional($ldapKeyInfo['parameters'], true))
+									elseif(Utility::isListOfArray($ldapKeyInfo['parameters'], true))
 										$fieldmapParams = $ldapKeyInfo['parameters'];
             		}
 
@@ -128,7 +128,7 @@ class LDAP {
 
             foreach($ldapKey as $Index => $ldapKeyInfo)
             {
-                if(isset($ldapKeyInfo['parameters']) && Utility::isMultidimensional($ldapKeyInfo['parameters'], true) && in_array(null, $ldapKeyInfo['parameters']))
+                if(isset($ldapKeyInfo['parameters']) && Utility::isListOfArray($ldapKeyInfo['parameters'], true) && in_array(null, $ldapKeyInfo['parameters']))
                 {                           
                     return (['status' => true, 'configIndex' => $Index ]);
                 }
@@ -140,9 +140,9 @@ class LDAP {
 		  		
 		  		if(isset($ldapKey['parameters']))
 		  		{
-						if(!Utility::isMultidimensional($ldapKey['parameters'], true) && is_array($ldapKey['parameters']))
+						if(!Utility::isListOfArray($ldapKey['parameters'], true) && is_array($ldapKey['parameters']))
 							$fieldmapParams = [$ldapKey['parameters']];
-						elseif(Utility::isMultidimensional($ldapKey['parameters'], true))
+						elseif(Utility::isListOfArray($ldapKey['parameters'], true))
 							$fieldmapParams = $ldapKey['parameters'];
 		  		}    
 
@@ -264,7 +264,7 @@ class LDAP {
                     $ldapBackendMap = [$newLdapKey => $backendvalue];
                 }                                             
             }
-            else if($backendDataFormat == 'TIMESTAMP')
+            elseif($backendDataFormat == 'TIMESTAMP')
             {
                 if($mapCompositeAttr)
                 {
@@ -323,7 +323,7 @@ class LDAP {
                 } 
             }
         }
-        else if($vCardDataFormat == 'URI')
+        elseif($vCardDataFormat == 'URI')
         {
             if($backendDataFormat == 'TEXT')
             {                
@@ -345,7 +345,7 @@ class LDAP {
                             {
                                 $vCardPropValueArr[] = $valueComponent['path'];
                             }
-                            else if(isset($valueComponent['scheme']) && (in_array($valueComponent['scheme'], self::$file_uri_schemes['embedded']) || in_array($valueComponent['scheme'], self::$file_uri_schemes['remote'])))
+                            elseif(isset($valueComponent['scheme']) && (in_array($valueComponent['scheme'], self::$file_uri_schemes['embedded']) || in_array($valueComponent['scheme'], self::$file_uri_schemes['remote'])))
                             {
                                 $mimeType = finfo_buffer(finfo_open(FILEINFO_MIME), file_get_contents((string)$vCardValuePart));
                                 $mimeType = explode(';', $mimeType)[0];
@@ -377,7 +377,7 @@ class LDAP {
                         $backendvalue = $valueComponent['path'];
                         $ldapBackendMap = [$newLdapKey => $backendvalue];
                     }
-                    else if(isset($valueComponent['scheme']) && (in_array($valueComponent['scheme'], self::$file_uri_schemes['embedded']) || in_array($valueComponent['scheme'], self::$file_uri_schemes['remote'])))
+                    elseif(isset($valueComponent['scheme']) && (in_array($valueComponent['scheme'], self::$file_uri_schemes['embedded']) || in_array($valueComponent['scheme'], self::$file_uri_schemes['remote'])))
                     {
                         $mimeType = finfo_buffer(finfo_open(FILEINFO_MIME), file_get_contents((string)$vObj));
                         $mimeType = explode(';', $mimeType)[0];
@@ -390,7 +390,7 @@ class LDAP {
                     }
                 } 
             }
-            else if($backendDataFormat == 'BINARY')
+            elseif($backendDataFormat == 'BINARY')
             {    
                 if($mapCompositeAttr)
                 {
@@ -497,7 +497,7 @@ class LDAP {
                     }
                 }
             }
-            else if($backendDataFormat == 'URI')
+            elseif($backendDataFormat == 'URI')
             {
                 if($mapCompositeAttr)
                 {
@@ -534,7 +534,7 @@ class LDAP {
                 }
             }
         }
-        else if($vCardDataFormat == 'BINARY')
+        elseif($vCardDataFormat == 'BINARY')
         {
             if($backendDataFormat == 'BINARY')
             {
@@ -594,7 +594,7 @@ class LDAP {
                 }                    
             }
         }
-        else if($vCardDataFormat == 'DATE' || $vCardDataFormat == 'TIME' || $vCardDataFormat == 'DATE-TIME' || $vCardDataFormat == 'DATE-AND-OR-TIME' || $vCardDataFormat == 'TIMESTAMP')
+        elseif($vCardDataFormat == 'DATE' || $vCardDataFormat == 'TIME' || $vCardDataFormat == 'DATE-TIME' || $vCardDataFormat == 'DATE-AND-OR-TIME' || $vCardDataFormat == 'TIMESTAMP')
         {
             if($backendDataFormat == 'TEXT')
             {
@@ -610,7 +610,7 @@ class LDAP {
                     $ldapBackendMap = [$newLdapKey => $backendvalue];
                 }
             }
-            else if($backendDataFormat == 'TIMESTAMP')
+            elseif($backendDataFormat == 'TIMESTAMP')
             {
                 if($mapCompositeAttr)
                 {

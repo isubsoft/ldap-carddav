@@ -104,7 +104,7 @@ class LDAP {
             {
                 $result = ldap_read($ldapConn, $base, $filter, $attributes, $attributesOnly);
             }
-            else if($scope == 'list')
+            elseif($scope == 'list')
             {
                 $result = ldap_list($ldapConn, $base, $filter, $attributes, $attributesOnly);
             }
@@ -164,7 +164,7 @@ class LDAP {
                         {
                             $result = ldap_read($args[0], $args[1], $args[2], $args[3]);
                         }
-                        else if($args[4] == 'list')
+                        elseif($args[4] == 'list')
                         {
                             $result = ldap_list($args[0], $args[1], $args[2], $args[3]);
                         }
@@ -236,9 +236,9 @@ class LDAP {
         if(empty($paramList))
             return [];
 
-        if(self::isMultidimensional($paramList, true) && isset($paramList[$MappIndex]) && $paramList[$MappIndex] != null)
+        if(self::isListOfArray($paramList, true) && isset($paramList[$MappIndex]) && $paramList[$MappIndex] != null)
         	$vCardParams = $paramList[$MappIndex];
-        elseif(!self::isMultidimensional($paramList, true))
+        elseif(!self::isListOfArray($paramList, true))
         	$vCardParams = $paramList;
 
         foreach($vCardParams as $param => $value)
@@ -296,7 +296,7 @@ class LDAP {
             );
         }
 
-    public static function isMultidimensional(array $array, bool $isNullValueOk = false) {
+    public static function isListOfArray(array $array, bool $isNullValueOk = false) {
         $notSingleArray = false;
         
         foreach ($array as $key => $value) {
@@ -320,7 +320,7 @@ class LDAP {
     	
 			foreach($fieldMap as $vCardKey => $backendMapArr)
 			{
-				if(self::isMultidimensional($backendMapArr))
+				if(self::isListOfArray($backendMapArr))
 				{
 					foreach($backendMapArr as $backendMap)
 					{

@@ -93,12 +93,12 @@ class Reader extends \Sabre\VObject\Reader{
 
                     $params = ['value' => 'DATE-TIME'];
                 }
-                else if((Utility::notHasValue([$dateTime['date'], $dateTime['month'], $dateTime['year']]) == false) && (Utility::notHasValue([$dateTime['hour'], $dateTime['minute'], $dateTime['second']]) == true))
+                elseif((Utility::notHasValue([$dateTime['date'], $dateTime['month'], $dateTime['year']]) == false) && (Utility::notHasValue([$dateTime['hour'], $dateTime['minute'], $dateTime['second']]) == true))
                 {
                     $cardData = $dateTime['year'] . $dateTime['month'] . $dateTime['date'];
                     $params = ['value' => 'DATE'];
                 }
-                else if((Utility::notHasValue([$dateTime['date'], $dateTime['month'], $dateTime['year']]) == true) && (Utility::notHasValue([$dateTime['hour'], $dateTime['minute'], $dateTime['second']]) == false))
+                elseif((Utility::notHasValue([$dateTime['date'], $dateTime['month'], $dateTime['year']]) == true) && (Utility::notHasValue([$dateTime['hour'], $dateTime['minute'], $dateTime['second']]) == false))
                 {
                     $cardData = $dateTime['hour'] . $dateTime['minute'] . $dateTime['second'] ;
                     $params = ['value' => 'DATE-AND-OR-TIME'];
@@ -110,12 +110,12 @@ class Reader extends \Sabre\VObject\Reader{
                 $params = ['value' => 'text'];
             }     
         }
-        else if($backendDataFormat == 'URI')
+        elseif($backendDataFormat == 'URI')
         {
             $cardData = $value;
             $params = ['value' => 'uri'];
         }
-        else if($backendDataFormat == 'BINARY')
+        elseif($backendDataFormat == 'BINARY')
         {
             if(self::$encoding_format == 'base64')
             {
@@ -123,7 +123,7 @@ class Reader extends \Sabre\VObject\Reader{
             }         
             $params = ['value' => 'uri'];
         }
-        else if($backendDataFormat == 'TIMESTAMP')
+        elseif($backendDataFormat == 'TIMESTAMP')
         {
             $dateComponent = substr($value, 0, 8);
             $timeComponent = substr($value, 8);

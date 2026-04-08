@@ -125,7 +125,7 @@ class Master
 				
 				return $backendId;		
 		}
-		else if($configuredBackendId == 'memcached') {
+		elseif($configuredBackendId == 'memcached') {
 			$memcached = new \Memcached();
 			
 			if(isset($backendConfig['auth']['username']) && isset($backendConfig['auth']['password']) && (!$memcached->setOption(\Memcached::OPT_BINARY_PROTOCOL, true) || !$memcached->setSaslAuthData($backendConfig['auth']['username'], $backendConfig['auth']['password']))) {
@@ -153,7 +153,7 @@ class Master
 			if(!isset($this->cache[$configuredBackendId]))
 				$this->cache[$configuredBackendId] = new SabreCacheBackend\Memcached($memcached);
 		}
-		else if($configuredBackendId == 'local_fs') {
+		elseif($configuredBackendId == 'local_fs') {
 			if(!file_exists(__CACHE_DIR__)) {
 				trigger_error("Caching is disbaled as cache directory does not exist. Check your '$configuredBackendId' cache backend configuration.", E_USER_WARNING);
 
@@ -168,11 +168,11 @@ class Master
 			if(!isset($this->cache[$configuredBackendId]))
 				$this->cache[$configuredBackendId] = new Backend\LocalFS(__CACHE_DIR__);
 		}
-		else if($configuredBackendId == 'apcu') {
+		elseif($configuredBackendId == 'apcu') {
 			if(!isset($this->cache[$configuredBackendId]))
 				$this->cache[$configuredBackendId] = new SabreCacheBackend\Apcu();
 		}
-		else if($configuredBackendId == 'memory') {
+		elseif($configuredBackendId == 'memory') {
 			if(!isset($this->cache[$configuredBackendId]))
 				$this->cache[$configuredBackendId] = new SabreCacheBackend\Memory();
 		}

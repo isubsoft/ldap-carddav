@@ -95,7 +95,7 @@ class LocalFS implements CacheInterface, ManagedInterface
     	
     	if(!is_int($ttl) || $ttl > 2592000)
     		$setTtl = self::$noTtlDefault + time();
-    	else if($ttl !== 0)
+    	elseif($ttl !== 0)
     		$setTtl = $ttl + time();
     	
 	  	if(file_put_contents($ttlFile, $setTtl) === false || file_put_contents($cacheFile, serialize($value)) === false) {
