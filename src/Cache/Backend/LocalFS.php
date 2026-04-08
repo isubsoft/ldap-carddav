@@ -234,7 +234,7 @@ class LocalFS implements CacheInterface, ManagedInterface
     
     private static function checkValidKey($key)
     {
-    	if(!is_string($key) || !ctype_print($key) || preg_match('#/#', $key) === 1)
+    	if(!is_string($key) || !ctype_print($key) || preg_match('#/|' . preg_quote(DIRECTORY_SEPARATOR, '#') . '#', $key) === 1)
     		throw InvalidArgumentException();    
     }
     

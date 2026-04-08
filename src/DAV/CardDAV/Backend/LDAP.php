@@ -235,7 +235,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
   		$this->principalId = $principal['id'];
 
 			if(!isset($principal['__backend_id'])) {
-				trigger_error("Could not obtain backend id for principal '" . $this->principalId . "'. Check principal configuration.", E_USER_WARNING);
+				trigger_error("Could not obtain backend id for principal uri '" . $principalUri . "'. Check principal configuration.", E_USER_WARNING);
 				throw new SabreDAVException\ServiceUnavailable();
 			}
     	
@@ -923,6 +923,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		      
 		      if(!empty($data) && $data['count'] > 0)
 		      {
+						if(!isset($data[0]['entryuuid'][0]))
+						{
+							trigger_error("Read access to required operational attributes in LDAP not present.", E_USER_WARNING);
+							throw new SabreDAVException\ServiceUnavailable();
+						}
+					
 				    try {
 				        $query = "INSERT INTO " . self::$backendMapTableName . " (card_uri, card_uid, addressbook_id, backend_id, user_id, create_sync_token)  VALUES (?, ?, ?, ?, ?, ?)";
 				        $sql = $this->pdo->prepare($query);
@@ -1103,7 +1109,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
                             $memberData = Utility::LdapQuery($ldapConn, $value, $addressBookConfig['filter'], ['entryuuid'], 'base');
                      
-                            if(! empty($memberData) && $memberData['count'] > 0)
+                            if(!empty($memberData) && $memberData['count'] > 0 && isset($memberData[0]['entryuuid'][0]))
                             { 
                                 $memberCardUID = null;
 
