@@ -13,7 +13,7 @@ function replacePlaceholder(string $placeholder, string $replacement, string $su
 		
 	$exprMatches = [];
 
-	if(preg_match_all($regexpDelim . '(' . $placeholderEscChar . '*)(' . $placeholder . ')' . $regexpDelim, $subject, $exprMatches, PREG_OFFSET_CAPTURE) > 0)
+	if(preg_match_all($regexpDelim . '(' . preg_quote($placeholderEscChar, $regexpDelim) . '*)(' . preg_quote($placeholder, $regexpDelim) . ')' . $regexpDelim, $subject, $exprMatches, PREG_OFFSET_CAPTURE) > 0)
 	{
 		$strOffset = 0;
 		$replacedStr = '';
