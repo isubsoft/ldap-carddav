@@ -8,9 +8,6 @@ function replacePlaceholder(string $placeholder, string $replacement, string $su
 	$regexpDelim = '/';
 	$placeholderEscChar = substr($placeholder, 0, 1);
 	
-	if($regexpDelim == $placeholderEscChar)
-		$regexpDelim = '#';
-		
 	$exprMatches = [];
 
 	if(preg_match_all($regexpDelim . '(' . preg_quote($placeholderEscChar, $regexpDelim) . '*)(' . preg_quote($placeholder, $regexpDelim) . ')' . $regexpDelim, $subject, $exprMatches, PREG_OFFSET_CAPTURE) > 0)
