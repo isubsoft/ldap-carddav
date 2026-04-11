@@ -928,9 +928,25 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						}
 					
 				    try {
-				        $query = "INSERT INTO " . self::$backendMapTableName . " (card_uri, card_uid, addressbook_id, backend_id, user_id, create_sync_token)  VALUES (?, ?, ?, ?, ?, ?)";
-				        $sql = $this->pdo->prepare($query);
-				        $sql->execute([$cardUri, ($cardUid == null)?$this->guidv4():$cardUid, $addressBookId, $data[0]['entryuuid'][0], $syncDbUserId, time()]);
+								$query = 'SELECT delete_sync_token FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ? AND card_uri = ?';
+								$stmt = $this->pdo->prepare($query);
+								$stmt->execute([$syncDbUserId, $addressBookId, $cardUri]);
+								
+								$row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+								if($row !== false) {
+									// Updating the card as new which was earlier marked as deleted.
+									if($row['delete_sync_token'] != null) {
+										$query = "UPDATE " . self::$backendMapTableName . " SET card_uid = ?, backend_id = ?, delete_sync_token = null, modify_sync_token = null, create_sync_token = ? WHERE user_id = ? AND addressbook_id = ? AND card_uri = ?";
+										$sql = $this->pdo->prepare($query);
+										$sql->execute([($cardUid == null)?$this->guidv4():$cardUid, $data[0]['entryuuid'][0], time(), $syncDbUserId, $addressBookId, $cardUri]);
+									}
+								}
+								else {
+						      $query = "INSERT INTO " . self::$backendMapTableName . " (user_id, addressbook_id, card_uri, card_uid, backend_id, create_sync_token)  VALUES (?, ?, ?, ?, ?, ?)";
+						      $sql = $this->pdo->prepare($query);
+						      $sql->execute([$syncDbUserId, $addressBookId, $cardUri, ($cardUid == null)?$this->guidv4():$cardUid, $data[0]['entryuuid'][0], time()]);
+				        }
 				    } catch (\Throwable $th) {
 							trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 				    }
@@ -1645,23 +1661,27 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					$cardUri = null;
 					
 					try {
-							$query = 'SELECT card_uri FROM ' . self::$backendMapTableName . ' WHERE addressbook_id = ? and backend_id = ? and user_id = ? AND delete_sync_token IS NULL';
+							$query = 'SELECT card_uri, card_uid, delete_sync_token FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?';
 							$stmt = $this->pdo->prepare($query);
-							$stmt->execute([$addressBookId, $data['data']['entryUUID'][0], $syncDbUserId]);
+							$stmt->execute([$syncDbUserId, $addressBookId, $data['data']['entryUUID'][0]]);
 							
 							$row = $stmt->fetch(\PDO::FETCH_ASSOC);
 							
-							if($row !== false)
-								$cardUri = $row['card_uri'];
-
-							if($cardUri == null)
-							{
-									$cardUid = $this->guidv4();
-									$cardUri = $cardUid .'.vcf';
-									
-									$query = "INSERT INTO " . self::$backendMapTableName . " (card_uri, card_uid, addressbook_id, backend_id, user_id, create_sync_token)  VALUES (?, ?, ?, ?, ?, ?)";
+							if($row !== false) {
+								// Updating the card as new which was earlier marked as deleted.
+								if($row['delete_sync_token'] != null) {
+									$query = "UPDATE " . self::$backendMapTableName . " SET delete_sync_token = null, modify_sync_token = null, create_sync_token = ? WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?";
 									$sql = $this->pdo->prepare($query);
-									$sql->execute([$cardUri, $cardUid, $addressBookId, $data['data']['entryUUID'][0], $syncDbUserId, time()]); 
+									$sql->execute([time(), $syncDbUserId, $addressBookId, $data['data']['entryUUID'][0]]);
+								}
+							}
+							else {
+								$cardUid = $this->guidv4();
+								$cardUri = $cardUid .'.vcf';
+										
+								$query = "INSERT INTO " . self::$backendMapTableName . " (card_uri, card_uid, addressbook_id, backend_id, user_id, create_sync_token)  VALUES (?, ?, ?, ?, ?, ?)";
+								$sql = $this->pdo->prepare($query);
+								$sql->execute([$cardUri, $cardUid, $addressBookId, $data['data']['entryUUID'][0], $syncDbUserId, time()]);
 							}
 					} catch (\Throwable $th) {
 						trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
@@ -1688,25 +1708,31 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					$cardUri = null;
 					
 					try {
-							$query = 'SELECT card_uri FROM ' . self::$backendMapTableName . ' WHERE addressbook_id = ? and backend_id = ? and user_id = ? AND delete_sync_token IS NULL';
+							$query = 'SELECT card_uri, card_uid, delete_sync_token FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?';
 							$stmt = $this->pdo->prepare($query);
-							$stmt->execute([$addressBookId, $data['data']['entryUUID'][0], $syncDbUserId]);
+							$stmt->execute([$syncDbUserId, $addressBookId, $data['data']['entryUUID'][0]]);
 							
 							$row = $stmt->fetch(\PDO::FETCH_ASSOC);
 							
-							if($row !== false)
-								$cardUri = $row['card_uri'];
-							
-							if($cardUri == null)
-							{
-									$cardUid = $this->guidv4();
-									$cardUri = $cardUid .'.vcf';
-
-									$query = "INSERT INTO " . self::$backendMapTableName . " (card_uri, card_uid, addressbook_id, backend_id, user_id, create_sync_token)  VALUES (?, ?, ?, ?, ?, ?)";
+							if($row !== false) {
+								// Updating the card as new which was earlier marked as deleted.
+								if($row['delete_sync_token'] != null) {
+									$query = "UPDATE " . self::$backendMapTableName . " SET delete_sync_token = null, modify_sync_token = null, create_sync_token = ? WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?";
 									$sql = $this->pdo->prepare($query);
-									$sql->execute([$cardUri, $cardUid, $addressBookId, $data['data']['entryUUID'][0], $syncDbUserId, time()]);
+									$sql->execute([time(), $syncDbUserId, $addressBookId, $data['data']['entryUUID'][0]]);
 									
 									continue;
+								}
+							}
+							else {
+								$cardUid = $this->guidv4();
+								$cardUri = $cardUid .'.vcf';
+										
+								$query = "INSERT INTO " . self::$backendMapTableName . " (card_uri, card_uid, addressbook_id, backend_id, user_id, create_sync_token)  VALUES (?, ?, ?, ?, ?, ?)";
+								$sql = $this->pdo->prepare($query);
+								$sql->execute([$cardUri, $cardUid, $addressBookId, $data['data']['entryUUID'][0], $syncDbUserId, time()]);
+								
+								continue;
 							}
 							
 							$cardValues = $this->cache->get(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null);
@@ -1975,9 +2001,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						$cardUid = null;
             $cardUri = null;
           
-            $query = 'SELECT card_uri, card_uid FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ? AND backend_id = ? AND delete_sync_token IS NULL';
+            $query = 'SELECT card_uri, card_uid, delete_sync_token FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?';
             $stmt = $this->pdo->prepare($query);
             $stmt->execute([$syncDbUserId, $addressBookId, $backendId]);
+            
             $row = $stmt->fetch(\PDO::FETCH_ASSOC);
           
             if ($row === false) {
@@ -1990,6 +2017,15 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
               $sql->execute([$cardUri, $cardUid, $addressBookId, $backendId, $syncDbUserId, time()]);
             }
 						else {
+							// Updating the card as new which was earlier marked as deleted.
+							if($row['delete_sync_token'] != null) {
+								$query = "UPDATE " . self::$backendMapTableName . " SET delete_sync_token = null, modify_sync_token = null, create_sync_token = ? WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?";
+								$sql = $this->pdo->prepare($query);
+								$sql->execute([time(), $syncDbUserId, $addressBookId, $data['data']['entryUUID'][0]]);
+								
+								continue;
+							}
+	
 							$cardUid = $row['card_uid'];
 							$cardUri = $row['card_uri'];
 							
