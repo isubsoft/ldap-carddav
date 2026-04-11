@@ -80,6 +80,20 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
     
     private static $cacheTtl = 86400;
     
+    /**
+     * Property name denoting groups which a principal is part of.
+     *
+     * @var string
+     */
+		public static $groupMembershipProperty = 'group';
+		
+    /**
+     * Property name denoting members of a group principal.
+     *
+     * @var string
+     */
+		public static $groupMemberProperty = 'member';
+    
       /**
      * Creates the backend.
      *
@@ -176,10 +190,8 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
 				$prefixPath = dirname($path);
         $principalId = basename($path);
         $currentUserPrincipalId = $GLOBALS['currentUserPrincipalId'];
-				$groupMembershipProperty = 'group';
-      	$groupMemberProperty = 'member';
 		    $groupMandatoryProperties = self::$mandatoryProperties;
-		    $groupMandatoryProperties[] = $groupMemberProperty;
+		    $groupMandatoryProperties[] = self::$groupMemberProperty;
         $principal = [];
         $isGroupPrincipal = false;
 
@@ -268,7 +280,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
 		 				throw new SabreDAVException\ServiceUnavailable();
 		 			}
 		 			
-					if(isset($configGroupFieldMap[$groupMemberProperty]) && isset($data[0][$configGroupFieldMap[$groupMemberProperty]]))
+					if(isset($configGroupFieldMap[self::$groupMemberProperty]) && isset($data[0][$configGroupFieldMap[self::$groupMemberProperty]]))
 						$isGroupPrincipal = true;
 		 			
 					if(!$isGroupPrincipal) {
@@ -288,37 +300,37 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
 							}
 							
 				  	$principal = Utility::setResourceProperty(null, $this->fieldMap, $configGroupFieldMap, $data[0]);
-						$principal['__extra_properties'][$groupMemberProperty] = [];
+						$principal['__extra_properties'][self::$groupMemberProperty] = [];
 				  	
  						// Adding members
-						for($index=0; $index<$data[0][$configGroupFieldMap[$groupMemberProperty]]['count']; $index++) {
-							$memberDn = $data[0][$configGroupFieldMap[$groupMemberProperty]][$index];
+						for($index=0; $index<$data[0][$configGroupFieldMap[self::$groupMemberProperty]]['count']; $index++) {
+							$memberDn = $data[0][$configGroupFieldMap[self::$groupMemberProperty]][$index];
 							$filter = Utility::replacePlaceholders($this->config['principal']['ldap']['search_filter'], ['%u' => ldap_escape($currentUserPrincipalId, "", LDAP_ESCAPE_FILTER)]);
 							
         			$memberData = Utility::LdapQuery($ldapConn, $memberDn, $filter, $attributes, 'base');
 							
 							if(!empty($memberData)) {
-								if(isset($memberData[0][$configGroupFieldMap[$groupMemberProperty]]) && isset($memberData[0][$configGroupFieldMap['id']]))
-									$principal['__extra_properties'][$groupMemberProperty][] = $prefixPath . '/' . $memberData[0][$configGroupFieldMap['id']][0];
+								if(isset($memberData[0][$configGroupFieldMap[self::$groupMemberProperty]]) && isset($memberData[0][$configGroupFieldMap['id']]))
+									$principal['__extra_properties'][self::$groupMemberProperty][] = $prefixPath . '/' . $memberData[0][$configGroupFieldMap['id']][0];
 								elseif(isset($memberData[0][$configFieldMap['id']]))
-									$principal['__extra_properties'][$groupMemberProperty][] = $prefixPath . '/' . $memberData[0][$configFieldMap['id']][0];
+									$principal['__extra_properties'][self::$groupMemberProperty][] = $prefixPath . '/' . $memberData[0][$configFieldMap['id']][0];
 							}
 						}
 					}
 					
 					// Adding group memberships
-					$filter = Utility::replacePlaceholders('(&' . $this->config['principal']['ldap']['search_filter'] . '(' . $configGroupFieldMap[$groupMemberProperty] . '=' . ldap_escape($data[0]['dn'], "", LDAP_ESCAPE_FILTER) . '))', ['%u' => ldap_escape($currentUserPrincipalId, "", LDAP_ESCAPE_FILTER)]);
+					$filter = Utility::replacePlaceholders('(&' . $this->config['principal']['ldap']['search_filter'] . '(' . $configGroupFieldMap[self::$groupMemberProperty] . '=' . ldap_escape($data[0]['dn'], "", LDAP_ESCAPE_FILTER) . '))', ['%u' => ldap_escape($currentUserPrincipalId, "", LDAP_ESCAPE_FILTER)]);
 					$attributes = [$configGroupFieldMap['id']];
 					
 					$groupData = Utility::LdapQuery($ldapConn, $ldaptree, $filter, $attributes, strtolower($this->config['principal']['ldap']['search_scope']));
 					            
 					if(!empty($groupData))
 					{
-						$principal['__extra_properties'][$groupMembershipProperty] = [];
+						$principal['__extra_properties'][self::$groupMembershipProperty] = [];
 						
 						for($index=0; $index<$groupData['count']; $index++)
 							if(isset($groupData[$index][$configGroupFieldMap['id']]))
-								$principal['__extra_properties'][$groupMembershipProperty][] = $prefixPath . '/' . $groupData[$index][$configGroupFieldMap['id']][0];
+								$principal['__extra_properties'][self::$groupMembershipProperty][] = $prefixPath . '/' . $groupData[$index][$configGroupFieldMap['id']][0];
 					}
 					
 					$principal['__extra_properties']['backend_id'] = $data[0]['entryuuid'][0];
@@ -420,11 +432,10 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      */
     function getGroupMemberSet($principal)
     {
-			$groupMemberProperty = 'member';
     	$groupPrincipal = $this->getPrincipalByPath($principal);
     	
-    	if(isset($groupPrincipal['__extra_properties'][$groupMemberProperty]) && is_array($groupPrincipal['__extra_properties'][$groupMemberProperty]))
-    		return $groupPrincipal['__extra_properties'][$groupMemberProperty];
+    	if(isset($groupPrincipal['__extra_properties'][self::$groupMemberProperty]) && is_array($groupPrincipal['__extra_properties'][self::$groupMemberProperty]))
+    		return $groupPrincipal['__extra_properties'][self::$groupMemberProperty];
     		
       return [];
     }
@@ -437,11 +448,10 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
      */
     function getGroupMembership($principal)
     {
-			$groupMembershipProperty = 'group';
     	$groupPrincipal = $this->getPrincipalByPath($principal);
     	
-    	if(isset($groupPrincipal['__extra_properties'][$groupMembershipProperty]) && is_array($groupPrincipal['__extra_properties'][$groupMembershipProperty]))
-    		return $groupPrincipal['__extra_properties'][$groupMembershipProperty];
+    	if(isset($groupPrincipal['__extra_properties'][self::$groupMembershipProperty]) && is_array($groupPrincipal['__extra_properties'][self::$groupMembershipProperty]))
+    		return $groupPrincipal['__extra_properties'][self::$groupMembershipProperty];
     		
     	return [];
     }

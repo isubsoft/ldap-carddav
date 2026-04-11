@@ -226,7 +226,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     {
 			$systemUser = null;
       $addressBooks = [];
-      $currentUserPrincipalId = $GLOBALS['currentUserPrincipalId'];
       $principal = $this->principalBackend->getPrincipalByPath($principalUri);
       
       if($principal == [])
@@ -257,6 +256,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		  }
       
       foreach ($this->config['card']['addressbook']['ldap'] as $addressBookId => $addressBookConfig) {
+				if((!isset($addressBookConfig['enable_for_group_user']) || !is_bool($addressBookConfig['enable_for_group_user']) || $addressBookConfig['enable_for_group_user'] === false) && isset($principal['__extra_properties'][\ISubsoft\DAV\DAVACL\PrincipalBackend\LDAP::$groupMemberProperty]))
+					continue;
+	
       	if(!isset($this->addressbook[$addressBookId])) {
 					try 
 					{

@@ -239,6 +239,12 @@ $config['card']['addressbook']['ldap']['me'] = [
 	// Defaults to false
 	//  'directory'				=> true,
 	
+	// Enable this address book for group user. Address books by default are enabled only
+	// for non-group users. You can set the below value to true to enable it for group users
+	// as well. Useful only when user_specific is also set to true above.
+	// Defaults to false.
+	//  'enable_for_group_user' => true,
+	
 	// Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
 	// of the address book from backend every time they sync their address book. Set the below to 
 	// prevent full address book refresh from backend at least for this interval (in seconds).
@@ -255,9 +261,9 @@ $config['card']['addressbook']['ldap']['me'] = [
 	// Maximum size of a card (in bytes) which is accepted for create/update. Defaults to 16 KiB.
 	//  'max_size'				=> 16384,
 	
-  // The following placeholders are available to be used in 'base_dn' and 'search_filter' below as applicable
-  // %u  - Username sent by client for authentication
-  // %dn - DN as returned by LDAP search for address book DN
+  // The following placeholders are available to be used in 'base_dn' and 'search_filter' below as applicable.
+  // %u  - Username of the user whose address book being accessed.
+  // %dn - DN as returned by LDAP search for address book DN.
   
 	'base_dn'       	=> '%dn', // Address book DN (used as base DN to search for contacts 
 															// and as parent DN for new contacts).
@@ -489,6 +495,12 @@ $config['card']['addressbook']['ldap']['global'] = [
 	// Defaults to false
 	//  'directory'				=> true,
 	
+	// Enable this address book for group user. Address books by default are enabled only
+	// for non-group users. You can set the below value to true to enable it for group users
+	// as well. Useful only when user_specific is also set to true above.
+	// Defaults to false.
+	//  'enable_for_group_user' => true,
+	
 	// Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
 	// of the address book from backend every time they sync their address book. Set the below to 
 	// prevent full address book refresh from backend at least for this interval (in seconds).
@@ -505,9 +517,9 @@ $config['card']['addressbook']['ldap']['global'] = [
 	// Maximum size of a card (in bytes) which is accepted for create/update. Defaults to 16 KiB.
 	//  'max_size'				=> 16384,
 	
-  // The following placeholders are available to be used in 'base_dn' and 'search_filter' below as applicable
-  // %u  - Username sent by client for authentication
-  // %dn - DN as returned by LDAP search for address book DN
+  // The following placeholders are available to be used in 'base_dn' and 'search_filter' below as applicable.
+  // %u  - Username of the user whose address book being accessed.
+  // %dn - DN as returned by LDAP search for address book DN.
   
 	'base_dn'       	=> 'ou=People,dc=example,dc=org', // Address book DN (used as base DN to search for contacts 
 																											// and as parent DN for new contacts).
@@ -738,6 +750,12 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	// Use this address book as a directory (i.e. for lookups only) for Apple devices
 	// Defaults to false
 	//  'directory'				=> true,
+	
+	// Enable this address book for group user. Address books by default are enabled only
+	// for non-group users. You can set the below value to true to enable it for group users
+	// as well. Useful only when user_specific is also set to true above.
+	// Defaults to false.
+	//  'enable_for_group_user' => true,
 
 	// Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
 	// of the address book from backend every time they sync their address book. Set the below to 
@@ -755,9 +773,9 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	// Maximum size of a card (in bytes) which is accepted for create/update. Defaults to 16 KiB.
 	//  'max_size'				=> 16384,
 	
-  // The following placeholders are available to be used in 'base_dn' and 'search_filter' below as applicable
-  // %u  - Username sent by client for authentication
-  // %dn - DN as returned by LDAP search for address book DN
+  // The following placeholders are available to be used in 'base_dn' and 'search_filter' below as applicable.
+  // %u  - Username of the user whose address book being accessed.
+  // %dn - DN as returned by LDAP search for address book DN.
   
 	'base_dn'       	=> 'ou=Address Book,%dn', // Address book DN (used as base DN to search for contacts 
 																							// and as parent DN for new contacts).
