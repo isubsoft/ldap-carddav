@@ -232,6 +232,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
       	return $addressBooks;
       	
   		$this->principalId = $principal['id'];
+  		$isGroupPrincipal = isset($principal['__extra_properties'][\ISubsoft\DAV\DAVACL\PrincipalBackend\LDAP::$groupMemberProperty])?true:false;
 
 			if(!isset($principal['__extra_properties']['backend_id'])) {
 				trigger_error("Could not obtain backend id for principal uri '" . $principalUri . "'. Check principal configuration.", E_USER_WARNING);
@@ -256,7 +257,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		  }
       
       foreach ($this->config['card']['addressbook']['ldap'] as $addressBookId => $addressBookConfig) {
-				if((!isset($addressBookConfig['enable_for_group_user']) || !is_bool($addressBookConfig['enable_for_group_user']) || $addressBookConfig['enable_for_group_user'] === false) && isset($principal['__extra_properties'][\ISubsoft\DAV\DAVACL\PrincipalBackend\LDAP::$groupMemberProperty]))
+      	// Skip address book configuration if not enabled for type of principal
+				if(((!isset($addressBookConfig['enable_only_for_group_user']) || !is_bool($addressBookConfig['enable_only_for_group_user']) || $addressBookConfig['enable_only_for_group_user'] === false || !isset($addressBookConfig['user_specific']) || $addressBookConfig['user_specific'] !== true) && $isGroupPrincipal) || (isset($addressBookConfig['enable_only_for_group_user']) && $addressBookConfig['enable_only_for_group_user'] === true && !$isGroupPrincipal))
 					continue;
 	
       	if(!isset($this->addressbook[$addressBookId])) {

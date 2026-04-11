@@ -239,11 +239,11 @@ $config['card']['addressbook']['ldap']['me'] = [
 	// Defaults to false
 	//  'directory'				=> true,
 	
-	// Enable this address book for group user. Address books by default are enabled only
-	// for non-group users. You can set the below value to true to enable it for group users
-	// as well. Useful only when user_specific is also set to true above.
+	// Enable this address book for group user only. Address books by default are enabled only
+	// for non-group users. You can set the below value to true to enable it for group users only (it will be 
+	// disabled for non-group users). Useful only when user_specific is also set to true.
 	// Defaults to false.
-	//  'enable_for_group_user' => true,
+	//  'enable_only_for_group_user' => true,
 	
 	// Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
 	// of the address book from backend every time they sync their address book. Set the below to 
@@ -269,7 +269,7 @@ $config['card']['addressbook']['ldap']['me'] = [
 															// and as parent DN for new contacts).
 	
 	// LDAP filter to be used to search for contacts
-	'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
+	'filter'        	=> '(objectClass=inetOrgPerson)',
 	
 	// Bind user to search/read/write contacts. If 'bind_dn' and 'bind_pass' values are not provided below 
 	// and if this address book is marked as 'user_specific' then 'bind_dn' and 'bind_pass' values provided 
@@ -293,7 +293,7 @@ $config['card']['addressbook']['ldap']['me'] = [
 	
   // It's possible to find the base of an address book DN from a search result. Useful only if the address book is user specific.
   'search_base_dn' => 'ou=People,dc=example,dc=org',
-  'search_filter'  => '(|(&(objectClass=inetOrgPerson)(uid=%u))(&(objectClass=groupOfNames)(cn=%u)))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
+  'search_filter'  => '(&(objectClass=inetOrgPerson)(uid=%u))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
 	'search_scope'   => 'list',  // Scope of search
 	                             //  sub: Subtree
 	                             // list: Immediate children
@@ -495,11 +495,11 @@ $config['card']['addressbook']['ldap']['global'] = [
 	// Defaults to false
 	//  'directory'				=> true,
 	
-	// Enable this address book for group user. Address books by default are enabled only
-	// for non-group users. You can set the below value to true to enable it for group users
-	// as well. Useful only when user_specific is also set to true above.
+	// Enable this address book for group user only. Address books by default are enabled only
+	// for non-group users. You can set the below value to true to enable it for group users only (it will be 
+	// disabled for non-group users). Useful only when user_specific is also set to true.
 	// Defaults to false.
-	//  'enable_for_group_user' => true,
+	//  'enable_only_for_group_user' => true,
 	
 	// Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
 	// of the address book from backend every time they sync their address book. Set the below to 
@@ -751,11 +751,11 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	// Defaults to false
 	//  'directory'				=> true,
 	
-	// Enable this address book for group user. Address books by default are enabled only
-	// for non-group users. You can set the below value to true to enable it for group users
-	// as well. Useful only when user_specific is also set to true above.
+	// Enable this address book for group user only. Address books by default are enabled only
+	// for non-group users. You can set the below value to true to enable it for group users only (it will be 
+	// disabled for non-group users). Useful only when user_specific is also set to true.
 	// Defaults to false.
-	//  'enable_for_group_user' => true,
+	//  'enable_only_for_group_user' => true,
 
 	// Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
 	// of the address book from backend every time they sync their address book. Set the below to 
@@ -805,7 +805,262 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	
   // It's possible to find the base of an address book DN from a search result. Useful only if the address book is user specific.
   'search_base_dn' => 'ou=People,dc=example,dc=org',
-  'search_filter'  => '(|(&(objectClass=inetOrgPerson)(uid=%u))(&(objectClass=groupOfNames)(cn=%u)))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
+  'search_filter'  => '(&(objectClass=inetOrgPerson)(uid=%u))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
+	'search_scope'   => 'list',  // Scope of search
+	                             //  sub: Subtree
+	                             // list: Immediate children
+	                             // base: Match Base DN only
+	
+	// Backend data update policy. Valid options are below.
+	// merge (default)  - Would only replace backend contact attibutes present in field map here and 
+	//                    leave others intact.
+	// replace          - Would replace whole backend contact with attibutes present in 
+	//                    field map here. WARNING: This option may lead to loss of contact attributes 
+	//                    in the backend which are not present in field map here.
+	//  'backend_data_update_policy' => 'merge',
+
+	// If writable is true then these fields need to be populated:
+	// LDAP_Object_Classes, required_fields, LDAP_rdn
+	'LDAP_Object_Classes' => ['inetOrgPerson'],
+	'required_fields'     => ['cn', 'sn'],
+	'LDAP_rdn'      			=> 'cn',
+
+	// Backend contact field acl. By default no access is denied to any backend field.
+	// 'eval' can have following values
+	// r (default) - Evaluate 'list' as read only fields
+	// w           - Evaluate 'list' as writable fields, rest of the fields are treated as read only
+	//  'field_acl'     => 	[ 
+	//												'eval' => 'r',
+	//												'list' => []
+	//											],
+	
+	// vCard    => LDAP field map
+	//
+	// Use primary name of the backend field here not it's alias.
+	//
+	// To map a composite value property to individual backend fields check conf/vcard_metadata.json for 
+	// logical names of the components of a composite value.
+	//
+	// vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only.
+	//
+	// Currently only 'TYPE' vCard parameter match is supported.
+  'fieldmap'      => [
+    'FN'            => ['field_name' => 'cn'],
+
+    'N'							=> ['field_name' => [
+    																			'last_name' 	=> 'sn', 
+    																			'first_name' 	=> 'givenName'
+    																		]
+    									 ],
+
+		'EMAIL'         => ['field_name' => 'mail'],
+
+		'ORG'         	=> ['field_name' => [
+																					'org_name' 			=> 'o', 
+																					'org_unit_name' => 'ou'
+																				]
+											 ],
+
+    'TITLE'         => ['field_name' => 'title'],
+    
+    'ROLE'        	=> ['field_name' => 'employeeType'],
+
+    'NICKNAME'      => ['field_name' => 'displayName'],
+
+		'PHOTO'         => 	[
+    											// Mapping profile picture
+													[
+														'field_name' => 'jpegPhoto',
+				                  	'field_data_format' => 'binary',
+				                  	'field_data_mediatype' => ['image/jpeg', 'image/png'], // List of mediatype which a 
+				                  																												 // binary backend field will accept
+				                  ]
+                       	],
+
+    'NOTE'        	=> 	['field_name' => 'description'],
+
+    'TEL'						=> 	[
+    											// Mapping pager number
+				                  [	
+				                  	'field_name' => 'pager',
+						                'parameters' => ['TYPE' => 'pager']
+				                  ],
+				                  
+    											// Mapping fax number
+		                      [
+		                      	'field_name' => 'facsimileTelephoneNumber',
+		                        'parameters' => [
+		                        									['TYPE' => ['fax', 'work']],
+		                        									['TYPE' => 'fax'],
+		                        								],
+		                    	],
+		                    	
+    											// Mapping mobile number
+				                  [
+				                  	'field_name' => 'mobile',
+				                    'parameters' => ['TYPE' => 'cell']
+				                  ],
+				                  
+    											// Mapping home telephone number
+    											[
+		  											'field_name' => 'homePhone',
+		                        'parameters' => [ 
+		                                          ['TYPE' => 'home'],
+		                        									['TYPE' => 'home', 'PREF' => '1']
+		                                        ],
+						                'reverse_map_parameter_index' => 1
+                          ],
+                          
+    											// Mapping work telephone number
+                          [	
+                          	'field_name' => 'telephoneNumber',
+		                        'parameters' => [ 
+		                                          ['TYPE' => 'work'],
+		                        									['TYPE' => 'work', 'PREF' => '1'],
+		                                          null
+		                                        ],
+						                'reverse_map_parameter_index' => 1
+                          ],
+                     ],
+                     
+      'ADR'         => [
+		  										// Mapping home postal address
+		    									[
+														'field_name' => 'homePostalAddress',
+				                    'parameters' => ['TYPE' => 'home'],
+				                    'map_component_separator' => '$'
+		                      ],
+		                      
+		  										// Mapping other postal address
+		    									[
+														'field_name' => 'postalAddress',
+				                    'parameters' => [null],
+				                    'map_component_separator' => '$'
+		                      ],
+
+		  										// Mapping location
+		                      [
+		     										'field_name' => [
+		     																			'po_box'			=> 'postOfficeBox',
+		     																			'street' 			=> 'street',
+		     																			'locality' 		=> 'l',
+		     																			'province' 		=> 'st', 
+		     																			'postal_code' => 'postalCode'
+		     																		],
+		                        'parameters' => ['TYPE' => 'work']
+		                      ]
+                       ],
+
+      'LANG'        => ['field_name' => 'preferredLanguage']
+	],
+	
+	// If writable is true then these fields need to be populated:
+	// group_LDAP_Object_Classes, group_required_fields, group_LDAP_rdn
+	'group_LDAP_Object_Classes' => ['groupOfNames'],
+	'group_required_fields'     => ['cn', 'member'],
+	'group_LDAP_rdn'      	    => 'cn',
+	
+	// Backend contact field acl. By default no access is denied to any backend field.
+	// 'eval' can have following values
+	// r (default) - Evaluate 'list' as read only fields
+	// w           - Evaluate 'list' as writable fields, rest of the fields are treated as read only
+	//  'group_field_acl' => 	[ 
+	//													'eval' => 'r',
+	//													'list' => []
+	//												],
+	
+	// Backend field which points to the contact which is member of this contact group  
+	'group_member_map'          => [ 'MEMBER'      => [ 'field_name' => 'member' ] ],
+	
+	// vCard    => LDAP field map
+	//
+	// Use primary name of the backend field here not it's alias.
+	//
+	// To map a composite value property to an individual backend field check conf/vcard_metadata.json for logical 
+	// names of the components of a composite value.
+	//
+	// vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only.
+	'group_fieldmap'            => [     
+		 'FN'          => [	'field_name' => 'cn'],
+	 	
+		 'NOTE'        => [	'field_name' => 'description']
+	 ]
+];
+
+// Address book.
+$config['card']['addressbook']['ldap']['group_shared'] = [
+	'name'          	=> 'Shared Address Book',
+  'description'     => 'Shared address book of the group user',
+
+	// 'user_specific' and 'writable' values are used as initialization parameters for the sync database. 
+	// Once the sync database has been initialized changing the values here to any conflicting values will 
+	// lead to this application not processing requests for this address book.
+	'user_specific' 	=> true, // If this is true then address book will be treated as belonging to the user 
+	                            // and username placeholder can be used in applicable places. This is a 
+	                            // mandatory setting and must be explicitly set strictly to a boolean value.
+	                            
+	'writable'     	 	=> true, // If true (default) then contacts can be created, updated, renamed and 
+	                            // deleted in the address book.
+	
+	// Use this address book as a directory (i.e. for lookups only) for Apple devices
+	// Defaults to false
+	//  'directory'				=> true,
+	
+	// Enable this address book for group user only. Address books by default are enabled only
+	// for non-group users. You can set the below value to true to enable it for group users only (it will be 
+	// disabled for non-group users). Useful only when user_specific is also set to true.
+	// Defaults to false.
+	'enable_only_for_group_user' => true,
+
+	// Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
+	// of the address book from backend every time they sync their address book. Set the below to 
+	// prevent full address book refresh from backend at least for this interval (in seconds).
+	// A larger value will lead to better performance. 
+	// Defaults to four hours.
+	//  'full_refresh_interval' => 14400,
+
+	// For WebDAV sync clients there is no way to know about contacts which are deleted in the backend but not by 
+	// this application. Set the below to delete those contacts in WebDAV sync clients at this interval at worst. 
+	// A larger value will lead to better performance.
+	// Defaults to a day.
+	//  'force_full_sync_interval' => 86400,
+	
+	// Maximum size of a card (in bytes) which is accepted for create/update. Defaults to 16 KiB.
+	//  'max_size'				=> 16384,
+	
+  // The following placeholders are available to be used in 'base_dn' and 'search_filter' below as applicable.
+  // %u  - Username of the user whose address book being accessed.
+  // %dn - DN as returned by LDAP search for address book DN.
+  
+	'base_dn'       	=> 'ou=Address Book,%dn', // Address book DN (used as base DN to search for contacts 
+																							// and as parent DN for new contacts).
+	
+	// LDAP filter to be used to search for contacts	
+	'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
+	
+	// Bind user to search/read/write contacts. If 'bind_dn' and 'bind_pass' values are not provided below 
+	// and if this address book is marked as 'user_specific' then 'bind_dn' and 'bind_pass' values provided 
+	// in $config['auth']['ldap'] will be used instead.
+	// This bind user must have read access to entryUUID, createTimestamp and modifyTimestamp operational attributes 
+	// of all contacts in the address book in addition to contact data.
+	//  'bind_dn'       	=> '',
+	//  'bind_pass'     => '',
+	
+	// Sync LDAP bind user can be used for contact searches if there are size or time limits on 'bind_dn' in LDAP.
+	// Read and write of contact data will still be performed by 'bind_dn'. 'sync_bind_dn' should have liberal or 
+	// no size or time limits and must have read access to entryUUID, createTimestamp and modifyTimestamp attribute 
+	// of all contacts in the address book. Access to other contact attributes is not required by this user.
+	//  'sync_bind_dn'       	=> 'cn=carddavsync,ou=People,dc=example,dc=org',
+	//  'sync_bind_pw'     	=> '<secret>',
+	
+	'scope'         => 'list',   // Scope of search for contacts
+	                             //  sub: Subtree
+	                             // list: Immediate children
+	                             // base: Match Base DN only
+	
+  // It's possible to find the base of an address book DN from a search result. Useful only if the address book is user specific.
+  'search_base_dn' => 'ou=People,dc=example,dc=org',
+  'search_filter'  => '(&(objectClass=groupOfNames)(cn=%u))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
 	'search_scope'   => 'list',  // Scope of search
 	                             //  sub: Subtree
 	                             // list: Immediate children
