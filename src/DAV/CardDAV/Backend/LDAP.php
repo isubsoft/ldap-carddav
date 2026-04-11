@@ -1663,7 +1663,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					$cardUri = null;
 					
 					try {
-							$query = 'SELECT card_uri, card_uid, delete_sync_token FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?';
+							$query = 'SELECT delete_sync_token FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?';
 							$stmt = $this->pdo->prepare($query);
 							$stmt->execute([$syncDbUserId, $addressBookId, $data['data']['entryUUID'][0]]);
 							
@@ -1710,7 +1710,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					$cardUri = null;
 					
 					try {
-							$query = 'SELECT card_uri, card_uid, delete_sync_token FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?';
+							$query = 'SELECT card_uri, delete_sync_token FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?';
 							$stmt = $this->pdo->prepare($query);
 							$stmt->execute([$syncDbUserId, $addressBookId, $data['data']['entryUUID'][0]]);
 							
@@ -1725,6 +1725,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 									
 									continue;
 								}
+								
+								$cardUri = $row['card_uri'];
 							}
 							else {
 								$cardUid = $this->guidv4();
@@ -2024,23 +2026,22 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 								$query = "UPDATE " . self::$backendMapTableName . " SET delete_sync_token = null, modify_sync_token = null, create_sync_token = ? WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?";
 								$sql = $this->pdo->prepare($query);
 								$sql->execute([time(), $syncDbUserId, $addressBookId, $data['data']['entryUUID'][0]]);
-								
-								continue;
 							}
-	
-							$cardUid = $row['card_uid'];
-							$cardUri = $row['card_uri'];
-							
-							$cardValues = $this->cache->get(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null);
-							
-							if(isset($cardValues['lastmodified']))
-							{
-								if($cardValues['lastmodified'] < $cardModifiedTimestamp)
-								{
-									if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null, -60))
-			    					trigger_error("Could not expire cache", E_USER_WARNING);
+							else {
+								$cardUid = $row['card_uid'];
+								$cardUri = $row['card_uri'];
 								
-									$this->addChange($addressBookId, $cardUri, 'MODIFY');
+								$cardValues = $this->cache->get(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null);
+								
+								if(isset($cardValues['lastmodified']))
+								{
+									if($cardValues['lastmodified'] < $cardModifiedTimestamp)
+									{
+										if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null, -60))
+					  					trigger_error("Could not expire cache", E_USER_WARNING);
+									
+										$this->addChange($addressBookId, $cardUri, 'MODIFY');
+									}
 								}
 						  }
 						}
