@@ -1668,7 +1668,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					try {
 							$query = 'SELECT delete_sync_token FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?';
 							$stmt = $this->pdo->prepare($query);
-						$stmt->execute([$syncDbUserId, $addressBookId, $backendId]);
+							$stmt->execute([$syncDbUserId, $addressBookId, $backendId]);
 							
 							$row = $stmt->fetch(\PDO::FETCH_ASSOC);
 							
@@ -1725,9 +1725,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 								if($row['delete_sync_token'] != null) {
 									$query = "UPDATE " . self::$backendMapTableName . " SET delete_sync_token = null, modify_sync_token = null, create_sync_token = ? WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?";
 									$sql = $this->pdo->prepare($query);
-								$sql->execute([time(), $syncDbUserId, $addressBookId, $backendId]);
+									$sql->execute([time(), $syncDbUserId, $addressBookId, $backendId]);
 									
-								$data = Utility::LdapIterativeQuery($ldapConn, $data['entryIns']);
+									$data = Utility::LdapIterativeQuery($ldapConn, $data['entryIns']);
 									continue;
 								}
 								
@@ -1739,9 +1739,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 										
 							$query = "INSERT INTO " . self::$backendMapTableName . " (user_id, addressbook_id, card_uri, card_uid, backend_id, create_sync_token)  VALUES (?, ?, ?, ?, ?, ?)";
 								$sql = $this->pdo->prepare($query);
-							$sql->execute([$syncDbUserId, $addressBookId, $cardUri, $cardUid, $backendId, time()]);
+								$sql->execute([$syncDbUserId, $addressBookId, $cardUri, $cardUid, $backendId, time()]);
 								
-							$data = Utility::LdapIterativeQuery($ldapConn, $data['entryIns']);
+								$data = Utility::LdapIterativeQuery($ldapConn, $data['entryIns']);
 								continue;
 							}
 							
