@@ -1654,7 +1654,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				if($data === false)
 		    	throw new SabreDAVException\ServiceUnavailable();
 
-				while($data = Utility::LdapIterativeQuery($ldapConn, $data['entryIns'], $data['fetchFirst']))
+				while($data = Utility::LdapIterativeFetch($ldapConn, $data['entryIns'], $data['fetchFirst']))
 				{
 					if(!isset($data['data']['entryUUID'][0]))
 					{
@@ -1700,7 +1700,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				if($data === false)
 					throw new SabreDAVException\ServiceUnavailable();
 					
-				while($data = Utility::LdapIterativeQuery($ldapConn, $data['entryIns'], $data['fetchFirst']))
+				while($data = Utility::LdapIterativeFetch($ldapConn, $data['entryIns'], $data['fetchFirst']))
 				{
 					if(!isset($data['data']['entryUUID'][0]) || !isset($data['data']['modifyTimestamp'][0]))
 					{
@@ -1994,7 +1994,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         
         try 
         {
-          while($data = Utility::LdapIterativeQuery($ldapConn, $data['entryIns'], $data['fetchFirst']))
+          while($data = Utility::LdapIterativeFetch($ldapConn, $data['entryIns'], $data['fetchFirst']))
 					{
 						if(!isset($data['data']['entryUUID'][0]) || !isset($data['data']['modifyTimestamp'][0]))
 						{
