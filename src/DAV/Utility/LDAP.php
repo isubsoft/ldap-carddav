@@ -132,75 +132,67 @@ class LDAP {
         return $data;
     }
 
-    public static function __callStatic($funcName, $args)
-    {
-        if($funcName == 'LdapIterativeQuery')
-        {
-            $data = null;
-
-            switch(count($args)){                
-                case 2:       
-                    try {    
-                        $data['entryIns'] = ldap_next_entry($args[0], $args[1]);
-                        
-                        if($data['entryIns'] === false)
-                        {
-                            return $data;
-                        }
-                        
-                        $data['dn'] = ldap_get_dn($args[0], $data['entryIns']);
-                        $data['data'] = ldap_get_attributes($args[0], $data['entryIns']);
-                       
-                    } catch (\Throwable $th) {
-											trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
-		                  throw new SabreDAVException\ServiceUnavailable();
-                    }
-                    
-                    return $data;
-
-                case 5:        
-                    try {
-                        if($args[4] == 'base')
-                        {
-                            $result = ldap_read($args[0], $args[1], $args[2], $args[3]);
-                        }
-                        else if($args[4] == 'list')
-                        {
-                            $result = ldap_list($args[0], $args[1], $args[2], $args[3]);
-                        }
-                        else
-                        {
-                            $result = ldap_search($args[0], $args[1], $args[2], $args[3]);
-                        }
+		public static function LdapIterativeQuery($ldapConn, $base, $filter, $attributes = [], $scope, int $attributesOnly = 0)
+		{
+      $result = false;
+      $data = [];
             
-                        if($result === false)
-                        {
-                            return false;
-                        }
-                        
-                        $data['entryIns'] = ldap_first_entry($args[0], $result);
-                        
-                        if($data['entryIns'] === false)
-                        {
-                            return $data;
-                        }
-                        
-                        $data['dn'] = ldap_get_dn($args[0], $data['entryIns']);
-                        $data['data'] = ldap_get_attributes($args[0], $data['entryIns']);
-                        
-                    } catch (\Throwable $th) {
-											trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
-											throw new SabreDAVException\ServiceUnavailable();
-                    }
-                    
-                    return $data;
+			try {
+					if($scope == 'base')
+					{
+						  $result = ldap_read($ldapConn, $base, $filter, $attributes, $attributesOnly);
+					}
+					elseif($scope == 'list')
+					{
+						  $result = ldap_list($ldapConn, $base, $filter, $attributes, $attributesOnly);
+					}
+					else
+					{
+						  $result = ldap_search($ldapConn, $base, $filter, $attributes, $attributesOnly);
+					}
 
-                default:
-                    return false;
-            }              
-        }
-    }
+					if($result === false)
+					{
+						  return false;
+					}
+					
+					$data['entryIns'] = $result;
+					$data['fetchFirst'] = true;
+			} catch (\Throwable $th) {
+				trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
+				throw new SabreDAVException\ServiceUnavailable();
+			}
 
+			return $data;		
+		}
+		
+		public static function LdapIterativeFetch($ldapConn, $entryIns, bool $fetchFirst = false)
+		{
+		  $result = false;
+		  $data = [];
+		  
+      try {
+      		if($fetchFirst)
+          	$result = ldap_first_entry($ldapConn, $entryIns);
+          else
+          	$result = ldap_next_entry($ldapConn, $entryIns);
+          
+          if($result === false)
+          {
+              return false;
+          }
+          
+          $data['entryIns'] = $result;
+					$data['fetchFirst'] = false;
+          $data['dn'] = ldap_get_dn($ldapConn, $data['entryIns']);
+          $data['data'] = ldap_get_attributes($ldapConn, $data['entryIns']);
+      } catch (\Throwable $th) {
+				trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
+        throw new SabreDAVException\ServiceUnavailable();
+      }
+      
+      return $data;
+		}
 
     public static function replacePlaceholders($subject, $values = [])
     {

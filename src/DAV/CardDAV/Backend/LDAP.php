@@ -1654,7 +1654,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				if($data === false)
 		    	throw new SabreDAVException\ServiceUnavailable();
 
-				while($data['entryIns'])
+				while($data = Utility::LdapIterativeFetch($ldapConn, $data['entryIns'], $data['fetchFirst']))
 				{
 					if(!isset($data['data']['entryUUID'][0]))
 					{
@@ -1692,8 +1692,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 						throw new SabreDAVException\ServiceUnavailable();
 					}
-					
-					$data = Utility::LdapIterativeQuery($ldapConn, $data['entryIns']);
 				}
 					
 				$filter = '(&' . $addressBookConfig['filter'] . '(!(createtimestamp>=' . gmdate('YmdHis', $backendSyncToken) . 'Z))(modifytimestamp>=' . gmdate('YmdHis', $backendSyncToken) . 'Z)(!(modifytimestamp>=' . gmdate('YmdHis', $addressBookSyncToken) . 'Z)))';
@@ -1702,7 +1700,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				if($data === false)
 					throw new SabreDAVException\ServiceUnavailable();
 					
-				while($data['entryIns'])
+				while($data = Utility::LdapIterativeFetch($ldapConn, $data['entryIns'], $data['fetchFirst']))
 				{
 					if(!isset($data['data']['entryUUID'][0]) || !isset($data['data']['modifyTimestamp'][0]))
 					{
@@ -1727,7 +1725,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 								$sql = $this->pdo->prepare($query);
 								$sql->execute([time(), $syncDbUserId, $addressBookId, $backendId]);
 								
-								$data = Utility::LdapIterativeQuery($ldapConn, $data['entryIns']);
 								continue;
 							}
 							
@@ -1741,7 +1738,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							$sql = $this->pdo->prepare($query);
 							$sql->execute([$syncDbUserId, $addressBookId, $cardUri, $cardUid, $backendId, time()]);
 							
-							$data = Utility::LdapIterativeQuery($ldapConn, $data['entryIns']);
 							continue;
 						}
 							
@@ -1763,8 +1759,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 						throw new SabreDAVException\ServiceUnavailable();
 					}
-						
-					$data = Utility::LdapIterativeQuery($ldapConn, $data['entryIns']);
 				}
 				
         try {
@@ -1989,6 +1983,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         
         if($ldapConn === false)
         	throw new SabreDAVException\ServiceUnavailable();
+        	
+				$backendContactsUriList = [];
         
 				$filter = '(&' . $addressBookConfig['filter'] . '(!(createtimestamp>=' . gmdate('YmdHis', $addressBookSyncToken) . 'Z)))';
 				$data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $filter, ['entryuuid', 'modifytimestamp'], strtolower($addressBookConfig['scope']));
@@ -1998,7 +1994,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         
         try 
         {
-          while($data['entryIns']) 
+					while($data = Utility::LdapIterativeFetch($ldapConn, $data['entryIns'], $data['fetchFirst']))
 					{
 						if(!isset($data['data']['entryUUID'][0]) || !isset($data['data']['modifyTimestamp'][0]))
 						{
@@ -2058,7 +2054,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							'backend_id' => $backendId,
 							'modified_timestamp' => $cardModifiedTimestamp
 						];
-            $data = Utility::LdapIterativeQuery($ldapConn, $data['entryIns']);
 					}
 					
 					// Deleting cards not present in backend
