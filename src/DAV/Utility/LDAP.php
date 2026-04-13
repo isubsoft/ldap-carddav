@@ -136,21 +136,28 @@ class LDAP {
     {
         if($funcName == 'LdapIterativeQuery')
         {
+            $result = false;
             $data = null;
 
-            switch(count($args)){                
-                case 2:       
-                    try {    
-                        $data['entryIns'] = ldap_next_entry($args[0], $args[1]);
+            switch(count($args)){
+                case 3:
+                    try {
+                    		if(is_bool($args[2]) && $args[2])
+                        	$result = ldap_first_entry($args[0], $args[1]);
+                        elseif(is_bool($args[2]) && !$args[2])
+                        	$result = ldap_next_entry($args[0], $args[1]);
+                        else
+													return false;
                         
-                        if($data['entryIns'] === false)
+                        if($result === false)
                         {
-                            return $data;
+                            return false;
                         }
                         
+                        $data['entryIns'] = $result;
+												$data['fetchFirst'] = false;
                         $data['dn'] = ldap_get_dn($args[0], $data['entryIns']);
                         $data['data'] = ldap_get_attributes($args[0], $data['entryIns']);
-                       
                     } catch (\Throwable $th) {
 											trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 		                  throw new SabreDAVException\ServiceUnavailable();
@@ -158,7 +165,7 @@ class LDAP {
                     
                     return $data;
 
-                case 5:        
+                case 5:
                     try {
                         if($args[4] == 'base')
                         {
@@ -178,16 +185,8 @@ class LDAP {
                             return false;
                         }
                         
-                        $data['entryIns'] = ldap_first_entry($args[0], $result);
-                        
-                        if($data['entryIns'] === false)
-                        {
-                            return $data;
-                        }
-                        
-                        $data['dn'] = ldap_get_dn($args[0], $data['entryIns']);
-                        $data['data'] = ldap_get_attributes($args[0], $data['entryIns']);
-                        
+												$data['entryIns'] = $result;
+												$data['fetchFirst'] = true;
                     } catch (\Throwable $th) {
 											trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 											throw new SabreDAVException\ServiceUnavailable();
