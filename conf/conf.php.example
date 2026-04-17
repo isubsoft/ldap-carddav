@@ -86,15 +86,15 @@ $config['server']['ldap'] = [
 ];
 
 // Caching. Allowed backends are mentioned below.
-// memcached: Memcached server
-// local_fs: Local filesystem
-// apcu: APCu cache ( check https://www.php.net/manual/en/book.apcu.php for details )
-// memory: System memory (for testing purpose only, cache does not persist between requests)
+// memcached: Memcached server.
+// local_fs: Local filesystem. Suitable only for a standalone server.
+// apcu: APCu cache. Suitable only for a standalone server. Check https://www.php.net/manual/en/book.apcu.php for details.
+// memory: System memory (for testing purpose only, cache does not persist between requests).
 
 // Caching backend to enable specific to object type. If not set then caching is disabled.
 // It is strongly recommended to keep caching enabled in a production environment.
-$config['cache']['principal']['backend'] = 'local_fs';
-$config['cache']['card']['backend'] = 'local_fs';
+$config['cache']['principal']['backend'] = 'memory';
+$config['cache']['card']['backend'] = 'memory';
 
 // TTL (in seconds) for cached items. TTL should be greater than 0 or less than or equal to 2592000 (30 days) else 
 // default value will be used.
