@@ -564,6 +564,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     protected function createUpdateCard($addressBookId, $cardUri, $cardData, $operation = 'CREATE')
     {
+        $vCardGroupMemberProperty = 'MEMBER';
         $addressBookConfig = $this->addressbook[$addressBookId]['config'];
         $syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
         $writableAddressBook = (!isset($addressBookConfig['writable']))?true:$addressBookConfig['writable'];
@@ -645,6 +646,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
           $ldapInfo['objectclass'] = (!isset($addressBookConfig['group_LDAP_Object_Classes']) || !is_array($addressBookConfig['group_LDAP_Object_Classes']))?[]:$addressBookConfig['group_LDAP_Object_Classes'];
           $fieldMap = (!isset($addressBookConfig['group_fieldmap']) || !is_array($addressBookConfig['group_fieldmap']))?[]:$addressBookConfig['group_fieldmap'];
           
+          if(isset($fieldMap[$vCardGroupMemberProperty]))
+          	unset($fieldMap[$vCardGroupMemberProperty]);
+          
           foreach((!isset($addressBookConfig['group_required_fields']) || !is_array($addressBookConfig['group_required_fields']))?[]:$addressBookConfig['group_required_fields'] as $field)
           {
 						$requiredFields[] = strtolower($field);
@@ -690,8 +694,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         
         if($isContactGroup)
         {
-            foreach($addressBookConfig['group_member_map'] as $vCardKey => $ldapKey) 
+            foreach(((isset($addressBookConfig['group_member_map']) && is_array($addressBookConfig['group_member_map']))?$addressBookConfig['group_member_map']:[]) as $vCardKey => $ldapKey) 
             {
+            		if($vCardKey != $vCardGroupMemberProperty)
+            			continue;
+            			
                 $multiAllowedStatus = Reader::multiAllowedStatus($vCardKey);
                 $compositeAttrStatus = Reader::compositeAttrStatus($vCardKey);
 
@@ -1084,51 +1091,64 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     protected function generateVcard($data, $addressBookId, $cardUid)
     { 
-        if (empty ($data) || empty($addressBookId) || empty($cardUid))
-            return null;
-        
+        if(empty($data) || empty($addressBookId) || empty($cardUid))
+        	return null;
+
+        $vCardGroupMemberProperty = 'MEMBER';
         $addressBookConfig = $this->addressbook[$addressBookId]['config'];
         $syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
-        $fieldMap = $addressBookConfig['fieldmap'];
+        $fieldMap = (isset($addressBookConfig['fieldmap']) && is_array($addressBookConfig['fieldmap']))?$addressBookConfig['fieldmap']:[];
         
         $this->setAddressbookBackendProperties($addressBookId);
         
         $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
         $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
         
-        // build the Vcard
+        // Build the vcard
         $vcard = (new \Sabre\VObject\Component\VCard(['UID' => $cardUid]))->convert($this->defaultVcardVersion);
         
         $isContactGroup = false;
-        $contactGroupMemberFieldName = $addressBookConfig['group_member_map']['MEMBER']['field_name'];
+        $contactGroupMemberFieldName = (isset($addressBookConfig['group_member_map'][$vCardGroupMemberProperty]['field_name']) && $addressBookConfig['group_member_map'][$vCardGroupMemberProperty]['field_name'] != '')?$addressBookConfig['group_member_map'][$vCardGroupMemberProperty]['field_name']:null;
         
-        if(isset($data[$contactGroupMemberFieldName]) && is_array($data[$contactGroupMemberFieldName]))
+        if($contactGroupMemberFieldName != null && isset($data[$contactGroupMemberFieldName]) && is_array($data[$contactGroupMemberFieldName]))
 					$isContactGroup = true;
 
         if($isContactGroup)
         {
             $vcard->add('KIND', 'group');
-            $fieldMap = $addressBookConfig['group_fieldmap'];      
+            $fieldMap = (isset($addressBookConfig['group_fieldmap']) && is_array($addressBookConfig['group_fieldmap']))?$addressBookConfig['group_fieldmap']:[];
+            
+            if(isset($fieldMap[$vCardGroupMemberProperty]))
+            	unset($fieldMap[$vCardGroupMemberProperty]);
 
             foreach ($addressBookConfig['group_member_map'] as $vCardKey => $ldapKey) 
             {
+            		if($vCardKey != $vCardGroupMemberProperty)
+            			continue;
+            		
                 $multiAllowedStatus = Reader::multiAllowedStatus($vCardKey);
                 $compositeAttrStatus = Reader::compositeAttrStatus($vCardKey);
 
                 if($multiAllowedStatus['status'] && !$compositeAttrStatus['status'] )
                 {
                     $newLdapKey = strtolower($ldapKey['field_name']);
+
                     if(isset($data[$newLdapKey]))
                     {
                         foreach($data[$newLdapKey] as $key => $value)
                         {
                             if($key === 'count')
-                            continue;
+                            	continue;
 
                             $memberData = Utility::LdapQuery($ldapConn, $value, $addressBookConfig['filter'], ['entryuuid'], 'base');
                      
-                            if(!empty($memberData) && $memberData['count'] > 0 && isset($memberData[0]['entryuuid'][0]))
-                            { 
+                            if(!empty($memberData) && $memberData['count'] > 0)
+                            {
+																if(!isset($memberData[0]['entryuuid'][0])) {
+																	trigger_error("Read access to required operational attributes in LDAP not present for member contact '$value' in address book '$addressBookId'. Member excluded from contact group.", E_USER_WARNING);
+																	continue;
+																}
+
                                 $memberCardUID = null;
 
                                 try {
