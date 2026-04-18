@@ -474,7 +474,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 	      $cardData = null;
 	      $data = $this->fetchLdapContactDataById($addressBookId, $backendId, ['*', 'modifyTimestamp']);
 	      
-	      if(empty($data))
+	      if($data === false)
 					throw new SabreDAVException\ServiceUnavailable();
 					
 	      if($data['count'] === 0)
@@ -805,7 +805,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					
 					$oldLdapInfo = $this->fetchLdapContactDataByUri($addressBookId, $cardUri, ['*'], 1);
 					
-					if(empty($oldLdapInfo))
+					if($oldLdapInfo === false)
 						throw new SabreDAVException\Conflict();
 						
 					if($fieldAclEval == 'w')
@@ -1054,7 +1054,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         	
         $data = $this->fetchLdapContactDataByUri($addressBookId, $cardUri, ['dn', 'entryUUID']);
         
-        if(empty($data))
+        if($data === false)
 					throw new SabreDAVException\ServiceUnavailable();
 					
 	      if($data['count'] > 1) {
@@ -1891,7 +1891,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      * @param string  $backendId
      * @param array 	$attributes
      * @param int 		$attributesOnly
-     * @return array
+     * @return array|false
      */
     function fetchLdapContactDataById($addressBookId, $backendId, $attributes = [], int $attributesOnly = 0)
     {
@@ -1902,12 +1902,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
         $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
         
-        if($backendId === null)
-					return null;
-        
         $filter = '(&'.$addressBookConfig['filter']. '(entryuuid=' . ldap_escape($backendId, "", LDAP_ESCAPE_FILTER) . '))';
+				$result = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, (!is_array($attributes) || $attributes == [])?['dn', 'createTimestamp', 'modifyTimestamp']:$attributes, strtolower($addressBookConfig['scope']), $attributesOnly);
               
-        return Utility::LdapQuery($ldapConn, $addressBookDn, $filter, empty($attributes)?['dn', 'createTimestamp', 'modifyTimestamp']:$attributes, strtolower($addressBookConfig['scope']), $attributesOnly);
+        return !is_array($result)?false:$result;
     }
     
 
@@ -1918,7 +1916,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      * @param string  $cardUri
      * @param array 	$attributes
      * @param int 		$attributesOnly
-     * @return array
+     * @return array|false
      */
     function fetchLdapContactDataByUri($addressBookId, $cardUri, $attributes = [], int $attributesOnly = 0)
     {
@@ -1933,14 +1931,17 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             $row = $stmt->fetch(\PDO::FETCH_ASSOC);
             
             if($row === false)
-            	return null;
+            	return ['count' => 0];
             	
             $backendId = $row['backend_id'];
         } catch (\Throwable $th) {
 					trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
+					return false;
         }
+        
+				$result = $this->fetchLdapContactDataById($addressBookId, $backendId, $attributes, $attributesOnly);
              
-        return $this->fetchLdapContactDataById($addressBookId, $backendId, $attributes, $attributesOnly);
+        return !is_array($result)?false:$result;
     }
 
 
