@@ -127,9 +127,14 @@ class LDAP {
             {
                 $result = ldap_list($ldapConn, $base, $filter, $attributes, $attributesOnly);
             }
-            else
+            else if($scope == 'sub')
             {
                 $result = ldap_search($ldapConn, $base, $filter, $attributes, $attributesOnly);
+            }
+            else
+            {
+							trigger_error("Backend search query scope '$scope' not recognized.", E_USER_WARNING);
+            	return false;
             }
 
             if($result === false)
@@ -174,9 +179,14 @@ class LDAP {
 					{
 						  $result = ldap_list($ldapConn, $base, $filter, $attributes, $attributesOnly);
 					}
-					else
+					elseif($scope == 'sub')
 					{
 						  $result = ldap_search($ldapConn, $base, $filter, $attributes, $attributesOnly);
+					}
+					else
+					{
+							trigger_error("Backend search query scope '$scope' not recognized.", E_USER_WARNING);
+							return false;
 					}
 
 					if($result === false)

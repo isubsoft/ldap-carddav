@@ -154,7 +154,7 @@ $config['auth']['ldap'] = [
 	'search_scope'         => 'list',   // Scope of search
 	                                    //  sub: Subtree
 	                                    // list: Immediate children
-	                                    // base: Match Base DN only
+	                                    // base: Match base DN only
 	                                    
   // DN and password to bind as before searching for bind DN, if anonymous search is not allowed.
   'search_bind_dn' => 'cn=admin,ou=People,dc=example,dc=org',
@@ -178,7 +178,7 @@ $config['principal']['ldap'] = [
 	'search_scope'         => 'list',   // Scope of search
 	                                    //  sub: Subtree
 	                                    // list: Immediate children
-	                                    // base: Match Base DN only
+	                                    // base: Match base DN only
   
   // DN and password to bind as before searching for pricipal DN(s), if anonymous search is not allowed
   'search_bind_dn' => 'cn=admin,ou=People,dc=example,dc=org',
@@ -267,7 +267,7 @@ $config['card']['addressbook']['ldap']['me'] = [
 	'scope'         => 'base',   // Scope of search for contacts
 	                             //  sub: Subtree
 	                             // list: Immediate children
-	                             // base: Match Base DN only
+	                             // base: Match base DN only
 	
   // It's possible to find the base of an address book DN from a search result. Useful only if the address book is user specific.
   'search_base_dn' => 'ou=People,dc=example,dc=org',
@@ -275,7 +275,7 @@ $config['card']['addressbook']['ldap']['me'] = [
 	'search_scope'   => 'list',  // Scope of search
 	                             //  sub: Subtree
 	                             // list: Immediate children
-	                             // base: Match Base DN only
+	                             // base: Match base DN only
 	
 	// Backend data update policy. Valid options are below.
 	// merge (default)  - Would only replace backend contact attibutes present in field map here and 
@@ -517,7 +517,7 @@ $config['card']['addressbook']['ldap']['global'] = [
 	'scope'         => 'list',   // Scope of search for contacts
 	                             //  sub: Subtree
 	                             // list: Immediate children
-	                             // base: Match Base DN only
+	                             // base: Match base DN only
 	
   // It's possible to find the base of an address book DN from a search result. Useful only if the address book is user specific.
   //  'search_base_dn' => 'ou=People,dc=example,dc=org',
@@ -525,7 +525,7 @@ $config['card']['addressbook']['ldap']['global'] = [
 	//  'search_scope'   => 'list',  // Scope of search
 	                             //  sub: Subtree
 	                             // list: Immediate children
-	                             // base: Match Base DN only
+	                             // base: Match base DN only
 	
 	// Backend data update policy. Valid options are below.
 	// merge (default)  - Would only replace backend contact attibutes present in field map here and 
@@ -767,7 +767,7 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	'scope'         => 'list',   // Scope of search for contacts
 	                             //  sub: Subtree
 	                             // list: Immediate children
-	                             // base: Match Base DN only
+	                             // base: Match base DN only
 	
   // It's possible to find the base of an address book DN from a search result. Useful only if the address book is user specific.
   'search_base_dn' => 'ou=People,dc=example,dc=org',
@@ -775,7 +775,7 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	'search_scope'   => 'list',  // Scope of search
 	                             //  sub: Subtree
 	                             // list: Immediate children
-	                             // base: Match Base DN only
+	                             // base: Match base DN only
 	
 	// Backend data update policy. Valid options are below.
 	// merge (default)  - Would only replace backend contact attibutes present in field map here and 
