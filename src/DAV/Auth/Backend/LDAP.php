@@ -62,7 +62,7 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
 						// verify binding
             if($ldapBindConn === false)
             {
-		          trigger_error("Could not establish bind connection to backend server.", E_USER_WARNING);
+		          trigger_error("Could not create connection to backend server. Check configuration.", E_USER_WARNING);
 		          throw new ServiceUnavailable();
             }
             

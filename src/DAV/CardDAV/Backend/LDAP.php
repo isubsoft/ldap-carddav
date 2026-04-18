@@ -165,6 +165,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				if(isset($addressBookConfig['bind_dn']) && $addressBookConfig['bind_dn'] != '')
         {
         	$this->addressbook[$addressBookId]['LdapConnection'] = Utility::LdapBindConnection(['bindDn' => $addressBookConfig['bind_dn'], 'bindPass' => isset($addressBookConfig['bind_pass'])?$addressBookConfig['bind_pass']:null], $this->config['server']['ldap']);
+        	
+        	if($this->addressbook[$addressBookId]['LdapConnection'] === false) {
+				    trigger_error("Could not create connection to backend server for address book '$addressBookId'. Check configuration.", E_USER_WARNING);
+						throw new SabreDAVException\ServiceUnavailable();
+        	}
         }
         else if($addressBookConfig['user_specific'] == true)
           $this->addressbook[$addressBookId]['LdapConnection'] = $GLOBALS['currentUserPrincipalLdapConn'];
@@ -1663,11 +1668,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					$syncBindDn = $addressBookConfig['sync_bind_dn'];
 					$syncBindPass = (!isset($addressBookConfig['sync_bind_pw']))?null:$addressBookConfig['sync_bind_pw'];
 					$ldapConn = Utility::LdapBindConnection(['bindDn' => $syncBindDn, 'bindPass' => $syncBindPass], $this->config['server']['ldap']);
+					
+					if($ldapConn === false) {
+				    trigger_error("Could not create sync user connection to backend server for address book '$addressBookId'. Check configuration.", E_USER_WARNING);
+				  	throw new SabreDAVException\ServiceUnavailable();
+					}
 				}
 
-				if($ldapConn === false)
-		    	throw new SabreDAVException\ServiceUnavailable();
-				
 				$filter = '(&' . $addressBookConfig['filter'] . '(createtimestamp>=' . gmdate('YmdHis', $backendSyncToken) . 'Z)(!(createtimestamp>=' . gmdate('YmdHis', $addressBookSyncToken) . 'Z)))';
 				$data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $filter, ['entryuuid'], strtolower($addressBookConfig['scope']));
 
@@ -1895,7 +1902,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
         $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
         
-        if($ldapConn === false || $backendId === null)
+        if($backendId === null)
 					return null;
         
         $filter = '(&'.$addressBookConfig['filter']. '(entryuuid=' . ldap_escape($backendId, "", LDAP_ESCAPE_FILTER) . '))';
@@ -1999,10 +2006,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         	$syncBindDn = $addressBookConfig['sync_bind_dn'];
         	$syncBindPass = (!isset($addressBookConfig['sync_bind_pw']))?null:$addressBookConfig['sync_bind_pw'];
         	$ldapConn = Utility::LdapBindConnection(['bindDn' => $syncBindDn, 'bindPass' => $syncBindPass], $this->config['server']['ldap']);
+        	
+		      if($ldapConn === false) {
+				    trigger_error("Could not create sync user connection to backend server for address book '$addressBookId'. Check configuration.", E_USER_WARNING);
+				  	throw new SabreDAVException\ServiceUnavailable();
+					}
         }
-        
-        if($ldapConn === false)
-        	throw new SabreDAVException\ServiceUnavailable();
         	
 				$backendContactsUriList = [];
         
