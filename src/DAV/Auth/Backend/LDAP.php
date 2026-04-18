@@ -6,7 +6,7 @@
 namespace ISubsoft\DAV\Auth\Backend;
 
 use ISubsoft\DAV\Utility\LDAP as Utility;
-use \Sabre\DAV\Exception\ServiceUnavailable;
+use Sabre\DAV\Exception as SabreDAVException;
 
 class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
 
@@ -63,7 +63,7 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
             if($ldapBindConn === false)
             {
 		          trigger_error("Could not create connection to backend server. Check configuration.", E_USER_WARNING);
-		          throw new ServiceUnavailable();
+		          throw new SabreDAVException\ServiceUnavailable();
             }
             
             $ldaptree = (isset($this->config['auth']['ldap']['search_base_dn']) && $this->config['auth']['ldap']['search_base_dn'] !== '')?$this->config['auth']['ldap']['search_base_dn']:$this->config['auth']['ldap']['base_dn'];
@@ -73,7 +73,7 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
 
             if($data === false) {
             	trigger_error("Could not execute backend search.", E_USER_WARNING);
-            	throw new ServiceUnavailable();
+            	throw new SabreDAVException\ServiceUnavailable();
             }
             
             if($data['count'] === 0)
@@ -93,7 +93,7 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
                 	return false;
             } catch (\Throwable $th) {
 							trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
-							throw new ServiceUnavailable();
+							throw new SabreDAVException\ServiceUnavailable();
             }
             
             $GLOBALS['currentUserPrincipalLdapConn'] = $ldapBindConn;
@@ -110,7 +110,7 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
             if($ldapBindConn === false)
             {
 		          trigger_error("Could not establish bind connection to backend server.", E_USER_WARNING);
-		          throw new ServiceUnavailable();
+		          throw new SabreDAVException\ServiceUnavailable();
             }
 
             $GLOBALS['currentUserPrincipalLdapConn'] = $ldapBindConn;
