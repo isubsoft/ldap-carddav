@@ -71,14 +71,18 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
 
             $data = Utility::LdapQuery($ldapBindConn, $ldaptree, $filter, ['dn'], strtolower($this->config['auth']['ldap']['search_scope']));
 
-            if(empty($data))
-            {
+            if($data === false) {
             	trigger_error("Could not execute backend search.", E_USER_WARNING);
             	throw new ServiceUnavailable();
             }
             
-            if($data['count'] !== 1)
+            if($data['count'] === 0)
+							return false;
+            
+            if($data['count'] > 1) {
+            	trigger_error("Backend search for authentication username returned multiple users. Check configuration.", E_USER_WARNING);
         			return false;
+        		}
             
             $bindDn = Utility::replacePlaceholders($this->config['auth']['ldap']['bind_dn'], ['%dn' => $data[0]['dn'], '%u' => ldap_escape($username, "", LDAP_ESCAPE_DN)]);
 

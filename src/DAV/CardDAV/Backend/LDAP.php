@@ -185,8 +185,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
           {
           	$filter = Utility::replacePlaceholders($addressBookConfig['search_filter'], ['%u' => ldap_escape($this->principalId, "", LDAP_ESCAPE_FILTER)]);
            	$data = Utility::LdapQuery($this->addressbook[$addressBookId]['LdapConnection'], $addressBookConfig['search_base_dn'], $filter, ['dn'], strtolower($addressBookConfig['search_scope']));
+           	
+				    if($data === false) {
+				    	trigger_error("Could not execute backend search.", E_USER_WARNING);
+				    	throw new SabreDAVException\ServiceUnavailable();
+				    }
           	
-            if(!empty($data) && $data['count'] === 1)
+            if($data['count'] === 1)
             {
               $addressBookDn = Utility::replacePlaceholders($addressBookConfig['base_dn'], ['%u' => ldap_escape($this->principalId, "", LDAP_ESCAPE_DN), '%dn' => $data[0]['dn']]);
             }
@@ -736,7 +741,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                         
                                 $data = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, ['dn'], strtolower($addressBookConfig['scope']));
                                 
-                                if( !empty($data) && $data['count'] > 0)
+																if($data === false) {
+																	trigger_error("Could not execute backend search.", E_USER_WARNING);
+																	throw new SabreDAVException\ServiceUnavailable();
+																}
+                                
+                                if($data['count'] > 0)
                                 {
                                     $ldapInfo[$newLdapKey][] = $data[0]['dn'];
                                 }
@@ -933,7 +943,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
 		      $data = Utility::LdapQuery($ldapConn, $ldapTree, $addressBookConfig['filter'], ['entryuuid'], 'base');
 		      
-		      if(!empty($data) && $data['count'] > 0)
+					if($data === false) {
+						trigger_error("Could not execute backend search.", E_USER_WARNING);
+						throw new SabreDAVException\ServiceUnavailable();
+					}
+		      
+		      if($data['count'] > 0)
 		      {
 						if(!isset($data[0]['entryuuid'][0]))
 						{
@@ -1146,8 +1161,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                             	continue;
 
                             $memberData = Utility::LdapQuery($ldapConn, $value, $addressBookConfig['filter'], ['entryuuid'], 'base');
+                            
+														if($memberData === false) {
+															trigger_error("Could not execute backend search.", E_USER_WARNING);
+															throw new SabreDAVException\ServiceUnavailable();
+														}
                      
-                            if(!empty($memberData) && $memberData['count'] > 0)
+                            if($memberData['count'] > 0)
                             {
 																if(!isset($memberData[0]['entryuuid'][0])) {
 																	trigger_error("Read access to required operational attributes in LDAP not present for member contact '$value' in address book '$addressBookId'. Member excluded from contact group.", E_USER_WARNING);
