@@ -29,26 +29,26 @@ $entityCache = [];
 
 // Create object for active cache backends.
 $cacheMaster = new ISubsoft\Cache\Master($config, $pdo);
-$resetCache = [];
+$warnToResetCache = [];
 
 foreach(CACHED_ENTITIES as $entityId) {
 	$cacheBackendId = $cacheMaster->getBackendId($entityId);
 	$entityCache[$entityId] = $cacheMaster->cache[$cacheBackendId];
 	
 	if($cacheMaster->wasBackendNotActive($entityId, $cacheBackendId)) {
-		if($cacheBackendId != ISubsoft\Cache\Master::$dummyBackend)
-			$resetCache[$cacheBackendId] = true;
+		if($cacheBackendId != ISubsoft\Cache\Master::$dummyBackend && !in_array($cacheBackendId, ISubsoft\Cache\Master::$noPersistenceBackends))
+			$warnToResetCache[$cacheBackendId] = true;
 		
 		if(!$cacheMaster->setActiveBackend($entityId, $cacheBackendId))
 			trigger_error("Cache backend '$cacheBackendId' could not be set active for $entityId.", E_USER_WARNING);
 	}
 }
 
-foreach($resetCache as $backendId => $value)
+foreach($warnToResetCache as $backendId => $value)
 	trigger_error("Cache backend '$backendId' was not used before. Make sure that this cache backend does not contain any previous cache from this application as it may contain data which is inconsistent with current application state.", E_USER_WARNING);
 	
 // Destroy what is no longer required.
-unset($cacheMaster, $resetCache);
+unset($cacheMaster, $warnToResetCache);
 
 // Backends
 $authBackend = new ISubsoft\DAV\Auth\Backend\LDAP($config);

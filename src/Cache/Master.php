@@ -41,6 +41,13 @@ class Master
    * @array
    */
 	public static $allowedBackends = ['memory', 'apcu', 'local_fs', 'memcached'];
+	
+  /**
+   * Cache backends with no persistence
+   *
+   * @array
+   */
+	public static $noPersistenceBackends = ['memory'];
 
   /**
    * Backend object indexed by backend id

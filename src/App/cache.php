@@ -69,13 +69,14 @@ else if(isset($argv[1]) && $argv[1] == 'clear')
 	echo "-- Cache info [ backend => object(s) cached ] --\n";
 	
 	foreach($cachedBackendEntity as $backendId => $entityList)
-		echo $backendId . " => " . json_encode($entityList, JSON_NUMERIC_CHECK) . "\n";
+		if(!in_array($backendId, ISubsoft\Cache\Master::$noPersistenceBackends))
+			echo $backendId . " => " . json_encode($entityList, JSON_NUMERIC_CHECK) . "\n";
 		
 	echo "\n";
 		
   $cachedBackend = readline("Enter the backend you want to clear: ");
   
-  if($cachedBackend == '' || !isset($cacheMaster->cache[$cachedBackend])) {
+  if($cachedBackend == '' || !isset($cacheMaster->cache[$cachedBackend]) || in_array($cachedBackend, ISubsoft\Cache\Master::$noPersistenceBackends)) {
 		error_log("[ERROR] Invalid cache backend provided.");
 		exit(1);
   }
