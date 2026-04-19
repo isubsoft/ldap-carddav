@@ -81,7 +81,7 @@ class LDAP extends \Sabre\DAV\Auth\Backend\AbstractBasic {
             
             if($data['count'] > 1) {
             	trigger_error("Backend search for authentication username returned multiple users. Check configuration.", E_USER_WARNING);
-		          throw new SabreDAVException\ServiceUnavailable();
+							return false;
         		}
             
             $bindDn = Utility::replacePlaceholders($this->config['auth']['ldap']['bind_dn'], ['%dn' => $data[0]['dn'], '%u' => ldap_escape($username, "", LDAP_ESCAPE_DN)]);
