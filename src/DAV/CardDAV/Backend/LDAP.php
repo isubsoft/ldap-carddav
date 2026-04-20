@@ -501,9 +501,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				$cardModifiedTimestamp = strtotime($data[0]['modifytimestamp'][0]);
       	$cardData = $this->generateVcard($data[0], $addressBookId, $cardUid);
       	
-				if(empty($cardData))
-					throw new SabreDAVException\ServiceUnavailable();
-					
 				$result = [
           'carddata'      => $cardData,
           'lastmodified'  => $cardModifiedTimestamp,
