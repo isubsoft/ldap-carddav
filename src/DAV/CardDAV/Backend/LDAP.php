@@ -133,6 +133,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     private $addressbook = [];
     
 		private static $cacheTtl = 86400;
+		
+		public static $vCardGroupMemberProperty = 'MEMBER';
     
     /**
      * Creates the backend.
@@ -574,7 +576,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     protected function createUpdateCard($addressBookId, $cardUri, $cardData, $operation = 'CREATE')
     {
-        $vCardGroupMemberProperty = 'MEMBER';
+        $vCardGroupMemberProperty = self::$vCardGroupMemberProperty;
         $addressBookConfig = $this->addressbook[$addressBookId]['config'];
         $syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
         $writableAddressBook = (!isset($addressBookConfig['writable']))?true:$addressBookConfig['writable'];
@@ -1111,10 +1113,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     protected function generateVcard($data, $addressBookId, $cardUid)
     { 
-        if(empty($data) || empty($addressBookId) || empty($cardUid))
-        	return null;
-
-        $vCardGroupMemberProperty = 'MEMBER';
+        $vCardGroupMemberProperty = self::$vCardGroupMemberProperty;
         $addressBookConfig = $this->addressbook[$addressBookId]['config'];
         $syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
         $fieldMap = (isset($addressBookConfig['fieldmap']) && is_array($addressBookConfig['fieldmap']))?$addressBookConfig['fieldmap']:[];
