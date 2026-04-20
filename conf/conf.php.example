@@ -471,7 +471,7 @@ $config['card']['addressbook']['ldap']['global'] = [
 	
 	// Use this address book as a directory (i.e. for lookups only) for Apple devices
 	// Defaults to false
-	//  'directory'				=> true,
+	'directory'				=> true,
 	
 	// Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
 	// of the address book from backend every time they sync their address book. Set the below to 
