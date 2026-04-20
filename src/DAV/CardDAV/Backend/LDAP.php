@@ -1108,8 +1108,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      * Generate Serialize Data of Vcard
      *
      * @param array $data
-     * @param array $addressBookId
-     * @return null or vcard data
+     * @param string $addressBookId
+     * @param string $cardUid
+     * @return vCard string
      */
     protected function generateVcard($data, $addressBookId, $cardUid)
     { 
