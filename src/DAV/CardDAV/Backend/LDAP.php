@@ -245,7 +245,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
   		$this->principalId = $principal['id'];
 
 			if(!isset($principal['__backend_id'])) {
-				trigger_error("Could not obtain backend id for principal uri '" . $principalUri . "'. Check principal configuration.", E_USER_WARNING);
+				trigger_error("Could not obtain backend id for principal '" . $this->principalId . "'.", E_USER_WARNING);
 				throw new SabreDAVException\ServiceUnavailable();
 			}
     	
