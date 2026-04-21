@@ -481,8 +481,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 	      $cardData = null;
 	      $data = $this->fetchLdapContactDataById($addressBookId, $backendId, ['*', 'modifyTimestamp']);
 	      
-	      if($data === false)
+	      if($data === false) {
+					trigger_error("Could not execute backend search.", E_USER_WARNING);
 					throw new SabreDAVException\ServiceUnavailable();
+				}
 					
 	      if($data['count'] === 0)
 	      	return false;
@@ -814,8 +816,21 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					
 					$oldLdapInfo = $this->fetchLdapContactDataByUri($addressBookId, $cardUri, ['*'], 1);
 					
-					if($oldLdapInfo === false)
+					if($oldLdapInfo === false) {
+						trigger_error("Could not execute backend search.", E_USER_WARNING);
+						throw new SabreDAVException\ServiceUnavailable();
+					}
+					
+					if($oldLdapInfo['count'] > 1) {
+						trigger_error("Multiple backend contacts found. Check configuration.", E_USER_WARNING);
+						throw new SabreDAVException\ServiceUnavailable();
+			    }
+					
+					if($oldLdapInfo['count'] === 0) {
+						$this->addChange($addressBookId, $cardUri);
+						trigger_error("No backend contact found.", E_USER_NOTICE);
 						throw new SabreDAVException\Conflict();
+					}
 						
 					if($fieldAclEval == 'w')
 					{
@@ -1068,8 +1083,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         	
         $data = $this->fetchLdapContactDataByUri($addressBookId, $cardUri, ['dn', 'entryUUID']);
         
-        if($data === false)
+        if($data === false) {
+					trigger_error("Could not execute backend search.", E_USER_WARNING);
 					throw new SabreDAVException\ServiceUnavailable();
+				}
 					
 	      if($data['count'] > 1) {
 					trigger_error("Multiple backend contacts found. Check configuration.", E_USER_WARNING);
