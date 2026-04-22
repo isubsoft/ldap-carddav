@@ -833,7 +833,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 	trigger_error("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore this error.", E_USER_NOTICE);
 	
 						$this->addChange($addressBookId, $cardUri);
-						throw new SabreDAVException\Conflict("No backend contact found. The backend contact may have been deleted by some other application/process.");
+						throw new SabreDAVException\Conflict("The contact you are trying to update does not exist in the backend. The backend contact may have been deleted by some other application/process.");
 					}
 						
 					if($fieldAclEval == 'w')
