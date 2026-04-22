@@ -486,8 +486,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					throw new SabreDAVException\ServiceUnavailable();
 				}
 					
-	      if($data['count'] === 0)
+	      if($data['count'] === 0) {
+					$this->addChange($addressBookId, $cardUri);
 	      	return false;
+	      }
 					
 	      if($data['count'] > 1) {
 					trigger_error("Multiple backend contacts found. Check configuration.", E_USER_WARNING);
