@@ -1939,9 +1939,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
         
         $filter = '(&'.$addressBookConfig['filter']. '(entryuuid=' . ldap_escape($backendId, "", LDAP_ESCAPE_FILTER) . '))';
-				$result = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, (!is_array($attributes) || $attributes == [])?['dn', 'createTimestamp', 'modifyTimestamp']:$attributes, strtolower($addressBookConfig['scope']), $attributesOnly);
+				$data = Utility::LdapQuery($ldapConn, $addressBookDn, $filter, (!is_array($attributes) || $attributes == [])?['dn', 'createTimestamp', 'modifyTimestamp']:$attributes, strtolower($addressBookConfig['scope']), $attributesOnly);
               
-        return !is_array($result)?false:$result;
+        return !is_array($data)?false:$data;
     }
     
 
@@ -1975,9 +1975,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					return false;
         }
         
-				$result = $this->fetchLdapContactDataById($addressBookId, $backendId, $attributes, $attributesOnly);
+				$data = $this->fetchLdapContactDataById($addressBookId, $backendId, $attributes, $attributesOnly);
              
-        return !is_array($result)?false:$result;
+        return !is_array($data)?false:$data;
     }
 
 
