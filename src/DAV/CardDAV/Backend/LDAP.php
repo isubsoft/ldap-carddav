@@ -901,8 +901,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 								throw new SabreDAVException\BadRequest("Required fields not present or do not have write access");
 				    }
 				    
-				    	if(array_key_exists($rdnField, $ldapInfo))
-								$newLdapRdn = $rdnField . '=' . ldap_escape(is_array($ldapInfo[$rdnField])?$ldapInfo[$rdnField][0]:$ldapInfo[$rdnField], "", LDAP_ESCAPE_DN);
+			    	if(array_key_exists($rdnField, $ldapInfo))
+							$newLdapRdn = $rdnField . '=' . ldap_escape(is_array($ldapInfo[$rdnField])?$ldapInfo[$rdnField][0]:$ldapInfo[$rdnField], "", LDAP_ESCAPE_DN);
 					}
 
 					$oldLdapTree = $oldLdapInfo[0]['dn'];
