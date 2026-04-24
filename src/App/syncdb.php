@@ -18,9 +18,9 @@ function printHelp($argv)
 	error_log("housekeeping:     Physically delete logically deleted records.");
 	error_log("");
 	error_log("-- Parameter(s) for action manage. Omitting any optional parameter below may turn on interactive mode to obtain it.");
-	error_log("  user: (optional) Manage a user.");
+	error_log("  user: (optional) Manage a user. Currently this parameter also implies the below 'delete' parameter.");
 	error_log("    delete: (optional) Delete a user.");
-	error_log("      <user_id>: (optional) entryUUID of the user from backend.");
+	error_log("      <user_id>: (optional) entryUUID of the user from backend. WARNING: If this parameter is provided no confirmation will be taken before execution. So use this parameter only in a non-interactive or batch process.");
 	error_log("");
 	error_log("  addressbook: (optional) Manage an address book.");
 	error_log("    list:   (optional) List address book(s) present in sync database.");
@@ -317,10 +317,18 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 			}
 			else
 			{
-				error_log("[ERROR] User id not provided.");
-  			error_log("");
-				printHelp($argv);
-				exit(1);
+				$oldUserId = readline("Enter the backend user id to delete: ");
+				
+				if($oldUserId == null || $oldUserId == '')
+				{
+					error_log("[ERROR] User id not provided.");
+					exit(1);
+				}
+				
+				$confirm = readline("Are you sure you want to proceed (y/N): ");
+				
+				if($confirm == '' || ($confirm != 'Y' && $confirm != 'y'))
+					exit;
 			}
 		}
 		else if(!isset($argv[3]))
