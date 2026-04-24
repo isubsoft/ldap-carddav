@@ -139,7 +139,7 @@ function addAddressBook($addressbookName = null)
 		$query = 'INSERT INTO '. $addressBooksTableName .' (addressbook_id, user_specific, writable) VALUES (?, ?, ?)';
 		$stmt = $pdo->prepare($query);
 		$stmt->execute([$addressbookName, $userSpecific, $writable]);
-		echo "Address book '$addressbookName' has been successfully added to sync database.\n";
+		echo "Address book '$addressbookName' has been successfully added to sync database." . PHP_EOL;
     
   	} catch (\Throwable $th) {
 			trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
@@ -171,7 +171,7 @@ if(isset($argv[1]) && $argv[1] == 'help')
 }
 else if(isset($argv[1]) && $argv[1] == 'init')
 {
-		echo "Initializing sync database ...\n";
+		echo "Initializing sync database ..." . PHP_EOL;
 		
 		if($initialized)
 		{
@@ -196,7 +196,7 @@ else if(isset($argv[1]) && $argv[1] == 'init')
           	}
       	}
       
-      	echo "Address book(s) successfully imported.\n";
+      	echo "Address book(s) successfully imported." . PHP_EOL;
 
     } catch (\Throwable $th) {
 			trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
@@ -218,7 +218,7 @@ elseif(isset($argv[1]) && $argv[1] == 'housekeeping')
 		exit(1);
 	}
 			
-	echo "Housekeeping sync database ...\n";
+	echo "Housekeeping sync database ..." . PHP_EOL;
 	
 	try {
 		$query1 = 'SELECT t1.user_id, t1.addressbook_id, t1.card_uri FROM ' . $backendMapTableName . ' AS t1 WHERE t1.delete_sync_token IS NOT NULL AND t1.delete_sync_token < (SELECT t2.sync_token FROM ' . $fullSyncTableName . ' AS t2 WHERE t2.user_id = t1.user_id AND t2.addressbook_id = t1.addressbook_id)';
@@ -262,8 +262,8 @@ elseif(isset($argv[1]) && $argv[1] == 'housekeeping')
 		exit(1);
 	}
 	
-	echo "Complete\n";
-	echo "[NOTE] After this action sync database table(s) '$backendMapTableName' may need optimization (re-indexing/re-build). Use native database command(s) to achieve the same.\n";
+	echo "Complete" . PHP_EOL;
+	echo "[NOTE] After this action sync database table(s) '$backendMapTableName' may need optimization (re-indexing/re-build). Use native database command(s) to achieve the same." . PHP_EOL;
 	exit;
 }
 
@@ -290,14 +290,14 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 	}
 	else
 	{
-		echo "-- Choose the object you want to manage --\n";
+		echo "-- Choose the object you want to manage --" . PHP_EOL;
 		
 		foreach($options as $key => $value)
-			echo $key . " for " . $value . "\n";
+			echo $key . " for " . $value . PHP_EOL;
 			
 		$choice = readline("Enter choice: ");
 		
-		echo "\n";
+		echo PHP_EOL;
 		
 		if(!array_key_exists($choice, $options))
 		{
@@ -325,7 +325,7 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 		}
 		else if(!isset($argv[3]))
 		{
-			$oldUserId = readline("\nEnter the backend user id to delete: ");
+			$oldUserId = readline("Enter the backend user id to delete: ");
 			
 			if($oldUserId == null || $oldUserId == '')
 			{
@@ -333,7 +333,7 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 				exit(1);
 			}
 			
-			$confirm = readline("\nAre you sure you want to proceed (y/N): ");
+			$confirm = readline("Are you sure you want to proceed (y/N): ");
 			
 			if($confirm == '' || ($confirm != 'Y' && $confirm != 'y'))
 				exit;
@@ -357,9 +357,9 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 		  		exit(1);
 			}
 
-			echo "User having user id '$oldUserId' has been deleted.\n";
-			echo "[NOTE] After this action sync database table(s) '$backendMapTableName' may need optimization (re-indexing/re-build). Use native database command(s) to achieve the same.\n";
-			echo "[NOTE] After this action sync database table(s) '$userTableName' may need optimization (re-indexing/re-build) (if you have deleted a large number of '$options[$choice]' objects). Use native database command(s) to achieve the same.\n";
+			echo "User having user id '$oldUserId' has been deleted." . PHP_EOL;
+			echo "[NOTE] After this action sync database table(s) '$backendMapTableName' may need optimization (re-indexing/re-build). Use native database command(s) to achieve the same." . PHP_EOL;
+			echo "[NOTE] After this action sync database table(s) '$userTableName' may need optimization (re-indexing/re-build) (if you have deleted a large number of '$options[$choice]' objects). Use native database command(s) to achieve the same." . PHP_EOL;
 		} catch (\Throwable $th) {
 			trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 			exit(1);
@@ -380,14 +380,14 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 		}
 		else
 		{
-			echo "-- Choose the operation to perform on a address book --\n";
+			echo "-- Choose the operation to perform on a address book --" . PHP_EOL;
 			
 			foreach($options as $key => $value)
-				echo $key . " to " . $value . "\n";
+				echo $key . " to " . $value . PHP_EOL;
 				
 			$choice = readline("Enter choice: ");
 			
-			echo "\n";
+			echo PHP_EOL;
 			
 			if(!array_key_exists($choice, $options))
 			{
@@ -401,16 +401,16 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 				$addressBooks = getAddressBooks();
 
 				if(count($addressBooks) < 1) {
-					echo "[INFO] No address book present in sync database. Quitting.\n";
+					echo "[INFO] No address book present in sync database. Quitting." . PHP_EOL;
 					exit;
 				}
 				
-				echo "-- Address books present in sync database [ id => info ] --\n";
+				echo "-- Address books present in sync database [ id => info ] --" . PHP_EOL;
 				
 				foreach($addressBooks as $addressbookId => $addressbookConfig)
-					echo $addressbookId . " => " . json_encode($addressbookConfig, JSON_NUMERIC_CHECK) . "\n";
+					echo $addressbookId . " => " . json_encode($addressbookConfig, JSON_NUMERIC_CHECK) . PHP_EOL;
 					
-				echo "\n";
+				echo PHP_EOL;
 			}
 			
 			if($options[$choice] == 'list')
@@ -420,19 +420,19 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 				$notImportedAddressBooks = getNotImportedAddressBooks();
 				
 				if(count($notImportedAddressBooks) < 1) {
-					echo "[INFO] No address book available to " . $options[$choice] . ". Quitting.\n";
+					echo "[INFO] No address book available to " . $options[$choice] . ". Quitting." . PHP_EOL;
 					exit;
 				}
 				
-			  echo "-- Address books available in configuration file to " . $options[$choice] . " [ id => info ] --\n";
+			  echo "-- Address books available in configuration file to " . $options[$choice] . " [ id => info ] --" . PHP_EOL;
 
 				foreach($notImportedAddressBooks as $addressbookId => $addressbookConfig)
-					echo $addressbookId . " => " . json_encode($addressbookConfig, JSON_NUMERIC_CHECK) . "\n";
+					echo $addressbookId . " => " . json_encode($addressbookConfig, JSON_NUMERIC_CHECK) . PHP_EOL;
 					
-				echo "\n";
+				echo PHP_EOL;
 			}
 			
-			$oldAddressBook = readline("\nEnter id of the address book to " . $options[$choice] . ": ");
+			$oldAddressBook = readline("Enter id of the address book to " . $options[$choice] . ": ");
 
 			if($oldAddressBook == null || $oldAddressBook == '')
 			{
@@ -447,7 +447,7 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 					exit(1);
 				}
 
-				$confirm = readline("\nAre you sure you want to proceed (y/N): ");
+				$confirm = readline("Are you sure you want to proceed (y/N): ");
 				
 				if($confirm == '' || ($confirm != 'Y' && $confirm != 'y'))
 					exit;
@@ -462,7 +462,7 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 						exit(1);
 					}
 					
-				  $newAddressbook = readline("\nEnter new address book id: ");
+				  $newAddressbook = readline("Enter new address book id: ");
 				  
 					if(array_key_exists($newAddressbook, getAddressBooks())) {
 			  		error_log("[ERROR] Address book '$newAddressbook' is already present in sync database.");
@@ -474,7 +474,7 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 						exit(1);
 					}
 					
-					$confirm = readline("\nAre you sure you want to proceed (y/N): ");
+					$confirm = readline("Are you sure you want to proceed (y/N): ");
 					
 					if($confirm == '' || ($confirm != 'Y' && $confirm != 'y'))
 						exit;
@@ -489,8 +489,8 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 				  	exit(1);
 					}
 
-				  echo "Address book '$oldAddressBook' has been renamed to '$newAddressbook'.\n";
-				  echo "[NOTE] After this action sync database table(s) '$backendMapTableName' may need optimization (re-indexing/re-build). Use native database command(s) to achieve the same.\n";
+				  echo "Address book '$oldAddressBook' has been renamed to '$newAddressbook'." . PHP_EOL;
+				  echo "[NOTE] After this action sync database table(s) '$backendMapTableName' may need optimization (re-indexing/re-build). Use native database command(s) to achieve the same." . PHP_EOL;
 			}
 			else if($options[$choice] == 'delete')
 			{
@@ -504,7 +504,7 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 						exit(1);
 					}
 					
-					$confirm = readline("\nAre you sure you want to proceed (y/N): ");
+					$confirm = readline("Are you sure you want to proceed (y/N): ");
 					
 					if($confirm == '' || ($confirm != 'Y' && $confirm != 'y'))
 						exit;
@@ -519,8 +519,8 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 				  	exit(1);
 					}
 
-				  echo "Address book '". $oldAddressBook ."' has been deleted.\n";
-				  echo "[NOTE] After this action sync database table(s) '$backendMapTableName' may need optimization (re-indexing/re-build). Use native database command(s) to achieve the same.\n";
+				  echo "Address book '". $oldAddressBook ."' has been deleted." . PHP_EOL;
+				  echo "[NOTE] After this action sync database table(s) '$backendMapTableName' may need optimization (re-indexing/re-build). Use native database command(s) to achieve the same." . PHP_EOL;
 			}
 
 		} catch (\Throwable $th) {
