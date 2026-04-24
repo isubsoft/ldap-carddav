@@ -925,15 +925,20 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					
 					$ldapTree = $oldLdapTree;
 					
-					if($newLdapRdn == null)
-						$newLdapRdn = $oldLdapRdn;
+					if($newLdapRdn !== null) {
+						$newLdapRdnSplit = explode('=', $newLdapRdn); 
+						$newLdapRdnAttr = $newLdapRdnSplit[0];
+						$newLdapRdnValue = Utility::decodeHexInString($newLdapRdnSplit[1]);
+						$oldLdapRdnSplit = explode('=', $oldLdapRdn);
+						$oldLdapRdnAttr = $oldLdapRdnSplit[0];
+						$oldLdapRdnValue = Utility::decodeHexInString($oldLdapRdnSplit[1]);
 
-					if($newLdapRdn != $oldLdapRdn)
-					{
-						if(!ldap_rename($ldapConn, $oldLdapTree, $newLdapRdn, null, false))
-							throw new SabreDAVException\BadRequest("Card with same name may already exist");
-							
-						$ldapTree = $newLdapRdn . ',' . $parentOldLdapTree;
+						if(strtolower($newLdapRdnAttr) != strtolower($oldLdapRdnAttr) || $newLdapRdnValue != $oldLdapRdnValue) {
+							if(!ldap_rename($ldapConn, $oldLdapTree, $newLdapRdn, null, false))
+								throw new SabreDAVException\BadRequest("Card with same name may already exist");
+								
+							$ldapTree = $newLdapRdn . ',' . $parentOldLdapTree;
+						}
 					}
 
 					if(!ldap_mod_replace($ldapConn, $ldapTree, $ldapInfo))
