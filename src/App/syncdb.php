@@ -142,7 +142,7 @@ function addAddressBook($addressbookName = null)
 		$stmt->bindValue(2, $userSpecific, PDO::PARAM_BOOL);
 		$stmt->bindValue(3, $writable, PDO::PARAM_BOOL);
 		$stmt->execute();
-		echo "Address book '$addressbookName' has been successfully added to sync database." . PHP_EOL;
+		echo "Address book '$addressbookName' added to sync database." . PHP_EOL;
     
   	} catch (\Throwable $th) {
 			trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
@@ -183,20 +183,21 @@ else if(isset($argv[1]) && $argv[1] == 'init')
 		}
 		
     try {
-      	if(isset($config['card']['addressbook']['ldap']))
+      	if(isset($config['card']['addressbook']['ldap']) && is_array($config['card']['addressbook']['ldap']))
       	{
+						$pdo->beginTransaction();
+						
           	foreach($config['card']['addressbook']['ldap'] as $addressBooksName => $values)
           	{
           		if(addAddressBook($addressBooksName) == false)
           		{
-          			error_log("[ERROR] Failed to add address book '$addressBooksName'. Sync database initialization failed. Reverting changes.");
-          		
-								$query = 'DELETE FROM '. $addressBooksTableName;
-								$stmt = $pdo->prepare($query);
-								$stmt->execute([]);
+								$pdo->rollback();
+          			error_log("[ERROR] Failed to add address book '$addressBooksName'. Sync database initialization failed. All initialization changes reverted.");
 								exit(1);
           		}
           	}
+          	
+          	$pdo->commit();
       	}
       
       	echo "Address book(s) successfully imported." . PHP_EOL;
