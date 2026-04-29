@@ -155,7 +155,7 @@ function addAddressBook($addressbookName = null)
 try {
 	$query = 'SELECT * FROM '. $addressBooksTableName;
 	$stmt = $pdo->prepare($query);
-	$stmt->execute([]);
+	$stmt->execute();
 
 	$row = $stmt->fetch(\PDO::FETCH_ASSOC);
 
