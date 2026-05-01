@@ -138,7 +138,7 @@ function addAddressBook($addressbookName = null)
 	  
 		$query = 'INSERT INTO '. $addressBooksTableName .' (addressbook_id, user_specific, writable) VALUES (?, ?, ?)';
 		$stmt = $pdo->prepare($query);
-		$stmt->execute([$addressbookName, $userSpecific, $writable]);
+		$stmt->execute([$addressbookName, (int)$userSpecific, (int)$writable]);
 		echo "Address book '$addressbookName' has been successfully added to sync database." . PHP_EOL;
     
   	} catch (\Throwable $th) {
@@ -188,9 +188,9 @@ else if(isset($argv[1]) && $argv[1] == 'init')
           		{
           			error_log("[ERROR] Failed to add address book '$addressBooksName'. Sync database initialization failed. Reverting changes.");
           		
-								$query = 'DELETE * FROM '. $addressBooksTableName;
+								$query = 'DELETE FROM '. $addressBooksTableName;
 								$stmt = $pdo->prepare($query);
-								$stmt->execute([]);
+								$stmt->execute();
 								exit(1);
           		}
           	}
