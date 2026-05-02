@@ -178,7 +178,7 @@ else if(isset($argv[1]) && $argv[1] == 'init')
 		
 		if($initialized)
 		{
-			error_log("[NOTE] Sync database has already been initialized");
+			echo "[NOTE] Sync database has already been initialized." . PHP_EOL;
 		  exit;
 		}
 		
@@ -273,8 +273,8 @@ elseif(isset($argv[1]) && $argv[1] == 'housekeeping')
 
 if(!$initialized)
 {
-  	error_log("[NOTE] Sync database has not been initialized. Initialize it first.");
-  	error_log("");
+  	echo "[NOTE] Sync database has not been initialized. Initialize it first." . PHP_EOL;
+		error_log("");
 		printHelp($argv);
   	exit(1);
 }
