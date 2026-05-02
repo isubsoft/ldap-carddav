@@ -207,6 +207,7 @@ else if(isset($argv[1]) && $argv[1] == 'init')
       exit(1);
     }
     
+	echo "[NOTE] Initialization complete." . PHP_EOL;
   exit;
 }
 elseif(isset($argv[1]) && $argv[1] == 'housekeeping')
