@@ -138,10 +138,7 @@ function addAddressBook($addressbookName = null)
 	  
 		$query = 'INSERT INTO '. $addressBooksTableName .' (addressbook_id, user_specific, writable) VALUES (?, ?, ?)';
 		$stmt = $pdo->prepare($query);
-		$stmt->bindValue(1, $addressbookName);
-		$stmt->bindValue(2, $userSpecific, PDO::PARAM_BOOL);
-		$stmt->bindValue(3, $writable, PDO::PARAM_BOOL);
-		$stmt->execute();
+		$stmt->execute([$addressbookName, (int)$userSpecific, (int)$writable]);
 		echo "Address book '$addressbookName' added to sync database." . PHP_EOL;
     
   	} catch (\Throwable $th) {
