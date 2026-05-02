@@ -995,28 +995,14 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 								// Updating the card as new which was earlier marked as deleted.
 								if($row['delete_sync_token'] != null) {
 									$query = "UPDATE " . self::$backendMapTableName . " SET delete_sync_token = null, modify_sync_token = null, create_sync_token = ?, card_uid = ?, backend_id = ? WHERE user_id = ? AND addressbook_id = ? AND card_uri = ?";
-									$stmt2 = $this->pdo->prepare($query);
-									
-									$stmt2->bindValue(1, time(), \PDO::PARAM_INT);
-									$stmt2->bindValue(2, ($cardUid == null)?$this->guidv4():$cardUid);
-									$stmt2->bindValue(3, $backendId);
-									$stmt2->bindValue(4, $syncDbUserId);
-									$stmt2->bindValue(5, $addressBookId);
-									$stmt2->bindValue(6, $cardUri);
-									$stmt2->execute();
+									$sql = $this->pdo->prepare($query);
+									$sql->execute([time(), ($cardUid == null)?$this->guidv4():$cardUid, $backendId, $syncDbUserId, $addressBookId, $cardUri]);
 								}
 							}
 							else {
 						    $query = "INSERT INTO " . self::$backendMapTableName . " (user_id, addressbook_id, card_uri, card_uid, backend_id, create_sync_token)  VALUES (?, ?, ?, ?, ?, ?)";
-						    $stmt2 = $this->pdo->prepare($query);
-						    
-						    $stmt2->bindValue(1, $syncDbUserId);
-						    $stmt2->bindValue(2, $addressBookId);
-						    $stmt2->bindValue(3, $cardUri);
-						    $stmt2->bindValue(4, ($cardUid == null)?$this->guidv4():$cardUid);
-						    $stmt2->bindValue(5, $backendId);
-						    $stmt2->bindValue(6, time(), \PDO::PARAM_INT);
-						    $stmt2->execute();
+						    $sql = $this->pdo->prepare($query);
+						    $sql->execute([$syncDbUserId, $addressBookId, $cardUri, ($cardUid == null)?$this->guidv4():$cardUid, $backendId, time()]);
 							}
 				    } catch (\Throwable $th) {
 							trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
@@ -1763,13 +1749,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							// Updating the card as new which was earlier marked as deleted.
 							if($row['delete_sync_token'] != null) {
 								$query = "UPDATE " . self::$backendMapTableName . " SET delete_sync_token = null, modify_sync_token = null, create_sync_token = ? WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?";
-								$stmt2 = $this->pdo->prepare($query);
-								
-								$stmt2->bindValue(1, time(), \PDO::PARAM_INT);
-								$stmt2->bindValue(2, $syncDbUserId);
-								$stmt2->bindValue(3, $addressBookId);
-								$stmt2->bindValue(4, $backendId);
-								$stmt2->execute();
+								$sql = $this->pdo->prepare($query);
+								$sql->execute([time(), $syncDbUserId, $addressBookId, $backendId]);
 							}
 						}
 						else {
@@ -1777,15 +1758,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							$cardUri = $cardUid .'.vcf';
 									
 							$query = "INSERT INTO " . self::$backendMapTableName . " (user_id, addressbook_id, card_uri, card_uid, backend_id, create_sync_token)  VALUES (?, ?, ?, ?, ?, ?)";
-							$stmt2 = $this->pdo->prepare($query);
-							
-							$stmt2->bindValue(1, $syncDbUserId);
-							$stmt2->bindValue(2, $addressBookId);
-							$stmt2->bindValue(3, $cardUri);
-							$stmt2->bindValue(4, $cardUid);
-							$stmt2->bindValue(5, $backendId);
-							$stmt2->bindValue(6, time(), \PDO::PARAM_INT);
-							$stmt2->execute();
+							$sql = $this->pdo->prepare($query);
+							$sql->execute([$syncDbUserId, $addressBookId, $cardUri, $cardUid, $backendId, time()]);
 						}
 					} catch (\Throwable $th) {
 						trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
@@ -1821,13 +1795,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							// Updating the card as new which was earlier marked as deleted.
 							if($row['delete_sync_token'] != null) {
 								$query = "UPDATE " . self::$backendMapTableName . " SET delete_sync_token = null, modify_sync_token = null, create_sync_token = ? WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?";
-								$stmt2 = $this->pdo->prepare($query);
-								
-								$stmt2->bindValue(1, time(), \PDO::PARAM_INT);
-								$stmt2->bindValue(2, $syncDbUserId);
-								$stmt2->bindValue(3, $addressBookId);
-								$stmt2->bindValue(4, $backendId);
-								$stmt2->execute();
+								$sql = $this->pdo->prepare($query);
+								$sql->execute([time(), $syncDbUserId, $addressBookId, $backendId]);
 								
 								continue;
 							}
@@ -1839,15 +1808,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							$cardUri = $cardUid .'.vcf';
 									
 							$query = "INSERT INTO " . self::$backendMapTableName . " (user_id, addressbook_id, card_uri, card_uid, backend_id, create_sync_token)  VALUES (?, ?, ?, ?, ?, ?)";
-							$stmt2 = $this->pdo->prepare($query);
-							
-							$stmt2->bindValue(1, $syncDbUserId);
-							$stmt2->bindValue(2, $addressBookId);
-							$stmt2->bindValue(3, $cardUri);
-							$stmt2->bindValue(4, $cardUid);
-							$stmt2->bindValue(5, $backendId);
-							$stmt2->bindValue(6, time(), \PDO::PARAM_INT);
-							$stmt2->execute();
+							$sql = $this->pdo->prepare($query);
+							$sql->execute([$syncDbUserId, $addressBookId, $cardUri, $cardUid, $backendId, time()]);
 							
 							continue;
 						}
@@ -1874,12 +1836,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				
         try {
 					$query = "UPDATE " . self::$backendSyncTableName . " SET sync_token = ? WHERE user_id = ? AND addressbook_id = ?"; 
-					$stmt2 = $this->pdo->prepare($query);
-					
-					$stmt2->bindValue(1, $addressBookSyncToken, \PDO::PARAM_INT);
-					$stmt2->bindValue(2, $syncDbUserId);
-					$stmt2->bindValue(3, $addressBookId);
-					$stmt2->execute();
+					$sql = $this->pdo->prepare($query);
+					$sql->execute([$addressBookSyncToken, $syncDbUserId, $addressBookId]);
 				} catch (\Throwable $th) {
 					trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 					throw new SabreDAVException\ServiceUnavailable();
@@ -1892,12 +1850,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				// Fetch new contacts
 				$query = 'SELECT card_uri FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ? AND delete_sync_token IS NULL AND create_sync_token >= ? AND create_sync_token < ?';
 				$stmt = $this->pdo->prepare($query);
-				
-				$stmt->bindValue(1, $syncDbUserId);
-				$stmt->bindValue(2, $addressBookId);
-				$stmt->bindValue(3, $syncToken, \PDO::PARAM_INT);
-				$stmt->bindValue(4, $addressBookSyncToken, \PDO::PARAM_INT);
-				$stmt->execute();
+				$stmt->execute([$syncDbUserId, $addressBookId, $syncToken, $addressBookSyncToken]);
 					
 				while($row = $stmt->fetch(\PDO::FETCH_ASSOC))
 				{
@@ -1908,13 +1861,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				// Fetch modified contacts
 				$query = 'SELECT card_uri FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ? AND delete_sync_token IS NULL AND create_sync_token < ? AND modify_sync_token IS NOT NULL AND modify_sync_token >= ? AND modify_sync_token < ?';
 				$stmt = $this->pdo->prepare($query);
-				
-				$stmt->bindValue(1, $syncDbUserId);
-				$stmt->bindValue(2, $addressBookId);
-				$stmt->bindValue(3, $syncToken, \PDO::PARAM_INT);
-				$stmt->bindValue(4, $syncToken, \PDO::PARAM_INT);
-				$stmt->bindValue(5, $addressBookSyncToken, \PDO::PARAM_INT);
-				$stmt->execute();
+				$stmt->execute([$syncDbUserId, $addressBookId, $syncToken, $syncToken, $addressBookSyncToken]);
 					
 				while($row = $stmt->fetch(\PDO::FETCH_ASSOC))
 				{
@@ -1925,12 +1872,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				// Fetch deleted contacts
 				$query = 'SELECT card_uri FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ? AND delete_sync_token IS NOT NULL AND delete_sync_token >= ? AND delete_sync_token < ?';
 				$stmt = $this->pdo->prepare($query);
-				
-				$stmt->bindValue(1, $syncDbUserId);
-				$stmt->bindValue(2, $addressBookId);
-				$stmt->bindValue(3, $syncToken, \PDO::PARAM_INT);
-				$stmt->bindValue(4, $addressBookSyncToken, \PDO::PARAM_INT);
-				$stmt->execute();
+				$stmt->execute([$syncDbUserId, $addressBookId, $syncToken, $addressBookSyncToken]);
 					
 				while($row = $stmt->fetch(\PDO::FETCH_ASSOC))
 				{
@@ -1963,13 +1905,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         {
 		      try {
 		        $query = "UPDATE " . self::$backendMapTableName . " SET delete_sync_token = ? WHERE addressbook_id = ? AND card_uri = ? AND user_id = ? AND delete_sync_token IS NULL"; 
-		        $stmt2 = $this->pdo->prepare($query);
-		        
-		        $stmt2->bindValue(1, time(), \PDO::PARAM_INT);
-		        $stmt2->bindValue(2, $addressBookId);
-		        $stmt2->bindValue(3, $objectUri);
-		        $stmt2->bindValue(4, $syncDbUserId);
-		        $stmt2->execute();
+		        $sql = $this->pdo->prepare($query);
+		        $sql->execute([time(), $addressBookId, $objectUri, $syncDbUserId]);
 		      } catch (\Throwable $th) {
 						trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 						return false;
@@ -1979,13 +1916,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         {
 		      try {
 		        $query = "UPDATE " . self::$backendMapTableName . " SET modify_sync_token = ? WHERE addressbook_id = ? AND card_uri = ? AND user_id = ? AND delete_sync_token IS NULL"; 
-		        $stmt2 = $this->pdo->prepare($query);
-		        
-		        $stmt2->bindValue(1, time(), \PDO::PARAM_INT);
-		        $stmt2->bindValue(2, $addressBookId);
-		        $stmt2->bindValue(3, $objectUri);
-		        $stmt2->bindValue(4, $syncDbUserId);
-		        $stmt2->execute();
+		        $sql = $this->pdo->prepare($query);
+		        $sql->execute([time(), $addressBookId, $objectUri, $syncDbUserId]);
 		      } catch (\Throwable $th) {
 						trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 						return false;
@@ -2162,15 +2094,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							$cardUri = $cardUid .'.vcf';
 									
 							$query = "INSERT INTO " . self::$backendMapTableName . " (user_id, addressbook_id, card_uri, card_uid, backend_id, create_sync_token)  VALUES (?, ?, ?, ?, ?, ?)";
-							$stmt2 = $this->pdo->prepare($query);
-							
-							$stmt2->bindValue(1, $syncDbUserId);
-							$stmt2->bindValue(2, $addressBookId);
-							$stmt2->bindValue(3, $cardUri);
-							$stmt2->bindValue(4, $cardUid);
-							$stmt2->bindValue(5, $backendId);
-							$stmt2->bindValue(6, time(), \PDO::PARAM_INT);
-							$stmt2->execute();
+							$sql = $this->pdo->prepare($query);
+							$sql->execute([$syncDbUserId, $addressBookId, $cardUri, $cardUid, $backendId, time()]);
 						}
 						else {
 							$cardUid = $row['card_uid'];
@@ -2179,13 +2104,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							// Updating the card as new which was earlier marked as deleted.
 							if($row['delete_sync_token'] != null) {
 								$query = "UPDATE " . self::$backendMapTableName . " SET delete_sync_token = null, modify_sync_token = null, create_sync_token = ? WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?";
-								$stmt2 = $this->pdo->prepare($query);
-								
-								$stmt2->bindValue(1, time(), \PDO::PARAM_INT);
-								$stmt2->bindValue(2, $syncDbUserId);
-								$stmt2->bindValue(3, $addressBookId);
-								$stmt2->bindValue(4, $backendId);
-								$stmt2->execute();
+								$sql = $this->pdo->prepare($query);
+								$sql->execute([time(), $syncDbUserId, $addressBookId, $backendId]);
 							}
 							else {
 								$cardValues = $this->cache->get(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null);
@@ -2238,22 +2158,14 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         
         try {
 					$query = "UPDATE " . self::$fullRefreshTableName . " SET sync_token = ? WHERE user_id = ? AND addressbook_id = ?"; 
-					$stmt2 = $this->pdo->prepare($query);
+					$sql = $this->pdo->prepare($query);
+					$sql->execute([$addressBookSyncToken, $syncDbUserId, $addressBookId]);
 					
-					$stmt2->bindValue(1, $addressBookSyncToken, \PDO::PARAM_INT);
-					$stmt2->bindValue(2, $syncDbUserId);
-					$stmt2->bindValue(3, $addressBookId);
-					$stmt2->execute();
-					
-					if(!$stmt2->rowCount() > 0)
+					if(!$sql->rowCount() > 0)
 					{
 						$query = "INSERT INTO " . self::$fullRefreshTableName . " (user_id, addressbook_id, sync_token) VALUES (?, ?, ?)"; 
-						$stmt3 = $this->pdo->prepare($query);
-						
-						$stmt3->bindvalue(1, $syncDbUserId);
-						$stmt3->bindvalue(2, $addressBookId);
-						$stmt3->bindvalue(3, $addressBookSyncToken, \PDO::PARAM_INT);
-						$stmt3->execute();
+						$sql = $this->pdo->prepare($query);
+						$sql->execute([$syncDbUserId, $addressBookId, $addressBookSyncToken]);
 					}
 				} catch (\Throwable $th) {
 					trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
@@ -2289,7 +2201,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		    if($row === false)
         	throw new SabreDAVException\ServiceUnavailable();
 		    	
-		    return (bool)$row['writable'];
+		    return $row['writable'];
 		  } 
 		  catch (\Throwable $th) {
 				trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
@@ -2326,11 +2238,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					{
 						$query = "INSERT INTO " . self::$backendSyncTableName . " (user_id, addressbook_id, sync_token) VALUES (?, ?, ?)"; 
 						$stmt = $this->pdo->prepare($query);
-						
-						$stmt->bindValue(1, $syncDbUserId);
-						$stmt->bindValue(2, $addressBookId);
-						$stmt->bindValue(3, $addressBookSyncToken, \PDO::PARAM_INT);
-						$stmt->execute();
+						$stmt->execute([$syncDbUserId, $addressBookId, $addressBookSyncToken]);
 					}
 
 			} catch (\Throwable $th) {
@@ -2352,11 +2260,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					{
 						$query = "INSERT INTO " . self::$fullSyncTableName . " (user_id, addressbook_id, sync_token) VALUES (?, ?, ?)"; 
 						$stmt = $this->pdo->prepare($query);
-						
-						$stmt->bindValue(1, $syncDbUserId);
-						$stmt->bindValue(2, $addressBookId);
-						$stmt->bindValue(3, $addressBookSyncToken, \PDO::PARAM_INT);
-						$stmt->execute();
+						$stmt->execute([$syncDbUserId, $addressBookId, $addressBookSyncToken]);
 					}
 
 			} catch (\Throwable $th) {
@@ -2368,11 +2272,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		    try {
 					$query = "UPDATE " . self::$fullSyncTableName . " SET sync_token = ? WHERE user_id = ? AND addressbook_id = ?"; 
 					$stmt = $this->pdo->prepare($query);
-					
-					$stmt->bindValue(1, $addressBookSyncToken, \PDO::PARAM_INT);
-					$stmt->bindValue(2, $syncDbUserId);
-					$stmt->bindValue(3, $addressBookId);
-					$stmt->execute();
+					$stmt->execute([$addressBookSyncToken, $syncDbUserId, $addressBookId]);
 				} catch (\Throwable $th) {
 					trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 				}
