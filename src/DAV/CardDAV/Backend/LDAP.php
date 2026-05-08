@@ -287,7 +287,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					  	continue;
 					  }
 					  	
-						if(!isset($addressBookConfig['user_specific']) || $addressBookConfig['user_specific'] !== (bool)$row['user_specific'] || !isset($addressBookConfig['writable']) || $addressBookConfig['writable'] !== (bool)$row['writable'])
+						if(!isset($addressBookConfig['user_specific']) || $addressBookConfig['user_specific'] !== (bool)((int)$row['user_specific']) || !isset($addressBookConfig['writable']) || $addressBookConfig['writable'] !== (bool)((int)$row['writable']))
 						{
 							trigger_error("Configured values do not match that of sync database for address book '$addressBookId'. Address book excluded.", E_USER_NOTICE);
 							continue;
