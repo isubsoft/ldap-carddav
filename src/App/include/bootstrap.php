@@ -85,8 +85,11 @@ try {
 		$pdo_dsn = replacePlaceholder('%datadir', __DATA_DIR__, $pdo_dsn);
     $pdo = new PDO($pdo_dsn, $pdo_username, $pdo_password, $pdo_options);
     
-    // Setting mandatory database connection attributes
+    // Setting database connection attributes needed by this application
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo->setAttribute(PDO::ATTR_ORACLE_NULLS, PDO::NULL_NATURAL);
+    $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+    $pdo->setAttribute(PDO::ATTR_STRINGIFY_FETCHES, false);
     
     $db_init_commands = (isset($config['sync_database']['init_commands']) && is_array($config['sync_database']['init_commands']))?$config['sync_database']['init_commands']:[];
     $applicable_db_init_commands = [];

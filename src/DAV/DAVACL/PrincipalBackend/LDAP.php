@@ -271,80 +271,95 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         $attributes[] = 'entryuuid';
 
         $data = Utility::LdapQuery($ldapConn, $ldaptree, $filter, $attributes, strtolower($this->config['principal']['ldap']['search_scope']));
+        
+        if($data === false) {
+        	trigger_error("Could not execute backend search.", E_USER_WARNING);
+        	throw new SabreDAVException\ServiceUnavailable();
+        }
+        
+				if($data['count'] === 0)
+        	return [];
+        
+        if($data['count'] > 1) {
+        	trigger_error("Backend search for principal id '$principalId' returned multiple principals. Check configuration.", E_USER_WARNING);
+        	throw new SabreDAVException\ServiceUnavailable();
+    		}
                     
-        if(!empty($data) && $data['count'] === 1)
-        {
-		 			if(!isset($data[0]['entryuuid'][0]))
-		 			{
-						trigger_error("Could not obtain backend id for principal uri '$path'. Check backend access privileges.", E_USER_WARNING);
-		 				throw new SabreDAVException\ServiceUnavailable();
-		 			}
-		 			
-					if(isset($configGroupFieldMap[self::$groupMemberProperty]) && isset($data[0][$configGroupFieldMap[self::$groupMemberProperty]]))
-						$isGroupPrincipal = true;
-		 			
-					if(!$isGroupPrincipal) {
-						foreach(self::$mandatoryProperties as $value)
-							if(!isset($data[0][$configFieldMap[$value]][0])) {
-								trigger_error("Mandatory property '$value' value for principal having backend id '" . $data[0]['entryuuid'][0] . "' not present. Check configuration or backend access privileges.", E_USER_WARNING);
-			 					throw new SabreDAVException\ServiceUnavailable();
-							}
-
-				  	$principal = Utility::setResourceProperty(null, $this->fieldMap, $configFieldMap, $data[0]);
-		    	}
-		    	else {
-						foreach($groupMandatoryProperties as $value)
-							if(!isset($data[0][$configGroupFieldMap[$value]][0])) {
-								trigger_error("Mandatory property '$value' value for principal group having backend id '" . $data[0]['entryuuid'][0] . "' not present. Check configuration or backend access privileges.", E_USER_WARNING);
-			 					throw new SabreDAVException\ServiceUnavailable();
-							}
-							
-				  	$principal = Utility::setResourceProperty(null, $this->fieldMap, $configGroupFieldMap, $data[0]);
-						$principal['__extra_properties'][self::$groupMemberProperty] = [];
-				  	
- 						// Adding members
-						for($index=0; $index<$data[0][$configGroupFieldMap[self::$groupMemberProperty]]['count']; $index++) {
-							$memberDn = $data[0][$configGroupFieldMap[self::$groupMemberProperty]][$index];
-							$filter = Utility::replacePlaceholders($this->config['principal']['ldap']['search_filter'], ['%u' => ldap_escape($currentUserPrincipalId, "", LDAP_ESCAPE_FILTER)]);
-							
-        			$memberData = Utility::LdapQuery($ldapConn, $memberDn, $filter, $attributes, 'base');
-							
-							if(!empty($memberData)) {
-								if(isset($memberData[0][$configGroupFieldMap[self::$groupMemberProperty]]) && isset($memberData[0][$configGroupFieldMap['id']]))
-									$principal['__extra_properties'][self::$groupMemberProperty][] = $prefixPath . '/' . $memberData[0][$configGroupFieldMap['id']][0];
-								elseif(isset($memberData[0][$configFieldMap['id']]))
-									$principal['__extra_properties'][self::$groupMemberProperty][] = $prefixPath . '/' . $memberData[0][$configFieldMap['id']][0];
-							}
+	 			if(!isset($data[0]['entryuuid'][0]))
+	 			{
+					trigger_error("Could not obtain backend id for principal '$principalId'. Check access privileges in backend.", E_USER_WARNING);
+	 				throw new SabreDAVException\ServiceUnavailable();
+	 			}
+	 			
+				if(isset($configGroupFieldMap[self::$groupMemberProperty]) && isset($data[0][$configGroupFieldMap[self::$groupMemberProperty]]))
+					$isGroupPrincipal = true;
+	 			
+				if(!$isGroupPrincipal) {
+					foreach(self::$mandatoryProperties as $value)
+						if(!isset($data[0][$configFieldMap[$value]][0])) {
+							trigger_error("Mandatory property '$value' value for principal having backend id '" . $data[0]['entryuuid'][0] . "' not present. Check configuration or backend access privileges.", E_USER_WARNING);
+		 					throw new SabreDAVException\ServiceUnavailable();
 						}
+
+			  	$principal = Utility::setResourceProperty(null, $this->fieldMap, $configFieldMap, $data[0]);
+	    	}
+	    	else {
+					foreach($groupMandatoryProperties as $value)
+						if(!isset($data[0][$configGroupFieldMap[$value]][0])) {
+							trigger_error("Mandatory property '$value' value for principal group having backend id '" . $data[0]['entryuuid'][0] . "' not present. Check configuration or backend access privileges.", E_USER_WARNING);
+		 					throw new SabreDAVException\ServiceUnavailable();
+						}
+						
+			  	$principal = Utility::setResourceProperty(null, $this->fieldMap, $configGroupFieldMap, $data[0]);
+					$principal['__extra_properties'][self::$groupMemberProperty] = [];
+			  	
+					// Adding members
+					for($index=0; $index<$data[0][$configGroupFieldMap[self::$groupMemberProperty]]['count']; $index++) {
+						$memberDn = $data[0][$configGroupFieldMap[self::$groupMemberProperty]][$index];
+						$filter = Utility::replacePlaceholders($this->config['principal']['ldap']['search_filter'], ['%u' => ldap_escape($currentUserPrincipalId, "", LDAP_ESCAPE_FILTER)]);
+						
+      			$memberData = Utility::LdapQuery($ldapConn, $memberDn, $filter, $attributes, 'base');
+      			
+						if($memberData === false) {
+							trigger_error("Could not execute backend search.", E_USER_WARNING);
+							throw new SabreDAVException\ServiceUnavailable();
+						}
+
+						if(isset($memberData[0][$configGroupFieldMap[self::$groupMemberProperty]]) && isset($memberData[0][$configGroupFieldMap['id']]))
+							$principal['__extra_properties'][self::$groupMemberProperty][] = $prefixPath . '/' . $memberData[0][$configGroupFieldMap['id']][0];
+						elseif(isset($memberData[0][$configFieldMap['id']]))
+							$principal['__extra_properties'][self::$groupMemberProperty][] = $prefixPath . '/' . $memberData[0][$configFieldMap['id']][0];
 					}
-					
-					// Adding group memberships
+				}
+				
+				// Adding group memberships
+		  	if($configGroupFieldMap !== []) {
 					$filter = Utility::replacePlaceholders('(&' . $this->config['principal']['ldap']['search_filter'] . '(' . $configGroupFieldMap[self::$groupMemberProperty] . '=' . ldap_escape($data[0]['dn'], "", LDAP_ESCAPE_FILTER) . '))', ['%u' => ldap_escape($currentUserPrincipalId, "", LDAP_ESCAPE_FILTER)]);
 					$attributes = [$configGroupFieldMap['id']];
 					
 					$groupData = Utility::LdapQuery($ldapConn, $ldaptree, $filter, $attributes, strtolower($this->config['principal']['ldap']['search_scope']));
-					            
-					if(!empty($groupData))
-					{
-						$principal['__extra_properties'][self::$groupMembershipProperty] = [];
-						
-						for($index=0; $index<$groupData['count']; $index++)
-							if(isset($groupData[$index][$configGroupFieldMap['id']]))
-								$principal['__extra_properties'][self::$groupMembershipProperty][] = $prefixPath . '/' . $groupData[$index][$configGroupFieldMap['id']][0];
+					
+					if($groupData === false) {
+						trigger_error("Could not execute backend search.", E_USER_WARNING);
+						throw new SabreDAVException\ServiceUnavailable();
 					}
-					
-					$principal['__extra_properties']['backend_id'] = $data[0]['entryuuid'][0];
-					
-					if(!$this->cache->set(self::getCacheKey($principalId), $principal, (isset($this->config['cache']['principal']['ttl']) && is_int($this->config['cache']['principal']['ttl']) && $this->config['cache']['principal']['ttl'] > 0 && $this->config['cache']['principal']['ttl'] <= 2592000)?$this->config['cache']['principal']['ttl']:self::$cacheTtl))
-						trigger_error("Could not set cache", E_USER_WARNING);
-		      
-		      $principal['id'] = $principalId;
-		      $principal['uri'] = $path;
-		      
-		      return $principal;
-        }
 
-        return [];
+					$principal['__extra_properties'][self::$groupMembershipProperty] = [];
+					
+					for($index=0; $index<$groupData['count']; $index++)
+						if(isset($groupData[$index][$configGroupFieldMap['id']]))
+							$principal['__extra_properties'][self::$groupMembershipProperty][] = $prefixPath . '/' . $groupData[$index][$configGroupFieldMap['id']][0];
+				}
+				
+				$principal['__extra_properties']['backend_id'] = $data[0]['entryuuid'][0];
+				
+				if(!$this->cache->set(self::getCacheKey($principalId), $principal, (isset($this->config['cache']['principal']['ttl']) && is_int($this->config['cache']['principal']['ttl']) && $this->config['cache']['principal']['ttl'] > 0 && $this->config['cache']['principal']['ttl'] <= 2592000)?$this->config['cache']['principal']['ttl']:self::$cacheTtl))
+					trigger_error("Could not set cache", E_USER_WARNING);
+	      
+	      $principal['id'] = $principalId;
+	      $principal['uri'] = $path;
+	      
+	      return $principal;
     }
 
     /**

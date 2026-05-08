@@ -86,15 +86,15 @@ $config['server']['ldap'] = [
 ];
 
 // Caching. Allowed backends are mentioned below.
-// memcached: Memcached server
-// local_fs: Local filesystem
-// apcu: APCu cache ( check https://www.php.net/manual/en/book.apcu.php for details )
-// memory: System memory (for testing purpose only, cache does not persist between requests)
+// memcached: Memcached server.
+// local_fs: Local filesystem. Suitable only for a standalone server.
+// apcu: APCu cache. Suitable only for a standalone server. Check https://www.php.net/manual/en/book.apcu.php for details.
+// memory: System memory (for testing purpose only, cache does not persist between requests).
 
 // Caching backend to enable specific to object type. If not set then caching is disabled.
 // It is strongly recommended to keep caching enabled in a production environment.
-$config['cache']['principal']['backend'] = 'local_fs';
-$config['cache']['card']['backend'] = 'local_fs';
+$config['cache']['principal']['backend'] = 'memory';
+$config['cache']['card']['backend'] = 'memory';
 
 // TTL (in seconds) for cached items. TTL should be greater than 0 or less than or equal to 2592000 (30 days) else 
 // default value will be used.
@@ -154,7 +154,7 @@ $config['auth']['ldap'] = [
 	'search_scope'         => 'list',   // Scope of search
 	                                    //  sub: Subtree
 	                                    // list: Immediate children
-	                                    // base: Match Base DN only
+	                                    // base: Match base DN only
 	                                    
   // DN and password to bind as before searching for bind DN, if anonymous search is not allowed.
   'search_bind_dn' => 'cn=admin,ou=People,dc=example,dc=org',
@@ -163,6 +163,8 @@ $config['auth']['ldap'] = [
 
 
 // Principals.
+//
+// Principal can be an individual user or a group.
 //
 // Should be able to return a few mandatory properties defined in the field map.
 //
@@ -178,7 +180,7 @@ $config['principal']['ldap'] = [
 	'search_scope'         => 'list',   // Scope of search
 	                                    //  sub: Subtree
 	                                    // list: Immediate children
-	                                    // base: Match Base DN only
+	                                    // base: Match base DN only
   
   // DN and password to bind as before searching for pricipal DN(s), if anonymous search is not allowed
   'search_bind_dn' => 'cn=admin,ou=People,dc=example,dc=org',
@@ -239,11 +241,12 @@ $config['card']['addressbook']['ldap']['me'] = [
 	// Defaults to false
 	//  'directory'				=> true,
 	
-	// Enable this address book for group user only. Address books by default are enabled only
-	// for non-group users. You can set the below value to true to enable it for group users only (it will be 
-	// disabled for non-group users). Useful only when user_specific is also set to true.
-	// Defaults to false.
-	//  'enable_only_for_group_user' => true,
+	// An address book can be restricted to a group or to only members of a group and are called shared address 
+	// books. Set the below to true to make this address book a shared address book. These address books are not 
+	// shown in address book list of normal users and need to be accessed via direct address book URI like 
+	// /addressbooks/group-name/addressbook-name/. Takes effect when user_specific is also set to true for this 
+	// address book.
+	//  'shared' => true,
 	
 	// Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
 	// of the address book from backend every time they sync their address book. Set the below to 
@@ -289,7 +292,7 @@ $config['card']['addressbook']['ldap']['me'] = [
 	'scope'         => 'base',   // Scope of search for contacts
 	                             //  sub: Subtree
 	                             // list: Immediate children
-	                             // base: Match Base DN only
+	                             // base: Match base DN only
 	
   // It's possible to find the base of an address book DN from a search result. Useful only if the address book is user specific.
   'search_base_dn' => 'ou=People,dc=example,dc=org',
@@ -297,7 +300,7 @@ $config['card']['addressbook']['ldap']['me'] = [
 	'search_scope'   => 'list',  // Scope of search
 	                             //  sub: Subtree
 	                             // list: Immediate children
-	                             // base: Match Base DN only
+	                             // base: Match base DN only
 	
 	// Backend data update policy. Valid options are below.
 	// merge (default)  - Would only replace backend contact attibutes present in field map here and 
@@ -493,13 +496,14 @@ $config['card']['addressbook']['ldap']['global'] = [
 	
 	// Use this address book as a directory (i.e. for lookups only) for Apple devices
 	// Defaults to false
-	//  'directory'				=> true,
+	'directory'				=> true,
 	
-	// Enable this address book for group user only. Address books by default are enabled only
-	// for non-group users. You can set the below value to true to enable it for group users only (it will be 
-	// disabled for non-group users). Useful only when user_specific is also set to true.
-	// Defaults to false.
-	//  'enable_only_for_group_user' => true,
+	// An address book can be restricted to a group or to only members of a group and are called shared address 
+	// books. Set the below to true to make this address book a shared address book. These address books are not 
+	// shown in address book list of normal users and need to be accessed via direct address book URI like 
+	// /addressbooks/group-name/addressbook-name/. Takes effect when user_specific is also set to true for this 
+	// address book.
+	//  'shared' => true,
 	
 	// Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
 	// of the address book from backend every time they sync their address book. Set the below to 
@@ -545,7 +549,7 @@ $config['card']['addressbook']['ldap']['global'] = [
 	'scope'         => 'list',   // Scope of search for contacts
 	                             //  sub: Subtree
 	                             // list: Immediate children
-	                             // base: Match Base DN only
+	                             // base: Match base DN only
 	
   // It's possible to find the base of an address book DN from a search result. Useful only if the address book is user specific.
   //  'search_base_dn' => 'ou=People,dc=example,dc=org',
@@ -553,7 +557,7 @@ $config['card']['addressbook']['ldap']['global'] = [
 	//  'search_scope'   => 'list',  // Scope of search
 	                             //  sub: Subtree
 	                             // list: Immediate children
-	                             // base: Match Base DN only
+	                             // base: Match base DN only
 	
 	// Backend data update policy. Valid options are below.
 	// merge (default)  - Would only replace backend contact attibutes present in field map here and 
@@ -751,11 +755,12 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	// Defaults to false
 	//  'directory'				=> true,
 	
-	// Enable this address book for group user only. Address books by default are enabled only
-	// for non-group users. You can set the below value to true to enable it for group users only (it will be 
-	// disabled for non-group users). Useful only when user_specific is also set to true.
-	// Defaults to false.
-	//  'enable_only_for_group_user' => true,
+	// An address book can be restricted to a group or to only members of a group and are called shared address 
+	// books. Set the below to true to make this address book a shared address book. These address books are not 
+	// shown in address book list of normal users and need to be accessed via direct address book URI like 
+	// /addressbooks/group-name/addressbook-name/. Takes effect when user_specific is also set to true for this 
+	// address book.
+	//  'shared' => true,
 
 	// Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
 	// of the address book from backend every time they sync their address book. Set the below to 
@@ -801,7 +806,7 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	'scope'         => 'list',   // Scope of search for contacts
 	                             //  sub: Subtree
 	                             // list: Immediate children
-	                             // base: Match Base DN only
+	                             // base: Match base DN only
 	
   // It's possible to find the base of an address book DN from a search result. Useful only if the address book is user specific.
   'search_base_dn' => 'ou=People,dc=example,dc=org',
@@ -809,7 +814,7 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	'search_scope'   => 'list',  // Scope of search
 	                             //  sub: Subtree
 	                             // list: Immediate children
-	                             // base: Match Base DN only
+	                             // base: Match base DN only
 	
 	// Backend data update policy. Valid options are below.
 	// merge (default)  - Would only replace backend contact attibutes present in field map here and 
@@ -988,9 +993,9 @@ $config['card']['addressbook']['ldap']['personal'] = [
 ];
 
 // Address book.
-$config['card']['addressbook']['ldap']['group_shared'] = [
+$config['card']['addressbook']['ldap']['shared'] = [
 	'name'          	=> 'Shared Address Book',
-  'description'     => 'Shared address book of the group user',
+  'description'     => 'Shared address book',
 
 	// 'user_specific' and 'writable' values are used as initialization parameters for the sync database. 
 	// Once the sync database has been initialized changing the values here to any conflicting values will 
@@ -1006,11 +1011,12 @@ $config['card']['addressbook']['ldap']['group_shared'] = [
 	// Defaults to false
 	//  'directory'				=> true,
 	
-	// Enable this address book for group user only. Address books by default are enabled only
-	// for non-group users. You can set the below value to true to enable it for group users only (it will be 
-	// disabled for non-group users). Useful only when user_specific is also set to true.
-	// Defaults to false.
-	'enable_only_for_group_user' => true,
+	// An address book can be restricted to a group or to only members of a group and are called shared address 
+	// books. Set the below to true to make this address book a shared address book. These address books are not 
+	// shown in address book list of normal users and need to be accessed via direct address book URI like 
+	// /addressbooks/group-name/addressbook-name/. Takes effect when user_specific is also set to true for this 
+	// address book.
+	'shared' => true,
 
 	// Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
 	// of the address book from backend every time they sync their address book. Set the below to 
@@ -1056,7 +1062,7 @@ $config['card']['addressbook']['ldap']['group_shared'] = [
 	'scope'         => 'list',   // Scope of search for contacts
 	                             //  sub: Subtree
 	                             // list: Immediate children
-	                             // base: Match Base DN only
+	                             // base: Match base DN only
 	
   // It's possible to find the base of an address book DN from a search result. Useful only if the address book is user specific.
   'search_base_dn' => 'ou=People,dc=example,dc=org',
@@ -1064,7 +1070,7 @@ $config['card']['addressbook']['ldap']['group_shared'] = [
 	'search_scope'   => 'list',  // Scope of search
 	                             //  sub: Subtree
 	                             // list: Immediate children
-	                             // base: Match Base DN only
+	                             // base: Match base DN only
 	
 	// Backend data update policy. Valid options are below.
 	// merge (default)  - Would only replace backend contact attibutes present in field map here and 
