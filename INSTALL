@@ -4,7 +4,7 @@ Link - https://github.com/isubsoft/ldap-carddav/wiki
 -- Requirements
 Check the wiki.
 
--- System dependencies (GNU/Linux Debian 11 used as a reference for a minimal test setup)
+-- System dependencies (GNU/Linux Debian 11 used as a reference for a minimal setup)
 [core packages]
 php-cli
 php-common
@@ -19,23 +19,23 @@ php-readline
 php-xml
 composer
 
-[packages if using sqlite as pdo database]
+[package(s) if using sqlite as pdo database]
 php-sqlite3
 sqlite3
 
-[packages if using mysql as pdo database]
+[package(s) if using mysql as pdo database]
 php-mysql
 
-[packages if using postgresql as pdo database]
+[package(s) if using postgresql as pdo database]
 php-pgsql
 
-[packages if using memcached as cache backend]
+[package(s) if using memcached as cache backend]
 php-memcached
 
-[packages if using apcu as cache backend]
+[package(s) if using apcu as cache backend]
 php-apcu
 
-[packages if using apache as web server]
+[package(s) if using apache as web server]
 apache2
 libapache2-mod-php
 
