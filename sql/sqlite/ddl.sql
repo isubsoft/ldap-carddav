@@ -20,8 +20,8 @@ CREATE TABLE cards_system_user
 CREATE TABLE cards_addressbook
 (
 	addressbook_id  VARCHAR(255) NOT NULL,
-	user_specific BOOL NOT NULL DEFAULT true,
-	writable BOOL NOT NULL DEFAULT true,
+	user_specific VARCHAR(1) NOT NULL DEFAULT '1',
+	writable VARCHAR(1) NOT NULL DEFAULT '1',
 	PRIMARY KEY (addressbook_id)
 );
 
@@ -93,32 +93,32 @@ CREATE TABLE entity_cache (
 /**************** Triggers ******************/
 
 DROP TRIGGER IF EXISTS cards_addressbook_before;
-CREATE TRIGGER cards_addressbook_before BEFORE INSERT ON cards_addressbook FOR EACH ROW WHEN NOT NEW.user_specific AND NOT EXISTS (SELECT 1 FROM cards_user WHERE user_id = '__SYS_USER') AND NOT EXISTS (SELECT 1 FROM cards_system_user)
+CREATE TRIGGER cards_addressbook_before BEFORE INSERT ON cards_addressbook FOR EACH ROW WHEN NEW.user_specific <> '1' AND NOT EXISTS (SELECT 1 FROM cards_user WHERE user_id = '__SYS_USER') AND NOT EXISTS (SELECT 1 FROM cards_system_user)
 BEGIN
 	INSERT INTO cards_user (user_id) VALUES ('__SYS_USER');
 	INSERT INTO cards_system_user (user_id) VALUES ('__SYS_USER');
 END;
 
 DROP TRIGGER IF EXISTS cards_backend_map_before;
-CREATE TRIGGER cards_backend_map_before BEFORE INSERT ON cards_backend_map FOR EACH ROW WHEN EXISTS (SELECT 1 FROM cards_addressbook WHERE addressbook_id = NEW.addressbook_id AND user_specific) AND NOT EXISTS (SELECT 1 FROM cards_user WHERE user_id = NEW.user_id)
+CREATE TRIGGER cards_backend_map_before BEFORE INSERT ON cards_backend_map FOR EACH ROW WHEN EXISTS (SELECT 1 FROM cards_addressbook WHERE addressbook_id = NEW.addressbook_id AND user_specific = '1') AND NOT EXISTS (SELECT 1 FROM cards_user WHERE user_id = NEW.user_id)
 BEGIN
 	INSERT INTO cards_user (user_id) VALUES (NEW.user_id);
 END;
 
 DROP TRIGGER IF EXISTS cards_full_refresh_before;
-CREATE TRIGGER cards_full_refresh_before BEFORE INSERT ON cards_full_refresh FOR EACH ROW WHEN EXISTS (SELECT 1 FROM cards_addressbook WHERE addressbook_id = NEW.addressbook_id AND user_specific) AND NOT EXISTS (SELECT 1 FROM cards_user WHERE user_id = NEW.user_id)
+CREATE TRIGGER cards_full_refresh_before BEFORE INSERT ON cards_full_refresh FOR EACH ROW WHEN EXISTS (SELECT 1 FROM cards_addressbook WHERE addressbook_id = NEW.addressbook_id AND user_specific = '1') AND NOT EXISTS (SELECT 1 FROM cards_user WHERE user_id = NEW.user_id)
 BEGIN
 	INSERT INTO cards_user (user_id) VALUES (NEW.user_id);
 END;
 
 DROP TRIGGER IF EXISTS cards_backend_sync_before;
-CREATE TRIGGER cards_backend_sync_before BEFORE INSERT ON cards_backend_sync FOR EACH ROW WHEN EXISTS (SELECT 1 FROM cards_addressbook WHERE addressbook_id = NEW.addressbook_id AND user_specific) AND NOT EXISTS (SELECT 1 FROM cards_user WHERE user_id = NEW.user_id)
+CREATE TRIGGER cards_backend_sync_before BEFORE INSERT ON cards_backend_sync FOR EACH ROW WHEN EXISTS (SELECT 1 FROM cards_addressbook WHERE addressbook_id = NEW.addressbook_id AND user_specific = '1') AND NOT EXISTS (SELECT 1 FROM cards_user WHERE user_id = NEW.user_id)
 BEGIN
 	INSERT INTO cards_user (user_id) VALUES (NEW.user_id);
 END;
 
 DROP TRIGGER IF EXISTS cards_full_sync_before;
-CREATE TRIGGER cards_full_sync_before BEFORE INSERT ON cards_full_sync FOR EACH ROW WHEN EXISTS (SELECT 1 FROM cards_addressbook WHERE addressbook_id = NEW.addressbook_id AND user_specific) AND NOT EXISTS (SELECT 1 FROM cards_user WHERE user_id = NEW.user_id)
+CREATE TRIGGER cards_full_sync_before BEFORE INSERT ON cards_full_sync FOR EACH ROW WHEN EXISTS (SELECT 1 FROM cards_addressbook WHERE addressbook_id = NEW.addressbook_id AND user_specific = '1') AND NOT EXISTS (SELECT 1 FROM cards_user WHERE user_id = NEW.user_id)
 BEGIN
 	INSERT INTO cards_user (user_id) VALUES (NEW.user_id);
 END;
