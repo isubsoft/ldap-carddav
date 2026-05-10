@@ -52,7 +52,7 @@ class Plugin extends \Sabre\DAVACL\Plugin
 		$principal = new Principal($this->principalBackend, ['uri' => $principalUri]);
 				
 		if(!in_array($GLOBALS['currentUserPrincipalUri'], $principal->getGroupMemberSet()) && $GLOBALS['currentUserPrincipalUri'] != $principalUri)
-			throw new SabreDAVException\Forbidden("This current user is not allowed to access this path");
+			throw new SabreDAVException\Forbidden("Current user is not allowed to access this path");
 			
 		return;
 	}
