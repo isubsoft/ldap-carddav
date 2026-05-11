@@ -10,17 +10,6 @@ use Sabre\DAV\Exception as SabreDAVException;
 
 class Plugin extends \Sabre\DAVACL\Plugin
 {
-	protected $principalBackend;
-	
-	function __construct($principalBackend) {
-		$this->principalBackend = $principalBackend;
-	}
-	
-	function initialize(Server $server){
-		parent::initialize($server);
-		$server->on('beforeMethod:*', [$this, 'beforeMethodBlockPrincipal'], 21);
-	}
-	
   /**
    * Return owner principal url if it can be determined from the request path else 
    * return authenticated principal url.
@@ -30,6 +19,9 @@ class Plugin extends \Sabre\DAVACL\Plugin
    */
 	public function getRequestUrlOwner()
 	{
+		if(!$this->server->tree->nodeExists($this->server->getRequestUri()))
+			return null;
+			
 		$properties = $this->server->getProperties($this->server->getRequestUri(), ['{DAV:}owner']);
 
 		if(isset($properties['{DAV:}owner'])) {
@@ -40,20 +32,5 @@ class Plugin extends \Sabre\DAVACL\Plugin
 		}
 			
 		return null;
-	}
-	
-	public function beforeMethodBlockPrincipal(\Sabre\HTTP\RequestInterface $request, \Sabre\HTTP\ResponseInterface $response)
-	{
-		$principalUri = $this->getRequestUrlOwner();
-		
-		if($principalUri === null)
-			return;
-		
-		$principal = new Principal($this->principalBackend, ['uri' => $principalUri]);
-				
-		if(!in_array($GLOBALS['currentUserPrincipalUri'], $principal->getGroupMemberSet()) && $GLOBALS['currentUserPrincipalUri'] != $principalUri)
-			throw new SabreDAVException\Forbidden("Current user is not allowed to access this path");
-			
-		return;
 	}
 }
