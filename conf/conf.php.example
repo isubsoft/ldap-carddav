@@ -180,7 +180,8 @@ $config['principal']['ldap'] = [
 	                                    // list: Immediate children
 	                                    // base: Match base DN only
   
-  // DN and password to bind as before searching for pricipal DN(s), if anonymous search is not allowed
+  // DN and password to bind as before searching for pricipal DN(s), if anonymous search is not allowed.
+	// This bind user must have read access to entryUUID operational attribute of all principals.
   'search_bind_dn' => 'cn=admin,ou=People,dc=example,dc=org',
   'search_bind_pw' => '<secret>',
 
@@ -239,9 +240,9 @@ $config['card']['addressbook']['ldap']['me'] = [
 	// Maximum size of a card (in bytes) which is accepted for create/update. Defaults to 16 KiB.
 	//  'max_size'				=> 16384,
 	
-  // The following placeholders are available to be used in 'base_dn' and 'search_filter' below as applicable
-  // %u  - Username sent by client for authentication
-  // %dn - DN as returned by LDAP search for address book DN
+  // The following placeholders are available to be used in 'base_dn' and 'search_filter' below as applicable.
+  // %u  - Username of the user whose address book being accessed.
+  // %dn - DN as returned by LDAP search for address book DN.
   
 	'base_dn'       	=> '%dn', // Address book DN (used as base DN to search for contacts 
 															// and as parent DN for new contacts).
@@ -489,9 +490,9 @@ $config['card']['addressbook']['ldap']['global'] = [
 	// Maximum size of a card (in bytes) which is accepted for create/update. Defaults to 16 KiB.
 	//  'max_size'				=> 16384,
 	
-  // The following placeholders are available to be used in 'base_dn' and 'search_filter' below as applicable
-  // %u  - Username sent by client for authentication
-  // %dn - DN as returned by LDAP search for address book DN
+  // The following placeholders are available to be used in 'base_dn' and 'search_filter' below as applicable.
+  // %u  - Username of the user whose address book being accessed.
+  // %dn - DN as returned by LDAP search for address book DN.
   
 	'base_dn'       	=> 'ou=People,dc=example,dc=org', // Address book DN (used as base DN to search for contacts 
 																											// and as parent DN for new contacts).
@@ -739,9 +740,9 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	// Maximum size of a card (in bytes) which is accepted for create/update. Defaults to 16 KiB.
 	//  'max_size'				=> 16384,
 	
-  // The following placeholders are available to be used in 'base_dn' and 'search_filter' below as applicable
-  // %u  - Username sent by client for authentication
-  // %dn - DN as returned by LDAP search for address book DN
+  // The following placeholders are available to be used in 'base_dn' and 'search_filter' below as applicable.
+  // %u  - Username of the user whose address book being accessed.
+  // %dn - DN as returned by LDAP search for address book DN.
   
 	'base_dn'       	=> 'ou=Address Book,%dn', // Address book DN (used as base DN to search for contacts 
 																							// and as parent DN for new contacts).
