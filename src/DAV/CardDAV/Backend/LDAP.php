@@ -486,13 +486,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					throw new SabreDAVException\ServiceUnavailable();
 				}
 					
-	      if($data['count'] === 0) {
-					if(!$this->cache->delete(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri)))
-						trigger_error("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore this error.", E_USER_NOTICE);
-	
-					$this->addChange($addressBookId, $cardUri);
+	      if($data['count'] === 0)
 	      	return false;
-	      }
 					
 	      if($data['count'] > 1) {
 					trigger_error("Multiple backend contacts found. Check configuration.", E_USER_WARNING);
@@ -831,13 +826,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						throw new SabreDAVException\ServiceUnavailable();
 			    }
 					
-					if($oldLdapInfo['count'] === 0) {
-						if(!$this->cache->delete(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri)))
-							trigger_error("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore this error.", E_USER_NOTICE);
-	
-						$this->addChange($addressBookId, $cardUri);
-						throw new SabreDAVException\Conflict("The contact you are trying to update does not exist in the backend. The backend contact may have been deleted by some other application/process.");
-					}
+					if($oldLdapInfo['count'] === 0)
+						throw new SabreDAVException\Conflict("Not found");
 						
 					if($fieldAclEval == 'w')
 					{
@@ -914,9 +904,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						throw new SabreDAVException\ServiceUnavailable();
 					}
 					
-					if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null, -60))
-			    	trigger_error("Could not expire cache", E_USER_WARNING);
-					
 					$oldLdapRdn = $componentOldLdapTree[0];
 					$parentOldLdapTree = "";
 
@@ -940,6 +927,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							$ldapTree = $newLdapRdn . ',' . $parentOldLdapTree;
 						}
 					}
+					
+					if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null, -60))
+			    	trigger_error("Could not expire cache", E_USER_WARNING);
 
 					if(!ldap_mod_replace($ldapConn, $ldapTree, $ldapInfo))
 						throw new SabreDAVException\BadRequest("Card data may be incompatible");
@@ -1105,14 +1095,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					throw new SabreDAVException\ServiceUnavailable();
 	      }
 	      
-				if(!$this->cache->delete(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri)))
-		      trigger_error("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore the error.", E_USER_NOTICE);
-					
-	      if($data['count'] === 0) {
-					$this->addChange($addressBookId, $cardUri);
-					
-	      	return true;
-	      }
+	      if($data['count'] === 0)
+					throw new SabreDAVException\Conflict("Not found");
         
         $ldapTree = $data[0]['dn'];
 
@@ -1123,6 +1107,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
             throw new SabreDAVException\ServiceUnavailable();
         }
+        
+				if(!$this->cache->delete(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri)))
+		      trigger_error("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore the error.", E_USER_NOTICE);
 
 				$this->addChange($addressBookId, $cardUri);
         
