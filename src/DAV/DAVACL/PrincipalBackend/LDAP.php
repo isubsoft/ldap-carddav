@@ -177,9 +177,6 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         $currentUserPrincipalId = $GLOBALS['currentUserPrincipalId'];
         $principal = [];
 
-        if(strtolower($principalId) != strtolower($currentUserPrincipalId))
-  				throw new SabreDAVException\Forbidden("User does not have access to this path");
-        
 			  if(!isset($this->config['principal']['ldap']['search_bind_dn']) || $this->config['principal']['ldap']['search_bind_dn'] == '') {
 			  	$principal = [ 'id'=> $principalId, 'uri' => $path];
 			    return $principal;
