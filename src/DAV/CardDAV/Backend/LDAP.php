@@ -924,16 +924,21 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							if(!ldap_rename($ldapConn, $oldLdapTree, $newLdapRdn, null, false))
 								throw new SabreDAVException\BadRequest("Card with same name may already exist");
 								
+							if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null, -60))
+								trigger_error("Could not expire cache", E_USER_WARNING);
+								
+							$this->addChange($addressBookId, $cardUri, 'MODIFY');
+								
 							$ldapTree = $newLdapRdn . ',' . $parentOldLdapTree;
 						}
 					}
 					
-					if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null, -60))
-			    	trigger_error("Could not expire cache", E_USER_WARNING);
-
 					if(!ldap_mod_replace($ldapConn, $ldapTree, $ldapInfo))
 						throw new SabreDAVException\BadRequest("Card data may be incompatible");
 						
+					if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null, -60))
+			    	trigger_error("Could not expire cache", E_USER_WARNING);
+			    	
 					$this->addChange($addressBookId, $cardUri, 'MODIFY');
 				}
 				else
