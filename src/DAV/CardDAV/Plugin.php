@@ -9,7 +9,7 @@ use Sabre\DAV\Server;
 
 class Plugin extends \Sabre\CardDAV\Plugin
 {
-	private $carddavBackend;
+	protected $carddavBackend;
 	
 	function __construct($carddavBackend) {
 		$this->carddavBackend = $carddavBackend;
@@ -17,14 +17,28 @@ class Plugin extends \Sabre\CardDAV\Plugin
 
 	function initialize(Server $server){
 		parent::initialize($server);
-		$server->on('beforeMethod:*', [$this, 'appBeforeMethod']);
+		$server->on('beforeMethod:*', [$this, 'beforeMethodSetDirectory'], 900);
 	}
 	
-	public function appBeforeMethod()
+  /**
+   * Mark address book(s) as CardDAV directory address book if configured to be one.
+   *
+   * @param object  $request
+   * @param object  $response
+   */
+	public function beforeMethodSetDirectory(\Sabre\HTTP\RequestInterface $request, \Sabre\HTTP\ResponseInterface $response)
 	{
-		foreach($this->carddavBackend->getAddressBooksForUser($GLOBALS['currentUserPrincipalUri']) as $addressbook) {
+		if(!in_array(strtolower($request->getMethod()), ['propfind', 'get'])) // GET method is needed for browser plugin
+			return;
+			
+		$principalUri = $this->server->getPlugin('acl')->getRequestUrlOwner();
+		
+		if($principalUri === null)
+			return;
+		
+		foreach($this->carddavBackend->getAddressBooksForUser($principalUri) as $addressbook) {
 			if($this->carddavBackend->isAddressbookDirectory($addressbook['id']))
-				$this->directories[] = $this->getAddressbookHomeForPrincipal($GLOBALS['currentUserPrincipalUri']) . '/' . $addressbook['id'] . '/';
+				$this->directories[] = $this->getAddressbookHomeForPrincipal($principalUri) . '/' . $addressbook['id'] . '/';
 		}
 		
 		return;

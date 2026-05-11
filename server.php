@@ -73,7 +73,7 @@ $server->setBaseUri($GLOBALS['base_uri']);
 $server->addPlugin(new ISubsoft\DAV\Auth\Plugin($authBackend));
 
 // Add ACL plugin
-$aclPlugin = new Sabre\DAVACL\Plugin();
+$aclPlugin = new ISubsoft\DAV\DAVACL\Plugin($principalBackend);
 $aclPlugin->allowUnauthenticatedAccess = false;
 $aclPlugin->allowAccessToNodesWithoutACL = false;
 $aclPlugin->hideNodesFromListings = true;
