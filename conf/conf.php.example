@@ -266,7 +266,7 @@ $config['card']['addressbook']['ldap']['me'] = [
 	//  'max_size'				=> 16384,
 	
   // The following placeholders are available to be used in 'base_dn' and 'search_filter' below as applicable.
-  // %u  - Username of the user whose address book being accessed.
+  // %u  - Username of the user whose address book is being accessed.
   // %dn - DN as returned by LDAP search for address book DN.
   
 	'base_dn'       	=> '%dn', // Address book DN (used as base DN to search for contacts 
@@ -523,7 +523,7 @@ $config['card']['addressbook']['ldap']['global'] = [
 	//  'max_size'				=> 16384,
 	
   // The following placeholders are available to be used in 'base_dn' and 'search_filter' below as applicable.
-  // %u  - Username of the user whose address book being accessed.
+  // %u  - Username of the user whose address book is being accessed.
   // %dn - DN as returned by LDAP search for address book DN.
   
 	'base_dn'       	=> 'ou=People,dc=example,dc=org', // Address book DN (used as base DN to search for contacts 
@@ -780,7 +780,7 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	//  'max_size'				=> 16384,
 	
   // The following placeholders are available to be used in 'base_dn' and 'search_filter' below as applicable.
-  // %u  - Username of the user whose address book being accessed.
+  // %u  - Username of the user whose address book is being accessed.
   // %dn - DN as returned by LDAP search for address book DN.
   
 	'base_dn'       	=> 'ou=Address Book,%dn', // Address book DN (used as base DN to search for contacts 
@@ -1036,7 +1036,7 @@ $config['card']['addressbook']['ldap']['shared'] = [
 	//  'max_size'				=> 16384,
 	
   // The following placeholders are available to be used in 'base_dn' and 'search_filter' below as applicable.
-  // %u  - Username of the user whose address book being accessed.
+  // %u  - Username of the user whose address book is being accessed.
   // %dn - DN as returned by LDAP search for address book DN.
   
 	'base_dn'       	=> 'ou=Address Book,%dn', // Address book DN (used as base DN to search for contacts 
