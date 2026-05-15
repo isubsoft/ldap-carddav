@@ -292,9 +292,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							trigger_error("Configured values do not match that of sync database for address book '$addressBookId'. Address book excluded.", E_USER_NOTICE);
 							continue;
 						}
-						
-					  $addressBookConfig['user_specific'] = $row['user_specific'];
-					  $addressBookConfig['writable'] = $row['writable'];
 					  
 					} catch (\Throwable $th) {
 						trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
@@ -469,6 +466,15 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					$cacheValid = false;
 					
 				if($cacheValid) {
+					if($addressBookConfig['writable'] == false)
+						$result['acl'] = [
+								[
+										'privilege' => '{DAV:}read',
+										'principal' => '{DAV:}owner',
+										'protected' => true,
+								]
+						];
+						
 		      $result['id'] = $cardUid;
 		      $result['uri'] = $cardUri;
         	
@@ -513,6 +519,15 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), $result, (isset($this->config['cache']['card']['ttl']) && is_int($this->config['cache']['card']['ttl']) && $this->config['cache']['card']['ttl'] > 0 && $this->config['cache']['card']['ttl'] <= 2592000)?$this->config['cache']['card']['ttl']:self::$cacheTtl))
 			    trigger_error("Could not set cache", E_USER_WARNING);
         
+				if($addressBookConfig['writable'] == false)
+					$result['acl'] = [
+							[
+									'privilege' => '{DAV:}read',
+									'principal' => '{DAV:}owner',
+									'protected' => true,
+							]
+					];
+					
         $result['id'] = $cardUid;
         $result['uri'] = $cardUri;
 				
@@ -578,16 +593,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $vCardGroupMemberProperty = self::$vCardGroupMemberProperty;
         $addressBookConfig = $this->addressbook[$addressBookId]['config'];
         $syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
-        $writableAddressBook = (!isset($addressBookConfig['writable']))?true:$addressBookConfig['writable'];
         $maxContactSize = $this->addressbook[$addressBookId]['contactMaxSize'];
         
-        $this->setAddressbookBackendProperties($addressBookId);
-        
-        if(!$writableAddressBook)
-					throw new SabreDAVException\Forbidden("Not allowed");
-					
 				if(strlen($cardData) > $maxContactSize)
 					throw new ISubsoftDAVException\ContentTooLarge();
+
+        if(!$addressBookConfig['writable'])
+					throw new SabreDAVException\Forbidden("Address book '$addressBookId' is read-only");
 					
 				$vcard = Reader::read($cardData);
 				
@@ -1079,15 +1091,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     {
         $addressBookConfig = $this->addressbook[$addressBookId]['config'];
         $syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
-        $writableAddressBook = (!isset($addressBookConfig['writable']))?true:$addressBookConfig['writable'];
+        
+        if(!$addressBookConfig['writable'])
+					throw new SabreDAVException\Forbidden("Address book '$addressBookId' is read-only");
         
         $this->setAddressbookBackendProperties($addressBookId);
         
         $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
-        
-        if(!$writableAddressBook)
-        	return false;
-        	
         $data = $this->fetchLdapContactDataByUri($addressBookId, $cardUri, ['dn', 'entryUUID']);
         
         if($data === false) {
@@ -2182,24 +2192,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     
     function isAddressbookWritable($addressBookId)
     {
-			try 
-			{
-		    $query = 'SELECT writable FROM ' . self::$addressBooksTableName . ' WHERE addressbook_id =?';
-		    $stmt = $this->pdo->prepare($query);
-		    $stmt->execute([$addressBookId]);
-		    
-		    $row = $stmt->fetch(\PDO::FETCH_ASSOC);
-		    
-		    if($row === false)
-        	throw new SabreDAVException\ServiceUnavailable();
-		    	
-		    return $row['writable'];
-		  } 
-		  catch (\Throwable $th) {
-				trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
-		  }
-		  
-      throw new SabreDAVException\ServiceUnavailable();
+			$addressBookConfig = $this->addressbook[$addressBookId]['config'];
+			
+			return $addressBookConfig['writable'];
     }
     
     function isAddressbookDirectory($addressBookId)
