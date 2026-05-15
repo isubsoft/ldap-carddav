@@ -1003,13 +1003,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 								if($row['delete_sync_token'] != null) {
 									$query = "UPDATE " . self::$backendMapTableName . " SET delete_sync_token = null, modify_sync_token = null, create_sync_token = ?, card_uid = ?, backend_id = ? WHERE user_id = ? AND addressbook_id = ? AND card_uri = ?";
 									$sql = $this->pdo->prepare($query);
-									$sql->execute([time(), ($cardUid == null)?$this->guidv4():$cardUid, $backendId, $syncDbUserId, $addressBookId, $cardUri]);
+									$sql->execute([time(), ($cardUid == null)?(\Sabre\DAV\UUIDUtil::getUUID()):$cardUid, $backendId, $syncDbUserId, $addressBookId, $cardUri]);
 								}
 							}
 							else {
 						    $query = "INSERT INTO " . self::$backendMapTableName . " (user_id, addressbook_id, card_uri, card_uid, backend_id, create_sync_token)  VALUES (?, ?, ?, ?, ?, ?)";
 						    $sql = $this->pdo->prepare($query);
-						    $sql->execute([$syncDbUserId, $addressBookId, $cardUri, ($cardUid == null)?$this->guidv4():$cardUid, $backendId, time()]);
+						    $sql->execute([$syncDbUserId, $addressBookId, $cardUri, ($cardUid == null)?(\Sabre\DAV\UUIDUtil::getUUID()):$cardUid, $backendId, time()]);
 							}
 				    } catch (\Throwable $th) {
 							trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
@@ -1756,7 +1756,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							}
 						}
 						else {
-							$cardUid = $this->guidv4();
+							$cardUid = \Sabre\DAV\UUIDUtil::getUUID();
 							$cardUri = $cardUid .'.vcf';
 									
 							$query = "INSERT INTO " . self::$backendMapTableName . " (user_id, addressbook_id, card_uri, card_uid, backend_id, create_sync_token)  VALUES (?, ?, ?, ?, ?, ?)";
@@ -1806,7 +1806,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							$cardUri = $row['card_uri'];
 						}
 						else {
-							$cardUid = $this->guidv4();
+							$cardUid = \Sabre\DAV\UUIDUtil::getUUID();
 							$cardUri = $cardUid .'.vcf';
 									
 							$query = "INSERT INTO " . self::$backendMapTableName . " (user_id, addressbook_id, card_uri, card_uid, backend_id, create_sync_token)  VALUES (?, ?, ?, ?, ?, ?)";
@@ -2092,7 +2092,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						$row = $stmt->fetch(\PDO::FETCH_ASSOC);
 						
 						if($row === false) {
-							$cardUid = $this->guidv4();
+							$cardUid = \Sabre\DAV\UUIDUtil::getUUID();
 							$cardUri = $cardUid .'.vcf';
 									
 							$query = "INSERT INTO " . self::$backendMapTableName . " (user_id, addressbook_id, card_uri, card_uid, backend_id, create_sync_token)  VALUES (?, ?, ?, ?, ?, ?)";
@@ -2176,20 +2176,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         return $contacts;
     }
 
-    function guidv4($data = null) {
-        // Generate 16 bytes (128 bits) of random data or use the data passed into the function.
-        $data = $data ?? random_bytes(16);
-        assert(strlen($data) == 16);
-    
-        // Set version to 0100
-        $data[6] = chr(ord($data[6]) & 0x0f | 0x40);
-        // Set bits 6-7 to 10
-        $data[8] = chr(ord($data[8]) & 0x3f | 0x80);
-    
-        // Output the 36 character UUID.
-        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
-    }
-    
     function isAddressbookWritable($addressBookId)
     {
 			$addressBookConfig = $this->addressbook[$addressBookId]['config'];
