@@ -2130,16 +2130,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					}
 					
 					// Deleting cards not present in backend
-					$mappedContactsUriList = [];
-					
 					$query = 'SELECT card_uri FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ? AND delete_sync_token IS NULL';
 					$stmt = $this->pdo->prepare($query);
 					$stmt->execute([$syncDbUserId, $addressBookId]);
 			
-					while($row = $stmt->fetch(\PDO::FETCH_ASSOC))
-						$mappedContactsUriList[] = $row['card_uri'];
-					
-					foreach($mappedContactsUriList as $mappedContactUri) {
+					while($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+						$mappedContactUri = $row['card_uri'];
+
 						if(!in_array($mappedContactUri, $backendContactsUriList)) {
 							if(!$this->cache->delete(self::getCacheKey($syncDbUserId, $addressBookId, $mappedContactUri)))
 				    		trigger_error("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore this error.", E_USER_NOTICE);
