@@ -2004,6 +2004,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $addressBookConfig = $this->addressbook[$addressBookId]['config'];
         $addressBookSyncToken = $this->addressbook[$addressBookId]['syncToken'];
         $syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
+        $fullRefreshTmpTableName = 'cards_mapped';
+				$fullRefreshTmpDbPdo = null;
+				$fullRefreshUseTmpDb = false;
 				$contacts = [];
 
 				$fullRefreshSyncToken = null;
@@ -2069,6 +2072,32 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         
         if($data === false)
          throw new SabreDAVException\ServiceUnavailable();
+         
+				$fullRefreshTmpDbPath = __TMP_DIR__ . '/' . __APP_NAME__ . '_' . strtolower(md5(implode('/', [self::$fullRefreshTableName, $syncDbUserId, $addressBookId])));
+				$fullRefreshTmpDbFile = $fullRefreshTmpDbPath . '/' . 'tmp.db';
+
+        if(mkdir($fullRefreshTmpDbPath, 0750)) {
+        	$fullRefreshTmpDbDsn = 'sqlite:' . $fullRefreshTmpDbFile;
+        	
+        	try {
+						$fullRefreshTmpDbPdo = new \PDO($fullRefreshTmpDbDsn);
+						$fullRefreshTmpDbPdo->exec("PRAGMA locking_mode = NORMAL");
+						$fullRefreshTmpDbPdo->exec("PRAGMA journal_mode = DELETE");
+						$fullRefreshTmpDbPdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+						$fullRefreshTmpDbPdo->setAttribute(\PDO::ATTR_ORACLE_NULLS, \PDO::NULL_NATURAL);
+						$fullRefreshTmpDbPdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
+						$fullRefreshTmpDbPdo->setAttribute(\PDO::ATTR_STRINGIFY_FETCHES, false);
+						$fullRefreshTmpDbPdo->exec("CREATE TABLE $fullRefreshTmpTableName (card_uri VARCHAR(255) NOT NULL, PRIMARY KEY (card_uri))");
+		      	$fullRefreshUseTmpDb = true;
+        	}
+        	catch (\Throwable $th) {
+						trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
+						
+						$fullRefreshTmpDbPdo = null; // Close PDO connection to tmp db before deleting tmp db files
+						unlink($fullRefreshTmpDbFile);
+						rmdir($fullRefreshTmpDbPath);
+		      }
+        }
         
         try 
         {
@@ -2077,6 +2106,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						if(!isset($data['data']['entryUUID'][0]) || !isset($data['data']['modifyTimestamp'][0]))
 						{
 							trigger_error("Read access to required operational attributes in LDAP not present.", E_USER_WARNING);
+							
+							$fullRefreshTmpDbPdo = null; // Close PDO connection to tmp db before deleting tmp db files
+							unlink($fullRefreshTmpDbFile);
+							rmdir($fullRefreshTmpDbPath);
+						
         			throw new SabreDAVException\ServiceUnavailable();
 						}
 						
@@ -2124,8 +2158,15 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 								}
 						  }
 						}
-            
-            $backendContactsUriList[] = $cardUri;
+						
+						if($fullRefreshUseTmpDb) {
+							$query = "INSERT INTO $fullRefreshTmpTableName (card_uri) VALUES (?)";
+							$sql = $fullRefreshTmpDbPdo->prepare($query);
+							$sql->execute([$cardUri]);
+						}
+						else
+							$backendContactsUriList[] = $cardUri;
+
 						$contacts[] = [
 							'card_uri' => $cardUri,
 							'card_uid' => $cardUid,
@@ -2135,28 +2176,42 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					}
 					
 					// Deleting cards not present in backend
-					$mappedContactsUriList = [];
-					
 					$query = 'SELECT card_uri FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ? AND delete_sync_token IS NULL';
 					$stmt = $this->pdo->prepare($query);
 					$stmt->execute([$syncDbUserId, $addressBookId]);
 			
-					while($row = $stmt->fetch(\PDO::FETCH_ASSOC))
-						$mappedContactsUriList[] = $row['card_uri'];
-					
-					foreach($mappedContactsUriList as $mappedContactUri) {
-						if(!in_array($mappedContactUri, $backendContactsUriList)) {
-							if(!$this->cache->delete(self::getCacheKey($syncDbUserId, $addressBookId, $mappedContactUri)))
-				    		trigger_error("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore this error.", E_USER_NOTICE);
-				    		
-		          $this->addChange($addressBookId, $mappedContactUri);
+					while($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+						$mappedContactUri = $row['card_uri'];
+						
+						if($fullRefreshUseTmpDb) {
+							$query2 = "SELECT 1 FROM $fullRefreshTmpTableName WHERE card_uri = ?";
+							$stmt2 = $fullRefreshTmpDbPdo->prepare($query2);
+							$stmt2->execute([$mappedContactUri]);
+							
+							if($stmt2->fetch(\PDO::FETCH_ASSOC) !== false)
+								continue;
 						}
+						elseif(in_array($mappedContactUri, $backendContactsUriList))
+							continue;
+						
+						if(!$this->cache->delete(self::getCacheKey($syncDbUserId, $addressBookId, $mappedContactUri)))
+				  		trigger_error("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore this error.", E_USER_NOTICE);
+				  		
+		        $this->addChange($addressBookId, $mappedContactUri);
 					}
-
         } catch (\Throwable $th) {
 					trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
+					
+					$fullRefreshTmpDbPdo = null; // Close PDO connection to tmp db
+					unlink($fullRefreshTmpDbFile);
+					rmdir($fullRefreshTmpDbPath);
+					
 					throw new SabreDAVException\ServiceUnavailable();
         }
+        
+				$fullRefreshTmpDbPdo = null; // Close PDO connection to tmp db
+				unlink($fullRefreshTmpDbFile);
+				rmdir($fullRefreshTmpDbPath);
         
         try {
 					$query = "UPDATE " . self::$fullRefreshTableName . " SET sync_token = ? WHERE user_id = ? AND addressbook_id = ?"; 
