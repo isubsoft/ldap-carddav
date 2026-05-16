@@ -4,15 +4,16 @@
 ## Features
 1. Create, edit, rename and delete contacts directly in LDAP server using CardDAV protocol.
 2. Authenticate CardDAV users against LDAP server.
-3. Multiple address book support.
-4. Global and private address book support.
-5. Bidirectional sync between LDAP server and CardDAV clients (contacts deleted directly in LDAP are deleted in CardDAV clients asynchronously).
-6. Supports WebDAV sync.
-7. Fully compatible (and can coexist) with LDAP address book applications.
-8. Extensive and customizable configuration option to map vCard properties to LDAP attributes including multi-value and composite value properties and attributes.
-9. Contact group support.
-10. Media (like profile picture) support for contacts.
-11. Caching support using popular backends like Memcached, APCu and file system.
+3. User group support.
+4. Multiple address book support.
+5. Global, private and group (shared) address book support.
+6. Bidirectional sync between LDAP server and CardDAV clients (contacts deleted directly in LDAP are deleted in CardDAV clients asynchronously).
+7. Supports WebDAV sync.
+8. Fully compatible (and can coexist) with LDAP address book applications.
+9. Extensive and customizable configuration option to map vCard properties to LDAP attributes including multi-value and composite value properties and attributes.
+10. Contact group support.
+11. Media (like profile picture) support for contacts.
+12. Caching support using popular backends like Memcached, APCu and file system.
 
 ## Limitations
 1. Does not support anonymous access.
@@ -24,7 +25,6 @@
 1. Support for more PDO databases.
 2. Compatibility to as many vCard data types as possible.
 3. Custom vCard property support.
-4. User groups.
 
 ## Installation
 Check INSTALL file.
