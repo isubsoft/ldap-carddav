@@ -5,8 +5,6 @@
 
 namespace ISubsoft\DAV\PropertyStorage;
 
-use Sabre\DAV\Server;
-
 class Plugin extends \Sabre\DAV\PropertyStorage\Plugin
 {
 	/**
@@ -16,16 +14,16 @@ class Plugin extends \Sabre\DAV\PropertyStorage\Plugin
 	 */
 	protected $server;
     
-	public function initialize(Server $server)
+	public function initialize(\Sabre\DAV\Server $server)
 	{
 		parent::initialize($server);
 
 		$this->server = $server;
 		
 		$this->pathFilter = function($path) {
-			$addressbookPathRegexp = '#^' . preg_quote($this->server->getPlugin('carddav')->publicGetAddressbookHomeForPrincipal($GLOBALS['currentUserPrincipalUri']), '#') . '$|^' . preg_quote($GLOBALS['currentUserPrincipalUri'], '#') . '$#';
+			$node = $this->server->tree->getNodeForPath($path);
 			
-			if (preg_match($addressbookPathRegexp, $path) === 1)
+			if($node instanceof \Sabre\CardDAV\AddressBookHome || $node instanceof \Sabre\DAVACL\Principal)
 				return true;
 
 			return false;
