@@ -5,12 +5,9 @@
 
 namespace ISubsoft\DAV\DAVACL;
 
-use Sabre\DAV\Server;
-use Sabre\DAV\Exception as SabreDAVException;
-
 class Plugin extends \Sabre\DAVACL\Plugin
 {
-	function initialize(Server $server)
+	function initialize(\Sabre\DAV\Server $server)
 	{
 		parent::initialize($server);
 		$server->on('beforeMethod:REPORT', [$this, 'beforeMethodReport'], 19);
@@ -42,6 +39,12 @@ class Plugin extends \Sabre\DAVACL\Plugin
 	
 	public function beforeMethodReport()
 	{
+		$exists = $this->server->tree->nodeExists($this->server->getRequestUri());
+
+    // If the node doesn't exists, none of these checks apply
+    if(!$exists)
+			return;
+        
 		$this->checkPrivileges($this->server->getRequestUri(), '{DAV:}read');
 		
 		return;
