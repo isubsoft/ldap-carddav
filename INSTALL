@@ -17,10 +17,10 @@ php-msgpack
 php-opcache
 php-readline
 php-xml
+php-sqlite3
 composer
 
 [package(s) if using sqlite as pdo database]
-php-sqlite3
 sqlite3
 
 [package(s) if using mysql as pdo database]
