@@ -10,6 +10,12 @@ use Sabre\DAV\Exception as SabreDAVException;
 
 class Plugin extends \Sabre\DAVACL\Plugin
 {
+	function initialize(Server $server)
+	{
+		parent::initialize($server);
+		$server->on('beforeMethod:REPORT', [$this, 'beforeMethodReport'], 19);
+	}
+	
   /**
    * Return owner principal url if it can be determined from the request path else 
    * return authenticated principal url.
@@ -32,5 +38,12 @@ class Plugin extends \Sabre\DAVACL\Plugin
 		}
 			
 		return null;
+	}
+	
+	public function beforeMethodReport()
+	{
+		$this->checkPrivileges($this->server->getRequestUri(), '{DAV:}read');
+		
+		return;
 	}
 }
