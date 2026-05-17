@@ -10,6 +10,7 @@ class Plugin extends \Sabre\DAVACL\Plugin
 	function initialize(\Sabre\DAV\Server $server)
 	{
 		parent::initialize($server);
+		$server->on('beforeMethod:PROPFIND', [$this, 'beforeMethodPropFind'], 19);
 		$server->on('beforeMethod:REPORT', [$this, 'beforeMethodReport'], 19);
 	}
 	
@@ -37,7 +38,7 @@ class Plugin extends \Sabre\DAVACL\Plugin
 		return null;
 	}
 	
-	public function beforeMethodReport()
+	private function checkReadAccess()
 	{
 		$exists = $this->server->tree->nodeExists($this->server->getRequestUri());
 
@@ -47,6 +48,18 @@ class Plugin extends \Sabre\DAVACL\Plugin
         
 		$this->checkPrivileges($this->server->getRequestUri(), '{DAV:}read');
 		
+		return;
+	}
+	
+	public function beforeMethodPropFind()
+	{
+		$this->checkReadAccess();
+		return;
+	}
+	
+	public function beforeMethodReport()
+	{
+		$this->checkReadAccess();
 		return;
 	}
 }
