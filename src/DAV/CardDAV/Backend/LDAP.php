@@ -2087,7 +2087,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						$fullRefreshTmpDbPdo->setAttribute(\PDO::ATTR_ORACLE_NULLS, \PDO::NULL_NATURAL);
 						$fullRefreshTmpDbPdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
 						$fullRefreshTmpDbPdo->setAttribute(\PDO::ATTR_STRINGIFY_FETCHES, false);
-						$fullRefreshTmpDbPdo->exec("CREATE TABLE $fullRefreshTmpTableName (card_uri VARCHAR(255) NOT NULL, PRIMARY KEY (card_uri))");
+						$fullRefreshTmpDbPdo->exec("CREATE TABLE $fullRefreshTmpTableName (card_uri VARCHAR(255) NOT NULL)");
+						$fullRefreshTmpDbPdo->exec("CREATE INDEX idx01 ON $fullRefreshTmpTableName (card_uri)");
 		      	$fullRefreshUseTmpDb = true;
         	}
         	catch (\Throwable $th) {
