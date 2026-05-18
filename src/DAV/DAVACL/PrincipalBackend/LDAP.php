@@ -114,6 +114,11 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
     	if($this->ldapConn !== false)
     		return;
     		
+    	if(!isset($this->config['principal']['ldap']['search_bind_dn']) || $this->config['principal']['ldap']['search_bind_dn'] == '') {
+				trigger_error("Backend search parameters for principal not present. Check configuration.", E_USER_WARNING);
+				throw new SabreDAVException\ServiceUnavailable();
+			}
+
 		  $bindDn = $this->config['principal']['ldap']['search_bind_dn'];
 		  $bindPass = (isset($this->config['principal']['ldap']['search_bind_pw']))?$this->config['principal']['ldap']['search_bind_pw']:null;
 		  $ldapConn = Utility::LdapBindConnection(['bindDn' => $bindDn, 'bindPass' => $bindPass], $this->config['server']['ldap']);
@@ -195,11 +200,6 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         $principal = [];
         $isGroupPrincipal = false;
 
-			  if(!isset($this->config['principal']['ldap']['search_bind_dn']) || $this->config['principal']['ldap']['search_bind_dn'] == '') {
-			  	$principal = [ 'id'=> $principalId, 'uri' => $path];
-			    return $principal;
-			  }
-        
 				$cacheValid = true; // If false then cache need to be refreshed
 				$principal = $this->cache->get(self::getCacheKey($principalId), null);
 				
