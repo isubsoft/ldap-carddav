@@ -182,8 +182,8 @@ $config['principal']['ldap'] = [
 	                                    // list: Immediate children
 	                                    // base: Match base DN only
   
-  // DN and password to bind as before searching for pricipal DN(s).
-	// This bind user must have read access to entryUUID operational attribute(s) of all principals.
+  // DN and password to bind as before searching for principal DN(s) and reading attributes mapped in fieldmap.
+	// This bind user in addition must have read access to entryUUID operational attribute of the principal.
   'search_bind_dn' => 'cn=admin,ou=People,dc=example,dc=org',
   'search_bind_pw' => '<secret>',
 
