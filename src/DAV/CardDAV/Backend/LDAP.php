@@ -995,7 +995,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							
 							if($row !== false) {
 								// Updating the card as new which was earlier marked as deleted.
-								if($row['delete_sync_token'] != null) {
+								if($row['delete_sync_token'] !== null && $row['delete_sync_token'] !== '') {
 									$query = "UPDATE " . self::$backendMapTableName . " SET delete_sync_token = null, modify_sync_token = null, create_sync_token = ?, card_uid = ?, backend_id = ? WHERE user_id = ? AND addressbook_id = ? AND card_uri = ?";
 									$sql = $this->pdo->prepare($query);
 									$sql->execute([time(), ($cardUid == null)?(\Sabre\DAV\UUIDUtil::getUUID()):$cardUid, $backendId, $syncDbUserId, $addressBookId, $cardUri]);
@@ -1744,7 +1744,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						
 						if($row !== false) {
 							// Updating the card as new which was earlier marked as deleted.
-							if($row['delete_sync_token'] != null) {
+							if($row['delete_sync_token'] !== null && $row['delete_sync_token'] !== '') {
 								$query = "UPDATE " . self::$backendMapTableName . " SET delete_sync_token = null, modify_sync_token = null, create_sync_token = ? WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?";
 								$sql = $this->pdo->prepare($query);
 								$sql->execute([time(), $syncDbUserId, $addressBookId, $backendId]);
@@ -1790,7 +1790,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						
 						if($row !== false) {
 							// Updating the card as new which was earlier marked as deleted.
-							if($row['delete_sync_token'] != null) {
+							if($row['delete_sync_token'] !== null && $row['delete_sync_token'] !== '') {
 								$query = "UPDATE " . self::$backendMapTableName . " SET delete_sync_token = null, modify_sync_token = null, create_sync_token = ? WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?";
 								$sql = $this->pdo->prepare($query);
 								$sql->execute([time(), $syncDbUserId, $addressBookId, $backendId]);
@@ -2099,7 +2099,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							$cardUri = $row['card_uri'];
 								
 							// Updating the card as new which was earlier marked as deleted.
-							if($row['delete_sync_token'] != null) {
+							if($row['delete_sync_token'] !== null && $row['delete_sync_token'] !== '') {
 								$query = "UPDATE " . self::$backendMapTableName . " SET delete_sync_token = null, modify_sync_token = null, create_sync_token = ? WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?";
 								$sql = $this->pdo->prepare($query);
 								$sql->execute([time(), $syncDbUserId, $addressBookId, $backendId]);
