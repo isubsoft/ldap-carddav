@@ -68,11 +68,11 @@ try {
     $pdo_dsn = !isset($config['sync_database']['dsn'])?null:(string)$config['sync_database']['dsn'];
     $pdo_username = !isset($config['sync_database']['username'])?null:(string)$config['sync_database']['username'];
     $pdo_password = !isset($config['sync_database']['password'])?null:(string)$config['sync_database']['password'];
-    $pdo_options = [];
+    $pdo_conn_options = [];
     
     foreach(!isset($config['sync_database']['options'])?[]:(array)$config['sync_database']['options'] as $pdoAttr => $value)
     	if(in_array($pdoAttr, $configurablePdoAttributes))
-    		$pdo_options[$pdoAttr] = $value;
+    		$pdo_conn_options[$pdoAttr] = $value;
     
     if($pdo_dsn == null)
     {
@@ -83,13 +83,6 @@ try {
     
     $pdo_scheme = parse_url($pdo_dsn, PHP_URL_SCHEME);
 		$pdo_dsn = replacePlaceholder('%datadir', __DATA_DIR__, $pdo_dsn);
-    $pdo = new PDO($pdo_dsn, $pdo_username, $pdo_password, $pdo_options);
-    
-    // Setting database connection attributes needed by this application
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $pdo->setAttribute(PDO::ATTR_ORACLE_NULLS, PDO::NULL_NATURAL);
-    $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
-    $pdo->setAttribute(PDO::ATTR_STRINGIFY_FETCHES, false);
     
     $db_init_commands = (isset($config['sync_database']['init_commands']) && is_array($config['sync_database']['init_commands']))?$config['sync_database']['init_commands']:[];
     $applicable_db_init_commands = [];
@@ -105,6 +98,9 @@ try {
     }
     elseif($pdo_scheme == 'mysql')
     {
+			// Setting database driver specific connection initialization attributes needed by this application
+			$pdo_conn_options[PDO::MYSQL_ATTR_FOUND_ROWS] = true;
+
 	  	foreach($db_init_commands as $stmt)
 	  		if(preg_match('/^\\s*SET\\s+/i', $stmt))
 	  			$applicable_db_init_commands[] = $stmt;
@@ -112,6 +108,15 @@ try {
     	// Enforce foreign key constraints
 			$applicable_db_init_commands[] = 'SET foreign_key_checks = ON';
     }
+    
+    // Initialize PDO connection
+    $pdo = new PDO($pdo_dsn, $pdo_username, $pdo_password, $pdo_conn_options);
+    
+    // Setting database connection attributes needed by this application
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo->setAttribute(PDO::ATTR_ORACLE_NULLS, PDO::NULL_NATURAL);
+    $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+    $pdo->setAttribute(PDO::ATTR_STRINGIFY_FETCHES, false);
     
     // Execute applicable init commands
     foreach($applicable_db_init_commands as $stmt)
