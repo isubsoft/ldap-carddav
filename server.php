@@ -89,7 +89,7 @@ if($GLOBALS['max_payload_size'] != null)
 $server->addPlugin($cardDavPlugin);
 
 // Add property storage plugin
-$server->addPlugin(new ISubsoft\DAV\PropertyStorage\Plugin($propStoreBackend));
+$server->addPlugin(new Sabre\DAV\PropertyStorage\Plugin($propStoreBackend));
 
 // Add webdav sync plugin
 if($GLOBALS['enable_incremental_sync'])
