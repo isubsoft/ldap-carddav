@@ -20,8 +20,8 @@ CREATE TABLE cards_system_user
 CREATE TABLE cards_addressbook
 (
 	addressbook_id  VARCHAR(255) NOT NULL,
-	user_specific VARCHAR(1) NOT NULL DEFAULT '1',
-	writable VARCHAR(1) NOT NULL DEFAULT '1',
+	user_specific CHAR(1) NOT NULL DEFAULT '1',
+	writable CHAR(1) NOT NULL DEFAULT '1',
 	CONSTRAINT cards_addressbook_pk PRIMARY KEY (addressbook_id)
 );
 
@@ -77,10 +77,10 @@ CREATE TABLE cards_full_sync
 
 CREATE TABLE propertystorage (
 	id INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
-	path VARBINARY(1024) NOT NULL,
-	name VARBINARY(100) NOT NULL,
-	valuetype INT UNSIGNED,
-	value MEDIUMBLOB
+	path TEXT NOT NULL,
+	name TEXT NOT NULL,
+	valuetype INTEGER,
+	value MEDIUMTEXT
 );
 CREATE UNIQUE INDEX path_property ON propertystorage (path(600), name(100));
 

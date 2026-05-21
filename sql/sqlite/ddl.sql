@@ -20,8 +20,8 @@ CREATE TABLE cards_system_user
 CREATE TABLE cards_addressbook
 (
 	addressbook_id  VARCHAR(255) NOT NULL,
-	user_specific VARCHAR(1) NOT NULL DEFAULT '1',
-	writable VARCHAR(1) NOT NULL DEFAULT '1',
+	user_specific CHAR(1) NOT NULL DEFAULT '1',
+	writable CHAR(1) NOT NULL DEFAULT '1',
 	PRIMARY KEY (addressbook_id)
 );
 
@@ -79,8 +79,8 @@ CREATE TABLE propertystorage (
 	id INTEGER primary key asc NOT NULL,
 	path TEXT NOT NULL,
 	name TEXT NOT NULL,
-	valuetype INTEGER NOT NULL,
-	value STRING
+	valuetype INTEGER,
+	value TEXT
 );
 CREATE UNIQUE INDEX path_property ON propertystorage (path, name);
 
