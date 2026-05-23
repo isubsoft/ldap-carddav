@@ -76,11 +76,11 @@ CREATE TABLE cards_full_sync
 );
 
 CREATE TABLE propertystorage (
-	id INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+	id INTEGER UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
 	path TEXT NOT NULL,
 	name TEXT NOT NULL,
 	valuetype INTEGER,
-	value MEDIUMTEXT
+	value MEDIUMBLOB
 );
 CREATE UNIQUE INDEX path_property ON propertystorage (path(600), name(100));
 
