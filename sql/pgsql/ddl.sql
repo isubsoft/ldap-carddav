@@ -80,7 +80,7 @@ CREATE TABLE propertystorage (
 	path TEXT NOT NULL,
 	name TEXT NOT NULL,
 	valuetype INTEGER,
-	value TEXT,
+	value BYTEA,
 	PRIMARY KEY (id)
 );
 CREATE UNIQUE INDEX propertystorage_ukey ON propertystorage (path, name);
