@@ -64,6 +64,12 @@ $config['sync_database'] = [
 												// which cannot be set via other means in a reliable manner. Defaults to empty array.
 												// WARNING: DO NOT use statements which violate the requirements for sync database like turning off
 												// database transactions.
+												//
+												// The following type of statements are supported for respective database product.
+												// sqlite: PRAGMA
+												// mysql: SET
+												// pgsql: SET
+												//
 												// The following database specific statements are anyways executed in the end.
 												// sqlite: PRAGMA foreign_keys = ON
 												// mysql: SET foreign_key_checks = ON

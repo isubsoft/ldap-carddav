@@ -108,6 +108,12 @@ try {
     	// Enforce foreign key constraints
 			$applicable_db_init_commands[] = 'SET foreign_key_checks = ON';
     }
+    elseif($pdo_scheme == 'pgsql')
+    {
+	  	foreach($db_init_commands as $stmt)
+	  		if(preg_match('/^\\s*SET\\s+/i', $stmt))
+	  			$applicable_db_init_commands[] = $stmt;
+    }
     
     // Initialize PDO connection
     $pdo = new PDO($pdo_dsn, $pdo_username, $pdo_password, $pdo_conn_options);
