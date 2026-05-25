@@ -6,7 +6,7 @@ This document defines the process to migrate existing sync database data for rel
 cards_user
 cards_system_user
 
-# In case you cannot disable foreign keys enforcement during load, as an example, you can create the SQL data dump in a file called sql_data_dump.sql in the current directory as below.
+# In case you cannot disable foreign keys enforcement during load you, as an example, can create the SQL data dump in a file called sql_data_dump.sql in the current directory as below.
 
 
 #### Mysql
