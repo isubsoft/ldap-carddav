@@ -6,40 +6,38 @@ This document defines the process to migrate existing sync database data for rel
 cards_user
 cards_system_user
 
-# Examples are given below.
+# In case you cannot disable foreign keys enforcement during load, as an example, you can create the SQL data dump in a file called sql_data_dump.sql in the current directory as below.
 
 
 #### Mysql
 
 # Create SQL dump of only 'cards_addressbook' table.
-mysqldump --skip-triggers --no-create-info --no-create-db --single-transaction --complete-insert --skip-set-charset --skip-extended-insert --skip-opt --compact --quick --hex-blob --compatible=ansi --skip-quote-names -u <username> <dbname> cards_addressbook | grep -i '^\s*INSERT\s\+INTO\s\+'
+mysqldump --skip-triggers --no-create-info --no-create-db --single-transaction --complete-insert --skip-set-charset --skip-extended-insert --skip-opt --compact --quick --hex-blob --compatible=ansi --skip-quote-names -u <username> <dbname> cards_addressbook | grep -i '^\s*INSERT\s\+INTO\s\+' > sql_data_dump.sql
 
 # Create SQL dump of rest of the needed tables.
-mysqldump --skip-triggers --no-create-info --no-create-db --single-transaction --complete-insert --skip-set-charset --skip-extended-insert --skip-opt --compact --quick --hex-blob --compatible=ansi --skip-quote-names --ignore-table <dbname>.cards_addressbook --ignore-table <dbname>.cards_user --ignore-table <dbname>.cards_system_user -u <username> <dbname> | grep -i '^\s*INSERT\s\+INTO\s\+'
+mysqldump --skip-triggers --no-create-info --no-create-db --single-transaction --complete-insert --skip-set-charset --skip-extended-insert --skip-opt --compact --quick --hex-blob --compatible=ansi --skip-quote-names --ignore-table <dbname>.cards_addressbook --ignore-table <dbname>.cards_user --ignore-table <dbname>.cards_system_user -u <username> <dbname> | grep -i '^\s*INSERT\s\+INTO\s\+' >> sql_data_dump.sql
 
 
 #### PostgreSQL
 
 # Create SQL dump of only 'cards_addressbook' table.
-pg_dump --format plain --data-only --no-owner --no-privileges --large-objects --inserts --column-inserts --no-comments --no-publications --no-sync --no-tablespaces --no-table-access-method --table <schema>.cards_addressbook --dbname <dbname> | grep -i '^\s*INSERT\s\+INTO\s\+'
+pg_dump --format plain --data-only --no-owner --no-privileges --large-objects --inserts --column-inserts --no-comments --no-publications --no-sync --no-tablespaces --no-table-access-method --table <schema>.cards_addressbook --dbname <dbname> | grep -i '^\s*INSERT\s\+INTO\s\+' > sql_data_dump.sql
 
 # Create SQL dump of rest of the needed tables.
-pg_dump --format plain --data-only --no-owner --no-privileges --large-objects --inserts --column-inserts --no-comments --no-publications --no-sync --no-tablespaces --no-table-access-method --exclude-table <schema>.cards_addressbook --exclude-table <schema>.cards_user --exclude-table <schema>.cards_system_user --dbname <dbname> | grep -i '^\s*INSERT\s\+INTO\s\+'
+pg_dump --format plain --data-only --no-owner --no-privileges --large-objects --inserts --column-inserts --no-comments --no-publications --no-sync --no-tablespaces --no-table-access-method --exclude-table <schema>.cards_addressbook --exclude-table <schema>.cards_user --exclude-table <schema>.cards_system_user --dbname <dbname> | grep -i '^\s*INSERT\s\+INTO\s\+' >> sql_data_dump.sql
 
 
 #### SQLite
 
 # Create SQL dump of only 'cards_addressbook' table.
-sqlite <syncdb_file> '.dump' | grep -i '^\s*INSERT\s\+INTO\s\+cards_addressbook'
+sqlite <syncdb_file> '.dump' | grep -i '^\s*INSERT\s\+INTO\s\+cards_addressbook' > sql_data_dump.sql
 
 # Create SQL dump of rest of the needed tables.
-sqlite <syncdb_file> '.dump' | grep -i '^\s*INSERT\s\+INTO\s\+' | grep -iv '^\s*INSERT\s\+INTO\s\+\(cards_addressbook\|cards_user\|cards_system_user\)\s\+'
+sqlite <syncdb_file> '.dump' | grep -i '^\s*INSERT\s\+INTO\s\+' | grep -iv '^\s*INSERT\s\+INTO\s\+\(cards_addressbook\|cards_user\|cards_system_user\)\s\+' >> sql_data_dump.sql
 
 
 ############### Loading SQL dump to target database ###############
 
 # Create target database using the sql/<database_product>/ddl.sql file provided in this release.
 
-# Load SQL data dump of table 'cards_addressbook' first.
-
-# Load SQL data dump of rest of the tables.
+# Load the sql_data_dump.sql file.
