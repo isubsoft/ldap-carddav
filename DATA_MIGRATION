@@ -1,0 +1,45 @@
+This document defines the process to migrate existing sync database data for release <= v1.0.2 to a sync database containing database structure as per this release.
+
+############### Creating SQL dump of source database ###############
+
+# Create data-only SQL dump of source database excluding below mentioned tables. Use native database tools for the same.
+cards_user
+cards_system_user
+
+# Examples are given below.
+
+
+#### Mysql
+
+# Create SQL dump of only 'cards_addressbook' table.
+mysqldump --skip-triggers --no-create-info --no-create-db --single-transaction --complete-insert --skip-set-charset --skip-extended-insert --skip-opt --compact --quick --hex-blob --compatible=ansi --skip-quote-names -u <username> <dbname> cards_addressbook | grep -i '^\s*INSERT\s\+INTO\s\+'
+
+# Create SQL dump of rest of the needed tables.
+mysqldump --skip-triggers --no-create-info --no-create-db --single-transaction --complete-insert --skip-set-charset --skip-extended-insert --skip-opt --compact --quick --hex-blob --compatible=ansi --skip-quote-names --ignore-table <dbname>.cards_addressbook --ignore-table <dbname>.cards_user --ignore-table <dbname>.cards_system_user -u <username> <dbname> | grep -i '^\s*INSERT\s\+INTO\s\+'
+
+
+#### PostgreSQL
+
+# Create SQL dump of only 'cards_addressbook' table.
+pg_dump --format plain --data-only --no-owner --no-privileges --large-objects --inserts --column-inserts --no-comments --no-publications --no-sync --no-tablespaces --no-table-access-method --table <schema>.cards_addressbook --dbname <dbname> | grep -i '^\s*INSERT\s\+INTO\s\+'
+
+# Create SQL dump of rest of the needed tables.
+pg_dump --format plain --data-only --no-owner --no-privileges --large-objects --inserts --column-inserts --no-comments --no-publications --no-sync --no-tablespaces --no-table-access-method --exclude-table <schema>.cards_addressbook --exclude-table <schema>.cards_user --exclude-table <schema>.cards_system_user --dbname <dbname> | grep -i '^\s*INSERT\s\+INTO\s\+'
+
+
+#### SQLite
+
+# Create SQL dump of only 'cards_addressbook' table.
+sqlite <syncdb_file> '.dump' | grep -i '^\s*INSERT\s\+INTO\s\+cards_addressbook'
+
+# Create SQL dump of rest of the needed tables.
+sqlite <syncdb_file> '.dump' | grep -i '^\s*INSERT\s\+INTO\s\+' | grep -iv '^\s*INSERT\s\+INTO\s\+\(cards_addressbook\|cards_user\|cards_system_user\)\s\+'
+
+
+############### Loading SQL dump to target database ###############
+
+# Create target database using the sql/<database_product>/ddl.sql file.
+
+# Load SQL data dump of table 'cards_addressbook' first.
+
+# Load SQL data dump of rest of the tables.
