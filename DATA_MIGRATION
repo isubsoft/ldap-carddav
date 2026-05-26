@@ -1,4 +1,8 @@
-This document defines the process to migrate existing sync database data for release <= v1.0.2 to a sync database containing database structure as per this release.
+This document defines the process to migrate existing sync database data of release(s) <= v1.0.2 to a sync database containing database structure as per this release.
+
+*************** WARNING ***************
+Performing any/all of the steps mentioned below without creating a reliable backup of sync database may result in data corruption and/or data inconsistency. Check Backup section of Data management page in the Wiki for more details.
+
 
 ############### Creating SQL dump of source database ###############
 
