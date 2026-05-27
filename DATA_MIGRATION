@@ -1,7 +1,7 @@
 This document defines the process to migrate existing sync database data of release(s) <= v1.0.2 to a sync database containing database structure as per this release.
 
 *************** WARNING ***************
-DO NOT perform any/all of the steps mentioned below before creating a reliable backup of sync database. Check Backup section of Data management page in the Wiki for more details.
+DO NOT perform any/all of the steps mentioned below before creating a reliable backup of the sync database. Check Backup section of Data management page in the Wiki for more details.
 
 
 ############### Creating SQL dump of source database ###############
@@ -10,7 +10,7 @@ DO NOT perform any/all of the steps mentioned below before creating a reliable b
 cards_user
 cards_system_user
 
-# In case you cannot disable foreign keys enforcement during load you, as an example, can create the SQL data dump in a file called ldap_carddav_data_dump.sql (in the current directory) as below.
+# In case you cannot disable foreign key enforcement in the target database during load you, as an example, can create the SQL data dump in a file called ldap_carddav_data_dump.sql (in the current directory) as below to load the data in the target database without getting foreign key violation error.
 
 
 #### Mysql
