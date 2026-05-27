@@ -10,7 +10,7 @@ DO NOT perform any/all of the steps mentioned below before creating a reliable b
 cards_user
 cards_system_user
 
-# In case you cannot disable foreign keys enforcement during load you, as an example, can create the SQL data dump in a file called ldap_carddav_data_dump.sql in the current directory as below.
+# In case you cannot disable foreign keys enforcement during load you, as an example, can create the SQL data dump in a file called ldap_carddav_data_dump.sql (in the current directory) as below.
 
 
 #### Mysql
