@@ -91,49 +91,17 @@ CREATE TABLE cards_full_sync
 );
 
 CREATE TABLE propertystorage (
-	id INTEGER PRIMARY KEY ASC NOT NULL,
+	id SERIAL NOT NULL,
 	path TEXT NOT NULL,
 	name TEXT NOT NULL,
 	valuetype INTEGER,
-	value BLOB
+	value BYTEA,
+	PRIMARY KEY (id)
 );
-CREATE UNIQUE INDEX path_property ON propertystorage (path, name);
+CREATE UNIQUE INDEX propertystorage_ukey ON propertystorage (path, name);
 
 CREATE TABLE entity_cache (
-	entity_id VARCHAR(255) NOT NULL PRIMARY KEY,
-	backend_id VARCHAR(255)
+	entity_id VARCHAR(255) NOT NULL,
+	backend_id VARCHAR(255),
+	PRIMARY KEY (entity_id)
 );
-
-
-/**************** Triggers ******************/
-
-DROP TRIGGER IF EXISTS cards_addressbook_before;
-CREATE TRIGGER cards_addressbook_before BEFORE INSERT ON cards_addressbook FOR EACH ROW WHEN NEW.user_specific <> '1' AND NOT EXISTS (SELECT 1 FROM cards_user WHERE user_id = '__SYS_USER') AND NOT EXISTS (SELECT 1 FROM cards_system_user)
-BEGIN
-	INSERT INTO cards_user (user_id) VALUES ('__SYS_USER');
-	INSERT INTO cards_system_user (user_id) VALUES ('__SYS_USER');
-END;
-
-DROP TRIGGER IF EXISTS cards_backend_map_before;
-CREATE TRIGGER cards_backend_map_before BEFORE INSERT ON cards_backend_map FOR EACH ROW WHEN EXISTS (SELECT 1 FROM cards_addressbook WHERE addressbook_id = NEW.addressbook_id AND user_specific = '1') AND NOT EXISTS (SELECT 1 FROM cards_user WHERE user_id = NEW.user_id)
-BEGIN
-	INSERT INTO cards_user (user_id) VALUES (NEW.user_id);
-END;
-
-DROP TRIGGER IF EXISTS cards_full_refresh_before;
-CREATE TRIGGER cards_full_refresh_before BEFORE INSERT ON cards_full_refresh FOR EACH ROW WHEN EXISTS (SELECT 1 FROM cards_addressbook WHERE addressbook_id = NEW.addressbook_id AND user_specific = '1') AND NOT EXISTS (SELECT 1 FROM cards_user WHERE user_id = NEW.user_id)
-BEGIN
-	INSERT INTO cards_user (user_id) VALUES (NEW.user_id);
-END;
-
-DROP TRIGGER IF EXISTS cards_backend_sync_before;
-CREATE TRIGGER cards_backend_sync_before BEFORE INSERT ON cards_backend_sync FOR EACH ROW WHEN EXISTS (SELECT 1 FROM cards_addressbook WHERE addressbook_id = NEW.addressbook_id AND user_specific = '1') AND NOT EXISTS (SELECT 1 FROM cards_user WHERE user_id = NEW.user_id)
-BEGIN
-	INSERT INTO cards_user (user_id) VALUES (NEW.user_id);
-END;
-
-DROP TRIGGER IF EXISTS cards_full_sync_before;
-CREATE TRIGGER cards_full_sync_before BEFORE INSERT ON cards_full_sync FOR EACH ROW WHEN EXISTS (SELECT 1 FROM cards_addressbook WHERE addressbook_id = NEW.addressbook_id AND user_specific = '1') AND NOT EXISTS (SELECT 1 FROM cards_user WHERE user_id = NEW.user_id)
-BEGIN
-	INSERT INTO cards_user (user_id) VALUES (NEW.user_id);
-END;
