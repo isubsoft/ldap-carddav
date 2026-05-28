@@ -17,12 +17,12 @@
 * 
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*
+* 
 * ---- Exceptions ----
 * Some variable names and/or their structure in this configuration is 
-* inspired by Roundcube Webmail client version 1.5.5 licensed under the 
-* GNU General Public License version 3 or any later version. 
-* Copyright (C) The Roundcube Dev Team.
+* inspired by Roundcube Webmail client version 1.5.5 
+* Copyright (C) The Roundcube Dev Team licensed under the 
+* GNU General Public License version 3 or any later version.
 *
 ***************************************************************************/
 
