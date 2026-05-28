@@ -42,6 +42,6 @@ sqlite <syncdb_file> '.dump' | grep -i '^\s*INSERT\s\+INTO\s\+' | grep -iv '^\s*
 
 ############### Loading SQL dump to target database ###############
 
-# Create target database using the sql/<database_product>/ddl.sql file provided in this release.
+# Create database objects as per sql/<database_product>/*_ddl.sql file(s) provided in this release.
 
 # Load the ldap_carddav_data_dump.sql file.
