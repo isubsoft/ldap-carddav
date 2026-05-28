@@ -91,116 +91,15 @@ CREATE TABLE cards_full_sync
 );
 
 CREATE TABLE propertystorage (
-	id SERIAL NOT NULL,
+	id INTEGER PRIMARY KEY ASC NOT NULL,
 	path TEXT NOT NULL,
 	name TEXT NOT NULL,
 	valuetype INTEGER,
-	value BYTEA,
-	PRIMARY KEY (id)
+	value BLOB
 );
-CREATE UNIQUE INDEX propertystorage_ukey ON propertystorage (path, name);
+CREATE UNIQUE INDEX path_property ON propertystorage (path, name);
 
 CREATE TABLE entity_cache (
-	entity_id VARCHAR(255) NOT NULL,
-	backend_id VARCHAR(255),
-	PRIMARY KEY (entity_id)
+	entity_id VARCHAR(255) NOT NULL PRIMARY KEY,
+	backend_id VARCHAR(255)
 );
-
-
-/**************** Triggers functions ******************/
-
-CREATE OR REPLACE FUNCTION cards_addressbook_before()
-RETURNS TRIGGER
-LANGUAGE PLPGSQL
-AS $$
-BEGIN
-    -- Your trigger logic here
-    -- For example, to log changes to another table:
-    -- INSERT INTO audit_log (table_name, old_data, new_data)
-    -- VALUES (TG_TABLE_NAME, OLD::text, NEW::text);
-
-    -- For BEFORE triggers, you can modify NEW or return NULL to skip the operation.
-    -- For AFTER triggers, you typically return NEW or OLD.
-    
-	IF NEW.user_specific <> '1' AND NOT EXISTS (SELECT 1 FROM cards_user WHERE user_id = '__SYS_USER') AND NOT EXISTS (SELECT 1 FROM cards_system_user) THEN
-		INSERT INTO cards_user (user_id) VALUES ('__SYS_USER');
-		INSERT INTO cards_system_user (user_id) VALUES ('__SYS_USER');
-	END IF;
-    
-  RETURN NEW; -- Or OLD for DELETE triggers, or NULL to skip the operation for BEFORE triggers
-END;
-$$;
-
-CREATE OR REPLACE FUNCTION cards_backend_map_before()
-RETURNS TRIGGER
-LANGUAGE PLPGSQL
-AS $$
-BEGIN
-	IF EXISTS (SELECT 1 FROM cards_addressbook WHERE addressbook_id = NEW.addressbook_id AND user_specific = '1') AND NOT EXISTS (SELECT 1 FROM cards_user WHERE user_id = NEW.user_id) THEN
-		INSERT INTO cards_user (user_id) VALUES (NEW.user_id);
-	END IF;
-    
-  RETURN NEW;
-END;
-$$;
-
-CREATE OR REPLACE FUNCTION cards_full_refresh_before()
-RETURNS TRIGGER
-LANGUAGE PLPGSQL
-AS $$
-BEGIN
-	IF EXISTS (SELECT 1 FROM cards_addressbook WHERE addressbook_id = NEW.addressbook_id AND user_specific = '1') AND NOT EXISTS (SELECT 1 FROM cards_user WHERE user_id = NEW.user_id) THEN
-		INSERT INTO cards_user (user_id) VALUES (NEW.user_id);
-	END IF;
-    
-  RETURN NEW;
-END;
-$$;
-
-CREATE OR REPLACE FUNCTION cards_backend_sync_before()
-RETURNS TRIGGER
-LANGUAGE PLPGSQL
-AS $$
-BEGIN
-	IF EXISTS (SELECT 1 FROM cards_addressbook WHERE addressbook_id = NEW.addressbook_id AND user_specific = '1') AND NOT EXISTS (SELECT 1 FROM cards_user WHERE user_id = NEW.user_id) THEN
-		INSERT INTO cards_user (user_id) VALUES (NEW.user_id);
-	END IF;
-    
-  RETURN NEW;
-END;
-$$;
-
-CREATE OR REPLACE FUNCTION cards_full_sync_before()
-RETURNS TRIGGER
-LANGUAGE PLPGSQL
-AS $$
-BEGIN
-	IF EXISTS (SELECT 1 FROM cards_addressbook WHERE addressbook_id = NEW.addressbook_id AND user_specific = '1') AND NOT EXISTS (SELECT 1 FROM cards_user WHERE user_id = NEW.user_id) THEN
-		INSERT INTO cards_user (user_id) VALUES (NEW.user_id);
-	END IF;
-    
-  RETURN NEW;
-END;
-$$;
-
-/**************** Triggers ******************/
-
-DROP TRIGGER IF EXISTS cards_addressbook_before ON cards_addressbook;
-CREATE TRIGGER cards_addressbook_before BEFORE INSERT ON cards_addressbook FOR EACH ROW
-EXECUTE FUNCTION cards_addressbook_before();
-
-DROP TRIGGER IF EXISTS cards_backend_map_before ON cards_backend_map;
-CREATE TRIGGER cards_backend_map_before BEFORE INSERT ON cards_backend_map FOR EACH ROW
-EXECUTE FUNCTION cards_backend_map_before();
-
-DROP TRIGGER IF EXISTS cards_full_refresh_before ON cards_full_refresh;
-CREATE TRIGGER cards_full_refresh_before BEFORE INSERT ON cards_full_refresh FOR EACH ROW
-EXECUTE FUNCTION cards_full_refresh_before();
-
-DROP TRIGGER IF EXISTS cards_backend_sync_before ON cards_backend_sync;
-CREATE TRIGGER cards_backend_sync_before BEFORE INSERT ON cards_backend_sync FOR EACH ROW
-EXECUTE FUNCTION cards_backend_sync_before();
-
-DROP TRIGGER IF EXISTS cards_full_sync_before ON cards_full_sync;
-CREATE TRIGGER cards_full_sync_before BEFORE INSERT ON cards_full_sync FOR EACH ROW
-EXECUTE FUNCTION cards_full_sync_before();
