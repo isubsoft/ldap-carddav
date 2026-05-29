@@ -56,8 +56,9 @@ NOTE: This application is compatible with PHP 5.6 and above but PHP 7.1 or above
 Copy conf/conf.php.example as conf/conf.php and update the file conf/conf.php according to your environment and need. Configuration keys are documented along side in the conf/conf.php.example file. Check the wiki for more advanced configuration examples.
 
 -- Sync database creation
-1. Create database objects as per sql/<database_product>/ddl.sql file.
-   Example (sqlite): sqlite3 data/sync/syncdb/sqlite/cards.db < sql/sqlite/ddl.sql
+1. Create database objects as per sql/<database_product>/*_ddl.sql file(s).
+   Example (sqlite): sqlite data/sync/syncdb/sqlite/cards.db < sql/sqlite/10_table_ddl.sql
+                     sqlite data/sync/syncdb/sqlite/cards.db < sql/sqlite/30_trigger_ddl.sql
 2. The database user to be used by this application should have SELECT, INSERT, UPDATE and DELETE privileges on all tables created in the above step.
 3. Update 'dsn' and credentials appropriately in $config['sync_database'] in conf/conf.php file.
 4. If creating a sqlite database make sure the database file is placed inside the data directory.
