@@ -1,6 +1,6 @@
 *************** APPLICABILITY ***************
-The below mentioned upgrade steps are applicable to you if you are upgrading from a release version <= v1.0.2 
-These changes are recommended to the sync database for better compatibility with future releases.
+The below mentioned upgrade steps are applicable to you if you created sync database from a release version <= v1.0.2
+This upgrade will make sync database more compatible with future application releases and more migration friendly to a different database product (including those not supported yet) hence recommended.
 
 *************** WARNING ***************
 1. DO NOT attempt any of the below mentioned migration activities before creating a reliable backup of application data. Check Wiki -> Data management -> Backup for more details.
@@ -20,6 +20,8 @@ ALTER TABLE propertystorage MODIFY COLUMN path TEXT NOT NULL, MODIFY COLUMN name
 # Execute SQL statements present in below mentioned files(s) from this release.
 sql/mysql/30_trigger_ddl.sql
 
+# Example: mysql -u <username> <dbname> < sql/mysql/30_trigger_ddl.sql
+
 
 #### PostgreSQL
 
@@ -29,6 +31,8 @@ ALTER TABLE propertystorage ALTER COLUMN path TYPE TEXT, ALTER COLUMN name TYPE 
 
 # Execute SQL statements present in below mentioned files(s) from this release.
 sql/pgsql/30_trigger_ddl.sql
+
+# Example: psql --dbname <dbname> -c 'SET search_path TO <schema>' -f sql/pgsql/30_trigger_ddl.sql
 
 
 #### SQLite
