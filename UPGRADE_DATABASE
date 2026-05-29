@@ -3,8 +3,9 @@ The below mentioned upgrade steps are applicable to you if you are upgrading fro
 These changes are recommended to the sync database for better compatibility with future releases.
 
 *************** WARNING ***************
-1. DO NOT perform any/all of the steps mentioned below before creating a reliable backup of the database. Check Backup section of Data management page in the Wiki for more details.
-2. Make sure the application is offline before performing the below mentioned steps to avoid unpredictable changes to the data/database.
+1. DO NOT attempt any of the below mentioned migration activities before creating a reliable backup of application data. Check backup section for more details.
+2. DO NOT attempt any of the below mentioned migration activities while the application is online as it may result in data corruption and/or data inconsistency.
+
 
 *************** UPGRADE STEPS ***************
 Perform the steps mentioned below depending upon to the database product you are using to complete upgrade of your application.
@@ -32,5 +33,5 @@ sql/pgsql/30_trigger_ddl.sql
 
 #### SQLite
 
-# Create target database as per "-- Sync database creation" section in the INSTALL file.
-# Follow the data migration process defined in DATA_MIGRATION file to upgrade.
+1. Create target database as per "-- Sync database creation" section in the INSTALL file of this release.
+2. Follow the data migration process defined in Wiki -> Data management -> Migration -> Sync database to upgrade.
