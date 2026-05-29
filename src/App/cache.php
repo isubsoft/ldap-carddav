@@ -121,8 +121,7 @@ else if(isset($argv[1]) && $argv[1] == 'housekeeping')
 			
 	if(!settype($batchSize, 'integer') || $batchSize < 0) {
 		error_log("[ERROR] Invalid batch size provided. Cannot continue. Quitting.");
-  	error_log("");
-		printHelp($argv);
+		error_log("Check help information using: " . $argv[0] . " help");
 		exit(1);
 	}
 			
@@ -147,8 +146,7 @@ else if(isset($argv[1]) && $argv[1] == 'housekeeping')
 else
 {
 	error_log("[ERROR] Not a valid action. Quitting.");
- 	error_log("");
-	printHelp($argv);
+	error_log("Check help information using: " . $argv[0] . " help");
 	exit(1);
 }
 
