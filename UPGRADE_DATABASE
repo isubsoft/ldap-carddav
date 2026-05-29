@@ -17,10 +17,8 @@ Perform the steps mentioned below depending upon to the database product you are
 ALTER TABLE cards_addressbook MODIFY COLUMN user_specific CHAR(1) NOT NULL DEFAULT '1', MODIFY COLUMN writable CHAR(1) NOT NULL DEFAULT '1';
 ALTER TABLE propertystorage MODIFY COLUMN path TEXT NOT NULL, MODIFY COLUMN name TEXT NOT NULL, MODIFY COLUMN valuetype INTEGER;
 
-# Execute SQL statements present in below mentioned files(s) from this release.
+# Execute SQL statements present in below mentioned files(s) from this release. Example: mysql -u <username> <dbname> < <file>
 sql/mysql/30_trigger_ddl.sql
-
-# Example: mysql -u <username> <dbname> < sql/mysql/30_trigger_ddl.sql
 
 
 #### PostgreSQL
@@ -29,10 +27,8 @@ sql/mysql/30_trigger_ddl.sql
 ALTER TABLE cards_addressbook ALTER COLUMN user_specific TYPE CHAR(1) USING (user_specific::INTEGER), ALTER COLUMN user_specific SET DEFAULT '1', ALTER COLUMN writable TYPE CHAR(1) USING (writable::INTEGER), ALTER COLUMN writable SET DEFAULT '1';
 ALTER TABLE propertystorage ALTER COLUMN path TYPE TEXT, ALTER COLUMN name TYPE TEXT, ALTER COLUMN valuetype TYPE INTEGER;
 
-# Execute SQL statements present in below mentioned files(s) from this release.
+# Execute SQL statements present in below mentioned files(s) from this release. Example: psql --dbname <dbname> -c 'SET search_path TO <schema>' -f <file>
 sql/pgsql/30_trigger_ddl.sql
-
-# Example: psql --dbname <dbname> -c 'SET search_path TO <schema>' -f sql/pgsql/30_trigger_ddl.sql
 
 
 #### SQLite
