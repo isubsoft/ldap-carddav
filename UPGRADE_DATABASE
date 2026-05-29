@@ -1,10 +1,13 @@
-If you are upgrading from a release which is <= v1.0.2 the following changes are recommended to the sync database for better compatibility with future releases.
+*************** APPLICABILITY ***************
+The below mentioned upgrade steps are applicable to you if you are upgrading from a release version <= v1.0.2 
+These changes are recommended to the sync database for better compatibility with future releases.
 
 *************** WARNING ***************
-DO NOT perform any/all of the steps mentioned below before creating a reliable backup of the database. Check Backup section of Data management page in the Wiki for more details.
+1. DO NOT perform any/all of the steps mentioned below before creating a reliable backup of the database. Check Backup section of Data management page in the Wiki for more details.
+2. Make sure the application is offline before performing the below mentioned steps to avoid unpredictable changes to the data/database.
 
-*************** IMPORTANT ***************
-Make the application offline before performing the below mentioned steps to avoid unpredictable changes to the data/database.
+*************** UPGRADE STEPS ***************
+Perform the steps mentioned below depending upon to the database product you are using to complete upgrade of your application.
 
 
 #### MariaDB / Mysql
@@ -13,7 +16,7 @@ Make the application offline before performing the below mentioned steps to avoi
 ALTER TABLE cards_addressbook MODIFY COLUMN user_specific CHAR(1) NOT NULL DEFAULT '1', MODIFY COLUMN writable CHAR(1) NOT NULL DEFAULT '1';
 ALTER TABLE propertystorage MODIFY COLUMN path TEXT NOT NULL, MODIFY COLUMN name TEXT NOT NULL, MODIFY COLUMN valuetype INTEGER;
 
-# Execute SQL statements from below mentioned files(s) in this release.
+# Execute SQL statements present in below mentioned files(s) from this release.
 sql/mysql/30_trigger_ddl.sql
 
 
@@ -23,7 +26,7 @@ sql/mysql/30_trigger_ddl.sql
 ALTER TABLE cards_addressbook ALTER COLUMN user_specific TYPE CHAR(1) USING (user_specific::INTEGER), ALTER COLUMN user_specific SET DEFAULT '1', ALTER COLUMN writable TYPE CHAR(1) USING (writable::INTEGER), ALTER COLUMN writable SET DEFAULT '1';
 ALTER TABLE propertystorage ALTER COLUMN path TYPE TEXT, ALTER COLUMN name TYPE TEXT, ALTER COLUMN valuetype TYPE INTEGER;
 
-# Execute SQL statements from below mentioned files(s) in this release.
+# Execute SQL statements present in below mentioned files(s) from this release.
 sql/pgsql/30_trigger_ddl.sql
 
 
