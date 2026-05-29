@@ -3,7 +3,7 @@ The below mentioned upgrade steps are applicable to you if you are upgrading fro
 These changes are recommended to the sync database for better compatibility with future releases.
 
 *************** WARNING ***************
-1. DO NOT attempt any of the below mentioned migration activities before creating a reliable backup of application data. Check backup section for more details.
+1. DO NOT attempt any of the below mentioned migration activities before creating a reliable backup of application data. Check Wiki -> Data management -> Backup for more details.
 2. DO NOT attempt any of the below mentioned migration activities while the application is online as it may result in data corruption and/or data inconsistency.
 
 
