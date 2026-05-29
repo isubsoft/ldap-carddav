@@ -288,8 +288,7 @@ elseif(isset($argv[1]) && $argv[1] == 'housekeeping')
 if(!$initialized)
 {
   	echo "[NOTE] Sync database has not been initialized. Initialize it first." . PHP_EOL;
-		error_log("");
-		printHelp($argv);
+		error_log("Check help information using: " . $argv[0] . " help");
   	exit(1);
 }
 
@@ -302,6 +301,7 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 		if(!in_array($argv[2], $options))
 		{
 			error_log('[ERROR] Please enter correct entry you want to operate upon.');
+			error_log("Check help information using: " . $argv[0] . " help");
 			exit(1);
 		}
 		$choice = array_search($argv[2], $options);
@@ -367,8 +367,7 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 		else
 		{
 			error_log("[ERROR] '$argv[3]' is not a valid operation. Quitting.");
-  		error_log("");
-			printHelp($argv);
+			error_log("Check help information using: " . $argv[0] . " help");
 			exit(1);
 		}
 		
@@ -400,6 +399,7 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 			if(!in_array($argv[3], $options))
 			{
 				error_log('[ERROR] Please enter correct entry you want to operate upon.');
+				error_log("Check help information using: " . $argv[0] . " help");
 				exit(1);
 			}
 			$choice = array_search($argv[3], $options);
@@ -558,8 +558,7 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 else
 {
 	error_log("[ERROR] '$argv[1]' is not a valid action. Quitting.");
- 	error_log("");
-	printHelp($argv);
+	error_log("Check help information using: " . $argv[0] . " help");
 	exit(1);
 }
 
