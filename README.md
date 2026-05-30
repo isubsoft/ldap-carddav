@@ -1,5 +1,5 @@
 # ldap-carddav - A CardDAV server with a LDAP server as contacts and authentication backend
-![A CardDAV interface to LDAP](https://github.com/user-attachments/assets/e7d0f02a-bfd1-489f-b8a8-e0aef168c035)
+![ldap-carddav - A CardDAV server for LDAP](https://github.com/user-attachments/assets/e7d0f02a-bfd1-489f-b8a8-e0aef168c035)
 
 ## Features
 1. Create, edit, rename and delete contacts directly in LDAP server using CardDAV protocol.
