@@ -39,7 +39,8 @@ apache2
 libapache2-mod-php
 
 -- Assumptions
-It is assumed that PHP will executed by user www-data on the host server. In case it is not so you can replace any reference to user www-data below with the user who will be executing PHP on your system.
+1. It is assumed that PHP will executed by user www-data on the host server. In case it is not so you can replace any reference to user www-data below with the user who will be executing PHP on your system.
+2. The term directory/directories imply the term folder/folders wherever applicable according to the hosting environment.
 
 -- Application configuration
 Copy conf/conf.php.example as conf/conf.php (application conf file) and update the conf file according to your environment and need. Configuration keys are documented along side in the conf/conf.php.example file. Check the wiki for more advanced configuration examples.
@@ -56,8 +57,8 @@ Copy conf/conf.php.example as conf/conf.php (application conf file) and update t
 1. Make sure your address books are configured correctly in the conf file before you perform the next steps.
 2. Execute 'php src/App/syncdb.php init' to initialize the sync database.
 
--- Application file/folder permissions
-1. Make sure no application files or folders are initially owned by user www-data.
+-- Application file/directory permissions
+1. Make sure no application files or directories are initially owned by user www-data.
 2. conf/conf.php MUST NOT be world readable but MUST be readable and preferably not writable by the user executing PHP.
    Equivalent of UNIX command: chmod o-rwx conf/conf.php && chmod g-w conf/conf.php && chgrp www-data conf/conf.php
 3. Data directory need to be writable by the user executing PHP and MUST NOT be world readable. All sub directories of data directory need to be writable by the user executing PHP. Default data directory is data.
