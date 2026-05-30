@@ -33,5 +33,5 @@ sql/pgsql/30_trigger_ddl.sql
 
 #### SQLite
 
-1. Create target database as per "-- Sync database creation" section in the INSTALL file of this release.
+1. Create target database as per "-- Application sync database creation" section in the INSTALL file of this release.
 2. Follow the data migration process defined in Wiki -> Data management -> Migration -> Sync database to upgrade.

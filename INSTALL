@@ -44,7 +44,7 @@ It is assumed that PHP will executed by user www-data on the host server. In cas
 -- Application configuration
 Copy conf/conf.php.example as conf/conf.php (application conf file) and update the conf file according to your environment and need. Configuration keys are documented along side in the conf/conf.php.example file. Check the wiki for more advanced configuration examples.
 
--- Sync database creation
+-- Application sync database creation
 1. Create database objects as per sql/<database_product>/*_ddl.sql file(s). It is recommended that a dedicated logical database/schema be used for this application.
    Example (sqlite): sqlite data/sync/syncdb/sqlite/cards.db < sql/sqlite/10_table_ddl.sql
                      sqlite data/sync/syncdb/sqlite/cards.db < sql/sqlite/30_trigger_ddl.sql
@@ -52,11 +52,11 @@ Copy conf/conf.php.example as conf/conf.php (application conf file) and update t
 3. Update 'dsn' and credentials appropriately in $config['sync_database'] in conf/conf.php file.
 4. If creating a sqlite database it is recommended that the database file be placed inside the application data directory or have read-write access by user www-data.
 
--- Initializing sync database
+-- Initializing application sync database
 1. Make sure your address books are configured correctly in the conf file before you perform the next steps.
 2. Execute 'php src/App/syncdb.php init' to initialize the sync database.
 
--- File permissions
+-- Application file/folder permissions
 1. Make sure no application files or folders are initially owned by user www-data.
 2. conf/conf.php MUST NOT be world readable but MUST be readable and preferably not writable by the user executing PHP.
    Equivalent of UNIX command: chmod o-rwx conf/conf.php && chmod g-w conf/conf.php && chgrp www-data conf/conf.php
