@@ -41,8 +41,8 @@ libapache2-mod-php
 -- Assumptions
 It is assumed that PHP will executed by user www-data on the host server. In case it is not so you can replace any reference to user www-data below with the user who will be executing PHP on your system.
 
--- Application conf file
-Copy conf/conf.php.example as conf/conf.php and update the file conf/conf.php according to your environment and need. Configuration keys are documented along side in the conf/conf.php.example file. Check the wiki for more advanced configuration examples.
+-- Application configuration
+Copy conf/conf.php.example as conf/conf.php (application conf file) and update the conf file according to your environment and need. Configuration keys are documented along side in the conf/conf.php.example file. Check the wiki for more advanced configuration examples.
 
 -- Sync database creation
 1. Create database objects as per sql/<database_product>/*_ddl.sql file(s). It is recommended that a dedicated logical database/schema be used for this application.
@@ -50,7 +50,7 @@ Copy conf/conf.php.example as conf/conf.php and update the file conf/conf.php ac
                      sqlite data/sync/syncdb/sqlite/cards.db < sql/sqlite/30_trigger_ddl.sql
 2. The database user to be used by this application should have SELECT, INSERT, UPDATE and DELETE privileges on all tables created in the above step. The database user to be used by this application should additionally have USAGE and/or SELECT privileges on all sequences created in the above step.
 3. Update 'dsn' and credentials appropriately in $config['sync_database'] in conf/conf.php file.
-4. If creating a sqlite database it is recommended that the database file is placed inside the data directory or have read-write access by user www-data.
+4. If creating a sqlite database it is recommended that the database file be placed inside the application data directory or have read-write access by user www-data.
 
 -- Initializing sync database
 1. Make sure your address books are configured correctly in the conf file before you perform the next steps.
