@@ -26,8 +26,8 @@
 3. Custom vCard property support.
 4. User groups.
 
-## Installation
-Check INSTALL file.
-
 ## Wiki
-Checkout the wiki here - [https://github.com/isubsoft/ldap-carddav/wiki](https://github.com/isubsoft/ldap-carddav/wiki) for more useful information and resources regarding this application.
+Checkout the [wiki](https://github.com/isubsoft/ldap-carddav/wiki) for useful information and resources regarding this application.
+
+## Installation
+Check the INSTALL file.
