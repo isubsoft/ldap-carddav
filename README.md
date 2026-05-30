@@ -26,8 +26,8 @@
 2. Compatibility to as many vCard data types as possible.
 3. Custom vCard property support.
 
-## Installation
-Check INSTALL file.
-
 ## Wiki
-Checkout the wiki here - [https://github.com/isubsoft/ldap-carddav/wiki](https://github.com/isubsoft/ldap-carddav/wiki) for more useful information and resources regarding this application.
+Checkout the [wiki](https://github.com/isubsoft/ldap-carddav/wiki) for useful information and resources regarding this application.
+
+## Installation
+Check the INSTALL file.
