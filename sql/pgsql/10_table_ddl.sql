@@ -15,6 +15,11 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 *
+* ---- Exceptions ----
+* Some of the below table structure(s) is copied from Sabre DAV library
+* version 4.0.3 Copyright (C) 2007-2016 fruux GmbH (https://fruux.com/)
+* and distributed under BSD 3-Clause "New" or "Revised" License.
+*
 ***************************************************************************/
 
 /**************** Tables ******************/
