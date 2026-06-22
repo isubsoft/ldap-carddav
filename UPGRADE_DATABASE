@@ -1,6 +1,6 @@
 *************** APPLICABILITY ***************
 The below mentioned upgrade steps are applicable to you if you created sync database from a release version <= v1.0.2
-This upgrade will make sync database more compatible with future application releases and more migration friendly to a different database product (including those not supported yet) hence recommended.
+This upgrade will make sync database compatible with future application releases and migration friendly to a different database product (including those not supported yet) hence recommended.
 
 *************** WARNING ***************
 1. DO NOT attempt any of the below mentioned migration activities before creating a reliable backup of application data. Check Wiki -> Data management -> Backup for more details.
@@ -33,5 +33,20 @@ sql/pgsql/30_trigger_ddl.sql
 
 #### SQLite
 
-1. Create target database as per "-- Application sync database creation" section in the INSTALL file of this release.
-2. Follow the data migration process defined in Wiki -> Data management -> Migration -> Sync database to upgrade.
+# Execute below SQL statements to alter required table(s).
+ALTER TABLE cards_addressbook RENAME COLUMN user_specific TO old_user_specific;
+ALTER TABLE cards_addressbook RENAME COLUMN writable TO old_writable;
+ALTER TABLE cards_addressbook ADD COLUMN user_specific CHAR(1) NOT NULL DEFAULT '1';
+ALTER TABLE cards_addressbook ADD COLUMN writable CHAR(1) NOT NULL DEFAULT '1';
+UPDATE cards_addressbook SET user_specific = old_user_specific, writable = old_writable;
+ALTER TABLE propertystorage RENAME COLUMN value TO old_value;
+ALTER TABLE propertystorage ADD COLUMN value BLOB;
+UPDATE propertystorage SET value = old_value;
+
+# Execute SQL statements present in below mentioned files(s) from this release. Example: sqlite data/sync/syncdb/sqlite/cards.db < <file>
+sql/sqlite/30_trigger_ddl.sql
+
+# Execute below SQL statements to complete altering required table(s).
+ALTER TABLE cards_addressbook DROP COLUMN old_user_specific;
+ALTER TABLE cards_addressbook DROP COLUMN old_writable;
+ALTER TABLE propertystorage DROP COLUMN old_value;
