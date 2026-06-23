@@ -20,35 +20,8 @@
 ***************************************************************************/
 
 /**
-* This script is used to manage sync database.
+* This script is used to upgrade sync database.
 **/
-
-function printHelp($argv)
-{
-	error_log("Usage: " . $argv[0] . " action [parameters]");
-	error_log("");
-	error_log("-- Actions");
-	error_log("help:             Print this help and exit.");
-	error_log("init:             Initialize sync database.");
-	error_log("manage (default): Manage objects in sync database.");
-	error_log("housekeeping:     Physically delete logically deleted records.");
-	error_log("");
-	error_log("-- Parameter(s) for action manage. Omitting any optional parameter below may turn on interactive mode to obtain it.");
-	error_log("  user: (optional) Manage a user. Currently this parameter also implies the below 'delete' parameter.");
-	error_log("    delete: (optional) Delete a user.");
-	error_log("      <user_id>: (optional) entryUUID of the user from backend. WARNING: If this parameter is provided no confirmation will be taken before execution. So use this parameter only in a non-interactive or batch process.");
-	error_log("");
-	error_log("  addressbook: (optional) Manage an address book.");
-	error_log("    list:   (optional) List address book(s) present in sync database.");
-	error_log("    add:    (optional) Add an address book.");
-	error_log("    rename: (optional) Rename an address book.");
-	error_log("    delete: (optional) Delete an address book.");
-	error_log("");
-	error_log("-- Parameter(s) for action housekeeping");
-	error_log("  <batch_size>: (optional, integer) Restrict action to maximum of these many items. Should be >= 1, defaults to 1000. Since this action can be time consuming set this parameter to a value in range 1000 to 10000 to be efficient. Avoid setting this to a very small or very large value as it may cause performance issues.");
-	
-	return;
-}
 
 /*import database connection*/
 require_once __DIR__ . '/include/bootstrap.php';
@@ -70,10 +43,10 @@ function mysqlFileGetContents($filename)
 	$fileContents = null;
 	
 	foreach(file($filename) as $line) {
-		if(preg_match('#^\s*DELIMITER\s+.*$#i', $line))
+		if(preg_match('#^\\s*DELIMITER\\s+.*$#i', $line))
 			continue;
 			
-		$fileContents = $fileContents . preg_replace('#(\s+)END\s*//|^(\s*)END\s*//#i', '$1END;', $line);
+		$fileContents = $fileContents . preg_replace('#(\\s+)END\\s*//|^(\\s*)END\\s*//#i', '$1END;', $line);
 	}
 	
 	return $fileContents;
