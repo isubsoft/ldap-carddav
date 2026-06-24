@@ -28,7 +28,7 @@ require_once __DIR__ . '/include/bootstrap.php';
 
 $installDbDdlFiles = [];
 
-foreach(glob(__BASE_DIR__ . "/sql/" . $$pdo_scheme . "/*_ddl.sql", GLOB_ERR) as $ddlSqlFile)
+foreach(glob(__BASE_DIR__ . "/sql/" . $pdo_scheme . "/*_ddl.sql", GLOB_ERR) as $ddlSqlFile)
 	$installDbDdlFiles[] = $ddlSqlFile;
 
 if($installDbDdlFiles == []) {
