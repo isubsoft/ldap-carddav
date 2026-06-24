@@ -26,21 +26,20 @@
 /*import database connection*/
 require_once __DIR__ . '/include/bootstrap.php';
 
-$installDbStmts = [];
+$installDbDdlFiles = [];
 
-foreach(SUPPOTED_SYNCDB_PRODUCTS as $dbProductName) {
-	foreach(glob(__BASE_DIR__ . "/sql/" . $dbProductName . "/*_ddl.sql", GLOB_ERR) as $ddlSqlFile)
-		$installDbStmts[$dbProductName][] = file_get_contents($ddlSqlFile);
-}
+foreach(glob(__BASE_DIR__ . "/sql/" . $$pdo_scheme . "/*_ddl.sql", GLOB_ERR) as $ddlSqlFile)
+	$installDbDdlFiles[] = $ddlSqlFile;
 
-if (!isset($installDbStmts[$pdo_scheme]) || !is_array($installDbStmts[$pdo_scheme])) {
+if($installDbDdlFiles == []) {
 	echo "[INFO] No install steps defined for '$pdo_scheme' database product.";
 	exit(1);
 }
 
 try {
-	foreach ($installDbStmts[$pdo_scheme] as $stmt)
-		$pdo->exec($stmt);
+	foreach ($installDbDdlFiles as $ddlSqlFile)
+		echo "[INFO] Executing DDL statements from file - '$ddlSqlFile'";
+		$pdo->exec(file_get_contents($ddlSqlFile));
 } 
 catch (\Throwable $th) {
 	trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
