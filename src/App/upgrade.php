@@ -52,7 +52,7 @@ function mysqlFileGetContents($filename)
 	return $fileContents;
 }
 
-$createDbVersionTableStmt = "CREATE TABLE schema_version (key_name VARCHAR(32) NOT NULL, value INTEGER NOT NULL DEFAULT 0)";
+$createDbVersionTableStmt = "CREATE TABLE schema_version (key_name VARCHAR(32) NOT NULL, key_value INTEGER NOT NULL DEFAULT 0)";
 
 foreach($syncDbVersion as $key_name => $key_value)
 	$updateDbVersionStmt[] = "INSERT INTO schema_version (key_name, key_value) VALUES ('" . $key_name . "', " . $key_value . ")";
