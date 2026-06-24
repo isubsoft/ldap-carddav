@@ -32,13 +32,13 @@ foreach(glob(__BASE_DIR__ . "/sql/" . $pdo_scheme . "/*_ddl.sql", GLOB_ERR) as $
 	$installDbDdlFiles[] = $ddlSqlFile;
 
 if($installDbDdlFiles == []) {
-	echo "[INFO] No install steps defined for '$pdo_scheme' database product.";
+	echo "[INFO] No install steps defined for '$pdo_scheme' database product." . PHP_EOL;
 	exit(1);
 }
 
 try {
 	foreach ($installDbDdlFiles as $ddlSqlFile)
-		echo "[INFO] Executing DDL statements from file - '$ddlSqlFile'";
+		echo "[INFO] Executing DDL statements from file - '$ddlSqlFile'" . PHP_EOL;
 		$pdo->exec(file_get_contents($ddlSqlFile));
 } 
 catch (\Throwable $th) {
