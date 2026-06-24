@@ -37,9 +37,10 @@ if($installDbDdlFiles == []) {
 }
 
 try {
-	foreach ($installDbDdlFiles as $ddlSqlFile)
+	foreach ($installDbDdlFiles as $ddlSqlFile) {
 		echo "[INFO] Executing DDL statements from file - '$ddlSqlFile'" . PHP_EOL;
 		$pdo->exec(file_get_contents($ddlSqlFile));
+	}
 } 
 catch (\Throwable $th) {
 	trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
