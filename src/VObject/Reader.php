@@ -35,7 +35,7 @@ class Reader extends \Sabre\VObject\Reader{
         return $jsonData;
     }
 
-    function multiAllowedStatus($vCard_attr){    
+    public static function multiAllowedStatus($vCard_attr){    
 
         $VCard_attr_info = self::vCardMetaData();
         if(isset($VCard_attr_info[$vCard_attr]))
@@ -46,7 +46,7 @@ class Reader extends \Sabre\VObject\Reader{
         return false;
     }
 
-    function compositeAttrStatus($vCard_attr){
+    public static function compositeAttrStatus($vCard_attr){
 
         $VCard_attr_info = self::vCardMetaData();
         if(isset($VCard_attr_info[$vCard_attr]))
@@ -57,7 +57,7 @@ class Reader extends \Sabre\VObject\Reader{
         return false;
     }
 
-    function getDefaultParams($vCard_attr){        
+    public static function getDefaultParams($vCard_attr){        
 
         $VCard_attr_info = self::vCardMetaData();
         if(isset($VCard_attr_info[$vCard_attr]))
@@ -69,7 +69,7 @@ class Reader extends \Sabre\VObject\Reader{
     }
 
 
-    function backendValueConversion($vCardAttr, $value, $backendDataFormat)
+    public static function backendValueConversion($vCardAttr, $value, $backendDataFormat)
     {
         $backendDataFormat = strtoupper($backendDataFormat);
         $cardData = '';
@@ -150,7 +150,7 @@ class Reader extends \Sabre\VObject\Reader{
         return  ['cardData' => $cardData, 'params' => $params];
     }
 
-    function memberValue($value, $vCardAttr)
+    public static function memberValue($value, $vCardAttr)
     {
         $valueComponent = parse_url($value);
         $vCardMetaData = self::vCardMetaData();
@@ -168,7 +168,7 @@ class Reader extends \Sabre\VObject\Reader{
         return $memberValue;
     }
 
-    function memberValueConversion($value, $vCardAttr)
+    public static function memberValueConversion($value, $vCardAttr)
     {
         $vCardMetaData = self::vCardMetaData();
         $vCardInfo = $vCardMetaData[$vCardAttr];
