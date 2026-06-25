@@ -1,4 +1,4 @@
-<?php
+<?php 
 
 /***************************************************************************
 *
@@ -25,16 +25,16 @@
 
 function printHelp($argv)
 {
-	error_log("Usage: " . $argv[0] . " action [parameters]");
-	error_log("");
-	error_log("-- Actions");
-	error_log("help:           Print this help and exit.");
-	error_log("info (default): Print cache information.");
-	error_log("clear:          Clear cache. WARNING: This will delete/invalidate all items in the cache including the ones set by other application(s).");
-	error_log("housekeeping:   Evict stale cache from managed caches.");
-	error_log("");
-	error_log("-- Parameter(s) for housekeeping");
-	error_log("  batch size: (optional, integer) Restrict action to maximum of these many items. Should be >= 0, 0 (default) means no limit. Since this action can be time consuming set this parameter to a small value like 1000 to finish early. Useful when used from a scheduler.");
+	echo "Usage: " . $argv[0] . " action [parameters]" . PHP_EOL;
+	echo "" . PHP_EOL;
+	echo "-- Actions" . PHP_EOL;
+	echo "help:           Print this help and exit." . PHP_EOL;
+	echo "info (default): Print cache information." . PHP_EOL;
+	echo "clear:          Clear cache. WARNING: This will delete/invalidate all items in the cache including the ones set by other application(s)." . PHP_EOL;
+	echo "housekeeping:   Evict stale cache from managed caches." . PHP_EOL;
+	echo "" . PHP_EOL;
+	echo "-- Parameter(s) for housekeeping" . PHP_EOL;
+	echo "  batch_size: (optional, integer) Restrict action to maximum of these many items. Should be >= 0, 0 (default) means no limit. Since this action can be time consuming set this parameter to a small value like 1000 to finish early. Useful when used from a scheduler." . PHP_EOL;
 	
 	return;
 }
@@ -82,11 +82,21 @@ else if(isset($argv[1]) && $argv[1] == 'clear')
 		exit;
 	}
 	
-	echo "-- Cache info [ backend => object(s) cached ] --" . PHP_EOL;
+	$persistedCachedBackendEntity = [];
 	
 	foreach($cachedBackendEntity as $backendId => $entityList)
 		if(!in_array($backendId, ISubsoft\Cache\Master::$noPersistenceBackends))
-			echo $backendId . " => " . json_encode($entityList, JSON_NUMERIC_CHECK) . PHP_EOL;
+			$persistedCachedBackendEntity[] = $backendId . " => " . json_encode($entityList, JSON_NUMERIC_CHECK);
+			
+	if(count($persistedCachedBackendEntity) < 1) {
+		echo "[INFO] Either no cache backend is active or all active cache backend are transient. Quitting." . PHP_EOL;
+		exit;
+	}
+	
+	echo "-- Cache info [ backend => object(s) cached ] --" . PHP_EOL;
+	
+	foreach($persistedCachedBackendEntity as $infoCachedBackendEntity)
+		echo $infoCachedBackendEntity . PHP_EOL;
 		
 	echo PHP_EOL;
 		
