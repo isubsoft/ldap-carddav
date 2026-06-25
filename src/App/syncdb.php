@@ -29,7 +29,7 @@ function printHelp($argv)
 	echo "    delete: (optional) Delete an address book." . PHP_EOL;
 	echo "" . PHP_EOL;
 	echo "-- Parameter(s) for action housekeeping" . PHP_EOL;
-	echo "  <batch_size>: (optional, integer) Restrict action to maximum of these many items. Should be >= 1, defaults to 1000. Since this action can be time consuming set this parameter to a value in range 1000 to 10000 to be efficient. Avoid setting this to a very small or very large value as it may cause performance issues." . PHP_EOL;
+	echo "  batch_size: (optional, integer) Restrict action to maximum of these many items. Should be >= 1, defaults to 1000. Since this action can be time consuming set this parameter to a value in range 1000 to 10000 to be efficient. Avoid setting this to a very small or very large value as it may cause performance issues." . PHP_EOL;
 	
 	return;
 }

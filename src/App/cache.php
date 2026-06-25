@@ -18,7 +18,7 @@ function printHelp($argv)
 	echo "housekeeping:   Evict stale cache from managed caches." . PHP_EOL;
 	echo "" . PHP_EOL;
 	echo "-- Parameter(s) for housekeeping" . PHP_EOL;
-	echo "  batch size: (optional, integer) Restrict action to maximum of these many items. Should be >= 0, 0 (default) means no limit. Since this action can be time consuming set this parameter to a small value like 1000 to finish early. Useful when used from a scheduler." . PHP_EOL;
+	echo "  batch_size: (optional, integer) Restrict action to maximum of these many items. Should be >= 0, 0 (default) means no limit. Since this action can be time consuming set this parameter to a small value like 1000 to finish early. Useful when used from a scheduler." . PHP_EOL;
 	
 	return;
 }
