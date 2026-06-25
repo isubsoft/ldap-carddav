@@ -25,27 +25,27 @@
 
 function printHelp($argv)
 {
-	error_log("Usage: " . $argv[0] . " action [parameters]");
-	error_log("");
-	error_log("-- Actions");
-	error_log("help:             Print this help and exit.");
-	error_log("init:             Initialize sync database.");
-	error_log("manage (default): Manage objects in sync database.");
-	error_log("housekeeping:     Physically delete logically deleted records.");
-	error_log("");
-	error_log("-- Parameter(s) for action manage. Omitting any optional parameter below may turn on interactive mode to obtain it.");
-	error_log("  user: (optional) Manage a user. Currently this parameter also implies the below 'delete' parameter.");
-	error_log("    delete: (optional) Delete a user.");
-	error_log("      <user_id>: (optional) entryUUID of the user from backend. WARNING: If this parameter is provided no confirmation will be taken before execution. So use this parameter only in a non-interactive or batch process.");
-	error_log("");
-	error_log("  addressbook: (optional) Manage an address book.");
-	error_log("    list:   (optional) List address book(s) present in sync database.");
-	error_log("    add:    (optional) Add an address book.");
-	error_log("    rename: (optional) Rename an address book.");
-	error_log("    delete: (optional) Delete an address book.");
-	error_log("");
-	error_log("-- Parameter(s) for action housekeeping");
-	error_log("  <batch_size>: (optional, integer) Restrict action to maximum of these many items. Should be >= 1, defaults to 1000. Since this action can be time consuming set this parameter to a value in range 1000 to 10000 to be efficient. Avoid setting this to a very small or very large value as it may cause performance issues.");
+	echo "Usage: " . $argv[0] . " action [parameters]" . PHP_EOL;
+	echo "" . PHP_EOL;
+	echo "-- Actions" . PHP_EOL;
+	echo "help:             Print this help and exit." . PHP_EOL;
+	echo "init:             Initialize sync database." . PHP_EOL;
+	echo "manage (default): Manage objects in sync database." . PHP_EOL;
+	echo "housekeeping:     Physically delete logically deleted records." . PHP_EOL;
+	echo "" . PHP_EOL;
+	echo "-- Parameter(s) for action manage. Omitting any optional parameter below may turn on interactive mode to obtain it." . PHP_EOL;
+	echo "  user: (optional) Manage a user. Currently this parameter also implies the below 'delete' parameter." . PHP_EOL;
+	echo "    delete: (optional) Delete a user." . PHP_EOL;
+	echo "      <user_id>: (optional) entryUUID of the user from backend. WARNING: If this parameter is provided no confirmation will be taken before execution. So use this parameter only in a non-interactive or batch process." . PHP_EOL;
+	echo "" . PHP_EOL;
+	echo "  addressbook: (optional) Manage an address book." . PHP_EOL;
+	echo "    list:   (optional) List address book(s) present in sync database." . PHP_EOL;
+	echo "    add:    (optional) Add an address book." . PHP_EOL;
+	echo "    rename: (optional) Rename an address book." . PHP_EOL;
+	echo "    delete: (optional) Delete an address book." . PHP_EOL;
+	echo "" . PHP_EOL;
+	echo "-- Parameter(s) for action housekeeping" . PHP_EOL;
+	echo "  batch_size: (optional, integer) Restrict action to maximum of these many items. Should be >= 1, defaults to 1000. Since this action can be time consuming set this parameter to a value in range 1000 to 10000 to be efficient. Avoid setting this to a very small or very large value as it may cause performance issues." . PHP_EOL;
 	
 	return;
 }
@@ -191,7 +191,7 @@ elseif(isset($argv[1]) && $argv[1] == 'init')
 		
 		if($initialized)
 		{
-			echo "[NOTE] Sync database has already been initialized." . PHP_EOL;
+			echo "[INFO] Sync database has already been initialized." . PHP_EOL;
 		  exit;
 		}
 		
@@ -220,7 +220,7 @@ elseif(isset($argv[1]) && $argv[1] == 'init')
       exit(1);
     }
     
-	echo "[NOTE] Initialization complete." . PHP_EOL;
+	echo "[INFO] Initialization complete." . PHP_EOL;
   exit;
 }
 elseif(isset($argv[1]) && $argv[1] == 'housekeeping')
@@ -281,13 +281,13 @@ elseif(isset($argv[1]) && $argv[1] == 'housekeeping')
 	}
 	
 	echo "Complete" . PHP_EOL;
-	echo "[NOTE] After this action sync database table(s) '$backendMapTableName' may need optimization (re-indexing/re-build). Use native database command(s) to achieve the same." . PHP_EOL;
+	echo "[NOTICE] After this action sync database table(s) '$backendMapTableName' may need optimization (re-indexing/re-build). Use native database command(s) to achieve the same." . PHP_EOL;
 	exit;
 }
 
 if(!$initialized)
 {
-  	echo "[NOTE] Sync database has not been initialized. Initialize it first." . PHP_EOL;
+  	echo "[NOTICE] Sync database has not been initialized. Initialize it first." . PHP_EOL;
 		error_log("Check help information using: " . $argv[0] . " help");
   	exit(1);
 }
@@ -383,8 +383,8 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 			}
 
 			echo "User having user id '$oldUserId' has been deleted." . PHP_EOL;
-			echo "[NOTE] After this action sync database table(s) '$backendMapTableName' may need optimization (re-indexing/re-build). Use native database command(s) to achieve the same." . PHP_EOL;
-			echo "[NOTE] After this action sync database table(s) '$userTableName' may need optimization (re-indexing/re-build) (if you have deleted a large number of '$options[$choice]' objects). Use native database command(s) to achieve the same." . PHP_EOL;
+			echo "[NOTICE] After this action sync database table(s) '$backendMapTableName' may need optimization (re-indexing/re-build). Use native database command(s) to achieve the same." . PHP_EOL;
+			echo "[NOTICE] After this action sync database table(s) '$userTableName' may need optimization (re-indexing/re-build) (if you have deleted a large number of '$options[$choice]' objects). Use native database command(s) to achieve the same." . PHP_EOL;
 		} catch (\Throwable $th) {
 			trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 			exit(1);
@@ -516,7 +516,7 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 					}
 
 				  echo "Address book '$oldAddressBook' has been renamed to '$newAddressbook'." . PHP_EOL;
-				  echo "[NOTE] After this action sync database table(s) '$backendMapTableName' may need optimization (re-indexing/re-build). Use native database command(s) to achieve the same." . PHP_EOL;
+				  echo "[NOTICE] After this action sync database table(s) '$backendMapTableName' may need optimization (re-indexing/re-build). Use native database command(s) to achieve the same." . PHP_EOL;
 			}
 			elseif($options[$choice] == 'delete')
 			{
@@ -546,7 +546,7 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 					}
 
 				  echo "Address book '". $oldAddressBook ."' has been deleted." . PHP_EOL;
-				  echo "[NOTE] After this action sync database table(s) '$backendMapTableName' may need optimization (re-indexing/re-build). Use native database command(s) to achieve the same." . PHP_EOL;
+				  echo "[NOTICE] After this action sync database table(s) '$backendMapTableName' may need optimization (re-indexing/re-build). Use native database command(s) to achieve the same." . PHP_EOL;
 			}
 
 		} catch (\Throwable $th) {
