@@ -53,6 +53,8 @@ function replacePlaceholder(string $placeholder, string $replacement, string $su
 
 // Define constants
 const __APP_NAME__ = 'ldap-carddav';
+
+const SUPPOTED_SYNCDB_PRODUCTS = ['sqlite', 'mysql', 'pgsql'];
 const CACHED_ENTITIES = ['principal', 'card'];
 
 define('__BASE_DIR__', __DIR__ . '/../../..');
@@ -79,6 +81,8 @@ $GLOBALS['log_level'] = (isset($config['app']['log_level']) && $config['app']['l
 /* Database */
 
 $configurablePdoAttributes = [PDO::ATTR_TIMEOUT, PDO::ATTR_PERSISTENT];
+$pdo_scheme = null;
+$pdo = null;
 
 try {
     $pdo_dsn = !isset($config['sync_database']['dsn'])?null:(string)$config['sync_database']['dsn'];
