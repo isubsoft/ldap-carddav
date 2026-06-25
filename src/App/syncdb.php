@@ -175,7 +175,7 @@ else if(isset($argv[1]) && $argv[1] == 'init')
 		
 		if($initialized)
 		{
-			echo "[NOTE] Sync database has already been initialized." . PHP_EOL;
+			echo "[INFO] Sync database has already been initialized." . PHP_EOL;
 		  exit;
 		}
 		
@@ -203,7 +203,7 @@ else if(isset($argv[1]) && $argv[1] == 'init')
       exit(1);
     }
     
-	echo "[NOTE] Initialization complete." . PHP_EOL;
+	echo "[INFO] Initialization complete." . PHP_EOL;
   exit;
 }
 elseif(isset($argv[1]) && $argv[1] == 'housekeeping')
@@ -264,13 +264,13 @@ elseif(isset($argv[1]) && $argv[1] == 'housekeeping')
 	}
 	
 	echo "Complete" . PHP_EOL;
-	echo "[NOTE] After this action sync database table(s) '$backendMapTableName' may need optimization (re-indexing/re-build). Use native database command(s) to achieve the same." . PHP_EOL;
+	echo "[NOTICE] After this action sync database table(s) '$backendMapTableName' may need optimization (re-indexing/re-build). Use native database command(s) to achieve the same." . PHP_EOL;
 	exit;
 }
 
 if(!$initialized)
 {
-  	echo "[NOTE] Sync database has not been initialized. Initialize it first." . PHP_EOL;
+  	echo "[NOTICE] Sync database has not been initialized. Initialize it first." . PHP_EOL;
 		error_log("Check help information using: " . $argv[0] . " help");
   	exit(1);
 }
@@ -366,8 +366,8 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 			}
 
 			echo "User having user id '$oldUserId' has been deleted." . PHP_EOL;
-			echo "[NOTE] After this action sync database table(s) '$backendMapTableName' may need optimization (re-indexing/re-build). Use native database command(s) to achieve the same." . PHP_EOL;
-			echo "[NOTE] After this action sync database table(s) '$userTableName' may need optimization (re-indexing/re-build) (if you have deleted a large number of '$options[$choice]' objects). Use native database command(s) to achieve the same." . PHP_EOL;
+			echo "[NOTICE] After this action sync database table(s) '$backendMapTableName' may need optimization (re-indexing/re-build). Use native database command(s) to achieve the same." . PHP_EOL;
+			echo "[NOTICE] After this action sync database table(s) '$userTableName' may need optimization (re-indexing/re-build) (if you have deleted a large number of '$options[$choice]' objects). Use native database command(s) to achieve the same." . PHP_EOL;
 		} catch (\Throwable $th) {
 			trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 			exit(1);
@@ -499,7 +499,7 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 					}
 
 				  echo "Address book '$oldAddressBook' has been renamed to '$newAddressbook'." . PHP_EOL;
-				  echo "[NOTE] After this action sync database table(s) '$backendMapTableName' may need optimization (re-indexing/re-build). Use native database command(s) to achieve the same." . PHP_EOL;
+				  echo "[NOTICE] After this action sync database table(s) '$backendMapTableName' may need optimization (re-indexing/re-build). Use native database command(s) to achieve the same." . PHP_EOL;
 			}
 			else if($options[$choice] == 'delete')
 			{
@@ -529,7 +529,7 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 					}
 
 				  echo "Address book '". $oldAddressBook ."' has been deleted." . PHP_EOL;
-				  echo "[NOTE] After this action sync database table(s) '$backendMapTableName' may need optimization (re-indexing/re-build). Use native database command(s) to achieve the same." . PHP_EOL;
+				  echo "[NOTICE] After this action sync database table(s) '$backendMapTableName' may need optimization (re-indexing/re-build). Use native database command(s) to achieve the same." . PHP_EOL;
 			}
 
 		} catch (\Throwable $th) {
