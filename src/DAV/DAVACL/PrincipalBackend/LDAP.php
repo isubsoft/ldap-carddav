@@ -1,7 +1,23 @@
 <?php
-/**************************************************************
+
+/***************************************************************************
+*
 * Copyright (C) 2023-2025 ISub Softwares (OPC) Private Limited
-**************************************************************/
+* 
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+* 
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+* 
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*
+***************************************************************************/
 
 namespace ISubsoft\DAV\DAVACL\PrincipalBackend;
 
@@ -100,6 +116,11 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
     	if($this->ldapConn !== false)
     		return;
     		
+    	if(!isset($this->config['principal']['ldap']['search_bind_dn']) || $this->config['principal']['ldap']['search_bind_dn'] == '') {
+				trigger_error("Backend search parameters for principal not present. Check configuration.", E_USER_WARNING);
+				throw new SabreDAVException\ServiceUnavailable();
+			}
+
 		  $bindDn = $this->config['principal']['ldap']['search_bind_dn'];
 		  $bindPass = (isset($this->config['principal']['ldap']['search_bind_pw']))?$this->config['principal']['ldap']['search_bind_pw']:null;
 		  $ldapConn = Utility::LdapBindConnection(['bindDn' => $bindDn, 'bindPass' => $bindPass], $this->config['server']['ldap']);
@@ -179,11 +200,6 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
 
         if(strtolower($principalId) != strtolower($currentUserPrincipalId))
   				throw new SabreDAVException\Forbidden("User does not have access to this path");
-        
-			  if(!isset($this->config['principal']['ldap']['search_bind_dn']) || $this->config['principal']['ldap']['search_bind_dn'] == '') {
-			  	$principal = [ 'id'=> $principalId, 'uri' => $path];
-			    return $principal;
-			  }
         
 				$cacheValid = true; // If false then cache need to be refreshed
 				$principal = $this->cache->get(self::getCacheKey($principalId), null);

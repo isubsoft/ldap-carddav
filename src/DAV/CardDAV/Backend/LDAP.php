@@ -1,7 +1,23 @@
 <?php
-/**************************************************************
+
+/***************************************************************************
+*
 * Copyright (C) 2023-2025 ISub Softwares (OPC) Private Limited
-**************************************************************/
+* 
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+* 
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+* 
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*
+***************************************************************************/
 
 namespace ISubsoft\DAV\CardDAV\Backend;
 
@@ -292,9 +308,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							trigger_error("Configured values do not match that of sync database for address book '$addressBookId'. Address book excluded.", E_USER_NOTICE);
 							continue;
 						}
-						
-					  $addressBookConfig['user_specific'] = $row['user_specific'];
-					  $addressBookConfig['writable'] = $row['writable'];
 					  
 					} catch (\Throwable $th) {
 						trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
@@ -2190,24 +2203,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     
     function isAddressbookWritable($addressBookId)
     {
-			try 
-			{
-		    $query = 'SELECT writable FROM ' . self::$addressBooksTableName . ' WHERE addressbook_id =?';
-		    $stmt = $this->pdo->prepare($query);
-		    $stmt->execute([$addressBookId]);
-		    
-		    $row = $stmt->fetch(\PDO::FETCH_ASSOC);
-		    
-		    if($row === false)
-        	throw new SabreDAVException\ServiceUnavailable();
-		    	
-		    return $row['writable'];
-		  } 
-		  catch (\Throwable $th) {
-				trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
-		  }
-		  
-      throw new SabreDAVException\ServiceUnavailable();
+			$addressBookConfig = $this->addressbook[$addressBookId]['config'];
+			
+			return $addressBookConfig['writable'];
     }
     
     function isAddressbookDirectory($addressBookId)

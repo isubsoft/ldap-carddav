@@ -1,5 +1,31 @@
 <?php
 
+/***************************************************************************
+*
+* Copyright (C) 2023-2025 ISub Softwares (OPC) Private Limited unless noted
+* otherwise in ---- Exceptions ---- below.
+* 
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+* 
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+* 
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <https://www.gnu.org/licenses/>.
+* 
+* ---- Exceptions ----
+* Some variable names and/or their structure in this configuration is 
+* inspired by Roundcube Webmail client version 1.5.5 
+* Copyright (C) The Roundcube Dev Team licensed under the 
+* GNU General Public License version 3 or any later version.
+*
+***************************************************************************/
+
 $config = [];
 
 // Set temporary files directory of the application if it is different from default. 
@@ -59,14 +85,25 @@ $config['sync_database'] = [
 	'password' => '', // Defaults to null.
 	'options' => [], 	// Currently only PDO::ATTR_TIMEOUT and PDO::ATTR_PERSISTENT attribute(s) is accepted. 
 										// Defaults to empty array.
-	'init_commands' => [] // Database specific statements to be executed before database is used 
-												// by the application. Can be used to set some dynamic client side parameters for this application
-												// which cannot be set via other means in a reliable manner. Defaults to empty array.
-												// WARNING: DO NOT use statements which violate the requirements for sync database like turning off
-												// database transactions.
-												// The following database specific statements are anyways executed in the end.
-												// sqlite: PRAGMA foreign_keys = ON
-												// mysql: SET foreign_key_checks = ON
+
+	// Database specific statements to be executed before database is used 
+	// by the application. Can be used to set some dynamic client side parameters for this application
+	// which cannot be set via other means in a reliable manner. Defaults to empty array.
+	// WARNING: DO NOT use statements which violate the requirements for sync database like turning off
+	// database transactions.
+	//
+	// The following type of statements are supported for respective database product.
+	// sqlite: PRAGMA
+	// mysql: SET
+	// pgsql: SET
+	//
+	// The following database specific statements are anyways executed in the end.
+	// sqlite: PRAGMA foreign_keys = ON
+	// mysql: SET foreign_key_checks = ON
+	'init_commands' => [
+		// Example for pgsql
+		//  'SET search_path TO <my_schema>'
+	]
 ];
 
 
@@ -180,7 +217,8 @@ $config['principal']['ldap'] = [
 	                                    // list: Immediate children
 	                                    // base: Match base DN only
   
-  // DN and password to bind as before searching for pricipal DN(s), if anonymous search is not allowed
+  // DN and password to bind as before searching for principal DN(s) and reading attributes mapped in fieldmap.
+	// This bind user in addition must have read access to entryUUID operational attribute of the principal.
   'search_bind_dn' => 'cn=admin,ou=People,dc=example,dc=org',
   'search_bind_pw' => '<secret>',
 
