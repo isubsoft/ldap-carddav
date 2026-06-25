@@ -102,12 +102,21 @@ try {
     }
     elseif($pdo_scheme == 'mysql')
     {
+			// Setting database driver specific connection initialization attributes needed by this application
+			$pdo_options[PDO::MYSQL_ATTR_FOUND_ROWS] = true;
+
 	  	foreach($db_init_commands as $stmt)
 	  		if(preg_match('/^\\s*SET\\s+/i', $stmt))
 	  			$applicable_db_init_commands[] = $stmt;
 	  			
     	// Enforce foreign key constraints
 			$applicable_db_init_commands[] = 'SET foreign_key_checks = ON';
+    }
+    elseif($pdo_scheme == 'pgsql')
+    {
+	  	foreach($db_init_commands as $stmt)
+	  		if(preg_match('/^\\s*SET\\s+/i', $stmt))
+	  			$applicable_db_init_commands[] = $stmt;
     }
     
     // Execute applicable init commands
