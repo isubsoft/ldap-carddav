@@ -79,6 +79,8 @@ $GLOBALS['log_level'] = (isset($config['app']['log_level']) && $config['app']['l
 /* Database */
 
 $configurablePdoAttributes = [PDO::ATTR_TIMEOUT, PDO::ATTR_PERSISTENT];
+$pdo_scheme = null;
+$pdo = null;
 
 try {
     $pdo_dsn = !isset($config['sync_database']['dsn'])?null:(string)$config['sync_database']['dsn'];
@@ -136,6 +138,9 @@ try {
     
     // Setting database connection attributes needed by this application
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo->setAttribute(PDO::ATTR_ORACLE_NULLS, PDO::NULL_NATURAL);
+    $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+    $pdo->setAttribute(PDO::ATTR_STRINGIFY_FETCHES, false);
     
     // Execute applicable init commands
     foreach($applicable_db_init_commands as $stmt)
