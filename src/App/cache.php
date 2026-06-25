@@ -66,11 +66,21 @@ else if(isset($argv[1]) && $argv[1] == 'clear')
 		exit;
 	}
 	
-	echo "-- Cache info [ backend => object(s) cached ] --" . PHP_EOL;
+	$persistedCachedBackendEntity = [];
 	
 	foreach($cachedBackendEntity as $backendId => $entityList)
 		if(!in_array($backendId, ISubsoft\Cache\Master::$noPersistenceBackends))
-			echo $backendId . " => " . json_encode($entityList, JSON_NUMERIC_CHECK) . PHP_EOL;
+			$persistedCachedBackendEntity[] = $backendId . " => " . json_encode($entityList, JSON_NUMERIC_CHECK);
+			
+	if(count($persistedCachedBackendEntity) < 1) {
+		echo "[INFO] Either no cache backend is active or all active cache backend are transient. Quitting." . PHP_EOL;
+		exit;
+	}
+	
+	echo "-- Cache info [ backend => object(s) cached ] --" . PHP_EOL;
+	
+	foreach($persistedCachedBackendEntity as $infoCachedBackendEntity)
+		echo $infoCachedBackendEntity . PHP_EOL;
 		
 	echo PHP_EOL;
 		
