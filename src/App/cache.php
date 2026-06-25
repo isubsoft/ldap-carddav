@@ -48,35 +48,34 @@ if(isset($argv[1]) && $argv[1] == 'help')
 else if(!isset($argv[1]) || $argv[1] == 'info')
 {
 	if(count($cachedBackendEntity) < 1) {
-		echo "[INFO] No cache backend is active. Quitting." . PHP_EOL;
+		echo "[INFO] No cache backend is active. Quitting.\n";
 		exit;
 	}
 
-	echo "-- Cache info [ backend => object(s) cached ] --" . PHP_EOL;
+	echo "-- Cache info [ backend => object(s) cached ] --\n";
 	
 	foreach($cachedBackendEntity as $backendId => $entityList)
-		echo $backendId . " => " . json_encode($entityList, JSON_NUMERIC_CHECK) . PHP_EOL;
+		echo $backendId . " => " . json_encode($entityList, JSON_NUMERIC_CHECK) . "\n";
 		
 	exit;
 }
 else if(isset($argv[1]) && $argv[1] == 'clear')
 {
 	if(count($cachedBackendEntity) < 1) {
-		echo "[INFO] No cache backend is active. Quitting." . PHP_EOL;
+		echo "[INFO] No cache backend is active. Quitting.\n";
 		exit;
 	}
 	
-	echo "-- Cache info [ backend => object(s) cached ] --" . PHP_EOL;
+	echo "-- Cache info [ backend => object(s) cached ] --\n";
 	
 	foreach($cachedBackendEntity as $backendId => $entityList)
-		if(!in_array($backendId, ISubsoft\Cache\Master::$noPersistenceBackends))
-			echo $backendId . " => " . json_encode($entityList, JSON_NUMERIC_CHECK) . PHP_EOL;
+		echo $backendId . " => " . json_encode($entityList, JSON_NUMERIC_CHECK) . "\n";
 		
-	echo PHP_EOL;
+	echo "\n";
 		
   $cachedBackend = readline("Enter the backend you want to clear: ");
   
-  if($cachedBackend == '' || !isset($cacheMaster->cache[$cachedBackend]) || in_array($cachedBackend, ISubsoft\Cache\Master::$noPersistenceBackends)) {
+  if($cachedBackend == '' || !isset($cacheMaster->cache[$cachedBackend])) {
 		error_log("[ERROR] Invalid cache backend provided.");
 		exit(1);
   }
@@ -93,7 +92,7 @@ else if(isset($argv[1]) && $argv[1] == 'clear')
 		exit(1);
   }
   
-	echo "Complete." . PHP_EOL;
+	echo "Complete.\n";
 }
 else if(isset($argv[1]) && $argv[1] == 'housekeeping')
 {
@@ -110,7 +109,7 @@ else if(isset($argv[1]) && $argv[1] == 'housekeeping')
 		exit(1);
 	}
 			
-	echo "Housekeeping cache ..." . PHP_EOL;
+	echo "Housekeeping cache ...\n";
 	
 	// Delete stale cache from each managed cache backend
 	foreach($cacheMaster->cache as $backendId => $cache) {
@@ -124,7 +123,7 @@ else if(isset($argv[1]) && $argv[1] == 'housekeeping')
 	}
 	
 	if($exitCode === 0)
-		echo "Complete" . PHP_EOL;
+		echo "Complete\n";
 		
 	exit($exitCode);
 }
