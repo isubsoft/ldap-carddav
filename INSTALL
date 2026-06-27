@@ -53,7 +53,7 @@ Copy conf/conf.php.example as conf/conf.php (henceforth called the conf file) an
 3. If creating a sqlite database it is recommended to place database file inside the application data directory or provide read-write access to it by the system user www-data.
 
 -- Initializing application sync database
-1. Update 'dsn' and credentials in $config['sync_database'] in the conf file to a database user who will be used by the application during normal operation. This user should have SELECT, INSERT, UPDATE and DELETE privileges on all sync database tables. This user should additionally have USAGE and/or SELECT privileges on all sequences in the sync database.
+1. Update 'dsn' and credentials in $config['sync_database'] in the conf file to the dedicated database user who will be used by the application during normal operation. This database user should have SELECT, INSERT, UPDATE and DELETE privileges on all sync database tables. This database user should additionally have USAGE and/or SELECT privileges on all sequences in the sync database.
 2. Make sure your address books are configured correctly in the conf file before you perform the next steps.
 3. Execute 'php src/App/syncdb.php init' to initialize the sync database.
 
