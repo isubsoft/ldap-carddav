@@ -47,15 +47,15 @@ Copy conf/conf.php.example as conf/conf.php (henceforth called the conf file) an
 
 -- Application sync database creation
 1. Create a dedicated logical database/schema and a database user for this application.
-2. Update 'dsn' and credentials appropriately in $config['sync_database'] in the conf file. The database user at this stage should be an admin user who can create tables, triggers and sequences in the database/schema created in the above step.
+2. Create database objects as per sql/<database_product>/ddl.sql file using a database admin user who can create tables, triggers and sequences in the database/schema created in the above step.
    Example (sqlite): sqlite data/sync/syncdb/sqlite/cards.db < sql/sqlite/ddl.sql
    Example (mysql): mysql -u <user> <db_name> < sql/mysql/ddl.sql
-3. Now update credentials in $config['sync_database'] in the conf file to a database user who will be used by the application during normal operation. This user should have SELECT, INSERT, UPDATE and DELETE privileges on all tables created in the above step. This user should additionally have USAGE and/or SELECT privileges on all sequences created in the above step.
-4. If creating a sqlite database it is recommended to place database file inside the application data directory or provide read-write access to it by the system user www-data.
+3. If creating a sqlite database it is recommended to place database file inside the application data directory or provide read-write access to it by the system user www-data.
 
 -- Initializing application sync database
-1. Make sure your address books are configured correctly in the conf file before you perform the next steps.
-2. Execute 'php src/App/syncdb.php init' to initialize the sync database.
+1. Update 'dsn' and credentials in $config['sync_database'] in the conf file to a database user who will be used by the application during normal operation. This user should have SELECT, INSERT, UPDATE and DELETE privileges on all tables created in the above step. This user should additionally have USAGE and/or SELECT privileges on all sequences created in the above step.
+2. Make sure your address books are configured correctly in the conf file before you perform the next steps.
+3. Execute 'php src/App/syncdb.php init' to initialize the sync database.
 
 -- Application file/directory permissions
 1. Make sure no application files or directories are initially owned by system user www-data.
