@@ -41,7 +41,7 @@ $upgradeCompatibleSyncDbVersion = [
 $currentSyncDbVersion = [];
 
 try {
-	$pdo->exec("SELECT 1 FROM schema_version");
+	$pdo->query("SELECT 1 FROM schema_version");
 }
 catch (\Throwable $th) {
 	$currentSyncDbVersion = [
