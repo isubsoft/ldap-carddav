@@ -28,14 +28,12 @@ require_once __DIR__ . '/include/bootstrap.php';
 
 $syncDbVersion = [
 	'major'    => 1,
-	'minor'    => 1,
-	'revision' => 0
+	'minor'    => 1
 ];
 
 $upgradeCompatibleSyncDbVersion = [
 	'major'    => null,
-	'minor'    => null,
-	'revision' => null
+	'minor'    => null
 ];
 
 $currentSyncDbVersion = [];
@@ -46,8 +44,7 @@ try {
 catch (\Throwable $th) {
 	$currentSyncDbVersion = [
 		'major'    => null,
-		'minor'    => null,
-		'revision' => null
+		'minor'    => null
 	];
 }
 
@@ -68,14 +65,18 @@ if($currentSyncDbVersion == []) {
 }
 
 // No upgrades are necessary if current syncdb schema version (major and minor) is equal to upgraded application syncdb schema version
-if (isset($currentSyncDbVersion['major']) && $currentSyncDbVersion['major'] = $syncDbVersion['major']) {
-	if (isset($currentSyncDbVersion['minor']) && $currentSyncDbVersion['minor'] = $syncDbVersion['minor']) {
-		echo "[INFO] Sync database schema is up to date with current application version. No upgrade performed." . PHP_EOL;
+if (isset($currentSyncDbVersion['major']) && $currentSyncDbVersion['major'] === $syncDbVersion['major']) {
+	if (isset($currentSyncDbVersion['minor']) && $currentSyncDbVersion['minor'] === $syncDbVersion['minor']) {
+		echo "[INFO] Sync database schema is up to date with current application version. No upgrade required." . PHP_EOL;
 		exit;
 	}
+	elseif (isset($currentSyncDbVersion['minor']) && $currentSyncDbVersion['minor'] !== $upgradeCompatibleSyncDbVersion['minor']) {
+		error_log("[ERROR] Current sync database schema version is " . (json_encode($currentSyncDbVersion)) . ". Version required for upgrade is " . (json_encode($upgradeCompatibleSyncDbVersion)) . ". No upgrade will be performed.");
+		exit(1);
+	}
 }
-elseif (isset($currentSyncDbVersion['major']) && ($currentSyncDbVersion['major'] > $syncDbVersion['major'] || ($currentSyncDbVersion['major'] = $syncDbVersion['major'] && isset($currentSyncDbVersion['minor']) && $currentSyncDbVersion['minor'] > $syncDbVersion['minor'] ))) {
-	error_log("[ERROR] Sync database schema is incompatible with current application version. No upgrade will be performed.");
+elseif (isset($currentSyncDbVersion['major']) && ($currentSyncDbVersion['major'] !== $upgradeCompatibleSyncDbVersion['major'])) {
+	error_log("[ERROR] Current sync database schema version is " . (json_encode($currentSyncDbVersion)) . ". Version required for upgrade is " . (json_encode($upgradeCompatibleSyncDbVersion)) . ". No upgrade will be performed.");
 	exit(1);
 }
 
