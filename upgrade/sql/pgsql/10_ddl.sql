@@ -1,0 +1,8 @@
+CREATE TABLE schema_version
+(
+	key_name VARCHAR(32) NOT NULL PRIMARY KEY,
+	key_value INTEGER NOT NULL DEFAULT 0
+);
+
+ALTER TABLE cards_addressbook ALTER COLUMN user_specific TYPE CHAR(1) USING (user_specific::INTEGER), ALTER COLUMN user_specific SET DEFAULT '1', ALTER COLUMN writable TYPE CHAR(1) USING (writable::INTEGER), ALTER COLUMN writable SET DEFAULT '1';
+ALTER TABLE propertystorage ALTER COLUMN path TYPE TEXT, ALTER COLUMN name TYPE TEXT, ALTER COLUMN valuetype TYPE INTEGER;

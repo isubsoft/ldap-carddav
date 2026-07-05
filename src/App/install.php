@@ -26,20 +26,20 @@
 /*import database connection*/
 require_once __DIR__ . '/include/bootstrap.php';
 
-$installDbDdlFiles = [];
+$installDbSqlFiles = [];
 
-foreach(glob(__BASE_DIR__ . "/sql/" . $pdo_scheme . "/*_ddl.sql", GLOB_ERR) as $ddlSqlFile)
-	$installDbDdlFiles[] = $ddlSqlFile;
+foreach(glob(__BASE_DIR__ . "/sql/" . $pdo_scheme . "/*.sql", GLOB_ERR) as $sqlFile)
+	$installDbSqlFiles[] = $sqlFile;
 
-if($installDbDdlFiles == []) {
+if($installDbSqlFiles == []) {
 	echo "[INFO] No install steps defined for '$pdo_scheme' database product." . PHP_EOL;
 	exit(1);
 }
 
 try {
-	foreach ($installDbDdlFiles as $ddlSqlFile) {
-		echo "[INFO] Executing DDL statements from file - '$ddlSqlFile'" . PHP_EOL;
-		$pdo->exec(file_get_contents($ddlSqlFile));
+	foreach ($installDbSqlFiles as $sqlFile) {
+		echo "[INFO] Executing SQL statements from file - '$sqlFile'" . PHP_EOL;
+		$pdo->exec(file_get_contents($sqlFile));
 	}
 } 
 catch (\Throwable $th) {

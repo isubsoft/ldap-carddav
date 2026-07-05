@@ -27,8 +27,8 @@
 require_once __DIR__ . '/include/bootstrap.php';
 
 $syncDbVersion = [
-	'major'    => 2,
-	'minor'    => 0,
+	'major'    => 1,
+	'minor'    => 1,
 	'revision' => 0
 ];
 
@@ -38,62 +38,87 @@ $upgradeCompatibleSyncDbVersion = [
 	'revision' => null
 ];
 
-$createDbVersionTableStmt = "CREATE TABLE schema_version (key_name VARCHAR(32) NOT NULL, key_value INTEGER NOT NULL DEFAULT 0)";
-$updateDbVersionStmt = [];
+$currentSyncDbVersion = [];
 
-foreach($syncDbVersion as $key_name => $key_value)
-	$updateDbVersionStmt[] = "INSERT INTO schema_version (key_name, key_value) VALUES ('" . $key_name . "', " . $key_value . ")";
-	
-$upgradeDbStatements = [];
+try {
+	$pdo->exec("SELECT 1 FROM schema_version");
+}
+catch (\Throwable $th) {
+	$currentSyncDbVersion = [
+		'major'    => null,
+		'minor'    => null,
+		'revision' => null
+	];
+}
+
+if($currentSyncDbVersion == []) {
+	try {
+		$query = 'SELECT key_name, key_value FROM schema_version';
+		$stmt = $pdo->prepare($query);
+		$stmt->execute();
+		
+		foreach ($stmt->fetchAll(\PDO::FETCH_ASSOC) as $row)
+			$currentSyncDbVersion[$row['key_name']] = $row['key_value'];
+	}
+	catch (\Throwable $th)
+	{
+		trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
+		exit(1);
+	}
+}
+
+// No upgrades are necessary if current syncdb schema version (major and minor) is equal to upgraded application syncdb schema version
+if (isset($currentSyncDbVersion['major']) && $currentSyncDbVersion['major'] = $syncDbVersion['major']) {
+	if (isset($currentSyncDbVersion['minor']) && $currentSyncDbVersion['minor'] = $syncDbVersion['minor']) {
+		echo "[INFO] Sync database schema is up to date with current application version. No upgrade performed." . PHP_EOL;
+		exit;
+	}
+}
+elseif (isset($currentSyncDbVersion['major']) && ($currentSyncDbVersion['major'] > $syncDbVersion['major'] || ($currentSyncDbVersion['major'] = $syncDbVersion['major'] && isset($currentSyncDbVersion['minor']) && $currentSyncDbVersion['minor'] > $syncDbVersion['minor'] ))) {
+	error_log("[ERROR] Sync database schema is incompatible with current application version. No upgrade will be performed.");
+	exit(1);
+}
+
+$upgradeDbSqlFile = [];
 
 if($pdo_scheme == 'mysql') {
-	$upgradeDbStatements = [
-		$createDbVersionTableStmt,
-		"ALTER TABLE cards_addressbook MODIFY COLUMN user_specific CHAR(1) NOT NULL DEFAULT '1', MODIFY COLUMN writable CHAR(1) NOT NULL DEFAULT '1'",
-		"ALTER TABLE propertystorage MODIFY COLUMN path TEXT NOT NULL, MODIFY COLUMN name TEXT NOT NULL, MODIFY COLUMN valuetype INTEGER",
-		"ALTER TABLE propertystorage DROP INDEX path_property, ADD UNIQUE INDEX path_property (path(600), name(100))",
-		file_get_contents(__BASE_DIR__ . "/sql/" . $pdo_scheme . "/30_trigger_ddl.sql")
+	$upgradeDbSqlFile = [
+		__BASE_DIR__ . "/upgrade/sql/" . $pdo_scheme . "/10_ddl.sql",
+		__BASE_DIR__ . "/sql/" . $pdo_scheme . "/30_trigger_ddl.sql",
+		__BASE_DIR__ . "/sql/" . $pdo_scheme . "/90_data_seed_dml.sql"
 	];
 }
 elseif($pdo_scheme == 'pgsql') {
-	$upgradeDbStatements = [
-		$createDbVersionTableStmt,
-		"ALTER TABLE cards_addressbook ALTER COLUMN user_specific TYPE CHAR(1) USING (user_specific::INTEGER), ALTER COLUMN user_specific SET DEFAULT '1', ALTER COLUMN writable TYPE CHAR(1) USING (writable::INTEGER), ALTER COLUMN writable SET DEFAULT '1'",
-		"ALTER TABLE propertystorage ALTER COLUMN path TYPE TEXT, ALTER COLUMN name TYPE TEXT, ALTER COLUMN valuetype TYPE INTEGER",
-		file_get_contents(__BASE_DIR__ . "/sql/" . $pdo_scheme . "/30_trigger_ddl.sql")
+	$upgradeDbSqlFile = [
+		__BASE_DIR__ . "/upgrade/sql/" . $pdo_scheme . "/10_ddl.sql",
+		__BASE_DIR__ . "/sql/" . $pdo_scheme . "/30_trigger_ddl.sql",
+		__BASE_DIR__ . "/sql/" . $pdo_scheme . "/90_data_seed_dml.sql"
 	];
 }
 elseif($pdo_scheme == 'sqlite') {
-	$upgradeDbStatements = [
-		$createDbVersionTableStmt,
-		"ALTER TABLE cards_addressbook RENAME COLUMN user_specific TO old_user_specific",
-		"ALTER TABLE cards_addressbook RENAME COLUMN writable TO old_writable",
-		"ALTER TABLE cards_addressbook ADD COLUMN user_specific CHAR(1) NOT NULL DEFAULT '1'",
-		"ALTER TABLE cards_addressbook ADD COLUMN writable CHAR(1) NOT NULL DEFAULT '1'",
-		"UPDATE cards_addressbook SET user_specific = old_user_specific, writable = old_writable",
-		"ALTER TABLE propertystorage RENAME COLUMN valuetype TO old_valuetype",
-		"ALTER TABLE propertystorage RENAME COLUMN value TO old_value",
-		"ALTER TABLE propertystorage ADD COLUMN valuetype INTEGER",
-		"ALTER TABLE propertystorage ADD COLUMN value BLOB",
-		"UPDATE propertystorage SET valuetype = old_valuetype, value = old_value",
-		file_get_contents(__BASE_DIR__ . "/sql/" . $pdo_scheme . "/30_trigger_ddl.sql"),
-		"ALTER TABLE cards_addressbook DROP COLUMN old_user_specific",
-		"ALTER TABLE cards_addressbook DROP COLUMN old_writable",
-		"ALTER TABLE propertystorage DROP COLUMN old_valuetype",
-		"ALTER TABLE propertystorage DROP COLUMN old_value"
+	$upgradeDbSqlFile = [
+		__BASE_DIR__ . "/upgrade/sql/" . $pdo_scheme . "/10_stage_1_ddl.sql",
+		__BASE_DIR__ . "/sql/" . $pdo_scheme . "/30_trigger_ddl.sql",
+		__BASE_DIR__ . "/upgrade/sql/" . $pdo_scheme . "/10_stage_2_ddl.sql",
+		__BASE_DIR__ . "/sql/" . $pdo_scheme . "/90_data_seed_dml.sql"
 	];
 }
 
+echo "[INFO] Performing sync database schema version upgrade from " . (json_encode($currentSyncDbVersion)) . " => " .  (json_encode($syncDbVersion)) . PHP_EOL;
+
+echo "[INFO] Sync database upgrade can be a long running process so, kindly standby." . PHP_EOL;
+
 try {
-	foreach ($upgradeDbStatements as $stmt)
-		$pdo->exec($stmt);
-		
-	foreach ($updateDbVersionStmt as $stmt)
-		$pdo->exec($stmt);
+	foreach ($upgradeDbSqlFile as $sqlFile) {
+		echo "[INFO] Executing SQL statements from file - '$sqlFile'" . PHP_EOL;
+		$pdo->exec(file_get_contents($sqlFile));
+	}
 } 
 catch (\Throwable $th) {
 	trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 	exit(1);
 }
+
+echo "[INFO] Upgrade complete." . PHP_EOL;
 
 exit;
