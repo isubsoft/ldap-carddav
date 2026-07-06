@@ -82,23 +82,17 @@ elseif (isset($currentSyncDbVersion['major']) && ($currentSyncDbVersion['major']
 
 $upgradeDbSqlFile = [];
 
-if($pdo_scheme == 'mysql') {
-	$upgradeDbSqlFile = [
-		__BASE_DIR__ . "/upgrade/sql/" . $pdo_scheme . "/10_ddl.sql",
-		__BASE_DIR__ . "/sql/" . $pdo_scheme . "/30_trigger_ddl.sql"
-	];
-}
-elseif($pdo_scheme == 'pgsql') {
-	$upgradeDbSqlFile = [
-		__BASE_DIR__ . "/upgrade/sql/" . $pdo_scheme . "/10_ddl.sql",
-		__BASE_DIR__ . "/sql/" . $pdo_scheme . "/30_trigger_ddl.sql"
-	];
-}
-elseif($pdo_scheme == 'sqlite') {
+if($pdo_scheme == 'sqlite') {
 	$upgradeDbSqlFile = [
 		__BASE_DIR__ . "/upgrade/sql/" . $pdo_scheme . "/10_stage_1_ddl.sql",
 		__BASE_DIR__ . "/sql/" . $pdo_scheme . "/30_trigger_ddl.sql",
 		__BASE_DIR__ . "/upgrade/sql/" . $pdo_scheme . "/10_stage_2_ddl.sql"
+	];
+}
+else {
+	$upgradeDbSqlFile = [
+		__BASE_DIR__ . "/upgrade/sql/" . $pdo_scheme . "/10_ddl.sql",
+		__BASE_DIR__ . "/sql/" . $pdo_scheme . "/30_trigger_ddl.sql"
 	];
 }
 
