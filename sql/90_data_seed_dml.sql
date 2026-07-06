@@ -21,4 +21,3 @@
 
 INSERT INTO schema_version (key_name, key_value) VALUES ('major', 1);
 INSERT INTO schema_version (key_name, key_value) VALUES ('minor', 1);
-INSERT INTO schema_version (key_name, key_value) VALUES ('revision', 0);
