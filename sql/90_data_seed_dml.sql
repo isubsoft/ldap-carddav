@@ -1,5 +1,3 @@
-<?php 
-
 /***************************************************************************
 *
 * Copyright (C) 2023-2025 ISub Softwares (OPC) Private Limited
@@ -19,35 +17,7 @@
 *
 ***************************************************************************/
 
-/**
-* This script is used to upgrade sync database.
-**/
+/**************** Data seeding ******************/
 
-/*import database connection*/
-require_once __DIR__ . '/include/bootstrap.php';
-
-$installDbSqlFiles = [];
-
-foreach(glob(__BASE_DIR__ . "/sql/" . $pdo_scheme . "/*_ddl.sql", GLOB_ERR) as $sqlFile)
-	$installDbSqlFiles[] = $sqlFile;
-	
-foreach(glob(__BASE_DIR__ . "/sql/*_dml.sql", GLOB_ERR) as $sqlFile)
-	$installDbSqlFiles[] = $sqlFile;
-
-if($installDbSqlFiles == []) {
-	echo "[INFO] No install steps defined for '$pdo_scheme' database product." . PHP_EOL;
-	exit(1);
-}
-
-try {
-	foreach ($installDbSqlFiles as $sqlFile) {
-		echo "[INFO] Executing SQL statements from file - '$sqlFile'" . PHP_EOL;
-		$pdo->exec(file_get_contents($sqlFile));
-	}
-} 
-catch (\Throwable $th) {
-	trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
-	exit(1);
-}
-
-exit;
+INSERT INTO schema_version (key_name, key_value) VALUES ('major', 1);
+INSERT INTO schema_version (key_name, key_value) VALUES ('minor', 1);

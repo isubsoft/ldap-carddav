@@ -24,6 +24,12 @@
 
 /**************** Tables ******************/
 
+CREATE TABLE schema_version
+(
+	key_name VARCHAR(32) NOT NULL PRIMARY KEY,
+	key_value INTEGER NOT NULL DEFAULT 0
+);
+
 CREATE TABLE cards_user
 (
 	user_id VARCHAR(255) NOT NULL,
