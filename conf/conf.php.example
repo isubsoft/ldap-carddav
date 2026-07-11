@@ -201,6 +201,9 @@ $config['auth']['ldap'] = [
 
 // Principals.
 //
+// Principals are same as authenticated users but provide more information about the user (which is 
+// needed by this application to operate) than the authentication section is required to provide.
+//
 // Should be able to return a few mandatory properties defined in the field map.
 //
 $config['principal']['ldap'] = [
