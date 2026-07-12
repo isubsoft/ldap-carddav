@@ -69,7 +69,7 @@ unset($cacheMaster, $warnToResetCache);
 // Backends
 $authBackend = new ISubsoft\DAV\Auth\Backend\LDAP($config);
 $principalBackend = new ISubsoft\DAV\DAVACL\PrincipalBackend\LDAP($config, $pdo, $entityCache['principal']);
-$propStoreBackend = new Sabre\DAV\PropertyStorage\Backend\PDO($pdo);
+$propStoreBackend = new ISubsoft\DAV\PropertyStorage\Backend\PDO($pdo);
 $carddavBackend = new ISubsoft\DAV\CardDAV\Backend\LDAP($config, $pdo, $principalBackend, $entityCache['card']);
 
 // Setting up the directory tree //
