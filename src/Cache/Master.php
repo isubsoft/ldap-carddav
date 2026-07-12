@@ -72,6 +72,8 @@ class Master
    */	
 	public $cache;
 	
+	private $wasBackendNotActivePdoPrepStmt = [];
+	
   public function __construct(array $config, \PDO $pdo) {
   	$this->config = $config['cache'];
   	$this->pdo = $pdo;
@@ -82,12 +84,24 @@ class Master
 	{
 		$backendId = ($setBackendId == self::$dummyBackend)?null:$setBackendId;
 		
-		try {
+		if(!isset($this->wasBackendNotActivePdoPrepStmt['stmt01'])) {
+			// Preparing PDO statements which are used either inside a loop or part of a function 
+			// which is called repeatedly during processing of the request
+			try {
 				$query = 'SELECT backend_id FROM ' . self::$entityCacheTableName . ' WHERE entity_id = ?';
-				$stmt = $this->pdo->prepare($query);
-				$stmt->execute([$entityId]);
-				
-				$row = $stmt->fetch(\PDO::FETCH_ASSOC);
+				$this->wasBackendNotActivePdoPrepStmt['stmt01'] = $this->pdo->prepare($query);
+			}
+			catch (\Throwable $th) {
+				trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
+				throw new SabreDAVException\ServiceUnavailable();
+			}
+		}
+		
+		$stmt01 = $this->wasBackendNotActivePdoPrepStmt['stmt01'];
+		
+		try {
+				$stmt01->execute([$entityId]);
+				$row = $stmt01->fetch(\PDO::FETCH_ASSOC);
 				
 				if($row === false || $backendId != $row['backend_id'])
 					return true;
