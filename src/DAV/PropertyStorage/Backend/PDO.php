@@ -17,7 +17,7 @@ use Sabre\DAV\Xml\Property\Complex;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class PDO implements \Sabre\DAV\PropertyStorage\Backend\BackendInterface
+class PDO extends \Sabre\DAV\PropertyStorage\Backend\PDO
 {
     private $propFindPdoPrepStmt = [];
     
