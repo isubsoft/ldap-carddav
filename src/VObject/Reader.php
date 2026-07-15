@@ -5,20 +5,24 @@
 
 namespace ISubsoft\VObject;
 use ISubsoft\DAV\Utility\LDAP as Utility;
-use \Sabre\VObject\DateTimeParser as DateTimeParser;
+use Sabre\VObject\DateTimeParser as DateTimeParser;
+use Sabre\DAV\Exception as SabreDAVException;
 
 date_default_timezone_set('UTC');
 
 class Reader extends \Sabre\VObject\Reader{
 
     private static $encoding_format = 'base64';
+    private static $vCardPropertyMetadataJsonFile = __CONF_DIR__ . '/vcard_metadata.json';
 
     public static function vCardMetaData(){
         if($GLOBALS['vCardPropertyMetadata'] === null) {
-        	$GLOBALS['vCardPropertyMetadata'] = json_decode(file_get_contents(__CONF_DIR__ . '/vcard_metadata.json'), true);
+        	$GLOBALS['vCardPropertyMetadata'] = json_decode(file_get_contents(self::$vCardPropertyMetadataJsonFile), true);
         	
-        	if($GLOBALS['vCardPropertyMetadata'] === null)
-        		$GLOBALS['vCardPropertyMetadata'] = [];
+        	if(!is_array($GLOBALS['vCardPropertyMetadata'])) {
+						trigger_error("vCard metadata json file - '" . self::$vCardPropertyMetadataJsonFile . "' is either not present or not well formed.", E_USER_WARNING);
+        		throw new SabreDAVException\ServiceUnavailable();
+        	}
         }
 
 				return $GLOBALS['vCardPropertyMetadata'];
