@@ -76,6 +76,11 @@ $GLOBALS['max_payload_size'] = (isset($config['app']['max_payload_size']) && is_
 $GLOBALS['base_uri'] = (isset($config['app']['base_uri']) && $config['app']['base_uri'] != '')?((preg_match('#^/#', $config['app']['base_uri']) == 1)?$config['app']['base_uri']:'/' . $config['app']['base_uri']):'/server.php';
 $GLOBALS['log_level'] = (isset($config['app']['log_level']) && $config['app']['log_level'] != null)?$config['app']['log_level']:error_reporting();
 
+
+/* VCard metadata */
+$vCardPropertyMetadata = null;
+
+
 /* Database */
 
 $configurablePdoAttributes = [PDO::ATTR_TIMEOUT, PDO::ATTR_PERSISTENT];
