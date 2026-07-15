@@ -12,27 +12,16 @@ date_default_timezone_set('UTC');
 class Reader extends \Sabre\VObject\Reader{
 
     private static $encoding_format = 'base64';
-    /**
-     * Vcard
-     *
-     * @var array
-     */
 
     public static function vCardMetaData(){
-
-        $json = file_get_contents(__CONF_DIR__ . '/vcard_metadata.json'); 
-
-        if ($json === false) {
-            return null;
+        if($GLOBALS['vCardPropertyMetadata'] === null) {
+        	$GLOBALS['vCardPropertyMetadata'] = json_decode(file_get_contents(__CONF_DIR__ . '/vcard_metadata.json'), true);
+        	
+        	if($GLOBALS['vCardPropertyMetadata'] === null)
+        		$GLOBALS['vCardPropertyMetadata'] = [];
         }
 
-        $jsonData = json_decode($json, true); 
-
-        if ($jsonData === null) {
-            return null;
-        }
-
-        return $jsonData;
+				return $GLOBALS['vCardPropertyMetadata'];
     }
 
     public static function multiAllowedStatus($vCard_attr){    
