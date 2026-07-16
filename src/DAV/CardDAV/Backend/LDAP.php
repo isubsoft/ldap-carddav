@@ -2239,7 +2239,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						  }
 						}
             
-            $backendContactsUriList[] = $cardUri;
+            $backendContactsUriList[$cardUri] = 1;
 						$contacts[] = [
 							'card_uri' => $cardUri,
 							'card_uid' => $cardUid,
@@ -2256,12 +2256,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					while($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
 						$mappedContactUri = $row['card_uri'];
 
-						if(!in_array($mappedContactUri, $backendContactsUriList)) {
-							if(!$this->cache->delete(self::getCacheKey($syncDbUserId, $addressBookId, $mappedContactUri)))
-				    		trigger_error("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore this error.", E_USER_NOTICE);
-				    		
-		          $this->addChange($addressBookId, $mappedContactUri);
-						}
+						if(isset($backendContactsUriList[$mappedContactUri]))
+							continue;
+							
+						if(!$this->cache->delete(self::getCacheKey($syncDbUserId, $addressBookId, $mappedContactUri)))
+			    		trigger_error("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore this error.", E_USER_NOTICE);
+			    		
+	          $this->addChange($addressBookId, $mappedContactUri);
 					}
         } catch (\Throwable $th) {
 					trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
