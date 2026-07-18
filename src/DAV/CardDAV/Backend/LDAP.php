@@ -1318,6 +1318,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                             $memberData = Utility::LdapQuery($ldapConn, $value, $addressBookConfig['filter'], ['entryuuid'], 'base');
                             
 														if($memberData === false) {
+															$ldapErrorNo = ldap_errno($ldapConn);
+															
+															if($ldapErrorNo == 0x20 || $ldapErrorNo == 0x32)
+																continue;
+															
 															trigger_error("Could not execute backend search.", E_USER_WARNING);
 															throw new SabreDAVException\ServiceUnavailable();
 														}
