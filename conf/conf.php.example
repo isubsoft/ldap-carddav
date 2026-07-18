@@ -350,9 +350,10 @@ $config['card']['addressbook']['ldap']['me'] = [
 	
 	// If writable is true then these fields need to be populated:
 	// LDAP_Object_Classes, required_fields, LDAP_rdn
-	'LDAP_Object_Classes' => ['inetOrgPerson'],
-	'required_fields'     => ['cn', 'sn'],
-	'LDAP_rdn'      			=> 'uid',
+	'LDAP_Object_Classes'     => ['inetOrgPerson'],
+	'required_fields'         => ['cn', 'sn'],
+	'required_field_default'  => ['cn' => '(null)', 'sn' => '(null)'],
+	'LDAP_rdn'      			    => 'uid',
 
 	// Backend contact field acl. By default no access is denied to any backend field.
 	// 'eval' can have following values
@@ -485,9 +486,10 @@ $config['card']['addressbook']['ldap']['me'] = [
 	
 	// If writable is true then these fields need to be populated:
 	// group_LDAP_Object_Classes, group_required_fields, group_LDAP_rdn
-	'group_LDAP_Object_Classes' => ['groupOfNames'],
-	'group_required_fields'     => ['cn', 'member'],
-	'group_LDAP_rdn'      	    => 'cn',
+	'group_LDAP_Object_Classes'    => ['groupOfNames'],
+	'group_required_fields'        => ['cn', 'member'],
+	'group_required_field_default' => ['cn' => '(null)', 'member' => 'cn=dummyRefInt'],
+	'group_LDAP_rdn'      	       => 'cn',
 	
 	// Backend contact field acl. By default no access is denied to any backend field.
 	// 'eval' can have following values
@@ -607,9 +609,10 @@ $config['card']['addressbook']['ldap']['global'] = [
 	
 	// If writable is true then these fields need to be populated:
 	// LDAP_Object_Classes, required_fields, LDAP_rdn
-	'LDAP_Object_Classes' => ['inetOrgPerson'],
-	'required_fields'     => ['cn', 'sn'],
-	'LDAP_rdn'      			=> 'uid',
+	'LDAP_Object_Classes'    => ['inetOrgPerson'],
+	'required_fields'        => ['cn', 'sn'],
+	'required_field_default' => ['cn' => '(null)', 'sn' => '(null)'],
+	'LDAP_rdn'      			   => 'uid',
 
 	// Backend contact field acl. By default no access is denied to any backend field.
 	// 'eval' can have following values
@@ -742,9 +745,10 @@ $config['card']['addressbook']['ldap']['global'] = [
 	
 	// If writable is true then these fields need to be populated:
 	// group_LDAP_Object_Classes, group_required_fields, group_LDAP_rdn
-	'group_LDAP_Object_Classes' => ['groupOfNames'],
-	'group_required_fields'     => ['cn', 'member'],
-	'group_LDAP_rdn'      	    => 'cn',
+	'group_LDAP_Object_Classes'    => ['groupOfNames'],
+	'group_required_fields'        => ['cn', 'member'],
+	'group_required_field_default' => ['cn' => '(null)', 'member' => 'cn=dummyRefInt'],
+	'group_LDAP_rdn'      	       => 'cn',
 	
 	// Backend contact field acl. By default no access is denied to any backend field.
 	// 'eval' can have following values
@@ -864,9 +868,10 @@ $config['card']['addressbook']['ldap']['personal'] = [
 
 	// If writable is true then these fields need to be populated:
 	// LDAP_Object_Classes, required_fields, LDAP_rdn
-	'LDAP_Object_Classes' => ['inetOrgPerson'],
-	'required_fields'     => ['cn', 'sn'],
-	'LDAP_rdn'      			=> 'cn',
+	'LDAP_Object_Classes'    => ['inetOrgPerson'],
+	'required_fields'        => ['cn', 'sn'],
+	'required_field_default' => ['cn' => '(null)', 'sn' => '(null)'],
+	'LDAP_rdn'      			   => 'cn',
 
 	// Backend contact field acl. By default no access is denied to any backend field.
 	// 'eval' can have following values
@@ -999,9 +1004,10 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	
 	// If writable is true then these fields need to be populated:
 	// group_LDAP_Object_Classes, group_required_fields, group_LDAP_rdn
-	'group_LDAP_Object_Classes' => ['groupOfNames'],
-	'group_required_fields'     => ['cn', 'member'],
-	'group_LDAP_rdn'      	    => 'cn',
+	'group_LDAP_Object_Classes'    => ['groupOfNames'],
+	'group_required_fields'        => ['cn', 'member'],
+	'group_required_field_default' => ['cn' => '(null)', 'member' => 'cn=dummyRefInt'],
+	'group_LDAP_rdn'      	       => 'cn',
 	
 	// Backend contact field acl. By default no access is denied to any backend field.
 	// 'eval' can have following values
@@ -1120,9 +1126,10 @@ $config['card']['addressbook']['ldap']['shared'] = [
 
 	// If writable is true then these fields need to be populated:
 	// LDAP_Object_Classes, required_fields, LDAP_rdn
-	'LDAP_Object_Classes' => ['inetOrgPerson'],
-	'required_fields'     => ['cn', 'sn'],
-	'LDAP_rdn'      			=> 'cn',
+	'LDAP_Object_Classes'    => ['inetOrgPerson'],
+	'required_fields'        => ['cn', 'sn'],
+	'required_field_default' => ['cn' => '(null)', 'sn' => '(null)'],
+	'LDAP_rdn'      			   => 'cn',
 
 	// Backend contact field acl. By default no access is denied to any backend field.
 	// 'eval' can have following values
@@ -1255,9 +1262,10 @@ $config['card']['addressbook']['ldap']['shared'] = [
 	
 	// If writable is true then these fields need to be populated:
 	// group_LDAP_Object_Classes, group_required_fields, group_LDAP_rdn
-	'group_LDAP_Object_Classes' => ['groupOfNames'],
-	'group_required_fields'     => ['cn', 'member'],
-	'group_LDAP_rdn'      	    => 'cn',
+	'group_LDAP_Object_Classes'    => ['groupOfNames'],
+	'group_required_fields'        => ['cn', 'member'],
+	'group_required_field_default' => ['cn' => '(null)', 'member' => 'cn=dummyRefInt'],
+	'group_LDAP_rdn'      	       => 'cn',
 	
 	// Backend contact field acl. By default no access is denied to any backend field.
 	// 'eval' can have following values

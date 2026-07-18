@@ -731,6 +731,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					$isContactGroup = true;
         
         $requiredFields = [];
+				$requiredFieldDefault = [];
         $rdnField = null;
         $fieldAclEval = 'r';
         $fieldAclList = [];
@@ -752,6 +753,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						$requiredFields[] = strtolower($field);
           }
           
+          foreach((!isset($addressBookConfig['group_required_field_default']) || !is_array($addressBookConfig['group_required_field_default']))?[]:$addressBookConfig['group_required_field_default'] as $key => $field)
+          {
+						$requiredFieldDefault[$key] = strtolower($field);
+          }
+          
           $rdnField = (!isset($addressBookConfig['group_LDAP_rdn']))?null:strtolower($addressBookConfig['group_LDAP_rdn']);
           $fieldAclEval = (!isset($addressBookConfig['group_field_acl']['eval']))?(self::$defaultFieldAclEval):strtolower($addressBookConfig['group_field_acl']['eval']);
           
@@ -768,6 +774,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
           foreach((!isset($addressBookConfig['required_fields']) || !is_array($addressBookConfig['required_fields']))?[]:$addressBookConfig['required_fields'] as $field)
           {
 						$requiredFields[] = strtolower($field);
+          }
+          
+          foreach((!isset($addressBookConfig['required_field_default']) || !is_array($addressBookConfig['required_field_default']))?[]:$addressBookConfig['required_field_default'] as $key => $field)
+          {
+						$requiredFieldDefault[$key] = strtolower($field);
           }
           
           $rdnField = (!isset($addressBookConfig['LDAP_rdn']))?null:strtolower($addressBookConfig['LDAP_rdn']);
@@ -962,14 +973,18 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							if(array_key_exists($key, $ldapInfo))
 								unset($ldapInfo[$key]);
 						}
-					
-					  foreach ($requiredFields as $key) {
-					      if(!array_key_exists($key, $ldapInfo))
-									throw new SabreDAVException\BadRequest("Required fields not present or do not have write access");
-					  }
-
+						
 					  if(!array_key_exists($rdnField, $ldapInfo))
 							throw new SabreDAVException\BadRequest("Identity field not present or do not have write access");
+					
+					  foreach ($requiredFields as $key) {
+					      if(!array_key_exists($key, $ldapInfo)) {
+									if(isset($requiredFieldDefault[$key]))
+										$ldapInfo[$key] = $requiredFieldDefault[$key];
+									else
+										throw new SabreDAVException\BadRequest("Required fields not present or do not have write access");
+								}
+					  }
 
 						$newLdapRdn = $rdnField . '=' . ldap_escape(is_array($ldapInfo[$rdnField])?$ldapInfo[$rdnField][0]:$ldapInfo[$rdnField], "", LDAP_ESCAPE_DN);
 					}
@@ -982,8 +997,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						}
 						
 				    foreach ($requiredFields as $key) {
-				      if(!in_array($key, $readOnlyFields) && !array_key_exists($key, $ldapInfo))
-								throw new SabreDAVException\BadRequest("Required fields not present or do not have write access");
+				      if(!in_array($key, $readOnlyFields) && !array_key_exists($key, $ldapInfo)) {
+								if(isset($requiredFieldDefault[$key]))
+									$ldapInfo[$key] = $requiredFieldDefault[$key];
+								else
+									throw new SabreDAVException\BadRequest("Required fields not present or do not have write access");
+							}
 				    }
 				    
 			    	if(array_key_exists($rdnField, $ldapInfo))
@@ -1043,14 +1062,18 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						if(array_key_exists($key, $ldapInfo))
 							unset($ldapInfo[$key]);
 					}
-				
-			    foreach ($requiredFields as $key) {
-			        if(!array_key_exists($key, $ldapInfo))
-								throw new SabreDAVException\BadRequest("Required fields not present or do not have write access");
-			    }
-
+					
 			    if(!array_key_exists($rdnField, $ldapInfo))
 						throw new SabreDAVException\BadRequest("Identity field not present or do not have write access");
+				
+			    foreach ($requiredFields as $key) {
+			        if(!array_key_exists($key, $ldapInfo)) {
+			        	if(isset($requiredFieldDefault[$key]))
+			        		$ldapInfo[$key] = $requiredFieldDefault[$key];
+			        	else
+									throw new SabreDAVException\BadRequest("Required fields not present or do not have write access");
+							}
+			    }
 						
 		      $ldapTree = $rdnField. '='. ldap_escape(is_array($ldapInfo[$rdnField])?$ldapInfo[$rdnField][0]:$ldapInfo[$rdnField], "", LDAP_ESCAPE_DN) . ',' .$addressBookDn;
 
