@@ -27,6 +27,19 @@ use ISubsoft\VObject\Reader as Reader;
 class LDAP {
 
     /**
+     * LDAP error codes related to client input and their user friendly
+     * description
+     *
+     * @var array
+     */
+		public static $ldapClientErrorNo = [
+			0x15 => "Data format in one or more field(s) was incorrect",
+			0x32 => "Access denied",
+			0x41 => "One or more required field(s) was empty",
+			0x44 => "Contact with same name already exist"
+		];
+
+    /**
      * allowed placeholders for configuration
      *
      * @var array

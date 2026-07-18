@@ -935,19 +935,19 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					if($oldLdapInfo['count'] === 0)
 						throw new SabreDAVException\Conflict("Not found");
 						
-					if($fieldAclEval == 'w')
-					{
-						for($i=0; $i<$oldLdapInfo[0]['count']; $i++)
-						{
-							$field = $oldLdapInfo[0][$i];
-							
-							if(!in_array($field, $fieldAclList) && !in_array($field, $readOnlyFields))
-								$readOnlyFields[] = $field;
-						}
-					}
-					
 					if($backendDataUpdatePolicy == 'replace')
 					{
+						if($fieldAclEval == 'w')
+						{
+							for($i=0; $i<$oldLdapInfo[0]['count']; $i++)
+							{
+								$field = $oldLdapInfo[0][$i];
+								
+								if(!in_array($field, $fieldAclList) && !in_array($field, $readOnlyFields))
+									$readOnlyFields[] = $field;
+							}
+						}
+					
 						foreach($oldLdapInfo[0] as $oldLdapAttrName => $oldLdapAttrValue)
 						{
 							if(!isset($ldapInfo[$oldLdapAttrName]))
@@ -978,7 +978,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							throw new SabreDAVException\BadRequest("Identity field not present or do not have write access");
 					
 					  foreach ($requiredFields as $key) {
-					      if(!array_key_exists($key, $ldapInfo)) {
+					      if($ldapInfo[$key] == []) {
 									if(isset($requiredFieldDefault[$key]))
 										$ldapInfo[$key] = $requiredFieldDefault[$key];
 									else
@@ -997,7 +997,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						}
 						
 				    foreach ($requiredFields as $key) {
-				      if(!in_array($key, $readOnlyFields) && !array_key_exists($key, $ldapInfo)) {
+				      if(!in_array($key, $readOnlyFields) && $ldapInfo[$key] == []) {
 								if(isset($requiredFieldDefault[$key]))
 									$ldapInfo[$key] = $requiredFieldDefault[$key];
 								else
@@ -1035,8 +1035,15 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						$oldLdapRdnValue = Utility::decodeHexInString($oldLdapRdnSplit[1]);
 
 						if(strtolower($newLdapRdnAttr) != strtolower($oldLdapRdnAttr) || $newLdapRdnValue != $oldLdapRdnValue) {
-							if(!ldap_rename($ldapConn, $oldLdapTree, $newLdapRdn, null, false))
-								throw new SabreDAVException\BadRequest("Card with same name may already exist");
+							if(!ldap_rename($ldapConn, $oldLdapTree, $newLdapRdn, null, false)) {
+						  	$ldapErrorNo = ldap_errno($ldapConn);
+						  	
+						  	if(isset(Utility::$ldapClientErrorNo[$ldapErrorNo]))
+						  		throw new SabreDAVException\BadRequest(Utility::$ldapClientErrorNo[$ldapErrorNo]);
+								
+								trigger_error("LDAP error: " . ldap_err2str($ldapErrorNo), E_USER_WARNING);
+								throw new SabreDAVException\ServiceUnavailable("Unknown error while saving card");
+							}
 								
 							if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null, -60))
 								trigger_error("Could not expire cache", E_USER_WARNING);
@@ -1047,8 +1054,15 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						}
 					}
 					
-					if(!ldap_mod_replace($ldapConn, $ldapTree, $ldapInfo))
+					if(!ldap_mod_replace($ldapConn, $ldapTree, $ldapInfo)) {
+		      	$ldapErrorNo = ldap_errno($ldapConn);
+		      	
+				  	if(isset(Utility::$ldapClientErrorNo[$ldapErrorNo]))
+				  		throw new SabreDAVException\BadRequest(Utility::$ldapClientErrorNo[$ldapErrorNo]);
+
+						trigger_error("LDAP error: " . ldap_err2str($ldapErrorNo), E_USER_WARNING);
 						throw new SabreDAVException\BadRequest("Card data may be incompatible");
+					}
 						
 					if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null, -60))
 			    	trigger_error("Could not expire cache", E_USER_WARNING);
@@ -1077,8 +1091,15 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						
 		      $ldapTree = $rdnField. '='. ldap_escape(is_array($ldapInfo[$rdnField])?$ldapInfo[$rdnField][0]:$ldapInfo[$rdnField], "", LDAP_ESCAPE_DN) . ',' .$addressBookDn;
 
-		      if(!ldap_add($ldapConn, $ldapTree, $ldapInfo))
+		      if(!ldap_add($ldapConn, $ldapTree, $ldapInfo)) {
+		      	$ldapErrorNo = ldap_errno($ldapConn);
+		      	
+				  	if(isset(Utility::$ldapClientErrorNo[$ldapErrorNo]))
+				  		throw new SabreDAVException\BadRequest(Utility::$ldapClientErrorNo[$ldapErrorNo]);
+
+						trigger_error("LDAP error: " . ldap_err2str($ldapErrorNo), E_USER_WARNING);
 						throw new SabreDAVException\BadRequest("Card data may be incompatible or card with same name may already exist");
+					}
 
 		      $data = Utility::LdapQuery($ldapConn, $ldapTree, $addressBookConfig['filter'], ['entryuuid'], 'base');
 		      
