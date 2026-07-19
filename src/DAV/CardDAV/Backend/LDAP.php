@@ -1035,14 +1035,23 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						$oldLdapRdnValue = Utility::decodeHexInString($oldLdapRdnSplit[1]);
 
 						if(strtolower($newLdapRdnAttr) != strtolower($oldLdapRdnAttr) || $newLdapRdnValue != $oldLdapRdnValue) {
-							if(!ldap_rename($ldapConn, $oldLdapTree, $newLdapRdn, null, false)) {
+							if(!@ldap_rename($ldapConn, $oldLdapTree, $newLdapRdn, null, false)) {
 						  	$ldapErrorNo = ldap_errno($ldapConn);
 						  	
-						  	if(isset(Utility::$ldapClientErrorNo[$ldapErrorNo]))
-						  		throw new SabreDAVException\BadRequest(Utility::$ldapClientErrorNo[$ldapErrorNo]);
+								if($ldapErrorNo == 0x44) {
+									$newLdapRdn = $newLdapRdn . ldap_escape(' ' . time() . '' . rand(1000, 9999), "", LDAP_ESCAPE_DN);
+									
+									if(ldap_rename($ldapConn, $oldLdapTree, $newLdapRdn, null, false))
+										$ldapErrorNo = 0x0;
+								}
 								
-								trigger_error("LDAP error: " . ldap_err2str($ldapErrorNo), E_USER_WARNING);
-								throw new SabreDAVException\ServiceUnavailable("Unknown error while saving card");
+								if($ldapErrorNo != 0x0) {
+									if(isset(Utility::$ldapClientErrorNo[$ldapErrorNo]))
+										throw new SabreDAVException\BadRequest(Utility::$ldapClientErrorNo[$ldapErrorNo]);
+									
+									trigger_error("LDAP error: " . ldap_err2str($ldapErrorNo), E_USER_WARNING);
+									throw new SabreDAVException\ServiceUnavailable("Unknown error while saving card");
+								}
 							}
 								
 							if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null, -60))
@@ -1089,16 +1098,26 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							}
 			    }
 						
-		      $ldapTree = $rdnField. '='. ldap_escape(is_array($ldapInfo[$rdnField])?$ldapInfo[$rdnField][0]:$ldapInfo[$rdnField], "", LDAP_ESCAPE_DN) . ',' .$addressBookDn;
+					$ldapRdn = $rdnField. '='. ldap_escape(is_array($ldapInfo[$rdnField])?$ldapInfo[$rdnField][0]:$ldapInfo[$rdnField], "", LDAP_ESCAPE_DN);
+		      $ldapTree = $ldapRdn . ',' . $addressBookDn;
 
-		      if(!ldap_add($ldapConn, $ldapTree, $ldapInfo)) {
+		      if(!@ldap_add($ldapConn, $ldapTree, $ldapInfo)) {
 		      	$ldapErrorNo = ldap_errno($ldapConn);
 		      	
-				  	if(isset(Utility::$ldapClientErrorNo[$ldapErrorNo]))
-				  		throw new SabreDAVException\BadRequest(Utility::$ldapClientErrorNo[$ldapErrorNo]);
+						if($ldapErrorNo == 0x44) {
+							$ldapTree = $ldapRdn . ldap_escape(' ' . time() . '' . rand(1000, 9999), "", LDAP_ESCAPE_DN) . ',' . $addressBookDn;
+							
+							if(ldap_add($ldapConn, $ldapTree, $ldapInfo))
+								$ldapErrorNo = 0x0;
+						}
+						
+						if($ldapErrorNo != 0x0) {
+							if(isset(Utility::$ldapClientErrorNo[$ldapErrorNo]))
+								throw new SabreDAVException\BadRequest(Utility::$ldapClientErrorNo[$ldapErrorNo]);
 
-						trigger_error("LDAP error: " . ldap_err2str($ldapErrorNo), E_USER_WARNING);
-						throw new SabreDAVException\BadRequest("Card data may be incompatible or card with same name may already exist");
+							trigger_error("LDAP error: " . ldap_err2str($ldapErrorNo), E_USER_WARNING);
+							throw new SabreDAVException\BadRequest("Card data may be incompatible or card with same name may already exist");
+						}
 					}
 
 		      $data = Utility::LdapQuery($ldapConn, $ldapTree, $addressBookConfig['filter'], ['entryuuid'], 'base');

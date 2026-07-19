@@ -33,6 +33,7 @@ class LDAP {
      * @var array
      */
 		public static $ldapClientErrorNo = [
+			0x14 => 'There is duplicate data in one or more field(s)',
 			0x15 => "Data format in one or more field(s) was incorrect",
 			0x32 => "Access denied",
 			0x41 => "One or more required field(s) was empty",
