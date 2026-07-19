@@ -978,7 +978,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							throw new SabreDAVException\BadRequest("Identity field not present or do not have write access");
 					
 					  foreach ($requiredFields as $key) {
-					      if($ldapInfo[$key] == []) {
+					      if(!isset($ldapInfo[$key]) || $ldapInfo[$key] == []) {
 									if(isset($requiredFieldDefault[$key]))
 										$ldapInfo[$key] = $requiredFieldDefault[$key];
 									else
@@ -997,7 +997,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						}
 						
 				    foreach ($requiredFields as $key) {
-				      if(!in_array($key, $readOnlyFields) && $ldapInfo[$key] == []) {
+				      if(!in_array($key, $readOnlyFields) && (!isset($ldapInfo[$key]) || $ldapInfo[$key] == [])) {
 								if(isset($requiredFieldDefault[$key]))
 									$ldapInfo[$key] = $requiredFieldDefault[$key];
 								else
@@ -1320,7 +1320,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 														if($memberData === false) {
 															$ldapErrorNo = ldap_errno($ldapConn);
 															
-															if($ldapErrorNo == 0x20 || $ldapErrorNo == 0x32)
+															if($ldapErrorNo == 0x20)
 																continue;
 															
 															trigger_error("Could not execute backend search.", E_USER_WARNING);
