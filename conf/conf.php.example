@@ -354,6 +354,13 @@ $config['card']['addressbook']['ldap']['me'] = [
 	'required_fields'         => ['cn', 'sn'],
 	'required_field_default'  => ['cn' => '(null)', 'sn' => '(null)'],
 	'LDAP_rdn'      			    => 'uid',
+	
+	// Sometimes contacts may not be created in backend due to conflicting DNs
+	// You can set the below to true to rename the rdn by appending text of format ' (crvs#<random_number>)'
+	// Make sure your LDAP_rdn attribute can accept such a formatted text before setting the below
+	// to true.
+	// Defaults to false
+	//  'LDAP_rdn_autorename'     => true,
 
 	// Backend contact field acl. By default no access is denied to any backend field.
 	// 'eval' can have following values
@@ -491,6 +498,13 @@ $config['card']['addressbook']['ldap']['me'] = [
 	'group_required_field_default' => ['cn' => '(null)', 'member' => 'cn=dummyRefInt'],
 	'group_LDAP_rdn'      	       => 'cn',
 	
+	// Sometimes contacts may not be created in backend due to conflicting DNs
+	// You can set the below to true to rename the rdn by appending text of format ' (crvs#<random_number>)'
+	// Make sure your group_LDAP_rdn attribute can accept such a formatted text before setting the below
+	// to true.
+	// Defaults to false
+	//  'group_LDAP_rdn_autorename'     => true,
+	
 	// Backend contact field acl. By default no access is denied to any backend field.
 	// 'eval' can have following values
 	// r (default) - Evaluate 'list' as read only fields
@@ -613,6 +627,13 @@ $config['card']['addressbook']['ldap']['global'] = [
 	'required_fields'        => ['cn', 'sn'],
 	'required_field_default' => ['cn' => '(null)', 'sn' => '(null)'],
 	'LDAP_rdn'      			   => 'uid',
+	
+	// Sometimes contacts may not be created in backend due to conflicting DNs
+	// You can set the below to true to rename the rdn by appending text of format ' (crvs#<random_number>)'
+	// Make sure your LDAP_rdn attribute can accept such a formatted text before setting the below
+	// to true.
+	// Defaults to false
+	//  'LDAP_rdn_autorename'     => true,
 
 	// Backend contact field acl. By default no access is denied to any backend field.
 	// 'eval' can have following values
@@ -749,6 +770,13 @@ $config['card']['addressbook']['ldap']['global'] = [
 	'group_required_fields'        => ['cn', 'member'],
 	'group_required_field_default' => ['cn' => '(null)', 'member' => 'cn=dummyRefInt'],
 	'group_LDAP_rdn'      	       => 'cn',
+	
+	// Sometimes contacts may not be created in backend due to conflicting DNs
+	// You can set the below to true to rename the rdn by appending text of format ' (crvs#<random_number>)'
+	// Make sure your group_LDAP_rdn attribute can accept such a formatted text before setting the below
+	// to true.
+	// Defaults to false
+	//  'group_LDAP_rdn_autorename'     => true,
 	
 	// Backend contact field acl. By default no access is denied to any backend field.
 	// 'eval' can have following values
@@ -872,6 +900,13 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	'required_fields'        => ['cn', 'sn'],
 	'required_field_default' => ['cn' => '(null)', 'sn' => '(null)'],
 	'LDAP_rdn'      			   => 'cn',
+	
+	// Sometimes contacts may not be created in backend due to conflicting DNs
+	// You can set the below to true to rename the rdn by appending text of format ' (crvs#<random_number>)'
+	// Make sure your LDAP_rdn attribute can accept such a formatted text before setting the below
+	// to true.
+	// Defaults to false
+	//  'LDAP_rdn_autorename'     => true,
 
 	// Backend contact field acl. By default no access is denied to any backend field.
 	// 'eval' can have following values
@@ -1008,6 +1043,13 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	'group_required_fields'        => ['cn', 'member'],
 	'group_required_field_default' => ['cn' => '(null)', 'member' => 'cn=dummyRefInt'],
 	'group_LDAP_rdn'      	       => 'cn',
+	
+	// Sometimes contacts may not be created in backend due to conflicting DNs
+	// You can set the below to true to rename the rdn by appending text of format ' (crvs#<random_number>)'
+	// Make sure your group_LDAP_rdn attribute can accept such a formatted text before setting the below
+	// to true.
+	// Defaults to false
+	//  'group_LDAP_rdn_autorename'     => true,
 	
 	// Backend contact field acl. By default no access is denied to any backend field.
 	// 'eval' can have following values
@@ -1130,6 +1172,13 @@ $config['card']['addressbook']['ldap']['shared'] = [
 	'required_fields'        => ['cn', 'sn'],
 	'required_field_default' => ['cn' => '(null)', 'sn' => '(null)'],
 	'LDAP_rdn'      			   => 'cn',
+	
+	// Sometimes contacts may not be created in backend due to conflicting DNs
+	// You can set the below to true to rename the rdn by appending text of format ' (crvs#<random_number>)'
+	// Make sure your LDAP_rdn attribute can accept such a formatted text before setting the below
+	// to true.
+	// Defaults to false
+	//  'LDAP_rdn_autorename'     => true,
 
 	// Backend contact field acl. By default no access is denied to any backend field.
 	// 'eval' can have following values
@@ -1266,6 +1315,13 @@ $config['card']['addressbook']['ldap']['shared'] = [
 	'group_required_fields'        => ['cn', 'member'],
 	'group_required_field_default' => ['cn' => '(null)', 'member' => 'cn=dummyRefInt'],
 	'group_LDAP_rdn'      	       => 'cn',
+	
+	// Sometimes contacts may not be created in backend due to conflicting DNs
+	// You can set the below to true to rename the rdn by appending text of format ' (crvs#<random_number>)'
+	// Make sure your group_LDAP_rdn attribute can accept such a formatted text before setting the below
+	// to true.
+	// Defaults to false
+	//  'group_LDAP_rdn_autorename'     => true,
 	
 	// Backend contact field acl. By default no access is denied to any backend field.
 	// 'eval' can have following values
