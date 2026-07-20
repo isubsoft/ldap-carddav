@@ -225,7 +225,7 @@ class LDAP {
                 $propIndex = array_search($propKey, $mapCompositeAttr);
                 if($propIndex !== false)
                 {
-                    if(isset($vCardPropValueArr[$propIndex]) && $vCardPropValueArr[$propIndex] != '')
+                    if(isset($vCardPropValueArr[$propIndex]))
                     {
                         $ldapBackendValueMap[strtolower($backendAttr)] = $vCardPropValueArr[$propIndex];
                     }
@@ -241,7 +241,7 @@ class LDAP {
             {
                 foreach ($mapCompositeAttr as $propIndex => $propKey) 
                 {
-                    if(isset($vCardPropValueArr[$propIndex]) && $vCardPropValueArr[$propIndex] != '')
+                    if(isset($vCardPropValueArr[$propIndex]))
                     {
                         $ldapAttrValueArr[] = Utility::encodeStringToHex($vCardPropValueArr[$propIndex], ['\\', $ldapKey['map_component_separator']]);
                     }
