@@ -1021,6 +1021,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					for($dnComponentIndex=1; $dnComponentIndex<$componentOldLdapTree['count']; $dnComponentIndex++)
 						$parentOldLdapTree = $parentOldLdapTree . (empty($parentOldLdapTree)?"":",") . $componentOldLdapTree[$dnComponentIndex];
 					
+					$isRenameRequired = true;
+					$validRenameLdapRdn = [];
 					$ldapTree = $oldLdapTree;
 					$ldapErrorNo = 0x0;
 					
@@ -1029,39 +1031,44 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							if($fieldValue != null && $fieldValue != '') {
 								$newLdapRdnAttrValue = $fieldValue;
 								$newLdapRdnValue = ldap_escape($fieldValue, "", LDAP_ESCAPE_DN);
-								$tmpNewLdapRdn = $rdnField . '=' . $newLdapRdnValue;
+								$newLdapRdn = $rdnField . '=' . $newLdapRdnValue;
 								
-								if(strtolower($tmpNewLdapRdn) != strtolower($oldLdapRdn)) {
-									ldap_rename($ldapConn, $oldLdapTree, $tmpNewLdapRdn, null, false);
-									
-									$ldapErrorNo = ldap_errno($ldapConn);
-									
-									if($ldapErrorNo == 0x0) {
-										$ldapTree = $tmpNewLdapRdn . ',' . $parentOldLdapTree;
-										break;
-									}
-									
-									if($ldapErrorNo == 0x44)
-										continue;
-									else
-										break;
+								if(strtolower($newLdapRdn) == strtolower($oldLdapRdn)) {
+									$isRenameRequired = false;
+									break;
 								}
+
+								$validRenameLdapRdn[] = $newLdapRdn;
 							}
 					}
 					elseif($ldapInfo[$rdnField] != null && $ldapInfo[$rdnField] != '') {
 						$newLdapRdnAttrValue = $ldapInfo[$rdnField];
 						$newLdapRdnValue = ldap_escape($ldapInfo[$rdnField], "", LDAP_ESCAPE_DN);
-						
-						$tmpNewLdapRdn = $rdnField . '=' . $newLdapRdnValue;
+						$newLdapRdn = $rdnField . '=' . $newLdapRdnValue;
 
-						if(strtolower($tmpNewLdapRdn) != strtolower($oldLdapRdn)) {
-							ldap_rename($ldapConn, $oldLdapTree, $tmpNewLdapRdn, null, false);
-							
-						  $ldapErrorNo = ldap_errno($ldapConn);
-						  
-							if($ldapErrorNo == 0x0)
-								$ldapTree = $tmpNewLdapRdn . ',' . $parentOldLdapTree;
+						if(strtolower($newLdapRdn) == strtolower($oldLdapRdn))
+							$isRenameRequired = false;
+						else
+							$validRenameLdapRdn[] = $newLdapRdn;
+					}
+					
+					if($isRenameRequired && count($validRenameLdapRdn, COUNT_NORMAL) < 1)
+						throw new SabreDAVException\BadRequest("Identity field does not have a valid value");
+					
+					foreach($validRenameLdapRdn as $newLdapRdn) {
+						ldap_rename($ldapConn, $oldLdapTree, $newLdapRdn, null, false);
+						
+						$ldapErrorNo = ldap_errno($ldapConn);
+						
+						if($ldapErrorNo == 0x0) {
+							$ldapTree = $newLdapRdn . ',' . $parentOldLdapTree;
+							break;
 						}
+						
+						if($ldapErrorNo == 0x44)
+							continue;
+						else
+							break;
 					}
 					
 					if($ldapErrorNo == 0x44 && $rdnAutorename) {
