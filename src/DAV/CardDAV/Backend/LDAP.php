@@ -733,6 +733,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $requiredFields = [];
 				$requiredFieldDefault = [];
         $rdnField = null;
+        $rdnAutorenameReplace = false;
         $rdnAutorename = false;
         $fieldAclEval = 'r';
         $fieldAclList = [];
@@ -756,6 +757,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						$requiredFieldDefault[$key] = strtolower($field);
           
           $rdnField = (!isset($addressBookConfig['group_LDAP_rdn']))?null:strtolower($addressBookConfig['group_LDAP_rdn']);
+          $rdnAutorenameReplace = (!isset($addressBookConfig['group_LDAP_rdn_autorename_replace']))?false:strtolower($addressBookConfig['group_LDAP_rdn_autorename_replace']);
           $rdnAutorename = (!isset($addressBookConfig['group_LDAP_rdn_autorename']))?false:$addressBookConfig['group_LDAP_rdn_autorename'];
           $fieldAclEval = (!isset($addressBookConfig['group_field_acl']['eval']))?(self::$defaultFieldAclEval):strtolower($addressBookConfig['group_field_acl']['eval']);
           
@@ -774,6 +776,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						$requiredFieldDefault[$key] = strtolower($field);
           
           $rdnField = (!isset($addressBookConfig['LDAP_rdn']))?null:strtolower($addressBookConfig['LDAP_rdn']);
+          $rdnAutorenameReplace = (!isset($addressBookConfig['LDAP_rdn_autorename_replace']))?false:strtolower($addressBookConfig['LDAP_rdn_autorename_replace']);
           $rdnAutorename = (!isset($addressBookConfig['LDAP_rdn_autorename']))?false:$addressBookConfig['LDAP_rdn_autorename'];
           $fieldAclEval = (!isset($addressBookConfig['field_acl']['eval']))?(self::$defaultFieldAclEval):strtolower($addressBookConfig['field_acl']['eval']);
           
@@ -1079,10 +1082,23 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						if($ldapErrorNo == 0x0) {
 							$ldapTree = $tmpNewLdapRdn . ',' . $parentOldLdapTree;
 							
-							if(is_array($ldapInfo[$rdnField]))
+							if(is_array($ldapInfo[$rdnField])) {
 								$ldapInfo[$rdnField][] = $tmpNewLdapRdnAttrValue;
-							else
-								$ldapInfo[$rdnField] = [$ldapRdnAttrValue, $tmpNewLdapRdnAttrValue];
+								
+								if($rdnAutorenameReplace) {
+									// Remove the changed RDN attribute value.
+									$index = array_search($validRenameLdapRdnAttrValue[0], $ldapInfo[$rdnField]);
+									
+									if($index !== false)
+										unset($ldapInfo[$rdnField][$index]);
+								}
+							}
+							else {
+								$ldapInfo[$rdnField] = [$validRenameLdapRdnAttrValue[0], $tmpNewLdapRdnAttrValue];
+								
+								if($rdnAutorenameReplace)
+									$ldapInfo[$rdnField] = $tmpNewLdapRdnAttrValue;
+							}
 						}
 					}
 					
@@ -1139,22 +1155,22 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							}
 			    }
 			    
-					$validAddLdapRdn = [];
+					$validAddLdapRdnAttrValue = [];
 					$ldapTree = null;
 			    
 			    if(is_array($ldapInfo[$rdnField])) {
 						foreach($ldapInfo[$rdnField] as $fieldValue)
 							if($fieldValue != null && $fieldValue != '')
-		      			$validAddLdapRdn[] = $rdnField . '=' . ldap_escape($fieldValue, "", LDAP_ESCAPE_DN);
+		      			$validAddLdapRdnAttrValue[] = $fieldValue;
 					}
 					elseif($ldapInfo[$rdnField] != null && $ldapInfo[$rdnField] != '')
-						$validAddLdapRdn[] = $rdnField . '=' . ldap_escape($fieldValue, "", LDAP_ESCAPE_DN);
+						$validAddLdapRdnAttrValue[] = $ldapInfo[$rdnField];
 
-					if(count($validAddLdapRdn, COUNT_NORMAL) < 1)
+					if(count($validAddLdapRdnAttrValue, COUNT_NORMAL) < 1)
 						throw new SabreDAVException\BadRequest("Identity field does not have a valid value");
 						
-					foreach($validAddLdapRdn as $tmpLdapRdn) {
-						$tmpLdapTree = $tmpLdapRdn . ',' . $addressBookDn;
+					foreach($validAddLdapRdnAttrValue as $tmpLdapRdnAttrValue) {
+						$tmpLdapTree = $rdnField . '=' . ldap_escape($tmpLdapRdnAttrValue, "", LDAP_ESCAPE_DN) . ',' . $addressBookDn;
 						
 						ldap_add($ldapConn, $tmpLdapTree, $ldapInfo);
 						
@@ -1176,8 +1192,27 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 	      	
 					if($ldapErrorNo == 0x44 && $rdnAutorename) {
 						$tmpNewLdapRdnValueVariance = ' (crvs#' . time() . rand(1000, 9999) . ')';
-						$tmpNewLdapRdn = $validAddLdapRdn[0] . ldap_escape($tmpNewLdapRdnValueVariance, "", LDAP_ESCAPE_DN);
+						$tmpNewLdapRdnAttrValue = $validAddLdapRdnAttrValue[0] . $tmpNewLdapRdnValueVariance;
+						$tmpNewLdapRdn = $rdnField . '=' . ldap_escape($tmpNewLdapRdnAttrValue, "", LDAP_ESCAPE_DN);
 						$tmpNewLdapTree = $tmpNewLdapRdn . ',' . $addressBookDn;
+						
+						if(is_array($ldapInfo[$rdnField])) {
+							$ldapInfo[$rdnField][] = $tmpNewLdapRdnAttrValue;
+							
+							if($rdnAutorenameReplace) {
+								// Remove the changed RDN attribute value.
+								$index = array_search($validAddLdapRdnAttrValue[0], $ldapInfo[$rdnField]);
+								
+								if($index !== false)
+									unset($ldapInfo[$rdnField][$index]);
+							}
+						}
+						else {
+							$ldapInfo[$rdnField] = [$validAddLdapRdnAttrValue[0], $tmpNewLdapRdnAttrValue];
+							
+							if($rdnAutorenameReplace)
+								$ldapInfo[$rdnField] = $tmpNewLdapRdnAttrValue;
+						}
 						
 						ldap_add($ldapConn, $tmpNewLdapTree, $ldapInfo);
 						

@@ -361,6 +361,12 @@ $config['card']['addressbook']['ldap']['me'] = [
 	// to true.
 	// Defaults to false
 	//  'LDAP_rdn_autorename'     => true,
+	
+	// Set the below to true to replace the rdn value to be renamed with the new value (rdn value with appended text)
+	// instead of adding it as a new value to the LDAP_rdn. If LDAP_rdn is a single valued attribute in the backend
+	// this must be set to true.
+	// Defaults to false
+	//  'LDAP_rdn_autorename_replace' => true,
 
 	// Backend contact field acl. By default no access is denied to any backend field.
 	// 'eval' can have following values
@@ -505,6 +511,12 @@ $config['card']['addressbook']['ldap']['me'] = [
 	// Defaults to false
 	//  'group_LDAP_rdn_autorename'     => true,
 	
+	// Set the below to true to replace the rdn value to be renamed with the new value (rdn value with appended text)
+	// instead of adding it as a new value to the group_LDAP_rdn. If group_LDAP_rdn is a single valued attribute in the backend
+	// this must be set to true.
+	// Defaults to false
+	//  'group_LDAP_rdn_autorename_replace' => true,
+	
 	// Backend contact field acl. By default no access is denied to any backend field.
 	// 'eval' can have following values
 	// r (default) - Evaluate 'list' as read only fields
@@ -625,7 +637,7 @@ $config['card']['addressbook']['ldap']['global'] = [
 	// LDAP_Object_Classes, required_fields, LDAP_rdn
 	'LDAP_Object_Classes'    => ['inetOrgPerson'],
 	'required_fields'        => ['cn', 'sn'],
-	'required_field_default' => ['cn' => '(null)', 'sn' => '(null)'],
+	//  'required_field_default' => ['cn' => '(null)', 'sn' => '(null)'],
 	'LDAP_rdn'      			   => 'uid',
 	
 	// Sometimes contacts may not be created in backend due to conflicting DNs
@@ -634,6 +646,12 @@ $config['card']['addressbook']['ldap']['global'] = [
 	// to true.
 	// Defaults to false
 	//  'LDAP_rdn_autorename'     => true,
+	
+	// Set the below to true to replace the rdn value to be renamed with the new value (rdn value with appended text)
+	// instead of adding it as a new value to the LDAP_rdn. If LDAP_rdn is a single valued attribute in the backend
+	// this must be set to true.
+	// Defaults to false
+	//  'LDAP_rdn_autorename_replace' => true,
 
 	// Backend contact field acl. By default no access is denied to any backend field.
 	// 'eval' can have following values
@@ -777,6 +795,12 @@ $config['card']['addressbook']['ldap']['global'] = [
 	// to true.
 	// Defaults to false
 	//  'group_LDAP_rdn_autorename'     => true,
+	
+	// Set the below to true to replace the rdn value to be renamed with the new value (rdn value with appended text)
+	// instead of adding it as a new value to the group_LDAP_rdn. If group_LDAP_rdn is a single valued attribute in the backend
+	// this must be set to true.
+	// Defaults to false
+	//  'group_LDAP_rdn_autorename_replace' => true,
 	
 	// Backend contact field acl. By default no access is denied to any backend field.
 	// 'eval' can have following values
@@ -907,6 +931,12 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	// to true.
 	// Defaults to false
 	//  'LDAP_rdn_autorename'     => true,
+	
+	// Set the below to true to replace the rdn value to be renamed with the new value (rdn value with appended text)
+	// instead of adding it as a new value to the LDAP_rdn. If LDAP_rdn is a single valued attribute in the backend
+	// this must be set to true.
+	// Defaults to false
+	//  'LDAP_rdn_autorename_replace' => true,
 
 	// Backend contact field acl. By default no access is denied to any backend field.
 	// 'eval' can have following values
@@ -1050,6 +1080,12 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	// to true.
 	// Defaults to false
 	//  'group_LDAP_rdn_autorename'     => true,
+	
+	// Set the below to true to replace the rdn value to be renamed with the new value (rdn value with appended text)
+	// instead of adding it as a new value to the group_LDAP_rdn. If group_LDAP_rdn is a single valued attribute in the backend
+	// this must be set to true.
+	// Defaults to false
+	//  'group_LDAP_rdn_autorename_replace' => true,
 	
 	// Backend contact field acl. By default no access is denied to any backend field.
 	// 'eval' can have following values
@@ -1179,6 +1215,12 @@ $config['card']['addressbook']['ldap']['shared'] = [
 	// to true.
 	// Defaults to false
 	//  'LDAP_rdn_autorename'     => true,
+	
+	// Set the below to true to replace the rdn value to be renamed with the new value (rdn value with appended text)
+	// instead of adding it as a new value to the LDAP_rdn. If LDAP_rdn is a single valued attribute in the backend
+	// this must be set to true.
+	// Defaults to false
+	//  'LDAP_rdn_autorename_replace' => true,
 
 	// Backend contact field acl. By default no access is denied to any backend field.
 	// 'eval' can have following values
@@ -1322,6 +1364,12 @@ $config['card']['addressbook']['ldap']['shared'] = [
 	// to true.
 	// Defaults to false
 	//  'group_LDAP_rdn_autorename'     => true,
+	
+	// Set the below to true to replace the rdn value to be renamed with the new value (rdn value with appended text)
+	// instead of adding it as a new value to the group_LDAP_rdn. If group_LDAP_rdn is a single valued attribute in the backend
+	// this must be set to true.
+	// Defaults to false
+	//  'group_LDAP_rdn_autorename_replace' => true,
 	
 	// Backend contact field acl. By default no access is denied to any backend field.
 	// 'eval' can have following values
