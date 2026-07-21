@@ -917,6 +917,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				else
 					$readOnlyFields = $fieldAclList;
 					
+		    // Remove duplicates
+		    $tmpLdapInfo = $ldapInfo;
+		    
+		    foreach($tmpLdapInfo as $key => $value)
+		    	if(is_array($value))
+		    		$ldapInfo[$key] = array_unique($value);
+					
 				if($operation == 'UPDATE')
 				{
 					$oldLdapInfo = $this->fetchLdapContactDataByUri($addressBookId, $cardUri, ['*'], 1);
