@@ -1022,65 +1022,61 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						$parentOldLdapTree = $parentOldLdapTree . (empty($parentOldLdapTree)?"":",") . $componentOldLdapTree[$dnComponentIndex];
 					
 					$isRenameRequired = true;
-					$validRenameLdapRdn = [];
+					$validRenameLdapRdnAttrValue = [];
 					$ldapTree = $oldLdapTree;
 					$ldapErrorNo = 0x0;
 					
 					if(is_array($ldapInfo[$rdnField])) {
 						foreach($ldapInfo[$rdnField] as $fieldValue)
 							if($fieldValue != null && $fieldValue != '') {
-								$newLdapRdnAttrValue = $fieldValue;
-								$newLdapRdnValue = ldap_escape($fieldValue, "", LDAP_ESCAPE_DN);
-								$newLdapRdn = $rdnField . '=' . $newLdapRdnValue;
-								
-								if(strtolower($newLdapRdn) == strtolower($oldLdapRdn)) {
+								if(strtolower($rdnField . '=' . ldap_escape($fieldValue, "", LDAP_ESCAPE_DN)) == strtolower($oldLdapRdn)) {
 									$isRenameRequired = false;
 									break;
 								}
 
-								$validRenameLdapRdn[] = $newLdapRdn;
+								$validRenameLdapRdnAttrValue[] = $fieldValue;
 							}
 					}
 					elseif($ldapInfo[$rdnField] != null && $ldapInfo[$rdnField] != '') {
-						$newLdapRdnAttrValue = $ldapInfo[$rdnField];
-						$newLdapRdnValue = ldap_escape($ldapInfo[$rdnField], "", LDAP_ESCAPE_DN);
-						$newLdapRdn = $rdnField . '=' . $newLdapRdnValue;
-
-						if(strtolower($newLdapRdn) == strtolower($oldLdapRdn))
+						if(strtolower($rdnField . '=' . ldap_escape($ldapInfo[$rdnField], "", LDAP_ESCAPE_DN)) == strtolower($oldLdapRdn))
 							$isRenameRequired = false;
 						else
-							$validRenameLdapRdn[] = $newLdapRdn;
+							$validRenameLdapRdnAttrValue[] = $ldapInfo[$rdnField];
 					}
 					
-					if($isRenameRequired && count($validRenameLdapRdn, COUNT_NORMAL) < 1)
+					if($isRenameRequired && count($validRenameLdapRdnAttrValue, COUNT_NORMAL) < 1)
 						throw new SabreDAVException\BadRequest("Identity field does not have a valid value");
 					
-					foreach($validRenameLdapRdn as $newLdapRdn) {
-						ldap_rename($ldapConn, $oldLdapTree, $newLdapRdn, null, false);
+					foreach($validRenameLdapRdnAttrValue as $tmpNewLdapRdnAttrValue) {
+						$tmpNewLdapRdn = $rdnField . '=' . ldap_escape($tmpNewLdapRdnAttrValue, "", LDAP_ESCAPE_DN);
+						
+						ldap_rename($ldapConn, $oldLdapTree, $tmpNewLdapRdn, null, false);
 						
 						$ldapErrorNo = ldap_errno($ldapConn);
 						
 						if($ldapErrorNo == 0x0) {
-							$ldapTree = $newLdapRdn . ',' . $parentOldLdapTree;
+							$ldapTree = $tmpNewLdapRdn . ',' . $parentOldLdapTree;
 							break;
 						}
 						
-						if($ldapErrorNo == 0x44)
+						if($ldapErrorNo == 0x44) {
 							continue;
+						}
 						else
 							break;
 					}
 					
 					if($ldapErrorNo == 0x44 && $rdnAutorename) {
-						$tmpNewLdapRdnValueVariance = ' (crvs#' . time() . rand(1000, 9999) . ')';
-						$tmpNewLdapRdnValue = $newLdapRdnValue . ldap_escape($tmpNewLdapRdnValueVariance, "", LDAP_ESCAPE_DN);
+						$ldapRdnAttrValueVariance = ' (crvs#' . time() . rand(1000, 9999) . ')';
+						$tmpNewLdapRdnAttrValue = $validRenameLdapRdnAttrValue[0] . $ldapRdnAttrValueVariance;
+						$tmpNewLdapRdnValue = ldap_escape($tmpNewLdapRdnAttrValue, "", LDAP_ESCAPE_DN);
 						$tmpNewLdapRdn = $rdnField . '=' . $tmpNewLdapRdnValue;
 						
 						if(ldap_rename($ldapConn, $oldLdapTree, $tmpNewLdapRdn, null, false)) {
 							if(is_array($ldapInfo[$rdnField]))
-								$ldapInfo[$rdnField][] = $newLdapRdnAttrValue . $tmpNewLdapRdnValueVariance;
+								$ldapInfo[$rdnField][] = $tmpNewLdapRdnAttrValue;
 							else
-								$ldapInfo[$rdnField] = [$newLdapRdnAttrValue, $newLdapRdnAttrValue . $tmpNewLdapRdnValueVariance];
+								$ldapInfo[$rdnField] = [$ldapRdnAttrValue, $tmpNewLdapRdnAttrValue];
 								
 							$ldapTree = $tmpNewLdapRdn . ',' . $parentOldLdapTree;
 							$ldapErrorNo = 0x0;
@@ -1140,60 +1136,52 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							}
 			    }
 			    
+					$validAddLdapRdn = [];
+					$ldapTree = null;
+			    
 			    if(is_array($ldapInfo[$rdnField])) {
-			    	$isContactAddAttempted = false;
-			    	
 						foreach($ldapInfo[$rdnField] as $fieldValue)
-							if($fieldValue != null && $fieldValue != '') {
-								$ldapRdnAttrValue = $fieldValue;
-								$ldapRdnValue = ldap_escape($fieldValue, "", LDAP_ESCAPE_DN);
-		      			$tmpLdapTree = $rdnField . '=' . $ldapRdnValue . ',' . $addressBookDn;
-								
-								ldap_add($ldapConn, $tmpLdapTree, $ldapInfo);
-
-								$isContactAddAttempted = true;
-								$ldapErrorNo = ldap_errno($ldapConn);
-								
-								if($ldapErrorNo == 0x0) {
-									$ldapTree = $tmpLdapTree;
-									break;
-								}
-								
-								if($ldapErrorNo == 0x44)
-									continue;
-								else
-									break;
-							}
-							
-						if(!$isContactAddAttempted)
-							throw new SabreDAVException\BadRequest("Identity field does not have a valid value");
+							if($fieldValue != null && $fieldValue != '')
+		      			$validAddLdapRdn[] = $rdnField . '=' . ldap_escape($fieldValue, "", LDAP_ESCAPE_DN);
 					}
-					elseif($ldapInfo[$rdnField] != null && $ldapInfo[$rdnField] != '') {
-						$ldapRdnAttrValue = $ldapInfo[$rdnField];
-						$ldapRdnValue = ldap_escape($ldapInfo[$rdnField], "", LDAP_ESCAPE_DN);
-						$tmpLdapTree = $rdnField . '=' . $ldapRdnValue . ',' . $addressBookDn;
+					elseif($ldapInfo[$rdnField] != null && $ldapInfo[$rdnField] != '')
+						$validAddLdapRdn[] = $rdnField . '=' . ldap_escape($fieldValue, "", LDAP_ESCAPE_DN);
+
+					if(count($validAddLdapRdn, COUNT_NORMAL) < 1)
+						throw new SabreDAVException\BadRequest("Identity field does not have a valid value");
+						
+					foreach($validAddLdapRdn as $tmpLdapRdn) {
+						$tmpLdapTree = $tmpLdapRdn . ',' . $addressBookDn;
 						
 						ldap_add($ldapConn, $tmpLdapTree, $ldapInfo);
 						
 						$ldapErrorNo = ldap_errno($ldapConn);
 						
-						if($ldapErrorNo == 0x0)
+						if($ldapErrorNo == 0x0) {
 							$ldapTree = $tmpLdapTree;
+							break;
+						}
+						
+						if($ldapErrorNo == 0x44)
+							continue;
+						else
+							break;
 					}
-					else
-						throw new SabreDAVException\BadRequest("Identity field does not have a valid value");
 						
 	      	if($ldapErrorNo == 0x41)
 	      		trigger_error("Consider adding defaults for required backend field(s) in '$addressBookId' address book configuration", E_USER_NOTICE);
 	      	
 					if($ldapErrorNo == 0x44 && $rdnAutorename) {
 						$tmpNewLdapRdnValueVariance = ' (crvs#' . time() . rand(1000, 9999) . ')';
-						$tmpNewLdapRdnValue = $ldapRdnValue . ldap_escape($tmpNewLdapRdnValueVariance, "", LDAP_ESCAPE_DN);
+						$tmpNewLdapRdn = $validAddLdapRdn[0] . ldap_escape($tmpNewLdapRdnValueVariance, "", LDAP_ESCAPE_DN);
+						$tmpNewLdapTree = $tmpNewLdapRdn . ',' . $addressBookDn;
 						
-						$ldapTree = $rdnField . '=' . $tmpNewLdapRdnValue . ',' . $addressBookDn;
+						ldap_add($ldapConn, $tmpNewLdapTree, $ldapInfo);
 						
-						if(ldap_add($ldapConn, $ldapTree, $ldapInfo))
-							$ldapErrorNo = 0x0;
+						$ldapErrorNo = ldap_errno($ldapConn);
+						
+						if($ldapErrorNo == 0x0)
+							$ldapTree = $tmpNewLdapTree;
 					}
 					
 					if($ldapErrorNo != 0x0) {
@@ -1203,6 +1191,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						trigger_error("LDAP error: " . ldap_err2str($ldapErrorNo), E_USER_WARNING);
 						throw new SabreDAVException\BadRequest("Card data may be incompatible or card with same name may already exist");
 					}
+					
+					if($ldapTree == null)
+						throw new SabreDAVException\ServiceUnavailable();
 
 		      $data = Utility::LdapQuery($ldapConn, $ldapTree, $addressBookConfig['filter'], ['entryuuid'], 'base');
 		      
