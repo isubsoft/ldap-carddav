@@ -1072,14 +1072,17 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						$tmpNewLdapRdnValue = ldap_escape($tmpNewLdapRdnAttrValue, "", LDAP_ESCAPE_DN);
 						$tmpNewLdapRdn = $rdnField . '=' . $tmpNewLdapRdnValue;
 						
-						if(ldap_rename($ldapConn, $oldLdapTree, $tmpNewLdapRdn, null, false)) {
+						ldap_rename($ldapConn, $oldLdapTree, $tmpNewLdapRdn, null, false);
+
+						$ldapErrorNo = ldap_errno($ldapConn);
+						
+						if($ldapErrorNo == 0x0) {
+							$ldapTree = $tmpNewLdapRdn . ',' . $parentOldLdapTree;
+							
 							if(is_array($ldapInfo[$rdnField]))
 								$ldapInfo[$rdnField][] = $tmpNewLdapRdnAttrValue;
 							else
 								$ldapInfo[$rdnField] = [$ldapRdnAttrValue, $tmpNewLdapRdnAttrValue];
-								
-							$ldapTree = $tmpNewLdapRdn . ',' . $parentOldLdapTree;
-							$ldapErrorNo = 0x0;
 						}
 					}
 					
