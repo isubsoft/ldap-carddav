@@ -906,7 +906,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					
 				$mappedBackendAttributes = Utility::getMappedBackendAttributes($fieldMap);
 				
-				// Object class as an implicitly mapped attribute during create/update
+				// Object class is an internally mapped attribute (from configuration) for this operation
 				$mappedBackendAttributes[] = 'objectclass';
 				
 				if($fieldAclEval == 'w')
@@ -966,7 +966,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					{
 						// Remove backend attributes which are marked read only but are not marked as required.
 						foreach($readOnlyFields as $key)
-							if(!array_key_exists($key, $requiredFields) && array_key_exists($key, $ldapInfo))
+							if(!in_array($key, $requiredFields) && array_key_exists($key, $ldapInfo))
 								unset($ldapInfo[$key]);
 					
 						// Apply any defaults
@@ -981,9 +981,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							}
 					  }
 					  
-					  if(!array_key_exists($rdnField, $ldapInfo))
-							throw new SabreDAVException\BadRequest("Identity field not present or is not writable");
-							
 						// Set backend attributes, which have not received any value and are writable, to an empty array to 
 						// clear them out from backend.
 						foreach($mappedBackendAttributes as $attr)
@@ -993,11 +990,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					  // Set existing contact attributes, which are not mapped, to an empty array to clear them out
 					  // from backend.
 						foreach($oldLdapInfo as $oldLdapAttrName => $oldLdapAttrValue) {
-							if(!in_array($oldLdapAttrName, $mappedBackendAttributes))
-							{
-								if(is_array($oldLdapAttrValue))
+							if(!in_array($attr, $readOnlyFields) && !array_key_exists($attr, $ldapInfo))
 									$ldapInfo[$oldLdapAttrName] = [];
-							}
 						}
 					}
 					else
@@ -1010,7 +1004,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						// Set backend attributes, which have not received any value and are writable, to an empty array to 
 						// clear them out from backend.
 						foreach($mappedBackendAttributes as $attr)
-							if(!in_array($attr, $readOnlyFields) && !array_key_exists($attr, $ldapInfo))
+							if(!in_array($attr, $readOnlyFields) && !in_array($attr, $requiredFields) && !array_key_exists($attr, $ldapInfo))
 								$ldapInfo[$attr] = [];
 					}
 					
@@ -1144,9 +1138,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				}
 				else
 				{
+					// Object class and RDN are internally required attributes for this operation
+					$requiredFields[] = 'objectclass';
+					$requiredFields[] = $rdnField;
+					
 					// Remove backend attributes which are marked read only but are not marked as required.
 					foreach($readOnlyFields as $key)
-						if(!array_key_exists($key, $requiredFields) && array_key_exists($key, $ldapInfo))
+						if(!in_array($key, $requiredFields) && array_key_exists($key, $ldapInfo))
 							unset($ldapInfo[$key]);
 					
 					// Apply any defaults
@@ -1160,9 +1158,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							}
 						}
 			    }
-			    
-			    if(!array_key_exists($rdnField, $ldapInfo))
-						throw new SabreDAVException\BadRequest("Identity field not present or is not writable");
 			    
 					$validAddLdapRdnAttrValue = [];
 					$ldapTree = null;
