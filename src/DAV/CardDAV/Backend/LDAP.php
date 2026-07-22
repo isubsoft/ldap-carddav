@@ -917,13 +917,27 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				else
 					$readOnlyFields = $fieldAclList;
 					
-		    // Remove duplicate values.
+				// Remove empty and duplicate values.
 		    $tmpLdapInfo = $ldapInfo;
-		    
-		    foreach($tmpLdapInfo as $key => $value)
-		    	if(is_array($value))
-		    		$ldapInfo[$key] = array_unique($value);
-		    		
+
+				foreach($tmpLdapInfo as $key => $value) {
+					if(is_array($value)) {
+						foreach($value as $index => $attrValue) {
+							if((string)$attrValue == '')
+								unset($ldapInfo[$key][$index]);
+						}
+						
+						// If remaining is an empty array then it needs to be removed as backend does not accept
+						// an empty array during add.
+						if($ldapInfo[$key] == [])
+							unset($ldapInfo[$key]);
+						else
+							$ldapInfo[$key] = array_unique($value);
+					}
+					elseif((string)$value == '')
+						unset($ldapInfo[$key]);
+				}
+
 		    unset($tmpLdapInfo);
 					
 				if($operation == 'UPDATE')
@@ -976,11 +990,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							if(array_key_exists($key, $ldapInfo) && !array_key_exists($key, $requiredFields))
 								unset($ldapInfo[$key]);
 					
-					  if(!array_key_exists($rdnField, $ldapInfo))
-							throw new SabreDAVException\BadRequest("Identity field not present or is not writable");
-					
 					  foreach ($requiredFields as $key) {
-					   	if(!array_key_exists($key, $ldapInfo) || $ldapInfo[$key] == null || $ldapInfo[$key] == '' || $ldapInfo[$key] == []) {
+					   	if(!array_key_exists($key, $ldapInfo) || $ldapInfo[$key] == []) {
 								if(array_key_exists($key, $requiredFieldDefault) && !empty($requiredFieldDefault[$key]))
 									$ldapInfo[$key] = $requiredFieldDefault[$key];
 								else {
@@ -989,6 +1000,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 								}
 							}
 					  }
+					  
+					  if(!array_key_exists($rdnField, $ldapInfo))
+							throw new SabreDAVException\BadRequest("Identity field not present or is not writable");
 					  
 					  // Set existing contact attributes, which are not mapped, to an empty array to clear them out
 					  // from backend.
@@ -1010,7 +1024,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						}
 					
 				    foreach ($requiredFields as $key) {
-				      if(!in_array($key, $readOnlyFields) && (!array_key_exists($key, $ldapInfo) || $ldapInfo[$key] == null || $ldapInfo[$key] == '' || $ldapInfo[$key] == [])) {
+				      if(!in_array($key, $readOnlyFields) && (!array_key_exists($key, $ldapInfo) || $ldapInfo[$key] == [])) {
 								if(array_key_exists($key, $requiredFieldDefault) && !empty($requiredFieldDefault[$key]))
 									$ldapInfo[$key] = $requiredFieldDefault[$key];
 								else {
@@ -1021,22 +1035,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				    }
 					}
 					
-					// Remove empty values.
-					$tmpLdapInfo = $ldapInfo;
-
-					foreach($tmpLdapInfo as $key => $value) {
-						if(is_array($value)) {
-							foreach($value as $index => $attrValue) {
-								if((string)$attrValue == '')
-									unset($ldapInfo[$key][$index]);
-							}
-						}
-						elseif((string)$value == '')
-							unset($ldapInfo[$key]);
-					}
-
-					unset($tmpLdapInfo);
-
 					$oldLdapTree = $oldLdapInfo['dn'];
 					$componentOldLdapTree = ldap_explode_dn($oldLdapTree, 0);
 
@@ -1170,11 +1168,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							unset($ldapInfo[$key]);
 					}
 					
-			    if(!array_key_exists($rdnField, $ldapInfo))
-						throw new SabreDAVException\BadRequest("Identity field not present or is not writable");
-				
 			    foreach ($requiredFields as $key) {
-				  	if(!array_key_exists($key, $ldapInfo) || $ldapInfo[$key] == null || $ldapInfo[$key] == '' || $ldapInfo[$key] == []) {
+				  	if(!array_key_exists($key, $ldapInfo) || $ldapInfo[$key] == []) {
 			      	if(array_key_exists($key, $requiredFieldDefault) && !empty($requiredFieldDefault[$key]))
 			      		$ldapInfo[$key] = $requiredFieldDefault[$key];
 			      	else {
@@ -1184,26 +1179,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						}
 			    }
 			    
-					// Remove empty values.
-					$tmpLdapInfo = $ldapInfo;
-
-					foreach($tmpLdapInfo as $key => $value) {
-						if(is_array($value)) {
-							foreach($value as $index => $attrValue) {
-								if((string)$attrValue == '')
-									unset($ldapInfo[$key][$index]);
-							}
-							
-							// If remaining is an empty array then it needs to be removed as backend does not accept
-							// an empty array during add.
-							if($ldapInfo[$key] == [])
-								unset($ldapInfo[$key]);
-						}
-						elseif((string)$value == '')
-							unset($ldapInfo[$key]);
-					}
-
-					unset($tmpLdapInfo);
+			    if(!array_key_exists($rdnField, $ldapInfo))
+						throw new SabreDAVException\BadRequest("Identity field not present or is not writable");
 			    
 					$validAddLdapRdnAttrValue = [];
 					$ldapTree = null;
