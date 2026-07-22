@@ -972,16 +972,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							}
 						}
 					}
-					else
-					{
-						// Set backend attributes, which have not received any value, to an empty array to 
-						// clear them out from backend.
-						foreach($mappedBackendAttributes as $attr)
-						{
-							if(!array_key_exists($attr, $ldapInfo))
-								$ldapInfo[$attr] = [];
-						}
-					}
 					
 					if($backendDataUpdatePolicy == 'replace')
 					{
@@ -991,7 +981,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 								unset($ldapInfo[$key]);
 					
 					  foreach ($requiredFields as $key) {
-					   	if(!array_key_exists($key, $ldapInfo) || $ldapInfo[$key] == []) {
+					   	if(!array_key_exists($key, $ldapInfo)) {
 								if(array_key_exists($key, $requiredFieldDefault) && !empty($requiredFieldDefault[$key]))
 									$ldapInfo[$key] = $requiredFieldDefault[$key];
 								else {
@@ -1024,7 +1014,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						}
 					
 				    foreach ($requiredFields as $key) {
-				      if(!in_array($key, $readOnlyFields) && (!array_key_exists($key, $ldapInfo) || $ldapInfo[$key] == [])) {
+				      if(!in_array($key, $readOnlyFields) && !array_key_exists($key, $ldapInfo)) {
 								if(array_key_exists($key, $requiredFieldDefault) && !empty($requiredFieldDefault[$key]))
 									$ldapInfo[$key] = $requiredFieldDefault[$key];
 								else {
@@ -1033,6 +1023,14 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 								}
 							}
 				    }
+				    
+						// Set backend attributes, which have not received any value, to an empty array to 
+						// clear them out from backend.
+						foreach($mappedBackendAttributes as $attr)
+						{
+							if(!array_key_exists($attr, $ldapInfo))
+								$ldapInfo[$attr] = [];
+						}
 					}
 					
 					$oldLdapTree = $oldLdapInfo['dn'];
@@ -1169,7 +1167,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					}
 					
 			    foreach ($requiredFields as $key) {
-				  	if(!array_key_exists($key, $ldapInfo) || $ldapInfo[$key] == []) {
+				  	if(!array_key_exists($key, $ldapInfo)) {
 			      	if(array_key_exists($key, $requiredFieldDefault) && !empty($requiredFieldDefault[$key]))
 			      		$ldapInfo[$key] = $requiredFieldDefault[$key];
 			      	else {
