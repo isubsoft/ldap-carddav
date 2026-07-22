@@ -1378,13 +1378,20 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         
         $ldapTree = $data[0]['dn'];
 
-        try {
-            if(!ldap_delete($ldapConn, $ldapTree))
-	            return false;
-        } catch (\Throwable $th) {
-						trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
-            throw new SabreDAVException\ServiceUnavailable();
-        }
+	      if(!ldap_delete($ldapConn, $ldapTree)) {
+					$ldapErrorNo = ldap_errno($ldapConn);
+					
+					if($ldapErrorNo == 0x32)
+						throw new SabreDAVException\Forbidden(isset(Utility::$ldapClientErrorNo[$ldapErrorNo])?Utility::$ldapClientErrorNo[$ldapErrorNo]:'Access denied');
+						
+					if($ldapErrorNo == 0x20)
+						throw new SabreDAVException\NotFound(isset(Utility::$ldapClientErrorNo[$ldapErrorNo])?Utility::$ldapClientErrorNo[$ldapErrorNo]:'Not found');
+					
+					if($ldapErrorNo != 0x0)
+						throw new SabreDAVException\ServiceUnavailable(isset(Utility::$ldapClientErrorNo[$ldapErrorNo])?Utility::$ldapClientErrorNo[$ldapErrorNo]:'');
+						
+	        return false;
+	      }
         
 				if(!$this->cache->delete(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri)))
 		      trigger_error("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore the error.", E_USER_NOTICE);
