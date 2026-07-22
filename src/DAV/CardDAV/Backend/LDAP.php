@@ -977,9 +977,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					{
 						// Remove backend attributes which are marked read only but are not marked as required.
 						foreach($readOnlyFields as $key)
-							if(array_key_exists($key, $ldapInfo) && !array_key_exists($key, $requiredFields))
+							if(!array_key_exists($key, $requiredFields) && array_key_exists($key, $ldapInfo))
 								unset($ldapInfo[$key]);
 					
+						// Apply any defaults
 					  foreach ($requiredFields as $key) {
 					   	if(!array_key_exists($key, $ldapInfo)) {
 								if(array_key_exists($key, $requiredFieldDefault) && !empty($requiredFieldDefault[$key]))
@@ -1008,11 +1009,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					{
 						// Remove backend attributes which are marked read only.
 						foreach($readOnlyFields as $key)
-						{
 							if(array_key_exists($key, $ldapInfo))
 								unset($ldapInfo[$key]);
-						}
-					
+								
+						// Apply any defaults
 				    foreach ($requiredFields as $key) {
 				      if(!in_array($key, $readOnlyFields) && !array_key_exists($key, $ldapInfo)) {
 								if(array_key_exists($key, $requiredFieldDefault) && !empty($requiredFieldDefault[$key]))
@@ -1161,11 +1161,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				{
 					// Remove backend attributes which are marked read only but are not marked as required.
 					foreach($readOnlyFields as $key)
-					{
-						if(array_key_exists($key, $ldapInfo) && !array_key_exists($key, $requiredFields))
+						if(!array_key_exists($key, $requiredFields) && array_key_exists($key, $ldapInfo))
 							unset($ldapInfo[$key]);
-					}
 					
+					// Apply any defaults
 			    foreach ($requiredFields as $key) {
 				  	if(!array_key_exists($key, $ldapInfo)) {
 			      	if(array_key_exists($key, $requiredFieldDefault) && !empty($requiredFieldDefault[$key]))
