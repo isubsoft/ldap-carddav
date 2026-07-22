@@ -917,12 +917,14 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				else
 					$readOnlyFields = $fieldAclList;
 					
-		    // Remove duplicates
+		    // Remove duplicate values.
 		    $tmpLdapInfo = $ldapInfo;
 		    
 		    foreach($tmpLdapInfo as $key => $value)
 		    	if(is_array($value))
 		    		$ldapInfo[$key] = array_unique($value);
+		    		
+		    unset($tmpLdapInfo);
 					
 				if($operation == 'UPDATE')
 				{
@@ -955,10 +957,43 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 									$readOnlyFields[] = $field;
 							}
 						}
-					
-						foreach($oldLdapInfo as $oldLdapAttrName => $oldLdapAttrValue)
+					}
+					else
+					{
+						// Set backend attributes, which have not received any value, to an empty array to 
+						// clear them out from backend.
+						foreach($mappedBackendAttributes as $attr)
 						{
-							if(!isset($ldapInfo[$oldLdapAttrName]))
+							if(!array_key_exists($attr, $ldapInfo))
+								$ldapInfo[$attr] = [];
+						}
+					}
+					
+					if($backendDataUpdatePolicy == 'replace')
+					{
+						// Remove backend attributes which are marked read only but are not marked as required.
+						foreach($readOnlyFields as $key)
+							if(array_key_exists($key, $ldapInfo) && !array_key_exists($key, $requiredFields))
+								unset($ldapInfo[$key]);
+					
+					  if(!array_key_exists($rdnField, $ldapInfo))
+							throw new SabreDAVException\BadRequest("Identity field not present or is not writable");
+					
+					  foreach ($requiredFields as $key) {
+					   	if(!array_key_exists($key, $ldapInfo) || $ldapInfo[$key] == null || $ldapInfo[$key] == '' || $ldapInfo[$key] == []) {
+								if(array_key_exists($key, $requiredFieldDefault) && !empty($requiredFieldDefault[$key]))
+									$ldapInfo[$key] = $requiredFieldDefault[$key];
+								else {
+									trigger_error("Consider adding defaults for required backend field(s) in '$addressBookId' address book configuration", E_USER_NOTICE);
+									throw new SabreDAVException\BadRequest("Required fields not present or are not writable");
+								}
+							}
+					  }
+					  
+					  // Set existing contact attributes, which are not mapped, to an empty array to clear them out
+					  // from backend.
+						foreach($oldLdapInfo as $oldLdapAttrName => $oldLdapAttrValue) {
+							if(!in_array($oldLdapAttrName, $mappedBackendAttributes))
 							{
 								if(is_array($oldLdapAttrValue))
 									$ldapInfo[$oldLdapAttrName] = [];
@@ -967,46 +1002,16 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					}
 					else
 					{
-						foreach($mappedBackendAttributes as $attr)
-						{
-							if(!isset($ldapInfo[$attr]))
-								$ldapInfo[$attr] = [];
-						}
-					}
-					
-					if($backendDataUpdatePolicy == 'replace')
-					{
+						// Remove backend attributes which are marked read only.
 						foreach($readOnlyFields as $key)
 						{
 							if(array_key_exists($key, $ldapInfo))
 								unset($ldapInfo[$key]);
 						}
-						
-					  if(!array_key_exists($rdnField, $ldapInfo))
-							throw new SabreDAVException\BadRequest("Identity field not present or is not writable");
 					
-					  foreach ($requiredFields as $key) {
-					      if(!isset($ldapInfo[$key]) || $ldapInfo[$key] == []) {
-									if(isset($requiredFieldDefault[$key]))
-										$ldapInfo[$key] = $requiredFieldDefault[$key];
-									else {
-										trigger_error("Consider adding defaults for required backend field(s) in '$addressBookId' address book configuration", E_USER_NOTICE);
-										throw new SabreDAVException\BadRequest("Required fields not present or do not have write access");
-									}
-								}
-					  }
-					}
-					else
-					{
-						foreach($readOnlyFields as $key)
-						{
-							if(array_key_exists($key, $ldapInfo))
-								unset($ldapInfo[$key]);
-						}
-						
 				    foreach ($requiredFields as $key) {
-				      if(!in_array($key, $readOnlyFields) && (!isset($ldapInfo[$key]) || $ldapInfo[$key] == [])) {
-								if(isset($requiredFieldDefault[$key]))
+				      if(!in_array($key, $readOnlyFields) && (!array_key_exists($key, $ldapInfo) || $ldapInfo[$key] == null || $ldapInfo[$key] == '' || $ldapInfo[$key] == [])) {
+								if(array_key_exists($key, $requiredFieldDefault) && !empty($requiredFieldDefault[$key]))
 									$ldapInfo[$key] = $requiredFieldDefault[$key];
 								else {
 									trigger_error("Consider adding defaults for required backend field(s) in '$addressBookId' address book configuration", E_USER_NOTICE);
@@ -1015,6 +1020,22 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							}
 				    }
 					}
+					
+					// Remove empty values.
+					$tmpLdapInfo = $ldapInfo;
+
+					foreach($tmpLdapInfo as $key => $value) {
+						if(is_array($value)) {
+							foreach($value as $index => $attrValue) {
+								if((string)$attrValue == '')
+									unset($ldapInfo[$key][$index]);
+							}
+						}
+						elseif((string)$value == '')
+							unset($ldapInfo[$key]);
+					}
+
+					unset($tmpLdapInfo);
 
 					$oldLdapTree = $oldLdapInfo['dn'];
 					$componentOldLdapTree = ldap_explode_dn($oldLdapTree, 0);
@@ -1142,9 +1163,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				}
 				else
 				{
+					// Remove backend attributes which are marked read only but are not marked as required.
 					foreach($readOnlyFields as $key)
 					{
-						if(array_key_exists($key, $ldapInfo))
+						if(array_key_exists($key, $ldapInfo) && !array_key_exists($key, $requiredFields))
 							unset($ldapInfo[$key]);
 					}
 					
@@ -1152,15 +1174,36 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						throw new SabreDAVException\BadRequest("Identity field not present or is not writable");
 				
 			    foreach ($requiredFields as $key) {
-			        if(!array_key_exists($key, $ldapInfo)) {
-			        	if(isset($requiredFieldDefault[$key]))
-			        		$ldapInfo[$key] = $requiredFieldDefault[$key];
-			        	else {
-			        		trigger_error("Consider adding defaults for required backend field(s) in '$addressBookId' address book configuration", E_USER_NOTICE);
-									throw new SabreDAVException\BadRequest("Required fields not present or do not have write access");
-								}
+				  	if(!array_key_exists($key, $ldapInfo) || $ldapInfo[$key] == null || $ldapInfo[$key] == '' || $ldapInfo[$key] == []) {
+			      	if(array_key_exists($key, $requiredFieldDefault) && !empty($requiredFieldDefault[$key]))
+			      		$ldapInfo[$key] = $requiredFieldDefault[$key];
+			      	else {
+			      		trigger_error("Consider adding defaults for required backend field(s) in '$addressBookId' address book configuration", E_USER_NOTICE);
+								throw new SabreDAVException\BadRequest("Required fields not present or do not have write access");
 							}
+						}
 			    }
+			    
+					// Remove empty values.
+					$tmpLdapInfo = $ldapInfo;
+
+					foreach($tmpLdapInfo as $key => $value) {
+						if(is_array($value)) {
+							foreach($value as $index => $attrValue) {
+								if((string)$attrValue == '')
+									unset($ldapInfo[$key][$index]);
+							}
+							
+							// If remaining is an empty array then it needs to be removed as backend does not accept
+							// an empty array during add.
+							if($ldapInfo[$key] == [])
+								unset($ldapInfo[$key]);
+						}
+						elseif((string)$value == '')
+							unset($ldapInfo[$key]);
+					}
+
+					unset($tmpLdapInfo);
 			    
 					$validAddLdapRdnAttrValue = [];
 					$ldapTree = null;
