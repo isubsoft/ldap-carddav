@@ -1251,7 +1251,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							throw new SabreDAVException\BadRequest(Utility::$ldapClientErrorNo[$ldapErrorNo]);
 
 						trigger_error("LDAP error: " . ldap_err2str($ldapErrorNo), E_USER_WARNING);
-						throw new SabreDAVException\BadRequest("Card data may be incompatible or card with same name may already exist");
+						throw new SabreDAVException\BadRequest("Card data may be incompatible");
 					}
 					
 					if($ldapTree == null)
