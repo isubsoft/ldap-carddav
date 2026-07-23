@@ -961,52 +961,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						throw new SabreDAVException\Conflict("Not found");
 						
 					$oldLdapInfo = $oldLdapInfo[0];
-						
-					if($backendDataUpdatePolicy == 'replace')
-					{
-						// Remove backend attributes which are marked read only but are not marked as required.
-						foreach($readOnlyFields as $key)
-							if(!in_array($key, $requiredFields) && array_key_exists($key, $ldapInfo))
-								unset($ldapInfo[$key]);
-					
-						// Apply any defaults
-					  foreach ($requiredFields as $key) {
-					   	if(!array_key_exists($key, $ldapInfo)) {
-								if(array_key_exists($key, $requiredFieldDefault) && !empty($requiredFieldDefault[$key]))
-									$ldapInfo[$key] = $requiredFieldDefault[$key];
-								else {
-									trigger_error("Consider adding defaults for required backend field(s) in '$addressBookId' address book configuration", E_USER_NOTICE);
-									throw new SabreDAVException\BadRequest("Required fields not present or are not writable");
-								}
-							}
-					  }
-					  
-						// Set backend attributes, which have not received any value and are writable, to an empty array to 
-						// clear them out from backend.
-						foreach($mappedBackendAttributes as $attr)
-							if(!in_array($attr, $readOnlyFields) && !array_key_exists($attr, $ldapInfo))
-								$ldapInfo[$attr] = [];
-					  
-					  // Set existing contact attributes, which are not mapped, to an empty array to clear them out
-					  // from backend.
-						foreach($oldLdapInfo as $oldLdapAttrName => $oldLdapAttrValue) {
-							if(!in_array($attr, $readOnlyFields) && !array_key_exists($attr, $ldapInfo))
-									$ldapInfo[$oldLdapAttrName] = [];
-						}
-					}
-					else
-					{
-						// Remove backend attributes which are marked read only.
-						foreach($readOnlyFields as $key)
-							if(array_key_exists($key, $ldapInfo))
-								unset($ldapInfo[$key]);
-								
-						// Set backend attributes, which have not received any value and are writable, to an empty array to 
-						// clear them out from backend.
-						foreach($mappedBackendAttributes as $attr)
-							if(!in_array($attr, $readOnlyFields) && !in_array($attr, $requiredFields) && !array_key_exists($attr, $ldapInfo))
-								$ldapInfo[$attr] = [];
-					}
 					
 					$oldLdapTree = $oldLdapInfo['dn'];
 					$componentOldLdapTree = ldap_explode_dn($oldLdapTree, 0);
@@ -1018,6 +972,68 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					}
 					
 					$oldLdapRdn = $componentOldLdapTree[0];
+						
+					if($backendDataUpdatePolicy == 'replace')
+					{
+						// Object class and RDN are internally required attributes for this operation
+						$requiredFields[] = 'objectclass';
+						$requiredFields[] = $rdnField;
+
+						// Remove backend attributes which are marked read only but are not marked as required.
+						foreach($readOnlyFields as $key)
+							if(!in_array($key, $requiredFields) && array_key_exists($key, $ldapInfo))
+								unset($ldapInfo[$key]);
+					
+						// Apply any defaults
+					  foreach ($requiredFields as $key) {
+					   	if(!array_key_exists($key, $ldapInfo)) {
+								if(array_key_exists($key, $requiredFieldDefault) && !empty($requiredFieldDefault[$key]))
+									$ldapInfo[$key] = $requiredFieldDefault[$key];
+								else {
+									trigger_error("Consider adding defaults for required backend field(s) including the rdn field in '$addressBookId' address book configuration", E_USER_NOTICE);
+									throw new SabreDAVException\BadRequest("Required field(s) not present, check with the server administrator for the list of field(s) which are required to filled.");
+								}
+							}
+					  }
+					  
+						// Set backend attributes, which have not received any value and are writable, to an empty array to 
+						// clear them out from backend.
+						foreach($mappedBackendAttributes as $attr)
+							if(!in_array($attr, $readOnlyFields) && !array_key_exists($attr, $ldapInfo))
+								$ldapInfo[$attr] = [];
+					  
+					  // Set existing contact attributes, which are not set, to an empty array to clear them out
+					  // from backend.
+						foreach($oldLdapInfo as $oldLdapAttr => $oldLdapAttrValue) {
+							if(!in_array($oldLdapAttr, $readOnlyFields) && !array_key_exists($oldLdapAttr, $ldapInfo))
+									$ldapInfo[$oldLdapAttr] = [];
+						}
+					}
+					
+					// Backend data update policy 'merge'
+					else
+					{
+						// Remove backend attributes which are marked read only.
+						foreach($readOnlyFields as $key)
+							if(array_key_exists($key, $ldapInfo))
+								unset($ldapInfo[$key]);
+								
+						$oldReadOnlyFields = [];
+						
+						// If new RDN attribute is not set then set old RDN attribute as read only.						
+						if(!array_key_exists($rdnField, $ldapInfo)) {
+							$tmpOldLdapRdn = explode('=', $oldLdapRdn);
+							$oldReadOnlyFields[] = strtolower($tmpOldLdapRdn[0]);
+						}
+						
+					  // Set existing contact attributes, which are mapped but not set, to an empty array
+					  // to clear them out from backend.
+						foreach($oldLdapInfo as $oldLdapAttr => $oldLdapAttrValue) {
+							if(!in_array($oldLdapAttr, $readOnlyFields) && !in_array($oldLdapAttr, $requiredFields) && !in_array($oldLdapAttr, $oldReadOnlyFields) && !array_key_exists($oldLdapAttr, $ldapInfo) && in_array($oldLdapAttr, $mappedBackendAttributes))
+									$ldapInfo[$oldLdapAttr] = [];
+						}
+					}
+					
 					$parentOldLdapTree = "";
 
 					for($dnComponentIndex=1; $dnComponentIndex<$componentOldLdapTree['count']; $dnComponentIndex++)
@@ -1122,7 +1138,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		      	$ldapErrorNo = ldap_errno($ldapConn);
 		      	
 		      	if($ldapErrorNo == 0x41)
-		      		trigger_error("Consider adding defaults for required backend field(s) in '$addressBookId' address book configuration", E_USER_NOTICE);
+		      		trigger_error("Consider adding defaults for required backend field(s) including the rdn field in '$addressBookId' address book configuration", E_USER_NOTICE);
 		      	
 				  	if(isset(Utility::$ldapClientErrorNo[$ldapErrorNo]))
 				  		throw new SabreDAVException\BadRequest(Utility::$ldapClientErrorNo[$ldapErrorNo]);
@@ -1136,6 +1152,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 			    	
 					$this->addChange($addressBookId, $cardUri, 'MODIFY');
 				}
+
+				// CREATE operation
 				else
 				{
 					// Object class and RDN are internally required attributes for this operation
@@ -1153,8 +1171,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 			      	if(array_key_exists($key, $requiredFieldDefault) && !empty($requiredFieldDefault[$key]))
 			      		$ldapInfo[$key] = $requiredFieldDefault[$key];
 			      	else {
-			      		trigger_error("Consider adding defaults for required backend field(s) in '$addressBookId' address book configuration", E_USER_NOTICE);
-								throw new SabreDAVException\BadRequest("Required fields not present or do not have write access");
+			      		trigger_error("Consider adding defaults for required backend field(s) including the rdn field in '$addressBookId' address book configuration", E_USER_NOTICE);
+								throw new SabreDAVException\BadRequest("Required field(s) not present, check with the server administrator for the list of field(s) which are required to filled.");
 							}
 						}
 			    }
@@ -1192,7 +1210,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					}
 						
 	      	if($ldapErrorNo == 0x41)
-	      		trigger_error("Consider adding defaults for required backend field(s) in '$addressBookId' address book configuration", E_USER_NOTICE);
+	      		trigger_error("Consider adding defaults for required backend field(s) including the rdn field in '$addressBookId' address book configuration", E_USER_NOTICE);
 	      	
 					if($ldapErrorNo == 0x44 && $rdnAutorename) {
 						$tmpNewLdapRdnValueVariance = ' (crvs#' . time() . rand(1000, 9999) . ')';
