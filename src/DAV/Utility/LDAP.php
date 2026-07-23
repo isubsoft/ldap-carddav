@@ -562,4 +562,28 @@ class LDAP {
         // Output the 36 character UUID.
         return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
     }
+    
+    public static function handleLdapError($ldapErrorNo)
+    {
+			if(in_array($ldapErrorNo, [0x14, 0x15, 0x41, 0x44])) {
+				if(isset(self::$ldapClientErrorNo[$ldapErrorNo]))
+					throw new SabreDAVException\BadRequest(self::$ldapClientErrorNo[$ldapErrorNo]);
+				else
+					throw new SabreDAVException\BadRequest(ldap_err2str($ldapErrorNo));
+			}
+			elseif(in_array($ldapErrorNo, [0x32])) {
+				if(isset(self::$ldapClientErrorNo[$ldapErrorNo]))
+					throw new SabreDAVException\Forbidden(self::$ldapClientErrorNo[$ldapErrorNo]);
+				else
+					throw new SabreDAVException\Forbidden(ldap_err2str($ldapErrorNo));
+			}
+			elseif(in_array($ldapErrorNo, [0x20])) {
+				if(isset(self::$ldapClientErrorNo[$ldapErrorNo]))
+					throw new SabreDAVException\NotFound(self::$ldapClientErrorNo[$ldapErrorNo]);
+				else
+					throw new SabreDAVException\NotFound(ldap_err2str($ldapErrorNo));
+			}
+			
+			return;
+    }
 }

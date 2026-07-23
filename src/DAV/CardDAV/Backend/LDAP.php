@@ -1124,8 +1124,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					}
 					
 					if($ldapErrorNo != 0x0) {
-						if(isset(Utility::$ldapClientErrorNo[$ldapErrorNo]))
-							throw new SabreDAVException\BadRequest(Utility::$ldapClientErrorNo[$ldapErrorNo]);
+						Utility::handleLdapError($ldapErrorNo);
 						
 						trigger_error("LDAP error: " . ldap_err2str($ldapErrorNo), E_USER_WARNING);
 						throw new SabreDAVException\ServiceUnavailable("Unknown error while saving card");
@@ -1142,11 +1141,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		      	if($ldapErrorNo == 0x41)
 		      		trigger_error("Consider adding defaults for required backend field(s) including the rdn field in '$addressBookId' address book configuration", E_USER_NOTICE);
 		      	
-				  	if(isset(Utility::$ldapClientErrorNo[$ldapErrorNo]))
-				  		throw new SabreDAVException\BadRequest(Utility::$ldapClientErrorNo[$ldapErrorNo]);
-
+						Utility::handleLdapError($ldapErrorNo);
+						
 						trigger_error("LDAP error: " . ldap_err2str($ldapErrorNo), E_USER_WARNING);
-						throw new SabreDAVException\BadRequest("Card data may be incompatible");
+						throw new SabreDAVException\ServiceUnavailable("Unknown error while saving card");
 					}
 						
 					if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null, -60))
@@ -1247,11 +1245,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					}
 					
 					if($ldapErrorNo != 0x0) {
-						if(isset(Utility::$ldapClientErrorNo[$ldapErrorNo]))
-							throw new SabreDAVException\BadRequest(Utility::$ldapClientErrorNo[$ldapErrorNo]);
-
+						Utility::handleLdapError($ldapErrorNo);
+						
 						trigger_error("LDAP error: " . ldap_err2str($ldapErrorNo), E_USER_WARNING);
-						throw new SabreDAVException\BadRequest("Card data may be incompatible");
+						throw new SabreDAVException\ServiceUnavailable("Unknown error while saving card");
 					}
 					
 					if($ldapTree == null)
@@ -1401,16 +1398,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 	      if(!ldap_delete($ldapConn, $ldapTree)) {
 					$ldapErrorNo = ldap_errno($ldapConn);
 					
-					if($ldapErrorNo == 0x32)
-						throw new SabreDAVException\Forbidden(isset(Utility::$ldapClientErrorNo[$ldapErrorNo])?Utility::$ldapClientErrorNo[$ldapErrorNo]:'Access denied');
-						
-					if($ldapErrorNo == 0x20)
-						throw new SabreDAVException\NotFound(isset(Utility::$ldapClientErrorNo[$ldapErrorNo])?Utility::$ldapClientErrorNo[$ldapErrorNo]:'Not found');
+					Utility::handleLdapError($ldapErrorNo);
 					
-					if($ldapErrorNo != 0x0)
-						throw new SabreDAVException\ServiceUnavailable(isset(Utility::$ldapClientErrorNo[$ldapErrorNo])?Utility::$ldapClientErrorNo[$ldapErrorNo]:'');
-						
-	        return false;
+					trigger_error("LDAP error: " . ldap_err2str($ldapErrorNo), E_USER_WARNING);
+					throw new SabreDAVException\ServiceUnavailable("Unknown error while deleting card");
 	      }
         
 				if(!$this->cache->delete(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri)))
