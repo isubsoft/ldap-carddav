@@ -972,6 +972,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					}
 					
 					$oldLdapRdn = $componentOldLdapTree[0];
+					
+					// Collect attributes from existing contact data.
+					for($index=0; $index<$oldLdapInfo['count']; $index++)
+						$oldLdapAttrList[] = $oldLdapInfo[$index];
 						
 					if($backendDataUpdatePolicy == 'replace')
 					{
@@ -1004,10 +1008,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					  
 					  // Set existing contact attributes, which are not set, to an empty array to clear them out
 					  // from backend.
-						foreach($oldLdapInfo as $oldLdapAttr => $oldLdapAttrValue) {
+						foreach($oldLdapAttrList as $oldLdapAttr)
 							if(!in_array($oldLdapAttr, $readOnlyFields) && !array_key_exists($oldLdapAttr, $ldapInfo))
 									$ldapInfo[$oldLdapAttr] = [];
-						}
 					}
 					
 					// Backend data update policy 'merge'
@@ -1028,10 +1031,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						
 					  // Set existing contact attributes, which are mapped but not set, to an empty array
 					  // to clear them out from backend.
-						foreach($oldLdapInfo as $oldLdapAttr => $oldLdapAttrValue) {
+						foreach($oldLdapAttrList as $oldLdapAttr)
 							if(!in_array($oldLdapAttr, $readOnlyFields) && !in_array($oldLdapAttr, $requiredFields) && !in_array($oldLdapAttr, $oldReadOnlyFields) && !array_key_exists($oldLdapAttr, $ldapInfo) && in_array($oldLdapAttr, $mappedBackendAttributes))
 									$ldapInfo[$oldLdapAttr] = [];
-						}
 					}
 					
 					$parentOldLdapTree = "";
