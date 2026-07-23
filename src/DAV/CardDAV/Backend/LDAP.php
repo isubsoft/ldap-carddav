@@ -916,6 +916,15 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						if(!in_array($field, $fieldAclList))
 							$readOnlyFields[] = $field;
 					}
+					
+					if(!in_array($rdnField, $fieldAclList) && !in_array($rdnField, $readOnlyFields))
+						$readOnlyFields[] = $rdnField;
+					
+					foreach($requiredFields as $field)
+					{
+						if(!in_array($field, $fieldAclList) && !in_array($field, $readOnlyFields))
+							$readOnlyFields[] = $field;
+					}
 				}
 				else
 					$readOnlyFields = $fieldAclList;
@@ -977,7 +986,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					for($index=0; $index<$oldLdapInfo['count']; $index++)
 						$oldLdapAttrList[] = $oldLdapInfo[$index];
 						
-					// Mark fields in existing data as read only based on field acl.
+					// Mark existing contact fields as read only based on field acl.
 					if($fieldAclEval == 'w')
 					{
 						foreach($oldLdapAttrList as $field)
