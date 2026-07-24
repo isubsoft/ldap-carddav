@@ -929,7 +929,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				else
 					$readOnlyFields = $fieldAclList;
 					
-				// Remove empty and duplicate values.
+				// Remove empty and duplicate values as if they were never sent in the first place.
 		    $tmpLdapInfo = $ldapInfo;
 
 				foreach($tmpLdapInfo as $key => $value) {
@@ -954,6 +954,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					
 				if($operation == 'UPDATE')
 				{
+					// List of fields not be marked for deletion as determined dynamically during the
+					// course of this operation
+					$noDeleteFields = [];
+					
+					// List of writable fields to be marked for deletion from backend.					
+					$toBeDeletedFields = [];
+					
 					$oldLdapInfo = $this->fetchLdapContactDataByUri($addressBookId, $cardUri, ['*'], 1);
 					
 					if($oldLdapInfo === false) {
@@ -995,23 +1002,15 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 								$readOnlyFields[] = $field;
 						}
 					}
-						
-					if($backendDataUpdatePolicy == 'replace')
-					{
-						// Object class and RDN are internally required attributes for this operation
-						$requiredFields[] = 'objectclass';
-						$requiredFields[] = $rdnField;
-
-						// Remove backend attributes which are marked read only but are not marked as required.
-						foreach($readOnlyFields as $key)
-							if(!in_array($key, $requiredFields) && array_key_exists($key, $ldapInfo))
-								unset($ldapInfo[$key]);
 					
+					if($backendDataUpdatePolicy == 'replace') {
+						$requiredFields[] = $rdnField;
+						
 						// Apply any defaults
-					  foreach ($requiredFields as $key) {
-					   	if(!array_key_exists($key, $ldapInfo)) {
-								if(array_key_exists($key, $requiredFieldDefault) && !empty($requiredFieldDefault[$key]))
-									$ldapInfo[$key] = $requiredFieldDefault[$key];
+					  foreach ($requiredFields as $field) {
+					   	if(!array_key_exists($field, $ldapInfo)) {
+								if(array_key_exists($field, $requiredFieldDefault) && !empty($requiredFieldDefault[$field]))
+									$ldapInfo[$field] = $requiredFieldDefault[$field];
 								else {
 									trigger_error("Consider adding defaults for required backend field(s) including the rdn field in '$addressBookId' address book configuration", E_USER_NOTICE);
 									throw new SabreDAVException\BadRequest("Required field(s) not present, check with the server administrator for the list of field(s) which are required to filled.");
@@ -1019,41 +1018,34 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							}
 					  }
 					  
-						// Set backend attributes, which have not received any value and are writable, to an empty array to 
-						// clear them out from backend.
-						foreach($mappedBackendAttributes as $attr)
-							if(!in_array($attr, $readOnlyFields) && !array_key_exists($attr, $ldapInfo))
-								$ldapInfo[$attr] = [];
-					  
-					  // Set existing contact attributes, which are not set, to an empty array to clear them out
-					  // from backend.
-						foreach($oldLdapAttrList as $oldLdapAttr)
-							if(!in_array($oldLdapAttr, $readOnlyFields) && !array_key_exists($oldLdapAttr, $ldapInfo))
-									$ldapInfo[$oldLdapAttr] = [];
+					  // Mark existing backend attributes, which are writable but have not received any value, to be deleted.
+						foreach($oldLdapAttrList as $field)
+							if(!array_key_exists($field, $ldapInfo))
+								$toBeDeletedFields[] = $field;
 					}
-					
-					// Backend data update policy 'merge'
-					else
-					{
-						// Remove backend attributes which are marked read only.
-						foreach($readOnlyFields as $key)
-							if(array_key_exists($key, $ldapInfo))
-								unset($ldapInfo[$key]);
-								
-						$oldReadOnlyFields = [];
-						
-						// If new RDN attribute is not set then set old RDN attribute as read only.						
+					else {
+						// If RDN attribute is not set then mark existing backend RDN attribute as no delete.
 						if(!array_key_exists($rdnField, $ldapInfo)) {
 							$tmpOldLdapRdn = explode('=', $oldLdapRdn);
-							$oldReadOnlyFields[] = strtolower($tmpOldLdapRdn[0]);
+							$noDeleteFields[] = strtolower($tmpOldLdapRdn[0]);
 						}
-						
-					  // Set existing contact attributes, which are mapped but not set, to an empty array
-					  // to clear them out from backend.
-						foreach($oldLdapAttrList as $oldLdapAttr)
-							if(!in_array($oldLdapAttr, $readOnlyFields) && !in_array($oldLdapAttr, $requiredFields) && !in_array($oldLdapAttr, $oldReadOnlyFields) && !array_key_exists($oldLdapAttr, $ldapInfo) && in_array($oldLdapAttr, $mappedBackendAttributes))
-									$ldapInfo[$oldLdapAttr] = [];
 					}
+					
+					foreach($mappedBackendAttributes as $field)
+						if(!array_key_exists($field, $ldapInfo))
+							$toBeDeletedFields[] = $field;
+					
+					$noDeleteFields = array_unique($noDeleteFields);
+					$toBeDeletedFields = array_unique($toBeDeletedFields);
+					
+					foreach($toBeDeletedFields as $field)
+						if(!in_array($field, $noDeleteFields) && !in_array($field, $requiredFields) && !in_array($field, $readOnlyFields))
+							$ldapInfo[$field] = [];
+						
+					// Unset backend attributes which are marked read only.
+					foreach($readOnlyFields as $field)
+						if(array_key_exists($field, $ldapInfo))
+							unset($ldapInfo[$field]);
 					
 					$parentOldLdapTree = "";
 
@@ -1067,15 +1059,20 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					
 					if(array_key_exists($rdnField, $ldapInfo)) {
 						if(is_array($ldapInfo[$rdnField])) {
-							foreach($ldapInfo[$rdnField] as $fieldValue)
-								if($fieldValue != null && $fieldValue != '') {
-									if(strtolower($rdnField . '=' . ldap_escape($fieldValue, "", LDAP_ESCAPE_DN)) == strtolower($oldLdapRdn)) {
-										$isRenameRequired = false;
-										break;
-									}
+							if($ldapInfo[$rdnField] == [])
+								$isRenameRequired = false;
+							else
+							{
+								foreach($ldapInfo[$rdnField] as $fieldValue)
+									if($fieldValue != null && $fieldValue != '') {
+										if(strtolower($rdnField . '=' . ldap_escape($fieldValue, "", LDAP_ESCAPE_DN)) == strtolower($oldLdapRdn)) {
+											$isRenameRequired = false;
+											break;
+										}
 
-									$validRenameLdapRdnAttrValue[] = $fieldValue;
-								}
+										$validRenameLdapRdnAttrValue[] = $fieldValue;
+									}
+							}
 						}
 						elseif($ldapInfo[$rdnField] != null && $ldapInfo[$rdnField] != '') {
 							if(strtolower($rdnField . '=' . ldap_escape($ldapInfo[$rdnField], "", LDAP_ESCAPE_DN)) == strtolower($oldLdapRdn))
