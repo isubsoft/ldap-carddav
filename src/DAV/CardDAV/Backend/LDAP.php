@@ -1023,11 +1023,20 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							if(!array_key_exists($field, $ldapInfo))
 								$toBeDeletedFields[] = $field;
 					}
+					
+					// Merge backend data update policy
 					else {
-						// If RDN attribute is not set then mark existing backend RDN attribute as no delete.
+						// If RDN field is not set
+						// and existing RDN field is set then set existing RDN field as RDN field
+						// else mark existing backend RDN field as no delete.
 						if(!array_key_exists($rdnField, $ldapInfo)) {
 							$tmpOldLdapRdn = explode('=', $oldLdapRdn);
-							$noDeleteFields[] = strtolower($tmpOldLdapRdn[0]);
+							$oldLdapRdnField = strtolower($tmpOldLdapRdn[0]);
+							
+							if(array_key_exists($oldLdapRdnField, $ldapInfo))
+								$rdnField = $oldLdapRdnField;
+							else
+								$noDeleteFields[] = $oldLdapRdnField;
 						}
 					}
 					
