@@ -1003,9 +1003,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						}
 					}
 					
-					if($backendDataUpdatePolicy == 'replace') {
-						$requiredFields[] = $rdnField;
+					$noDeleteFields[] =  'objectclass';
 						
+					if($backendDataUpdatePolicy == 'replace') {
 						// Apply any defaults
 					  foreach ($requiredFields as $field) {
 					   	if(!array_key_exists($field, $ldapInfo)) {
@@ -1017,6 +1017,22 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 								}
 							}
 					  }
+					  
+						// Trying to set a suitable RDN field when the configured RDN field is not set.
+						if(!array_key_exists($rdnField, $ldapInfo)) {
+							$isNewRdnFound = false;
+							
+							foreach(array_keys($ldapInfo) as $field)
+								if(!in_array($field, ['objectclass'])) { // Avoid objectclass field to be set as RDN field.
+									$rdnField = $ldapInfoFields[0];
+									$isNewRdnFound = true;
+								}
+								
+							if(!$isNewRdnFound) {
+								trigger_error("Rdn field did not receive any value and another field could not be selected as new rdn field. Check '$addressBookId' address book configuration.", E_USER_NOTICE);
+								throw new SabreDAVException\BadRequest("Required field(s) not present, check with the server administrator for the list of field(s) which are required to filled.");
+							}
+						}
 					  
 					  // Mark existing backend attributes, which are writable but have not received any value, to be deleted.
 						foreach($oldLdapAttrList as $field)
@@ -1187,9 +1203,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				// CREATE operation
 				else
 				{
-					// Object class and RDN are internally required attributes for this operation
+					// Object class is an internally required field for this operation
 					$requiredFields[] = 'objectclass';
-					$requiredFields[] = $rdnField;
 					
 					// Apply any defaults
 			    foreach ($requiredFields as $field) {
@@ -1202,6 +1217,22 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							}
 						}
 			    }
+			    
+					// Trying to set a suitable RDN field when the configured RDN field did not receive any value.
+					if(!array_key_exists($rdnField, $ldapInfo)) {
+						$isNewRdnFound = false;
+						
+						foreach(array_keys($ldapInfo) as $field)
+							if(!in_array($field, ['objectclass'])) { // Avoid objectclass field to be set as RDN field.
+								$rdnField = $ldapInfoFields[0];
+								$isNewRdnFound = true;
+							}
+							
+						if(!$isNewRdnFound) {
+							trigger_error("Rdn field did not receive any value and another field could not be selected as new rdn field. Check '$addressBookId' address book configuration.", E_USER_NOTICE);
+							throw new SabreDAVException\BadRequest("Required field(s) not present, check with the server administrator for the list of field(s) which are required to filled.");
+						}
+					}
 			    
 					// Unset backend attributes which are marked read only.
 					foreach($readOnlyFields as $field)
