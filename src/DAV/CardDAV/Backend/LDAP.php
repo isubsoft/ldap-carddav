@@ -1036,12 +1036,15 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							if(array_key_exists($oldLdapRdnField, $ldapInfo))
 								$rdnField = $oldLdapRdnField;
 							else {
+								$noDeleteFields[] = $oldLdapRdnField;
 								$ldapInfoFields = array_keys($ldapInfo);
 								
-								if(count($ldapInfoFields, COUNT_NORMAL) > 0)
-									$rdnField = $ldapInfoFields[0];
-								else
-									$noDeleteFields[] = $oldLdapRdnField;
+								foreach($ldapInfoFields as $field)
+									if(!in_array($field, ['objectclass'])) {
+										$rdnField = $ldapInfoFields[0];
+										unset($noDeleteFields[array_search($oldLdapRdnField, $noDeleteFields)]);
+										break;
+									}
 							}
 						}
 					}
