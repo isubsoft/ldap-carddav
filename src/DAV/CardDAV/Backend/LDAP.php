@@ -934,8 +934,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
 				foreach($tmpLdapInfo as $key => $value) {
 					if(is_array($value)) {
-						foreach($value as $index => $attrValue) {
-							if((string)$attrValue == '')
+						foreach($value as $index => $fieldValue) {
+							if((string)$fieldValue == '')
 								unset($ldapInfo[$key][$index]);
 						}
 						
