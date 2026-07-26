@@ -1026,21 +1026,18 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					
 					// Merge backend data update policy
 					else {
-						// If RDN field is not set
-						// and existing RDN field is set then set existing RDN field as RDN field
-						// else mark existing backend RDN field as no delete.
+						// Trying to set a suitable RDN field during a merge update when configured RDN field is not set.
 						if(!array_key_exists($rdnField, $ldapInfo)) {
 							$tmpOldLdapRdn = explode('=', $oldLdapRdn);
-							$oldLdapRdnField = strtolower($tmpOldLdapRdn[0]);
-							
-							if(array_key_exists($oldLdapRdnField, $ldapInfo))
-								$rdnField = $oldLdapRdnField;
+							$oldRdnField = strtolower($tmpOldLdapRdn[0]);
+
+							if(array_key_exists($oldRdnField, $ldapInfo))
+								$rdnField = $oldRdnField;
 							else {
-								$noDeleteFields[] = $oldLdapRdnField;
-								$ldapInfoFields = array_keys($ldapInfo);
-								
-								foreach($ldapInfoFields as $field)
-									if(!in_array($field, ['objectclass'])) {
+								$noDeleteFields[] = $oldRdnField;
+
+								foreach(array_keys($ldapInfo) as $field)
+									if(!in_array($field, ['objectclass'])) { // Avoid objectclass field to be set as RDN field.
 										$rdnField = $ldapInfoFields[0];
 										unset($noDeleteFields[array_search($oldLdapRdnField, $noDeleteFields)]);
 										break;
