@@ -974,7 +974,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 			    }
 					
 					if($oldLdapInfo['count'] === 0)
-						throw new SabreDAVException\Conflict("Not found");
+						throw new SabreDAVException\Conflict("Not found.");
 						
 					$oldLdapInfo = $oldLdapInfo[0];
 					
@@ -1012,8 +1012,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 								if(array_key_exists($field, $requiredFieldDefault) && !empty($requiredFieldDefault[$field]))
 									$ldapInfo[$field] = $requiredFieldDefault[$field];
 								else {
-									trigger_error("Consider adding defaults for required backend field(s) in '$addressBookId' address book configuration", E_USER_NOTICE);
-									throw new SabreDAVException\BadRequest("Required field(s) not present, check with the server administrator for the list of field(s) which are required to be filled by you.");
+									trigger_error("Consider adding defaults for the required backend field(s) in '$addressBookId' address book configuration", E_USER_NOTICE);
+									throw new SabreDAVException\BadRequest("Required field(s) not present, check with the server administrator for the list of field(s) which are required to be filled.");
 								}
 							}
 					  }
@@ -1029,8 +1029,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 								}
 								
 							if(!$isNewRdnFound) {
-								trigger_error("Rdn field did not receive any value and another field could not be selected as new rdn field. Check '$addressBookId' address book configuration.", E_USER_NOTICE);
-								throw new SabreDAVException\BadRequest("Required field(s) not present, check with the server administrator for the list of field(s) which are required to filled.");
+								trigger_error("Rdn field did not receive any value and another field could not be selected as the new rdn field. Check '$addressBookId' address book configuration.", E_USER_NOTICE);
+								throw new SabreDAVException\BadRequest("Required field(s) not present, check with the server administrator for the list of field(s) which are required to be filled.");
 							}
 						}
 					  
@@ -1116,7 +1116,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						$isRenameRequired = false;
 					
 					if($isRenameRequired && count($validRenameLdapRdnAttrValue, COUNT_NORMAL) < 1)
-						throw new SabreDAVException\BadRequest("Identity field does not have a valid value");
+						throw new SabreDAVException\BadRequest("Identity field does not have a valid value.");
 					
 					foreach($validRenameLdapRdnAttrValue as $tmpNewLdapRdnAttrValue) {
 						$tmpNewLdapRdn = $rdnField . '=' . ldap_escape($tmpNewLdapRdnAttrValue, "", LDAP_ESCAPE_DN);
@@ -1174,7 +1174,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						Utility::handleLdapError($ldapErrorNo);
 						
 						trigger_error("LDAP error: " . ldap_err2str($ldapErrorNo), E_USER_WARNING);
-						throw new SabreDAVException\ServiceUnavailable("Unknown error while saving card");
+						throw new SabreDAVException\ServiceUnavailable("Unknown error while saving card.");
 					}
 						
 					if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null, -60))
@@ -1191,7 +1191,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						Utility::handleLdapError($ldapErrorNo);
 						
 						trigger_error("LDAP error: " . ldap_err2str($ldapErrorNo), E_USER_WARNING);
-						throw new SabreDAVException\ServiceUnavailable("Unknown error while saving card");
+						throw new SabreDAVException\ServiceUnavailable("Unknown error while saving card.");
 					}
 						
 					if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null, -60))
@@ -1212,8 +1212,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 			      	if(array_key_exists($field, $requiredFieldDefault) && !empty($requiredFieldDefault[$field]))
 			      		$ldapInfo[$field] = $requiredFieldDefault[$field];
 			      	else {
-			      		trigger_error("Consider adding defaults for required backend field(s) in '$addressBookId' address book configuration", E_USER_NOTICE);
-								throw new SabreDAVException\BadRequest("Required field(s) not present, check with the server administrator for the list of field(s) which are required to be filled by you.");
+			      		trigger_error("Consider adding defaults for the required backend field(s) in '$addressBookId' address book configuration", E_USER_NOTICE);
+								throw new SabreDAVException\BadRequest("Required field(s) not present, check with the server administrator for the list of field(s) which are required to be filled.");
 							}
 						}
 			    }
@@ -1229,7 +1229,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							}
 							
 						if(!$isNewRdnFound) {
-							trigger_error("Rdn field did not receive any value and another field could not be selected as new rdn field. Check '$addressBookId' address book configuration.", E_USER_NOTICE);
+							trigger_error("Rdn field did not receive any value and another field could not be selected as the new rdn field. Check '$addressBookId' address book configuration.", E_USER_NOTICE);
 							throw new SabreDAVException\BadRequest("Required field(s) not present, check with the server administrator for the list of field(s) which are required to filled.");
 						}
 					}
@@ -1251,7 +1251,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						$validAddLdapRdnAttrValue[] = $ldapInfo[$rdnField];
 
 					if(count($validAddLdapRdnAttrValue, COUNT_NORMAL) < 1)
-						throw new SabreDAVException\BadRequest("Identity field does not have a valid value");
+						throw new SabreDAVException\BadRequest("Identity field does not have a valid value.");
 						
 					foreach($validAddLdapRdnAttrValue as $tmpLdapRdnAttrValue) {
 						$tmpLdapTree = $rdnField . '=' . ldap_escape($tmpLdapRdnAttrValue, "", LDAP_ESCAPE_DN) . ',' . $addressBookDn;
@@ -1310,7 +1310,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						Utility::handleLdapError($ldapErrorNo);
 						
 						trigger_error("LDAP error: " . ldap_err2str($ldapErrorNo), E_USER_WARNING);
-						throw new SabreDAVException\ServiceUnavailable("Unknown error while saving card");
+						throw new SabreDAVException\ServiceUnavailable("Unknown error while saving card.");
 					}
 					
 					if($ldapTree == null)
