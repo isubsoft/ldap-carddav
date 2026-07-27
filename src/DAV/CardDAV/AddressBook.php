@@ -25,29 +25,76 @@ class AddressBook extends \Sabre\CardDAV\AddressBook
 {
 	public function getACL()
 	{
-		  if($this->carddavBackend->isAddressbookWritable($this->getName()) == false)
-				return [
-				    [
-				        'privilege' => '{DAV:}read',
-				        'principal' => '{DAV:}owner',
-				        'protected' => true,
-				    ],
-				];
-				
-			return parent::getACL();
+		$acl = [];
+		
+		if($this->carddavBackend->isAddressbookWritable($this->getName()) == false) {
+			$acl[] = [
+		    'privilege' => '{DAV:}read',
+		    'principal' => '{DAV:}owner',
+		    'protected' => true
+		  ];
+		}
+		else {
+			$acl[] = [
+		    'privilege' => '{DAV:}read',
+		    'principal' => '{DAV:}owner',
+		    'protected' => true
+		  ];
+				  
+			$acl[] = [
+				'privilege' => '{DAV:}bind',
+				'principal' => '{DAV:}owner',
+				'protected' => true
+			];
+			
+			$acl[] = [
+				'privilege' => '{DAV:}unbind',
+				'principal' => '{DAV:}owner',
+				'protected' => true
+			];
+		}
+			
+		if($this->carddavBackend->isAddressbookUserSpecific($this->getName()) == true)
+			$acl[] = [
+				'privilege' => '{DAV:}write-properties',
+				'principal' => '{DAV:}owner',
+				'protected' => true
+			];
+			
+		return $acl;
 	}
 	
   public function getChildACL()
   {
-		if($this->carddavBackend->isAddressbookWritable($this->getName()) == false)
-			return [
-					[
-					    'privilege' => '{DAV:}read',
-					    'principal' => '{DAV:}owner',
-					    'protected' => true,
-					],
+  	$acl = [];
+  	
+		if($this->carddavBackend->isAddressbookWritable($this->getName()) == false) {
+			$acl[] = [
+				'privilege' => '{DAV:}read',
+				'principal' => '{DAV:}owner',
+				'protected' => true
+			];
+		}
+		else {
+			$acl[] = [
+				'privilege' => '{DAV:}read',
+				'principal' => '{DAV:}owner',
+				'protected' => true
+			];
+			$acl[] = [
+				'privilege' => '{DAV:}write-content',
+				'principal' => '{DAV:}owner',
+				'protected' => true
+			];
+		}
+			
+		if($this->carddavBackend->isAddressbookUserSpecific($this->getName()) == true)
+			$acl[] = [
+				'privilege' => '{DAV:}write-properties',
+				'principal' => '{DAV:}owner',
+				'protected' => true
 			];
 			
-			return parent::getChildACL();
+		return $acl;
   }
 }

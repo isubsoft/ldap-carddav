@@ -504,6 +504,36 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				$cardUid = null;
 				$addressBookConfig = $this->addressbook[$addressBookId]['config'];
 				$syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
+				$acl = [];
+				
+				if($addressBookConfig['writable'] == false) {
+					$acl[] = [
+						'privilege' => '{DAV:}read',
+						'principal' => '{DAV:}owner',
+						'protected' => true
+					];
+				}
+				else {
+					$acl[] = [
+						'privilege' => '{DAV:}read',
+						'principal' => '{DAV:}owner',
+						'protected' => true
+					];
+					
+					$acl[] = [
+						'privilege' => '{DAV:}write-content',
+						'principal' => '{DAV:}owner',
+						'protected' => true
+					];
+				}
+					
+				if($addressBookConfig['user_specific'] == true)
+					$acl[] = [
+						'privilege' => '{DAV:}write-properties',
+						'principal' => '{DAV:}owner',
+						'protected' => true
+					];
+				
 				
 				if(!isset($this->getCardPdoPrepStmt['stmt01'])) {
 					// Preparing PDO statements which are used inside a loop
@@ -541,17 +571,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					$cacheValid = false;
 					
 				if($cacheValid) {
-					if($addressBookConfig['writable'] == false)
-						$result['acl'] = [
-								[
-										'privilege' => '{DAV:}read',
-										'principal' => '{DAV:}owner',
-										'protected' => true,
-								]
-						];
-						
 		      $result['id'] = $cardUid;
 		      $result['uri'] = $cardUri;
+					$result['acl'] = $acl;
         	
         	return $result;
 				}
@@ -594,17 +616,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), $result, (isset($this->config['cache']['card']['ttl']) && is_int($this->config['cache']['card']['ttl']) && $this->config['cache']['card']['ttl'] > 0 && $this->config['cache']['card']['ttl'] <= 2592000)?$this->config['cache']['card']['ttl']:self::$cacheTtl))
 			    trigger_error("Could not set cache", E_USER_WARNING);
         
-				if($addressBookConfig['writable'] == false)
-					$result['acl'] = [
-							[
-									'privilege' => '{DAV:}read',
-									'principal' => '{DAV:}owner',
-									'protected' => true,
-							]
-					];
-					
         $result['id'] = $cardUid;
         $result['uri'] = $cardUri;
+				$result['acl'] = $acl;
 				
         return $result;
     }
@@ -2580,6 +2594,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         return $contacts;
     }
 
+    function isAddressbookUserSpecific($addressBookId)
+    {
+			$addressBookConfig = $this->addressbook[$addressBookId]['config'];
+			
+			return $addressBookConfig['user_specific'];
+    }
+    
     function isAddressbookWritable($addressBookId)
     {
 			$addressBookConfig = $this->addressbook[$addressBookId]['config'];
