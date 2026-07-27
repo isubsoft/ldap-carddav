@@ -504,6 +504,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				$cardUid = null;
 				$addressBookConfig = $this->addressbook[$addressBookId]['config'];
 				$syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
+				$acl = [];
+				
 				$acl[] = [
 					'privilege' => '{DAV:}read',
 					'principal' => '{DAV:}owner',
@@ -524,6 +526,19 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						'principal' => '{DAV:}owner',
 						'protected' => true
 					];
+					
+				// Due to lack of proper ACL support for nodes in clients all privileges are
+				// given to contacts of a writable address book. This can be removed in future (as above
+				// rules are the actual privileges which need to be sent to the client) when proper
+				// ACL support for nodes is available in clients.
+				if($addressBookConfig['writable'] == true) {
+					$acl = [];
+					$acl[] = [
+						'privilege' => '{DAV:}all',
+						'principal' => '{DAV:}owner',
+						'protected' => true
+					];
+				}
 				
 				
 				if(!isset($this->getCardPdoPrepStmt['stmt01'])) {
@@ -695,10 +710,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					throw new ISubsoftDAVException\ContentTooLarge();
 
         if(!$addressBookConfig['writable'])
-					throw new SabreDAVException\Forbidden("Address book is read-only");
+					throw new SabreDAVException\Forbidden("Address book '$addressBookId' is read-only");
 					
 				if(in_array(strtolower($operation), $writeAclDeny))
-					throw new SabreDAVException\Forbidden("Address book has no " . strtolower($operation) . " access.");
+					throw new SabreDAVException\Forbidden("Address book '$addressBookId' has no '" . strtolower($operation) . "' access.");
 					
 				$vcard = Reader::read($cardData);
 				
@@ -1463,10 +1478,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $writeAclDeny = $this->getWriteAclDenyList($addressBookId);
         
         if(!$addressBookConfig['writable'])
-					throw new SabreDAVException\Forbidden("Address book is read-only");
+					throw new SabreDAVException\Forbidden("Address book '$addressBookId' is read-only");
 					
 				if(in_array(strtolower($operation), $writeAclDeny))
-					throw new SabreDAVException\Forbidden("Address book has no " . strtolower($operation) . " access.");
+					throw new SabreDAVException\Forbidden("Address book '$addressBookId' has no '" . strtolower($operation) . "' access.");
         
         $this->setAddressbookBackendProperties($addressBookId);
         

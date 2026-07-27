@@ -25,6 +25,7 @@ class AddressBook extends \Sabre\CardDAV\AddressBook
 {
 	public function getACL()
 	{
+		$acl = [];
 		$acl[] = [
 	    'privilege' => '{DAV:}read',
 	    'principal' => '{DAV:}owner',
@@ -60,11 +61,25 @@ class AddressBook extends \Sabre\CardDAV\AddressBook
 				'protected' => true
 			];
 			
+		// Due to lack of proper ACL support for collections in clients all privileges are
+		// given to a writable address book. This can be removed in future (as above rules
+		// are the actual privileges which need to be sent to the client) when proper ACL support
+		// for collections is available in clients.
+	  if($this->carddavBackend->isAddressbookWritable($this->getName()) == true) {
+			$acl = [];
+			$acl[] = [
+			  'privilege' => '{DAV:}all',
+			  'principal' => '{DAV:}owner',
+			  'protected' => true
+			];
+		}
+			
 		return $acl;
 	}
 	
   public function getChildACL()
   {
+		$acl = [];
 		$acl[] = [
 			'privilege' => '{DAV:}read',
 			'principal' => '{DAV:}owner',
