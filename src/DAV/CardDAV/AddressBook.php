@@ -25,34 +25,33 @@ class AddressBook extends \Sabre\CardDAV\AddressBook
 {
 	public function getACL()
 	{
-		$acl = [];
-		
-		if($this->carddavBackend->isAddressbookWritable($this->getName()) == false) {
-			$acl[] = [
-		    'privilege' => '{DAV:}read',
-		    'principal' => '{DAV:}owner',
-		    'protected' => true
-		  ];
-		}
-		else {
-			$acl[] = [
-		    'privilege' => '{DAV:}read',
-		    'principal' => '{DAV:}owner',
-		    'protected' => true
-		  ];
-				  
-			$acl[] = [
-				'privilege' => '{DAV:}bind',
-				'principal' => '{DAV:}owner',
-				'protected' => true
-			];
+		$acl[] = [
+	    'privilege' => '{DAV:}read',
+	    'principal' => '{DAV:}owner',
+	    'protected' => true
+	  ];
+	  
+	  if($this->carddavBackend->isAddressbookWritable($this->getName()) == true) {
+			$writeAclDeny = [];
 			
-			$acl[] = [
-				'privilege' => '{DAV:}unbind',
-				'principal' => '{DAV:}owner',
-				'protected' => true
-			];
-		}
+			$writeAclDeny = $this->carddavBackend->getWriteAclDenyList($this->getName());
+			
+			if(!in_array('create', $writeAclDeny)) {
+				$acl[] = [
+					'privilege' => '{DAV:}bind',
+					'principal' => '{DAV:}owner',
+					'protected' => true
+				];
+			}
+			
+			if(!in_array('delete', $writeAclDeny)) {
+				$acl[] = [
+					'privilege' => '{DAV:}unbind',
+					'principal' => '{DAV:}owner',
+					'protected' => true
+				];
+			}
+	  }
 			
 		if($this->carddavBackend->isAddressbookUserSpecific($this->getName()) == true)
 			$acl[] = [
@@ -66,8 +65,6 @@ class AddressBook extends \Sabre\CardDAV\AddressBook
 	
   public function getChildACL()
   {
-  	$acl = [];
-  	
 		$acl[] = [
 			'privilege' => '{DAV:}read',
 			'principal' => '{DAV:}owner',

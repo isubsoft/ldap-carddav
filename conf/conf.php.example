@@ -274,6 +274,15 @@ $config['card']['addressbook']['ldap']['me'] = [
 	                            
 	'writable'     	 	=> true, // If true (default) then contacts can be created, updated, renamed and 
 	                            // deleted in the address book.
+	                            
+	// For writable address books creation or deletion of contacts can be denied using the below.
+	// WARNING: Not setting the below to appropriate values(s) can lead to contacts being added and/or deleted
+	// to the address book when only update of certain contact fields is desired.
+	// The following values are accepted
+	// create : Cannot add new contacts.
+	// delete : Cannot delete any contact.
+	// By default no access is denied.
+	'write_acl_deny'  => ['create', 'delete'],
 	
 	// Use this address book as a directory (i.e. for lookups only) for Apple devices
 	// Defaults to false
@@ -559,6 +568,15 @@ $config['card']['addressbook']['ldap']['global'] = [
 	                            
 	'writable'     	 	=> false, // If true (default) then contacts can be created, updated, renamed and 
 	                            // deleted in the address book.
+	                            
+	// For writable address books creation or deletion of contacts can be denied using the below.
+	// WARNING: Not setting the below to appropriate values(s) can lead to contacts being added and/or deleted
+	// to the address book when only update of certain contact fields is desired.
+	// The following values are accepted
+	// create : Cannot add new contacts.
+	// delete : Cannot delete any contact.
+	// By default no access is denied.
+	//  'write_acl_deny'  => ['create', 'delete'],
 	
 	// Use this address book as a directory (i.e. for lookups only) for Apple devices
 	// Defaults to false
@@ -844,6 +862,15 @@ $config['card']['addressbook']['ldap']['personal'] = [
 	                            
 	'writable'     	 	=> true, // If true (default) then contacts can be created, updated, renamed and 
 	                            // deleted in the address book.
+	                            
+	// For writable address books creation or deletion of contacts can be denied using the below.
+	// WARNING: Not setting the below to appropriate values(s) can lead to contacts being added and/or deleted
+	// to the address book when only update of certain contact fields is desired.
+	// The following values are accepted
+	// create : Cannot add new contacts.
+	// delete : Cannot delete any contact.
+	// By default no access is denied.
+	//  'write_acl_deny'  => ['create', 'delete'],
 	
 	// Use this address book as a directory (i.e. for lookups only) for Apple devices
 	// Defaults to false
@@ -1128,6 +1155,15 @@ $config['card']['addressbook']['ldap']['shared'] = [
 	                            
 	'writable'     	 	=> true, // If true (default) then contacts can be created, updated, renamed and 
 	                            // deleted in the address book.
+	                            
+	// For writable address books creation or deletion of contacts can be denied using the below.
+	// WARNING: Not setting the below to appropriate values(s) can lead to contacts being added and/or deleted
+	// to the address book when only update of certain contact fields is desired.
+	// The following values are accepted
+	// create : Cannot add new contacts.
+	// delete : Cannot delete any contact.
+	// By default no access is denied.
+	//  'write_acl_deny'  => ['create', 'delete'],
 	
 	// Use this address book as a directory (i.e. for lookups only) for Apple devices
 	// Defaults to false

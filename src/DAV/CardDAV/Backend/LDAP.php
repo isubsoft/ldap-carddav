@@ -504,22 +504,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				$cardUid = null;
 				$addressBookConfig = $this->addressbook[$addressBookId]['config'];
 				$syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
-				$acl = [];
+				$acl[] = [
+					'privilege' => '{DAV:}read',
+					'principal' => '{DAV:}owner',
+					'protected' => true
+				];
 				
-				if($addressBookConfig['writable'] == false) {
-					$acl[] = [
-						'privilege' => '{DAV:}read',
-						'principal' => '{DAV:}owner',
-						'protected' => true
-					];
-				}
-				else {
-					$acl[] = [
-						'privilege' => '{DAV:}read',
-						'principal' => '{DAV:}owner',
-						'protected' => true
-					];
-					
+				if($addressBookConfig['writable'] == true) {
 					$acl[] = [
 						'privilege' => '{DAV:}write-content',
 						'principal' => '{DAV:}owner',
@@ -650,6 +641,19 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
         return $result;
     }
+    
+		// Function to get list of denied privileges on an writable address book.
+    function getWriteAclDenyList($addressBookId)
+    {
+			$allowedWriteAclDenyValues = ['create', 'delete'];
+			$writeAclDeny = [];
+			
+		  foreach(((isset($this->addressbook[$addressBookId]['config']['write_acl_deny']) && is_array($this->addressbook[$addressBookId]['config']['write_acl_deny']))?$this->addressbook[$addressBookId]['config']['write_acl_deny']:[]) as $value)
+		  	if(in_array(strtolower($value), $allowedWriteAclDenyValues))
+		  		$writeAclDeny[] = strtolower($value);
+		  	
+		  return $writeAclDeny;
+    }
 
     /**
      * Creates a new card or updates an existing one.
@@ -683,12 +687,18 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $addressBookConfig = $this->addressbook[$addressBookId]['config'];
         $syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
         $maxContactSize = $this->addressbook[$addressBookId]['contactMaxSize'];
+        $writeAclDeny = [];
+        
+        $writeAclDeny = $this->getWriteAclDenyList($addressBookId);
         
 				if(strlen($cardData) > $maxContactSize)
 					throw new ISubsoftDAVException\ContentTooLarge();
 
         if(!$addressBookConfig['writable'])
-					throw new SabreDAVException\Forbidden("Address book '$addressBookId' is read-only");
+					throw new SabreDAVException\Forbidden("Address book is read-only");
+					
+				if(in_array(strtolower($operation), $writeAclDeny))
+					throw new SabreDAVException\Forbidden("Address book has no " . strtolower($operation) . " access.");
 					
 				$vcard = Reader::read($cardData);
 				
@@ -1445,11 +1455,18 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     function deleteCard($addressBookId, $cardUri)
     {
+        $operation = 'DELETE';
         $addressBookConfig = $this->addressbook[$addressBookId]['config'];
         $syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
+        $writeAclDeny = [];
+        
+        $writeAclDeny = $this->getWriteAclDenyList($addressBookId);
         
         if(!$addressBookConfig['writable'])
-					throw new SabreDAVException\Forbidden("Address book '$addressBookId' is read-only");
+					throw new SabreDAVException\Forbidden("Address book is read-only");
+					
+				if(in_array(strtolower($operation), $writeAclDeny))
+					throw new SabreDAVException\Forbidden("Address book has no " . strtolower($operation) . " access.");
         
         $this->setAddressbookBackendProperties($addressBookId);
         
