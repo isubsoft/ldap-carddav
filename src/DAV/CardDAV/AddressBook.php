@@ -68,33 +68,12 @@ class AddressBook extends \Sabre\CardDAV\AddressBook
   {
   	$acl = [];
   	
-		if($this->carddavBackend->isAddressbookWritable($this->getName()) == false) {
-			$acl[] = [
-				'privilege' => '{DAV:}read',
-				'principal' => '{DAV:}owner',
-				'protected' => true
-			];
-		}
-		else {
-			$acl[] = [
-				'privilege' => '{DAV:}read',
-				'principal' => '{DAV:}owner',
-				'protected' => true
-			];
-			$acl[] = [
-				'privilege' => '{DAV:}write-content',
-				'principal' => '{DAV:}owner',
-				'protected' => true
-			];
-		}
-			
-		if($this->carddavBackend->isAddressbookUserSpecific($this->getName()) == true)
-			$acl[] = [
-				'privilege' => '{DAV:}write-properties',
-				'principal' => '{DAV:}owner',
-				'protected' => true
-			];
-			
+		$acl[] = [
+			'privilege' => '{DAV:}read',
+			'principal' => '{DAV:}owner',
+			'protected' => true
+		];
+		
 		return $acl;
   }
 }

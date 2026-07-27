@@ -29,12 +29,12 @@ class Principal extends \Sabre\DAVACL\Principal
 		  [
 		      'privilege' => '{DAV:}read',
 		      'principal' => '{DAV:}owner',
-		      'protected' => true,
+		      'protected' => true
 		  ],
 		  [
 		      'privilege' => '{DAV:}write-properties',
 		      'principal' => '{DAV:}owner',
-		      'protected' => true,
+		      'protected' => true
 		  ]
 		];
 	}
