@@ -42,10 +42,15 @@ class AddressBookHome extends \Sabre\CardDAV\AddressBookHome
   {
 		return [
 		  [
-		      'privilege' => '{DAV:}all',
+		      'privilege' => '{DAV:}read',
 				  'principal' => '{DAV:}owner',
 		      'protected' => true,
 		  ],
+		  [
+		      'privilege' => '{DAV:}write-properties',
+		      'principal' => '{DAV:}owner',
+		      'protected' => true,
+		  ]
 		];
   }
 }
