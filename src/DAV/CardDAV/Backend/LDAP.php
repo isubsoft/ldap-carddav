@@ -1059,6 +1059,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					  
 						// Trying to set a suitable RDN field when the configured RDN field is not set.
 						if(!array_key_exists($rdnField, $ldapInfo)) {
+							trigger_error("Rdn field did not receive any value. Check '$addressBookId' address book configuration.", E_USER_WARNING);
+							
 							$isNewRdnFound = false;
 							
 							foreach(array_keys($ldapInfo) as $field)
@@ -1068,8 +1070,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 								}
 								
 							if(!$isNewRdnFound) {
-								trigger_error("Rdn field did not receive any value and another field could not be selected as the new rdn field. Check '$addressBookId' address book configuration.", E_USER_NOTICE);
-								throw new SabreDAVException\BadRequest("Required field(s) not present, check with the server administrator for the list of field(s) which are required to be filled.");
+								trigger_error("Another field could not be selected as the new rdn field. Check '$addressBookId' address book configuration.", E_USER_NOTICE);
+								throw new SabreDAVException\BadRequest("Identity field was not present, check with the server administrator for the list of field(s) which are required to be filled.");
 							}
 						}
 					  
@@ -1088,6 +1090,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							if(array_key_exists($oldRdnField, $ldapInfo))
 								$rdnField = $oldRdnField;
 							else {
+								if($rdnField != $oldRdnField)
+									trigger_error("Rdn field and existing rdn field did not receive any value. Check '$addressBookId' address book configuration.", E_USER_WARNING);
+								
 								$noDeleteFields[] = $oldRdnField;
 								$noDeleteFields = array_unique($noDeleteFields);
 
