@@ -25,6 +25,14 @@ use Sabre\DAV\Exception as SabreDAVException;
 
 class Plugin extends \Sabre\DAVACL\Plugin
 {
+  protected $defaultAcl = [
+      [
+          'principal' => '{DAV:}authenticated',
+          'protected' => true,
+          'privilege' => '{DAV:}read'
+      ],
+  ];
+    
 	function initialize(\Sabre\DAV\Server $server)
 	{
 		parent::initialize($server);
