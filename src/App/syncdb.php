@@ -72,7 +72,7 @@ function getAddressBooks()
 	$stmt->execute();
 
   while ($row = $stmt->fetch(\PDO::FETCH_ASSOC))
-  	$addressBooks[$row['addressbook_id']] = ['user_specific' => (bool)$row['user_specific'], 'writable' => (bool)$row['writable']];
+  	$addressBooks[$row['addressbook_id']] = ['user_specific' => (bool)(int)$row['user_specific'], 'writable' => (bool)(int)$row['writable']];
   
   return $addressBooks;
 }
@@ -185,7 +185,7 @@ if(isset($argv[1]) && $argv[1] == 'help')
 	printHelp($argv);
 	exit;
 }
-else if(isset($argv[1]) && $argv[1] == 'init')
+elseif(isset($argv[1]) && $argv[1] == 'init')
 {
 		echo "Initializing sync database ..." . PHP_EOL;
 		
@@ -349,7 +349,7 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 					exit;
 			}
 		}
-		else if(!isset($argv[3]))
+		elseif(!isset($argv[3]))
 		{
 			$oldUserId = readline("Enter the backend user id to delete: ");
 			
@@ -390,7 +390,7 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 			exit(1);
 		}
 	}
-	else if($options[$choice] == 'addressbook')
+	elseif($options[$choice] == 'addressbook')
 	{
 		$options = [0 => 'list', 1 => 'add', 2 => 'rename', 3 => 'delete'];
 		
@@ -481,7 +481,7 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 				if(addAddressBook($oldAddressBook) == false)
 					exit(1);
 			}
-			else if($options[$choice] == 'rename')
+			elseif($options[$choice] == 'rename')
 			{
 					if(!array_key_exists($oldAddressBook, getAddressBooks())) {
 						error_log("[ERROR] Invalid address book id provided.");
@@ -518,7 +518,7 @@ if(!isset($argv[1]) || $argv[1] == 'manage')
 				  echo "Address book '$oldAddressBook' has been renamed to '$newAddressbook'." . PHP_EOL;
 				  echo "[NOTICE] After this action sync database table(s) '$backendMapTableName' may need optimization (re-indexing/re-build). Use native database command(s) to achieve the same." . PHP_EOL;
 			}
-			else if($options[$choice] == 'delete')
+			elseif($options[$choice] == 'delete')
 			{
 					if(!array_key_exists($oldAddressBook, getAddressBooks())) {
 						error_log("[ERROR] Invalid address book id provided.");
