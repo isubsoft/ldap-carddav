@@ -25,29 +25,67 @@ class AddressBook extends \Sabre\CardDAV\AddressBook
 {
 	public function getACL()
 	{
-		  if($this->carddavBackend->isAddressbookWritable($this->getName()) == false)
-				return [
-				    [
+		$acl = [];
+		$acl[] = [
 				        'privilege' => '{DAV:}read',
 				        'principal' => '{DAV:}owner',
-				        'protected' => true,
-				    ],
+	    'protected' => true
 				];
 				
-			return parent::getACL();
+	  if($this->carddavBackend->isAddressbookWritable($this->getName()) == true) {
+			$writeAclDeny = [];
+			
+			$writeAclDeny = $this->carddavBackend->getWriteAclDenyList($this->getName());
+			
+			if(!in_array('create', $writeAclDeny)) {
+				$acl[] = [
+					'privilege' => '{DAV:}bind',
+					'principal' => '{DAV:}owner',
+					'protected' => true
+				];
+			}
+			
+			if(!in_array('delete', $writeAclDeny)) {
+				$acl[] = [
+					'privilege' => '{DAV:}unbind',
+					'principal' => '{DAV:}owner',
+					'protected' => true
+				];
+			}
+	  }
+			
+		if($this->carddavBackend->isAddressbookUserSpecific($this->getName()) == true)
+			$acl[] = [
+				'privilege' => '{DAV:}write-properties',
+				'principal' => '{DAV:}owner',
+				'protected' => true
+			];
+			
+		// Due to lack of proper ACL support for collections in clients all privileges are
+		// given to a writable address book. This can be removed in future (as above rules
+		// are the actual privileges which need to be sent to the client) when proper ACL support
+		// for collections is available in clients.
+	  if($this->carddavBackend->isAddressbookWritable($this->getName()) == true) {
+			$acl = [];
+			$acl[] = [
+			  'privilege' => '{DAV:}all',
+			  'principal' => '{DAV:}owner',
+			  'protected' => true
+			];
+		}
+			
+		return $acl;
 	}
 	
   public function getChildACL()
   {
-		if($this->carddavBackend->isAddressbookWritable($this->getName()) == false)
-			return [
-					[
+		$acl = [];
+		$acl[] = [
 					    'privilege' => '{DAV:}read',
 					    'principal' => '{DAV:}owner',
-					    'protected' => true,
-					],
+			'protected' => true
 			];
 			
-			return parent::getChildACL();
+		return $acl;
   }
 }

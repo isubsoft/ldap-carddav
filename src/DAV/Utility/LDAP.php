@@ -27,6 +27,21 @@ use ISubsoft\VObject\Reader as Reader;
 class LDAP {
 
     /**
+     * LDAP error codes related to client input and their user friendly
+     * description
+     *
+     * @var array
+     */
+		public static $ldapClientErrorNo = [
+			0x14 => 'There is duplicate data in one or more field(s)',
+			0x15 => "Data format in one or more field(s) was incorrect",
+			0x20 => "Not found",
+			0x32 => "Access denied",
+			0x41 => "One or more required field(s) was empty",
+			0x44 => "Contact with same name already exist"
+		];
+
+    /**
      * allowed placeholders for configuration
      *
      * @var array
@@ -546,5 +561,29 @@ class LDAP {
     
         // Output the 36 character UUID.
         return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
+    }
+    
+    public static function handleLdapError($ldapErrorNo)
+    {
+			if(in_array($ldapErrorNo, [0x14, 0x15, 0x41, 0x44])) {
+				if(isset(self::$ldapClientErrorNo[$ldapErrorNo]))
+					throw new SabreDAVException\BadRequest(self::$ldapClientErrorNo[$ldapErrorNo]);
+				else
+					throw new SabreDAVException\BadRequest(ldap_err2str($ldapErrorNo));
+			}
+			elseif(in_array($ldapErrorNo, [0x32])) {
+				if(isset(self::$ldapClientErrorNo[$ldapErrorNo]))
+					throw new SabreDAVException\Forbidden(self::$ldapClientErrorNo[$ldapErrorNo]);
+				else
+					throw new SabreDAVException\Forbidden(ldap_err2str($ldapErrorNo));
+			}
+			elseif(in_array($ldapErrorNo, [0x20])) {
+				if(isset(self::$ldapClientErrorNo[$ldapErrorNo]))
+					throw new SabreDAVException\NotFound(self::$ldapClientErrorNo[$ldapErrorNo]);
+				else
+					throw new SabreDAVException\NotFound(ldap_err2str($ldapErrorNo));
+			}
+			
+			return;
     }
 }
