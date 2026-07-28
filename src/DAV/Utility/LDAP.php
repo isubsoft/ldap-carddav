@@ -154,11 +154,11 @@ class LDAP {
             {
                 $result = ldap_read($ldapConn, $base, $filter, $attributes, $attributesOnly);
             }
-            else if($scope == 'list')
+            elseif($scope == 'list')
             {
                 $result = ldap_list($ldapConn, $base, $filter, $attributes, $attributesOnly);
             }
-            else if($scope == 'sub')
+            elseif($scope == 'sub')
             {
                 $result = ldap_search($ldapConn, $base, $filter, $attributes, $attributesOnly);
             }
