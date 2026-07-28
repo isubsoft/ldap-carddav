@@ -47,9 +47,9 @@ Copy conf/conf.php.example as conf/conf.php (henceforth called the conf file) an
 
 -- Application sync database creation
 1. Create a dedicated database/schema and a database user for this application.
-2. Update 'dsn' and credentials appropriately in $config['sync_database'] in the conf file. The database user at this stage should be an admin user who can create tables, triggers and sequences in the database/schema created in the above step.
-3. Execute 'php src/App/install.php' to create necessary database objects in the database.
-4. Now update credentials in $config['sync_database'] in the conf file to a database user who will be used by the application during normal operation. This user should have SELECT, INSERT, UPDATE and DELETE privileges on all tables created in the above step. This user should additionally have USAGE and/or SELECT privileges on all sequences created in the above step.
+2. Update 'dsn' appropriately in $config['sync_database'] in the conf file. Update database user credentials to an admin user at this stage who can create tables, triggers and sequences in the database/schema created in the above step.
+3. Execute 'php src/App/install.php' to create necessary database objects.
+4. Now update user credentials in $config['sync_database'] in the conf file to the dedicated database user created for this application. Grant SELECT, INSERT, UPDATE and DELETE privileges on all tables created in the above step to this user. This user should additionally have USAGE and/or SELECT privileges on all sequences created in the above step.
 5. If creating a sqlite database it is recommended to place database file inside the application data directory or provide read-write access to it by the system user www-data.
 
 -- Initializing application sync database
