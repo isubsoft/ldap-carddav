@@ -27,11 +27,11 @@ class AddressBook extends \Sabre\CardDAV\AddressBook
 	{
 		$acl = [];
 		$acl[] = [
-				        'privilege' => '{DAV:}read',
-				        'principal' => '{DAV:}owner',
+	    'privilege' => '{DAV:}read',
+	    'principal' => '{DAV:}owner',
 	    'protected' => true
-				];
-				
+	  ];
+	  
 	  if($this->carddavBackend->isAddressbookWritable($this->getName()) == true) {
 			$writeAclDeny = [];
 			
@@ -81,11 +81,11 @@ class AddressBook extends \Sabre\CardDAV\AddressBook
   {
 		$acl = [];
 		$acl[] = [
-					    'privilege' => '{DAV:}read',
-					    'principal' => '{DAV:}owner',
+			'privilege' => '{DAV:}read',
+			'principal' => '{DAV:}owner',
 			'protected' => true
-			];
-			
+		];
+		
 		return $acl;
   }
 }

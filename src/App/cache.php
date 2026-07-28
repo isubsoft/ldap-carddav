@@ -61,7 +61,7 @@ if(isset($argv[1]) && $argv[1] == 'help')
 	printHelp($argv);
 	exit;
 }
-else if(!isset($argv[1]) || $argv[1] == 'info')
+elseif(!isset($argv[1]) || $argv[1] == 'info')
 {
 	if(count($cachedBackendEntity) < 1) {
 		echo "[INFO] No cache backend is active. Quitting." . PHP_EOL;
@@ -75,7 +75,7 @@ else if(!isset($argv[1]) || $argv[1] == 'info')
 		
 	exit;
 }
-else if(isset($argv[1]) && $argv[1] == 'clear')
+elseif(isset($argv[1]) && $argv[1] == 'clear')
 {
 	if(count($cachedBackendEntity) < 1) {
 		echo "[INFO] No cache backend is active. Quitting." . PHP_EOL;
@@ -121,7 +121,7 @@ else if(isset($argv[1]) && $argv[1] == 'clear')
   
 	echo "Complete." . PHP_EOL;
 }
-else if(isset($argv[1]) && $argv[1] == 'housekeeping')
+elseif(isset($argv[1]) && $argv[1] == 'housekeeping')
 {
 	$exitCode = 0;
 	$batchSize = 0;
