@@ -72,7 +72,7 @@ function getAddressBooks()
 	$stmt->execute();
 
   while ($row = $stmt->fetch(\PDO::FETCH_ASSOC))
-  	$addressBooks[$row['addressbook_id']] = ['user_specific' => (bool)$row['user_specific'], 'writable' => (bool)$row['writable']];
+  	$addressBooks[$row['addressbook_id']] = ['user_specific' => (bool)(int)$row['user_specific'], 'writable' => (bool)(int)$row['writable']];
   
   return $addressBooks;
 }
