@@ -69,7 +69,7 @@ unset($cacheMaster, $warnToResetCache);
 // Backends
 $authBackend = new ISubsoft\DAV\Auth\Backend\LDAP($config);
 $principalBackend = new ISubsoft\DAV\DAVACL\PrincipalBackend\LDAP($config, $pdo, $entityCache['principal']);
-$propStoreBackend = new Sabre\DAV\PropertyStorage\Backend\PDO($pdo);
+$propStoreBackend = new ISubsoft\DAV\PropertyStorage\Backend\PDO($pdo);
 $carddavBackend = new ISubsoft\DAV\CardDAV\Backend\LDAP($config, $pdo, $principalBackend, $entityCache['card']);
 
 // Setting up the directory tree //
@@ -89,7 +89,7 @@ $server->setBaseUri($GLOBALS['base_uri']);
 $server->addPlugin(new ISubsoft\DAV\Auth\Plugin($authBackend));
 
 // Add ACL plugin
-$aclPlugin = new Sabre\DAVACL\Plugin();
+$aclPlugin = new ISubsoft\DAV\DAVACL\Plugin($principalBackend);
 $aclPlugin->allowUnauthenticatedAccess = false;
 $aclPlugin->allowAccessToNodesWithoutACL = false;
 $aclPlugin->hideNodesFromListings = true;
@@ -105,7 +105,7 @@ if($GLOBALS['max_payload_size'] != null)
 $server->addPlugin($cardDavPlugin);
 
 // Add property storage plugin
-$server->addPlugin(new ISubsoft\DAV\PropertyStorage\Plugin($propStoreBackend));
+$server->addPlugin(new Sabre\DAV\PropertyStorage\Plugin($propStoreBackend));
 
 // Add webdav sync plugin
 if($GLOBALS['enable_incremental_sync'])

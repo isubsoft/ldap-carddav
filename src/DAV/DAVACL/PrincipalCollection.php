@@ -34,7 +34,7 @@ class PrincipalCollection extends \Sabre\DAVACL\PrincipalCollection
 		  [
 		      'privilege' => '{DAV:}read',
 		      'principal' => '{DAV:}authenticated',
-		      'protected' => true,
+		      'protected' => true
 		  ],
 		];
 	}
@@ -43,9 +43,9 @@ class PrincipalCollection extends \Sabre\DAVACL\PrincipalCollection
 	{
 		return [
 		  [
-		      'privilege' => '{DAV:}all',
+		      'privilege' => '{DAV:}read',
 		      'principal' => '{DAV:}owner',
-		      'protected' => true,
+		      'protected' => true
 		  ]
 		];
 	}

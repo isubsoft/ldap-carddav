@@ -198,9 +198,6 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
         $currentUserPrincipalId = $GLOBALS['currentUserPrincipalId'];
         $principal = [];
 
-        if(strtolower($principalId) != strtolower($currentUserPrincipalId))
-  				throw new SabreDAVException\Forbidden("User does not have access to this path");
-        
 				$cacheValid = true; // If false then cache need to be refreshed
 				$principal = $this->cache->get(self::getCacheKey($principalId), null);
 				

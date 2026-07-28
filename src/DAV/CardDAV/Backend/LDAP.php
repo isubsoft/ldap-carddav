@@ -148,9 +148,44 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */    
     private $addressbook = [];
     
+    /**
+     * Address books for which housekeeping has been done
+     *
+     * @var array
+     */
+    private $housekeepingDone = [];
+    
 		private static $cacheTtl = 86400;
 		
 		public static $vCardGroupMemberProperty = 'MEMBER';
+		
+    /**
+     * Array of PDO prepared statements
+     *
+     * @var array
+     */
+		private $getAddressBooksPdoPrepStmt = [];
+
+    /**
+     * Array of PDO prepared statements
+     *
+     * @var array
+     */
+		private $getCardPdoPrepStmt = [];
+		
+		/**
+     * Array of PDO prepared statements
+     *
+     * @var array
+     */
+		private $housekeepingPdoPrepStmt = [];
+		
+		/**
+     * Array of PDO prepared statements
+     *
+     * @var array
+     */
+		private $generateVcardPdoPrepStmt = [];
     
     /**
      * Creates the backend.
@@ -189,7 +224,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						throw new SabreDAVException\ServiceUnavailable();
         	}
         }
-        else if($addressBookConfig['user_specific'] == true)
+        elseif($addressBookConfig['user_specific'] == true)
           $this->addressbook[$addressBookId]['LdapConnection'] = $GLOBALS['currentUserPrincipalLdapConn'];
         else
         {
@@ -254,7 +289,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     {
 			$systemUser = null;
       $addressBooks = [];
-      $currentUserPrincipalId = $GLOBALS['currentUserPrincipalId'];
       $principal = $this->principalBackend->getPrincipalByPath($principalUri);
       
       if($principal == [])
@@ -269,10 +303,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     	
     	$this->principalBackendId = $principal['__backend_id'];
   		
-  		// We do not know how to deal with a principal who is different from logged in user principal
-  		if(strtolower($this->principalId) != strtolower($currentUserPrincipalId))
-  			throw new SabreDAVException\Forbidden("User does not have access to this path");
-        			
 			try 
 			{
 		    $query = 'SELECT user_id FROM ' . self::$systemUsersTableName;
@@ -287,33 +317,43 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		  } catch (\Throwable $th) {
 				trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 		  }
+		  
+			if (!isset($this->getAddressBooksPdoPrepStmt['stmt01'])) {
+				// Preparing PDO statements which are used inside a loop
+				try {
+					$query = 'SELECT user_specific, writable FROM ' . self::$addressBooksTableName . ' WHERE addressbook_id =?';
+					$this->getAddressBooksPdoPrepStmt['stmt01'] = $this->pdo->prepare($query);
+				}
+				catch (\Throwable $th) {
+					trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
+					throw new SabreDAVException\ServiceUnavailable();
+				}
+		  }
+		  
+		  $stmt01 = $this->getAddressBooksPdoPrepStmt['stmt01'];
       
       foreach ($this->config['card']['addressbook']['ldap'] as $addressBookId => $addressBookConfig) {
       	if(!isset($this->addressbook[$addressBookId])) {
-					try 
-					{
-					  $query = 'SELECT user_specific, writable FROM ' . self::$addressBooksTableName . ' WHERE addressbook_id =?';
-					  $stmt = $this->pdo->prepare($query);
-					  $stmt->execute([$addressBookId]);
-					  
-					  $row = $stmt->fetch(\PDO::FETCH_ASSOC);
-					  
-					  if($row === false) {
-							trigger_error("Address book '$addressBookId' is not present in sync database. Excluded.", E_USER_NOTICE);
-					  	continue;
-					  }
-					  	
-						if(!isset($addressBookConfig['user_specific']) || $addressBookConfig['user_specific'] !== (bool)$row['user_specific'] || !isset($addressBookConfig['writable']) || $addressBookConfig['writable'] !== (bool)$row['writable'])
-						{
-							trigger_error("Configured values do not match that of sync database for address book '$addressBookId'. Address book excluded.", E_USER_NOTICE);
-							continue;
-						}
-					  
-					} catch (\Throwable $th) {
+					try {
+					  $stmt01->execute([$addressBookId]);
+					  $row = $stmt01->fetch(\PDO::FETCH_ASSOC);
+					} 
+					catch (\Throwable $th) {
 						trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 						throw new SabreDAVException\ServiceUnavailable();
 					}
-					
+					  
+				  if($row === false) {
+						trigger_error("Address book '$addressBookId' is not present in sync database. Excluded.", E_USER_NOTICE);
+				  	continue;
+				  }
+				  	
+					if(!isset($addressBookConfig['user_specific']) || $addressBookConfig['user_specific'] !== (bool)(int)$row['user_specific'] || !isset($addressBookConfig['writable']) || $addressBookConfig['writable'] !== (bool)(int)$row['writable'])
+					{
+						trigger_error("Configured values do not match that of sync database for address book '$addressBookId'. Address book excluded.", E_USER_NOTICE);
+						continue;
+					}
+					  
 		      $this->addressbook[$addressBookId]['config'] = $addressBookConfig;
 		      $this->addressbook[$addressBookId]['syncToken'] = time();
 		      $this->addressbook[$addressBookId]['syncDbUserId'] =  ($addressBookConfig['user_specific'])?$this->principalBackendId:$systemUser;
@@ -322,7 +362,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         
 	      $addressBookSyncToken = $this->addressbook[$addressBookId]['syncToken'];
 	      
- 				$this->housekeeping($addressBookId);
+	      if(!in_array($addressBookId, $this->housekeepingDone)) {
+ 					$this->housekeeping($addressBookId);
+ 					$this->housekeepingDone[] = $addressBookId;
+ 				}
         
         $addressBooks[] = [
             'id'                                                          => $addressBookId,
@@ -456,24 +499,71 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				$cardUid = null;
 				$addressBookConfig = $this->addressbook[$addressBookId]['config'];
 				$syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
+				$acl = [];
+				
+				$acl[] = [
+					'privilege' => '{DAV:}read',
+					'principal' => '{DAV:}owner',
+					'protected' => true
+				];
+				
+				if($addressBookConfig['writable'] == true) {
+					$acl[] = [
+						'privilege' => '{DAV:}write-content',
+						'principal' => '{DAV:}owner',
+						'protected' => true
+					];
+				}
+					
+				if($addressBookConfig['user_specific'] == true)
+					$acl[] = [
+						'privilege' => '{DAV:}write-properties',
+						'principal' => '{DAV:}owner',
+						'protected' => true
+					];
+					
+				// Due to lack of proper ACL support for nodes in clients all privileges are
+				// given to contacts of a writable address book. This can be removed in future (as above
+				// rules are the actual privileges which need to be sent to the client) when proper
+				// ACL support for nodes is available in clients.
+				if($addressBookConfig['writable'] == true) {
+					$acl = [];
+					$acl[] = [
+						'privilege' => '{DAV:}all',
+						'principal' => '{DAV:}owner',
+						'protected' => true
+					];
+				}
+				
+				
+				if(!isset($this->getCardPdoPrepStmt['stmt01'])) {
+					// Preparing PDO statements which are used inside a loop
+					try {
+						$query = 'SELECT card_uid, backend_id FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ? AND card_uri = ? AND delete_sync_token IS NULL';
+						$this->getCardPdoPrepStmt['stmt01'] = $this->pdo->prepare($query);
+					}
+					catch (\Throwable $th) {
+						trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
+						throw new SabreDAVException\ServiceUnavailable();
+					}
+				}
+				
+				$stmt01 = $this->getCardPdoPrepStmt['stmt01'];
         
 				try 
 				{
-		      $query = 'SELECT card_uid, backend_id FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ? AND card_uri = ? AND delete_sync_token IS NULL';
-		      $stmt = $this->pdo->prepare($query);
-		      $stmt->execute([$syncDbUserId, $addressBookId, $cardUri]);
-		      
-					$row = $stmt->fetch(\PDO::FETCH_ASSOC);
-					
-		    	if($row === false)
-						return false;
-		    	
-		      	$cardUid = $row['card_uid'];
-		      	$backendId = $row['backend_id'];
+		      $stmt01->execute([$syncDbUserId, $addressBookId, $cardUri]);
+					$row = $stmt01->fetch(\PDO::FETCH_ASSOC);
 		    } catch (\Throwable $th) {
 					trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 					throw new SabreDAVException\ServiceUnavailable();
 		    }
+		    
+	    	if($row === false)
+					return false;
+		    	
+      	$cardUid = $row['card_uid'];
+      	$backendId = $row['backend_id'];
             
 				$cacheValid = true; // If false then cache need to be refreshed
        	$result = $this->cache->get(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null);
@@ -484,6 +574,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				if($cacheValid) {
 		      $result['id'] = $cardUid;
 		      $result['uri'] = $cardUri;
+					$result['acl'] = $acl;
         	
         	return $result;
 				}
@@ -499,13 +590,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					throw new SabreDAVException\ServiceUnavailable();
 				}
 					
-	      if($data['count'] === 0) {
-					if(!$this->cache->delete(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri)))
-						trigger_error("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore this error.", E_USER_NOTICE);
-	
-					$this->addChange($addressBookId, $cardUri);
+	      if($data['count'] === 0)
 	      	return false;
-	      }
 					
 	      if($data['count'] > 1) {
 					trigger_error("Multiple backend contacts found. Check configuration.", E_USER_WARNING);
@@ -533,6 +619,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         
         $result['id'] = $cardUid;
         $result['uri'] = $cardUri;
+				$result['acl'] = $acl;
 				
         return $result;
     }
@@ -563,6 +650,19 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         }
 
         return $result;
+    }
+    
+		// Function to get list of denied privileges on an writable address book.
+    function getWriteAclDenyList($addressBookId)
+    {
+			$allowedWriteAclDenyValues = ['create', 'delete'];
+			$writeAclDeny = [];
+			
+		  foreach(((isset($this->addressbook[$addressBookId]['config']['write_acl_deny']) && is_array($this->addressbook[$addressBookId]['config']['write_acl_deny']))?$this->addressbook[$addressBookId]['config']['write_acl_deny']:[]) as $value)
+		  	if(in_array(strtolower($value), $allowedWriteAclDenyValues))
+		  		$writeAclDeny[] = strtolower($value);
+		  	
+		  return $writeAclDeny;
     }
 
     /**
@@ -596,16 +696,19 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $vCardGroupMemberProperty = self::$vCardGroupMemberProperty;
         $addressBookConfig = $this->addressbook[$addressBookId]['config'];
         $syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
-        $writableAddressBook = (!isset($addressBookConfig['writable']))?true:$addressBookConfig['writable'];
         $maxContactSize = $this->addressbook[$addressBookId]['contactMaxSize'];
+        $writeAclDeny = [];
         
-        $this->setAddressbookBackendProperties($addressBookId);
+        $writeAclDeny = $this->getWriteAclDenyList($addressBookId);
         
-        if(!$writableAddressBook)
-					throw new SabreDAVException\Forbidden("Not allowed");
-					
 				if(strlen($cardData) > $maxContactSize)
 					throw new ISubsoftDAVException\ContentTooLarge();
+
+        if(!$addressBookConfig['writable'])
+					throw new SabreDAVException\Forbidden("Address book '$addressBookId' is read-only");
+					
+				if(in_array(strtolower($operation), $writeAclDeny))
+					throw new SabreDAVException\Forbidden("Address book '$addressBookId' has no '" . strtolower($operation) . "' access.");
 					
 				$vcard = Reader::read($cardData);
 				
@@ -679,17 +782,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
           	unset($fieldMap[$vCardGroupMemberProperty]);
           
           foreach((!isset($addressBookConfig['group_required_fields']) || !is_array($addressBookConfig['group_required_fields']))?[]:$addressBookConfig['group_required_fields'] as $field)
-          {
 						$requiredFields[] = strtolower($field);
-          }
           
           $rdnField = (!isset($addressBookConfig['group_LDAP_rdn']))?null:strtolower($addressBookConfig['group_LDAP_rdn']);
           $fieldAclEval = (!isset($addressBookConfig['group_field_acl']['eval']))?(self::$defaultFieldAclEval):strtolower($addressBookConfig['group_field_acl']['eval']);
           
           foreach((!isset($addressBookConfig['group_field_acl']['list']) || !is_array($addressBookConfig['group_field_acl']['list']))?[]:$addressBookConfig['group_field_acl']['list'] as $field)
-          {
 						$fieldAclList[] = strtolower($field);
-          }
         }
         else
         {
@@ -697,23 +796,26 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
           $fieldMap = (!isset($addressBookConfig['fieldmap']) || !is_array($addressBookConfig['fieldmap']))?[]:$addressBookConfig['fieldmap'];
           
           foreach((!isset($addressBookConfig['required_fields']) || !is_array($addressBookConfig['required_fields']))?[]:$addressBookConfig['required_fields'] as $field)
-          {
 						$requiredFields[] = strtolower($field);
-          }
           
           $rdnField = (!isset($addressBookConfig['LDAP_rdn']))?null:strtolower($addressBookConfig['LDAP_rdn']);
           $fieldAclEval = (!isset($addressBookConfig['field_acl']['eval']))?(self::$defaultFieldAclEval):strtolower($addressBookConfig['field_acl']['eval']);
           
           foreach((!isset($addressBookConfig['field_acl']['list']) || !is_array($addressBookConfig['field_acl']['list']))?[]:$addressBookConfig['field_acl']['list'] as $field)
-          {
 						$fieldAclList[] = strtolower($field);
-          }
+        }
+        
+        if($ldapInfo['objectclass'] == []) {
+					trigger_error("Backend object class not defined for address book '$addressBookId' contacts. Check configuration." . $th->getMessage(), E_USER_WARNING);
+					throw new SabreDAVException\ServiceUnavailable();
         }
         
 				if($operation == 'CREATE' || ($operation == 'UPDATE' && $backendDataUpdatePolicy == 'replace'))
 				{
-		      if($rdnField == null || $ldapInfo['objectclass'] == [])
+		      if($rdnField == null) {
+						trigger_error("Backend rdn field not defined for address book '$addressBookId' contacts. Check configuration." . $th->getMessage(), E_USER_WARNING);
 						throw new SabreDAVException\ServiceUnavailable();
+					}
 				}
 				
 				$this->setAddressbookBackendProperties($addressBookId);
@@ -734,6 +836,17 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                 if(isset($vcard->$vCardKey) && $multiAllowedStatus['status'] && !$compositeAttrStatus['status'] )
                 {
                     $newLdapKey = strtolower($ldapKey['field_name']);
+                    
+										// Preparing PDO statements which are used inside a loop
+										try {
+		                  $query = 'SELECT backend_id FROM ' . self::$backendMapTableName . ' WHERE addressbook_id = ? and card_uid = ? and user_id = ? AND delete_sync_token IS NULL';
+		                  $stmt01 = $this->pdo->prepare($query);
+										}
+										catch (\Throwable $th) {
+											trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
+											throw new SabreDAVException\ServiceUnavailable();
+										}
+                    
                     foreach($vcard->$vCardKey as $values)
                     {                 
                         $memberCardUID = Reader::memberValue($values, $vCardKey);
@@ -742,14 +855,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                             $backendId = null;
 
                             try {
-                                $query = 'SELECT backend_id FROM ' . self::$backendMapTableName . ' WHERE addressbook_id = ? and card_uid = ? and user_id = ? AND delete_sync_token IS NULL';
-                                $stmt = $this->pdo->prepare($query);
-                                $stmt->execute([$addressBookId, $memberCardUID, $syncDbUserId]);
+                              $stmt01->execute([$addressBookId, $memberCardUID, $syncDbUserId]);
+                              $row = $stmt01->fetch(\PDO::FETCH_ASSOC);
                                 
-                                $row = $stmt->fetch(\PDO::FETCH_ASSOC);
-                                
-																if($row !== false)
-                                	$backendId = $row['backend_id'];
+															if($row !== false)
+		                          	$backendId = $row['backend_id'];
                             } catch (\Throwable $th) {
 															trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
                             }
@@ -817,6 +927,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					
 				$mappedBackendAttributes = Utility::getMappedBackendAttributes($fieldMap);
 				
+				// Object class is an internally mapped attribute (from configuration) for this operation
+				$mappedBackendAttributes[] = 'objectclass';
+				
 				if($fieldAclEval == 'w')
 				{
 					foreach($mappedBackendAttributes as $field)
@@ -824,13 +937,50 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						if(!in_array($field, $fieldAclList))
 							$readOnlyFields[] = $field;
 					}
+					
+					if(!in_array($rdnField, $fieldAclList) && !in_array($rdnField, $readOnlyFields))
+						$readOnlyFields[] = $rdnField;
+					
+					foreach($requiredFields as $field)
+					{
+						if(!in_array($field, $fieldAclList) && !in_array($field, $readOnlyFields))
+							$readOnlyFields[] = $field;
+					}
 				}
 				else
 					$readOnlyFields = $fieldAclList;
 					
+				// Remove empty and duplicate values as if they were never sent in the first place.
+		    $tmpLdapInfo = $ldapInfo;
+
+				foreach($tmpLdapInfo as $key => $value) {
+					if(is_array($value)) {
+						foreach($value as $index => $fieldValue) {
+							if((string)$fieldValue == '')
+								unset($ldapInfo[$key][$index]);
+						}
+						
+						// If remaining is an empty array then it needs to be removed as backend does not accept
+						// an empty array during add.
+						if($ldapInfo[$key] == [])
+							unset($ldapInfo[$key]);
+						else
+							$ldapInfo[$key] = array_unique($value);
+					}
+					elseif((string)$value == '')
+						unset($ldapInfo[$key]);
+				}
+
+		    unset($tmpLdapInfo);
+					
 				if($operation == 'UPDATE')
 				{
-					$newLdapRdn = null;
+					// List of fields not be marked for deletion as determined dynamically during the
+					// course of this operation
+					$noDeleteFields = [];
+					
+					// List of writable fields to be marked for deletion from backend.					
+					$toBeDeletedFields = [];
 					
 					$oldLdapInfo = $this->fetchLdapContactDataByUri($addressBookId, $cardUri, ['*'], 1);
 					
@@ -844,81 +994,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						throw new SabreDAVException\ServiceUnavailable();
 			    }
 					
-					if($oldLdapInfo['count'] === 0) {
-						if(!$this->cache->delete(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri)))
-							trigger_error("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore this error.", E_USER_NOTICE);
-	
-						$this->addChange($addressBookId, $cardUri);
-						throw new SabreDAVException\Conflict("The contact you are trying to update does not exist in the backend. The backend contact may have been deleted by some other application/process.");
-					}
+					if($oldLdapInfo['count'] === 0)
+						throw new SabreDAVException\Conflict("Not found.");
 						
-					if($fieldAclEval == 'w')
-					{
-						for($i=0; $i<$oldLdapInfo[0]['count']; $i++)
-						{
-							$field = $oldLdapInfo[0][$i];
-							
-							if(!in_array($field, $fieldAclList) && !in_array($field, $readOnlyFields))
-								$readOnlyFields[] = $field;
-						}
-					}
+					$oldLdapInfo = $oldLdapInfo[0];
 					
-					if($backendDataUpdatePolicy == 'replace')
-					{
-						foreach($oldLdapInfo[0] as $oldLdapAttrName => $oldLdapAttrValue)
-						{
-							if(!isset($ldapInfo[$oldLdapAttrName]))
-							{
-								if(is_array($oldLdapAttrValue))
-									$ldapInfo[$oldLdapAttrName] = [];
-							}
-						}
-					}
-					else
-					{
-						foreach($mappedBackendAttributes as $attr)
-						{
-							if(!isset($ldapInfo[$attr]))
-								$ldapInfo[$attr] = [];
-						}
-					}
-					
-					if($backendDataUpdatePolicy == 'replace')
-					{
-						foreach($readOnlyFields as $key)
-						{
-							if(array_key_exists($key, $ldapInfo))
-								unset($ldapInfo[$key]);
-						}
-					
-					  foreach ($requiredFields as $key) {
-					      if(!array_key_exists($key, $ldapInfo))
-									throw new SabreDAVException\BadRequest("Required fields not present or do not have write access");
-					  }
-
-					  if(!array_key_exists($rdnField, $ldapInfo))
-							throw new SabreDAVException\BadRequest("Identity field not present or do not have write access");
-
-						$newLdapRdn = $rdnField . '=' . ldap_escape(is_array($ldapInfo[$rdnField])?$ldapInfo[$rdnField][0]:$ldapInfo[$rdnField], "", LDAP_ESCAPE_DN);
-					}
-					else
-					{
-						foreach($readOnlyFields as $key)
-						{
-							if(array_key_exists($key, $ldapInfo))
-								unset($ldapInfo[$key]);
-						}
-						
-				    foreach ($requiredFields as $key) {
-				      if(!in_array($key, $readOnlyFields) && !array_key_exists($key, $ldapInfo))
-								throw new SabreDAVException\BadRequest("Required fields not present or do not have write access");
-				    }
-				    
-			    	if(array_key_exists($rdnField, $ldapInfo))
-							$newLdapRdn = $rdnField . '=' . ldap_escape(is_array($ldapInfo[$rdnField])?$ldapInfo[$rdnField][0]:$ldapInfo[$rdnField], "", LDAP_ESCAPE_DN);
-					}
-
-					$oldLdapTree = $oldLdapInfo[0]['dn'];
+					$oldLdapTree = $oldLdapInfo['dn'];
 					$componentOldLdapTree = ldap_explode_dn($oldLdapTree, 0);
 
 					if(!$componentOldLdapTree)
@@ -927,58 +1008,256 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						throw new SabreDAVException\ServiceUnavailable();
 					}
 					
-					if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null, -60))
-			    	trigger_error("Could not expire cache", E_USER_WARNING);
-					
 					$oldLdapRdn = $componentOldLdapTree[0];
+					
+					// Collect attributes from existing contact data.
+					for($index=0; $index<$oldLdapInfo['count']; $index++)
+						$oldLdapAttrList[] = $oldLdapInfo[$index];
+						
+					// Mark existing contact fields as read only based on field acl.
+					if($fieldAclEval == 'w')
+					{
+						foreach($oldLdapAttrList as $field)
+						{
+							if(!in_array($field, $fieldAclList))
+								$readOnlyFields[] = $field;
+						}
+					}
+					
+					$noDeleteFields[] =  'objectclass';
+						
+					if($backendDataUpdatePolicy == 'replace') {
+						// Apply any defaults
+					  foreach ($requiredFields as $field) {
+					   	if(!array_key_exists($field, $ldapInfo))
+								throw new SabreDAVException\BadRequest("Required field(s) not present, check with the server administrator for the list of field(s) which are required to be filled.");
+					  }
+					  
+						// Trying to set a suitable RDN field when the configured RDN field is not set.
+						if(!array_key_exists($rdnField, $ldapInfo)) {
+							trigger_error("Rdn field did not receive any value. Check '$addressBookId' address book configuration.", E_USER_WARNING);
+							
+							$isNewRdnFound = false;
+							
+							foreach(array_keys($ldapInfo) as $field)
+								if(!in_array($field, ['objectclass'])) { // Avoid objectclass field to be set as RDN field.
+									$rdnField = $ldapInfoFields[0];
+									$isNewRdnFound = true;
+								}
+								
+							if(!$isNewRdnFound) {
+								trigger_error("Another field could not be selected as the new rdn field. Check '$addressBookId' address book configuration.", E_USER_NOTICE);
+								throw new SabreDAVException\BadRequest("Identity field was not present, check with the server administrator for the list of field(s) which are required to be filled.");
+							}
+						}
+					  
+					  // Mark existing backend fields for deletion.
+						foreach($oldLdapAttrList as $field)
+							$toBeDeletedFields[] = $field;
+					}
+					
+					// Merge backend data update policy
+					else {
+						// Trying to set a suitable RDN field during a merge update when configured RDN field is not set.
+						if(!array_key_exists($rdnField, $ldapInfo)) {
+							$tmpOldLdapRdn = explode('=', $oldLdapRdn);
+							$oldRdnField = strtolower($tmpOldLdapRdn[0]);
+
+							if(array_key_exists($oldRdnField, $ldapInfo))
+								$rdnField = $oldRdnField;
+							else {
+								if($rdnField != $oldRdnField)
+									trigger_error("Rdn field and existing rdn field did not receive any value. Check '$addressBookId' address book configuration.", E_USER_WARNING);
+								
+								$noDeleteFields[] = $oldRdnField;
+								$noDeleteFields = array_unique($noDeleteFields);
+
+								foreach(array_keys($ldapInfo) as $field)
+									if(!in_array($field, ['objectclass'])) { // Avoid objectclass field to be set as RDN field.
+										$rdnField = $field;
+										unset($noDeleteFields[array_search($oldRdnField, $noDeleteFields)]);
+										break;
+									}
+							}
+						}
+					}
+					
+					// WARNING: Do not set any more values in backend data beyond this point.
+					
+				  // Mark mapped backend fields, which have not received any value, for deletion.
+					foreach($mappedBackendAttributes as $field)
+						if(!array_key_exists($field, $ldapInfo))
+							$toBeDeletedFields[] = $field;
+					
+					foreach($toBeDeletedFields as $field)
+						if(!in_array($field, $noDeleteFields) && !in_array($field, $requiredFields) && !in_array($field, $readOnlyFields) && !array_key_exists($field, $ldapInfo))
+							$ldapInfo[$field] = [];
+						
+					// Unset backend attributes which are marked read only.
+					foreach($readOnlyFields as $field)
+						if(array_key_exists($field, $ldapInfo))
+							unset($ldapInfo[$field]);
+					
 					$parentOldLdapTree = "";
 
 					for($dnComponentIndex=1; $dnComponentIndex<$componentOldLdapTree['count']; $dnComponentIndex++)
 						$parentOldLdapTree = $parentOldLdapTree . (empty($parentOldLdapTree)?"":",") . $componentOldLdapTree[$dnComponentIndex];
 					
+					$isRenameRequired = true;
+					$validRenameLdapRdnAttrValue = [];
 					$ldapTree = $oldLdapTree;
+					$ldapErrorNo = 0x0;
 					
-					if($newLdapRdn !== null) {
-						$newLdapRdnSplit = explode('=', $newLdapRdn); 
-						$newLdapRdnAttr = $newLdapRdnSplit[0];
-						$newLdapRdnValue = Utility::decodeHexInString($newLdapRdnSplit[1]);
-						$oldLdapRdnSplit = explode('=', $oldLdapRdn);
-						$oldLdapRdnAttr = $oldLdapRdnSplit[0];
-						$oldLdapRdnValue = Utility::decodeHexInString($oldLdapRdnSplit[1]);
+					if(array_key_exists($rdnField, $ldapInfo)) {
+						if(is_array($ldapInfo[$rdnField])) {
+							if($ldapInfo[$rdnField] == [])
+								$isRenameRequired = false;
+							else
+							{
+								foreach($ldapInfo[$rdnField] as $fieldValue)
+									if($fieldValue != null && $fieldValue != '') {
+										if(strtolower($rdnField . '=' . ldap_escape($fieldValue, "", LDAP_ESCAPE_DN)) == strtolower($oldLdapRdn)) {
+											$isRenameRequired = false;
+											break;
+										}
 
-						if(strtolower($newLdapRdnAttr) != strtolower($oldLdapRdnAttr) || $newLdapRdnValue != $oldLdapRdnValue) {
-							if(!ldap_rename($ldapConn, $oldLdapTree, $newLdapRdn, null, false))
-								throw new SabreDAVException\BadRequest("Card with same name may already exist");
-								
-							$ldapTree = $newLdapRdn . ',' . $parentOldLdapTree;
+										$validRenameLdapRdnAttrValue[] = $fieldValue;
+									}
+							}
+						}
+						elseif($ldapInfo[$rdnField] != null && $ldapInfo[$rdnField] != '') {
+							if(strtolower($rdnField . '=' . ldap_escape($ldapInfo[$rdnField], "", LDAP_ESCAPE_DN)) == strtolower($oldLdapRdn))
+								$isRenameRequired = false;
+							else
+								$validRenameLdapRdnAttrValue[] = $ldapInfo[$rdnField];
 						}
 					}
-
-					if(!ldap_mod_replace($ldapConn, $ldapTree, $ldapInfo))
-						throw new SabreDAVException\BadRequest("Card data may be incompatible");
+					else
+						$isRenameRequired = false;
+					
+					if($isRenameRequired && count($validRenameLdapRdnAttrValue, COUNT_NORMAL) < 1)
+						throw new SabreDAVException\BadRequest("Identity field does not have a valid value.");
+					
+					foreach($validRenameLdapRdnAttrValue as $tmpNewLdapRdnAttrValue) {
+						$tmpNewLdapRdn = $rdnField . '=' . ldap_escape($tmpNewLdapRdnAttrValue, "", LDAP_ESCAPE_DN);
+						
+						ldap_rename($ldapConn, $oldLdapTree, $tmpNewLdapRdn, null, false);
+						
+						$ldapErrorNo = ldap_errno($ldapConn);
+						
+						if($ldapErrorNo == 0x0) {
+							$ldapTree = $tmpNewLdapRdn . ',' . $parentOldLdapTree;
+							break;
+						}
+						
+						if($ldapErrorNo == 0x44) {
+							continue;
+						}
+						else
+							break;
+					}
+					
+					if($ldapErrorNo != 0x0) {
+						Utility::handleLdapError($ldapErrorNo);
+						
+						trigger_error("LDAP error: " . ldap_err2str($ldapErrorNo), E_USER_WARNING);
+						throw new SabreDAVException\ServiceUnavailable("Unknown error while saving card.");
+					}
+						
+					if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null, -60))
+						trigger_error("Could not expire cache", E_USER_WARNING);
 						
 					$this->addChange($addressBookId, $cardUri, 'MODIFY');
+					
+					if(!ldap_mod_replace($ldapConn, $ldapTree, $ldapInfo)) {
+		      	$ldapErrorNo = ldap_errno($ldapConn);
+		      	
+						Utility::handleLdapError($ldapErrorNo);
+						
+						trigger_error("LDAP error: " . ldap_err2str($ldapErrorNo), E_USER_WARNING);
+						throw new SabreDAVException\ServiceUnavailable("Unknown error while saving card.");
+					}
+						
+					if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null, -60))
+			    	trigger_error("Could not expire cache", E_USER_WARNING);
+			    	
+					$this->addChange($addressBookId, $cardUri, 'MODIFY');
 				}
+
+				// CREATE operation
 				else
 				{
-					foreach($readOnlyFields as $key)
-					{
-						if(array_key_exists($key, $ldapInfo))
-							unset($ldapInfo[$key]);
-					}
-				
-			    foreach ($requiredFields as $key) {
-			        if(!array_key_exists($key, $ldapInfo))
-								throw new SabreDAVException\BadRequest("Required fields not present or do not have write access");
+					// Object class is an internally required field for this operation
+					$requiredFields[] = 'objectclass';
+					
+					// Apply any defaults
+			    foreach ($requiredFields as $field) {
+				  	if(!array_key_exists($field, $ldapInfo))
+							throw new SabreDAVException\BadRequest("Required field(s) not present, check with the server administrator for the list of field(s) which are required to be filled.");
 			    }
-
-			    if(!array_key_exists($rdnField, $ldapInfo))
-						throw new SabreDAVException\BadRequest("Identity field not present or do not have write access");
+			    
+					// Trying to set a suitable RDN field when the configured RDN field did not receive any value.
+					if(!array_key_exists($rdnField, $ldapInfo)) {
+						$isNewRdnFound = false;
 						
-		      $ldapTree = $rdnField. '='. ldap_escape(is_array($ldapInfo[$rdnField])?$ldapInfo[$rdnField][0]:$ldapInfo[$rdnField], "", LDAP_ESCAPE_DN) . ',' .$addressBookDn;
+						foreach(array_keys($ldapInfo) as $field)
+							if(!in_array($field, ['objectclass'])) { // Avoid objectclass field to be set as RDN field.
+								$rdnField = $ldapInfoFields[0];
+								$isNewRdnFound = true;
+							}
+							
+						if(!$isNewRdnFound) {
+							trigger_error("Rdn field did not receive any value and another field could not be selected as the new rdn field. Check '$addressBookId' address book configuration.", E_USER_NOTICE);
+							throw new SabreDAVException\BadRequest("Required field(s) not present, check with the server administrator for the list of field(s) which are required to filled.");
+						}
+					}
+			    
+					// Unset backend attributes which are marked read only.
+					foreach($readOnlyFields as $field)
+						if(array_key_exists($field, $ldapInfo))
+							unset($ldapInfo[$field]);
+			    
+					$validAddLdapRdnAttrValue = [];
+					$ldapTree = null;
+			    
+			    if(is_array($ldapInfo[$rdnField])) {
+						foreach($ldapInfo[$rdnField] as $fieldValue)
+							if($fieldValue != null && $fieldValue != '')
+		      			$validAddLdapRdnAttrValue[] = $fieldValue;
+					}
+					elseif($ldapInfo[$rdnField] != null && $ldapInfo[$rdnField] != '')
+						$validAddLdapRdnAttrValue[] = $ldapInfo[$rdnField];
 
-		      if(!ldap_add($ldapConn, $ldapTree, $ldapInfo))
-						throw new SabreDAVException\BadRequest("Card data may be incompatible or card with same name may already exist");
+					if(count($validAddLdapRdnAttrValue, COUNT_NORMAL) < 1)
+						throw new SabreDAVException\BadRequest("Identity field does not have a valid value.");
+						
+					foreach($validAddLdapRdnAttrValue as $tmpLdapRdnAttrValue) {
+						$tmpLdapTree = $rdnField . '=' . ldap_escape($tmpLdapRdnAttrValue, "", LDAP_ESCAPE_DN) . ',' . $addressBookDn;
+						
+						ldap_add($ldapConn, $tmpLdapTree, $ldapInfo);
+						
+						$ldapErrorNo = ldap_errno($ldapConn);
+						
+						if($ldapErrorNo == 0x0) {
+							$ldapTree = $tmpLdapTree;
+							break;
+						}
+						
+						if($ldapErrorNo == 0x44)
+							continue;
+						else
+							break;
+					}
+						
+					if($ldapErrorNo != 0x0) {
+						Utility::handleLdapError($ldapErrorNo);
+						
+						trigger_error("LDAP error: " . ldap_err2str($ldapErrorNo), E_USER_WARNING);
+						throw new SabreDAVException\ServiceUnavailable("Unknown error while saving card.");
+					}
+					
+					if($ldapTree == null)
+						throw new SabreDAVException\ServiceUnavailable();
 
 		      $data = Utility::LdapQuery($ldapConn, $ldapTree, $addressBookConfig['filter'], ['entryuuid'], 'base');
 		      
@@ -1009,13 +1288,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 								if($row['delete_sync_token'] !== null && $row['delete_sync_token'] !== '') {
 									$query = "UPDATE " . self::$backendMapTableName . " SET delete_sync_token = null, modify_sync_token = null, create_sync_token = ?, card_uid = ?, backend_id = ? WHERE user_id = ? AND addressbook_id = ? AND card_uri = ?";
 									$sql = $this->pdo->prepare($query);
-									$sql->execute([time(), ($cardUid == null)?$this->guidv4():$cardUid, $backendId, $syncDbUserId, $addressBookId, $cardUri]);
+									$sql->execute([time(), ($cardUid == null)?(\Sabre\DAV\UUIDUtil::getUUID()):$cardUid, $backendId, $syncDbUserId, $addressBookId, $cardUri]);
 								}
 							}
 							else {
 						    $query = "INSERT INTO " . self::$backendMapTableName . " (user_id, addressbook_id, card_uri, card_uid, backend_id, create_sync_token)  VALUES (?, ?, ?, ?, ?, ?)";
 						    $sql = $this->pdo->prepare($query);
-						    $sql->execute([$syncDbUserId, $addressBookId, $cardUri, ($cardUid == null)?$this->guidv4():$cardUid, $backendId, time()]);
+						    $sql->execute([$syncDbUserId, $addressBookId, $cardUri, ($cardUid == null)?(\Sabre\DAV\UUIDUtil::getUUID()):$cardUid, $backendId, time()]);
 							}
 				    } catch (\Throwable $th) {
 							trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
@@ -1095,17 +1374,22 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     function deleteCard($addressBookId, $cardUri)
     {
+        $operation = 'DELETE';
         $addressBookConfig = $this->addressbook[$addressBookId]['config'];
         $syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
-        $writableAddressBook = (!isset($addressBookConfig['writable']))?true:$addressBookConfig['writable'];
+        $writeAclDeny = [];
+        
+        $writeAclDeny = $this->getWriteAclDenyList($addressBookId);
+        
+        if(!$addressBookConfig['writable'])
+					throw new SabreDAVException\Forbidden("Address book '$addressBookId' is read-only");
+					
+				if(in_array(strtolower($operation), $writeAclDeny))
+					throw new SabreDAVException\Forbidden("Address book '$addressBookId' has no '" . strtolower($operation) . "' access.");
         
         $this->setAddressbookBackendProperties($addressBookId);
         
         $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
-        
-        if(!$writableAddressBook)
-        	return false;
-        	
         $data = $this->fetchLdapContactDataByUri($addressBookId, $cardUri, ['dn', 'entryUUID']);
         
         if($data === false) {
@@ -1118,24 +1402,22 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					throw new SabreDAVException\ServiceUnavailable();
 	      }
 	      
-				if(!$this->cache->delete(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri)))
-		      trigger_error("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore the error.", E_USER_NOTICE);
-					
-	      if($data['count'] === 0) {
-					$this->addChange($addressBookId, $cardUri);
-					
-	      	return true;
-	      }
+	      if($data['count'] === 0)
+					throw new SabreDAVException\Conflict("Not found");
         
         $ldapTree = $data[0]['dn'];
 
-        try {
-            if(!ldap_delete($ldapConn, $ldapTree))
-	            return false;
-        } catch (\Throwable $th) {
-						trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
-            throw new SabreDAVException\ServiceUnavailable();
-        }
+	      if(!ldap_delete($ldapConn, $ldapTree)) {
+					$ldapErrorNo = ldap_errno($ldapConn);
+					
+					Utility::handleLdapError($ldapErrorNo);
+					
+					trigger_error("LDAP error: " . ldap_err2str($ldapErrorNo), E_USER_WARNING);
+					throw new SabreDAVException\ServiceUnavailable("Unknown error while deleting card");
+	      }
+        
+				if(!$this->cache->delete(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri)))
+		      trigger_error("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore the error.", E_USER_NOTICE);
 
 				$this->addChange($addressBookId, $cardUri);
         
@@ -1202,6 +1484,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                             $memberData = Utility::LdapQuery($ldapConn, $value, $addressBookConfig['filter'], ['entryuuid'], 'base');
                             
 														if($memberData === false) {
+															$ldapErrorNo = ldap_errno($ldapConn);
+															
+															if($ldapErrorNo == 0x20)
+																continue;
+															
 															trigger_error("Could not execute backend search.", E_USER_WARNING);
 															throw new SabreDAVException\ServiceUnavailable();
 														}
@@ -1212,15 +1499,26 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 																	trigger_error("Read access to required operational attributes in LDAP not present for member contact '$value' in address book '$addressBookId'. Member excluded from contact group.", E_USER_WARNING);
 																	continue;
 																}
+																
+																if(!isset($this->generateVcardPdoPrepStmt['stmt01'])) {
+																	// Preparing PDO statements which are used inside a loop
+																	try {
+														        $query = 'SELECT card_uid FROM ' . self::$backendMapTableName . ' WHERE addressbook_id = ? and backend_id = ? and user_id = ? AND delete_sync_token IS NULL';
+														        $this->generateVcardPdoPrepStmt['stmt01'] = $this->pdo->prepare($query);
+																	}
+																	catch (\Throwable $th) {
+																		trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
+																		throw new SabreDAVException\ServiceUnavailable();
+																	}
+																}
+																
+																$stmt01 = $this->generateVcardPdoPrepStmt['stmt01'];
 
                                 $memberCardUID = null;
 
                                 try {
-                                    $query = 'SELECT card_uid FROM ' . self::$backendMapTableName . ' WHERE addressbook_id = ? and backend_id = ? and user_id = ? AND delete_sync_token IS NULL';
-                                    $stmt = $this->pdo->prepare($query);
-                                    $stmt->execute([$addressBookId, $memberData[0]['entryuuid'][0], $syncDbUserId]);
-                                    
-                                    $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+                                    $stmt01->execute([$addressBookId, $memberData[0]['entryuuid'][0], $syncDbUserId]);
+                                    $row = $stmt01->fetch(\PDO::FETCH_ASSOC);
                                     
 																		if($row !== false)
                                     	$memberCardUID = $row['card_uid'];
@@ -1262,7 +1560,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                     }
                 }
             }
-            else if($compositeAttrStatus['status'] && !$iterativeArr)  
+            elseif($compositeAttrStatus['status'] && !$iterativeArr)  
             {
                 if(!is_array($ldapKey['field_name']) && isset($ldapKey['map_component_separator']))
                 {
@@ -1383,7 +1681,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
                     }  
                 }                  
             }
-            else if($iterativeArr)
+            elseif($iterativeArr)
             {
                 foreach($ldapKey as $ldapKeyInfo)
                 {
@@ -1739,6 +2037,22 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
 				if($data === false)
 		    	throw new SabreDAVException\ServiceUnavailable();
+		    	
+				// Preparing PDO statements which are used inside a loop
+				try {
+					$query = 'SELECT delete_sync_token FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?';
+					$stmt01 = $this->pdo->prepare($query);
+					
+					$query = "UPDATE " . self::$backendMapTableName . " SET delete_sync_token = null, modify_sync_token = null, create_sync_token = ? WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?";
+					$stmt02 = $this->pdo->prepare($query);
+					
+					$query = "INSERT INTO " . self::$backendMapTableName . " (user_id, addressbook_id, card_uri, card_uid, backend_id, create_sync_token)  VALUES (?, ?, ?, ?, ?, ?)";
+					$stmt03 = $this->pdo->prepare($query);
+				}
+				catch (\Throwable $th) {
+					trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
+					throw new SabreDAVException\ServiceUnavailable();
+				}
 
 				while($data = Utility::LdapIterativeFetch($ldapConn, $data['entryIns'], $data['fetchFirst']))
 				{
@@ -1752,27 +2066,20 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					$cardUri = null;
 					
 					try {
-						$query = 'SELECT delete_sync_token FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?';
-						$stmt = $this->pdo->prepare($query);
-						$stmt->execute([$syncDbUserId, $addressBookId, $backendId]);
-
-						$row = $stmt->fetch(\PDO::FETCH_ASSOC);
+						$stmt01->execute([$syncDbUserId, $addressBookId, $backendId]);
+						$row = $stmt01->fetch(\PDO::FETCH_ASSOC);
 						
 						if($row !== false) {
 							// Updating the card as new which was earlier marked as deleted.
 							if($row['delete_sync_token'] !== null && $row['delete_sync_token'] !== '') {
-								$query = "UPDATE " . self::$backendMapTableName . " SET delete_sync_token = null, modify_sync_token = null, create_sync_token = ? WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?";
-								$sql = $this->pdo->prepare($query);
-								$sql->execute([time(), $syncDbUserId, $addressBookId, $backendId]);
+								$stmt02->execute([time(), $syncDbUserId, $addressBookId, $backendId]);
 							}
 						}
 						else {
-							$cardUid = $this->guidv4();
+							$cardUid = \Sabre\DAV\UUIDUtil::getUUID();
 							$cardUri = $cardUid .'.vcf';
 									
-							$query = "INSERT INTO " . self::$backendMapTableName . " (user_id, addressbook_id, card_uri, card_uid, backend_id, create_sync_token)  VALUES (?, ?, ?, ?, ?, ?)";
-							$sql = $this->pdo->prepare($query);
-							$sql->execute([$syncDbUserId, $addressBookId, $cardUri, $cardUid, $backendId, time()]);
+							$stmt03->execute([$syncDbUserId, $addressBookId, $cardUri, $cardUid, $backendId, time()]);
 						}
 					} catch (\Throwable $th) {
 						trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
@@ -1786,6 +2093,22 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				if($data === false)
 					throw new SabreDAVException\ServiceUnavailable();
 					
+				// Preparing PDO statements which are used inside a loop
+				try {
+					$query = 'SELECT card_uri, delete_sync_token FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?';
+					$stmt01 = $this->pdo->prepare($query);
+					
+					$query = "UPDATE " . self::$backendMapTableName . " SET delete_sync_token = null, modify_sync_token = null, create_sync_token = ? WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?";
+					$stmt02 = $this->pdo->prepare($query);
+					
+					$query = "INSERT INTO " . self::$backendMapTableName . " (user_id, addressbook_id, card_uri, card_uid, backend_id, create_sync_token)  VALUES (?, ?, ?, ?, ?, ?)";
+					$stmt03 = $this->pdo->prepare($query);
+				}
+				catch (\Throwable $th) {
+					trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
+					throw new SabreDAVException\ServiceUnavailable();
+				}
+					
 				while($data = Utility::LdapIterativeFetch($ldapConn, $data['entryIns'], $data['fetchFirst']))
 				{
 					if(!isset($data['data']['entryUUID'][0]) || !isset($data['data']['modifyTimestamp'][0]))
@@ -1798,32 +2121,23 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					$cardUri = null;
 					
 					try {
-						$query = 'SELECT card_uri, delete_sync_token FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?';
-						$stmt = $this->pdo->prepare($query);
-						$stmt->execute([$syncDbUserId, $addressBookId, $backendId]);
-
-						$row = $stmt->fetch(\PDO::FETCH_ASSOC);
+						$stmt01->execute([$syncDbUserId, $addressBookId, $backendId]);
+						$row = $stmt01->fetch(\PDO::FETCH_ASSOC);
 						
 						if($row !== false) {
 							// Updating the card as new which was earlier marked as deleted.
 							if($row['delete_sync_token'] !== null && $row['delete_sync_token'] !== '') {
-								$query = "UPDATE " . self::$backendMapTableName . " SET delete_sync_token = null, modify_sync_token = null, create_sync_token = ? WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?";
-								$sql = $this->pdo->prepare($query);
-								$sql->execute([time(), $syncDbUserId, $addressBookId, $backendId]);
-								
+								$stmt02->execute([time(), $syncDbUserId, $addressBookId, $backendId]);
 								continue;
 							}
 							
 							$cardUri = $row['card_uri'];
 						}
 						else {
-							$cardUid = $this->guidv4();
+							$cardUid = \Sabre\DAV\UUIDUtil::getUUID();
 							$cardUri = $cardUid .'.vcf';
 									
-							$query = "INSERT INTO " . self::$backendMapTableName . " (user_id, addressbook_id, card_uri, card_uid, backend_id, create_sync_token)  VALUES (?, ?, ?, ?, ?, ?)";
-							$sql = $this->pdo->prepare($query);
-							$sql->execute([$syncDbUserId, $addressBookId, $cardUri, $cardUid, $backendId, time()]);
-							
+							$stmt03->execute([$syncDbUserId, $addressBookId, $cardUri, $cardUid, $backendId, time()]);
 							continue;
 						}
 							
@@ -2072,14 +2386,47 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				  	throw new SabreDAVException\ServiceUnavailable();
 					}
         }
-        	
-				$backendContactsUriList = [];
         
+				$fullRefreshLockFile = __TMP_DIR__ . '/' . __APP_NAME__ . '_' . strtolower(md5(implode('/', [self::$fullRefreshTableName, $syncDbUserId, $addressBookId]))) . '_process.lock';
+				
+				if(file_exists($fullRefreshLockFile)) {
+					trigger_error("Full refresh of address book '$addressBookId' of sync database user '$syncDbUserId' is in progress in another local session. Client will be notified to retry after sometime. If this message continue to appear after a few retries by the client, the following local file may have to be manually removed - '$fullRefreshLockFile' and this may require the server process to be stopped.", E_USER_NOTICE);
+					throw new SabreDAVException\ServiceUnavailable("The server is currently processing a long running request in another session and cannot process this request at this time, kindly retry after sometime. If this issue persist after a few retries, contact the server administrator.");
+				}
+				
+				$fullRefreshLockFileHandle = fopen($fullRefreshLockFile, 'x');
+					
+				if($fullRefreshLockFileHandle === false)
+					throw new SabreDAVException\ServiceUnavailable();
+        	
 				$filter = '(&' . $addressBookConfig['filter'] . '(!(createtimestamp>=' . gmdate('YmdHis', $addressBookSyncToken) . 'Z)))';
 				$data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $filter, ['entryuuid', 'modifytimestamp'], strtolower($addressBookConfig['scope']));
         
-        if($data === false)
-         throw new SabreDAVException\ServiceUnavailable();
+        if($data === false) {
+					fclose($fullRefreshLockFileHandle);
+					unlink($fullRefreshLockFile);
+					throw new SabreDAVException\ServiceUnavailable();
+        }
+         
+				$backendContactsUriList = [];
+
+				// Preparing PDO statements which are used inside a loop
+				try {
+					$query = 'SELECT card_uri, card_uid, delete_sync_token FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?';
+					$stmt01 = $this->pdo->prepare($query);
+					
+					$query = "INSERT INTO " . self::$backendMapTableName . " (user_id, addressbook_id, card_uri, card_uid, backend_id, create_sync_token)  VALUES (?, ?, ?, ?, ?, ?)";
+					$stmt02 = $this->pdo->prepare($query);
+					
+					$query = "UPDATE " . self::$backendMapTableName . " SET delete_sync_token = null, modify_sync_token = null, create_sync_token = ? WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?";
+					$stmt03 = $this->pdo->prepare($query);
+				}
+				catch (\Throwable $th) {
+					trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
+					fclose($fullRefreshLockFileHandle);
+					unlink($fullRefreshLockFile);
+					throw new SabreDAVException\ServiceUnavailable();
+				}
         
         try 
         {
@@ -2088,6 +2435,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						if(!isset($data['data']['entryUUID'][0]) || !isset($data['data']['modifyTimestamp'][0]))
 						{
 							trigger_error("Read access to required operational attributes in LDAP not present.", E_USER_WARNING);
+							fclose($fullRefreshLockFileHandle);
+							unlink($fullRefreshLockFile);
         			throw new SabreDAVException\ServiceUnavailable();
 						}
 						
@@ -2096,19 +2445,14 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						$cardUid = null;
             $cardUri = null;
           
-						$query = 'SELECT card_uri, card_uid, delete_sync_token FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?';
-						$stmt = $this->pdo->prepare($query);
-						$stmt->execute([$syncDbUserId, $addressBookId, $backendId]);
-
-						$row = $stmt->fetch(\PDO::FETCH_ASSOC);
+						$stmt01->execute([$syncDbUserId, $addressBookId, $backendId]);
+						$row = $stmt01->fetch(\PDO::FETCH_ASSOC);
 						
 						if($row === false) {
-							$cardUid = $this->guidv4();
+							$cardUid = \Sabre\DAV\UUIDUtil::getUUID();
 							$cardUri = $cardUid .'.vcf';
 									
-							$query = "INSERT INTO " . self::$backendMapTableName . " (user_id, addressbook_id, card_uri, card_uid, backend_id, create_sync_token)  VALUES (?, ?, ?, ?, ?, ?)";
-							$sql = $this->pdo->prepare($query);
-							$sql->execute([$syncDbUserId, $addressBookId, $cardUri, $cardUid, $backendId, time()]);
+							$stmt02->execute([$syncDbUserId, $addressBookId, $cardUri, $cardUid, $backendId, time()]);
 						}
 						else {
 							$cardUid = $row['card_uid'];
@@ -2116,9 +2460,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 								
 							// Updating the card as new which was earlier marked as deleted.
 							if($row['delete_sync_token'] !== null && $row['delete_sync_token'] !== '') {
-								$query = "UPDATE " . self::$backendMapTableName . " SET delete_sync_token = null, modify_sync_token = null, create_sync_token = ? WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?";
-								$sql = $this->pdo->prepare($query);
-								$sql->execute([time(), $syncDbUserId, $addressBookId, $backendId]);
+								$stmt03->execute([time(), $syncDbUserId, $addressBookId, $backendId]);
 							}
 							else {
 								$cardValues = $this->cache->get(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null);
@@ -2136,7 +2478,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						  }
 						}
             
-            $backendContactsUriList[] = $cardUri;
+            $backendContactsUriList[$cardUri] = 1;
 						$contacts[] = [
 							'card_uri' => $cardUri,
 							'card_uid' => $cardUid,
@@ -2153,19 +2495,21 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					while($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
 						$mappedContactUri = $row['card_uri'];
 
-						if(!in_array($mappedContactUri, $backendContactsUriList)) {
-							if(!$this->cache->delete(self::getCacheKey($syncDbUserId, $addressBookId, $mappedContactUri)))
-				    		trigger_error("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore this error.", E_USER_NOTICE);
-				    		
-		          $this->addChange($addressBookId, $mappedContactUri);
-						}
+						if(isset($backendContactsUriList[$mappedContactUri]))
+							continue;
+						
+						if(!$this->cache->delete(self::getCacheKey($syncDbUserId, $addressBookId, $mappedContactUri)))
+				  		trigger_error("There was an issue with deleting cache. If there is no prior error message or if the error message complains about cache not found, you may ignore this error.", E_USER_NOTICE);
+				  		
+		        $this->addChange($addressBookId, $mappedContactUri);
 					}
-
         } catch (\Throwable $th) {
 					trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
+					fclose($fullRefreshLockFileHandle);
+					unlink($fullRefreshLockFile);
 					throw new SabreDAVException\ServiceUnavailable();
         }
-        
+
         try {
 					$query = "UPDATE " . self::$fullRefreshTableName . " SET sync_token = ? WHERE user_id = ? AND addressbook_id = ?"; 
 					$sql = $this->pdo->prepare($query);
@@ -2181,21 +2525,16 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 				}
 
+				fclose($fullRefreshLockFileHandle);
+				unlink($fullRefreshLockFile);
         return $contacts;
     }
 
-    function guidv4($data = null) {
-        // Generate 16 bytes (128 bits) of random data or use the data passed into the function.
-        $data = $data ?? random_bytes(16);
-        assert(strlen($data) == 16);
-    
-        // Set version to 0100
-        $data[6] = chr(ord($data[6]) & 0x0f | 0x40);
-        // Set bits 6-7 to 10
-        $data[8] = chr(ord($data[8]) & 0x3f | 0x80);
-    
-        // Output the 36 character UUID.
-        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
+    function isAddressbookUserSpecific($addressBookId)
+    {
+			$addressBookConfig = $this->addressbook[$addressBookId]['config'];
+			
+			return $addressBookConfig['user_specific'];
     }
     
     function isAddressbookWritable($addressBookId)
@@ -2222,12 +2561,24 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
       $syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
 			$forceInitialSyncInterval = (isset($addressBookConfig['force_full_sync_interval']) && is_int($addressBookConfig['force_full_sync_interval']) && $addressBookConfig['force_full_sync_interval'] > 0)?$addressBookConfig['force_full_sync_interval']:self::$defaultForceFullSyncInterval;
 			
-			try {
+			if(!isset($this->housekeepingPdoPrepStmt['stmt01'])) {
+				// Preparing PDO statements which are used either inside a loop or part of a function 
+				// which is called repeatedly during processing of the request
+				try {
 					$query = 'SELECT sync_token FROM ' . self::$backendSyncTableName . ' WHERE addressbook_id = ? AND user_id = ?';
-					$stmt = $this->pdo->prepare($query);
-					$stmt->execute([$addressBookId, $syncDbUserId]);
-					
-					$row = $stmt->fetch(\PDO::FETCH_ASSOC);
+					$this->housekeepingPdoPrepStmt['stmt01'] = $this->pdo->prepare($query);
+				}
+				catch (\Throwable $th) {
+					trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
+					throw new SabreDAVException\ServiceUnavailable();
+				}
+			}
+			
+			$stmt01 = $this->housekeepingPdoPrepStmt['stmt01'];
+			
+			try {
+					$stmt01->execute([$addressBookId, $syncDbUserId]);
+					$row = $stmt01->fetch(\PDO::FETCH_ASSOC);
 					
 					if($row === false)
 					{
@@ -2240,14 +2591,26 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 			}
 
+			if(!isset($this->housekeepingPdoPrepStmt['stmt02'])) {
+				// Preparing PDO statements which are used either inside a loop or part of a function 
+				// which is called repeatedly during processing of the request
+				try {
+					$query = 'SELECT sync_token FROM ' . self::$fullSyncTableName . ' WHERE addressbook_id = ? AND user_id = ?';
+					$this->housekeepingPdoPrepStmt['stmt02'] = $this->pdo->prepare($query);
+				}
+				catch (\Throwable $th) {
+					trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
+					throw new SabreDAVException\ServiceUnavailable();
+				}
+			}
+			
+			$stmt02 = $this->housekeepingPdoPrepStmt['stmt02'];
+			
 			$fullSyncToken = null;
 			
 			try {
-					$query = 'SELECT sync_token FROM ' . self::$fullSyncTableName . ' WHERE addressbook_id = ? AND user_id = ?';
-					$stmt = $this->pdo->prepare($query);
-					$stmt->execute([$addressBookId, $syncDbUserId]);
-					
-					$row = $stmt->fetch(\PDO::FETCH_ASSOC);
+					$stmt02->execute([$addressBookId, $syncDbUserId]);
+					$row = $stmt02->fetch(\PDO::FETCH_ASSOC);
 					
 					if($row !== false)
 						$fullSyncToken = (int)$row['sync_token'];
