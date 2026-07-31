@@ -28,7 +28,7 @@
 *********************************************************************************/
 
 // Initialize
-require_once __DIR__ . '/../src/App/include/bootstrap.php';
+require_once __DIR__ . '/src/App/include/bootstrap.php';
 
 // Loader
 require_once __BASE_DIR__ . '/vendor/autoload.php';

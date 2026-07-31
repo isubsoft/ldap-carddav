@@ -56,7 +56,7 @@ $config = [];
 // If you have configured clean URLs in your HTTP server configuration then, uncomment the below and update
 // if required.
 // Defaults to '/server.php'.
-$config['app']['base_uri'] = '/';
+//  $config['app']['base_uri'] = '/';
 
 // Set application environment. If set to 'prod' certain application features are turned off which are not suitable
 // or unsafe for a production environment.
