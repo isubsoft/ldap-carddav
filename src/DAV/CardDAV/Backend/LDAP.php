@@ -1540,7 +1540,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
             
             $multiAllowedStatus = Reader::multiAllowedStatus($vCardKey);
             $compositeAttrStatus = Reader::compositeAttrStatus($vCardKey);
-            $iterativeArr = Utility::isMultidimensional($ldapKey);
+            $iterativeArr = Utility::isListOfArray($ldapKey);
 
             if($multiAllowedStatus['status'] && !$compositeAttrStatus['status'] && !$iterativeArr)
             {
