@@ -41,7 +41,7 @@ class LDAP {
     {
         $compositeAttrStatus = Reader::compositeAttrStatus($vCardAttr);
 
-        $iterativeArr = Utility::isMultidimensional($mappLdapConfig);
+        $iterativeArr = Utility::isListOfArray($mappLdapConfig);
         $vCardParams = Utility::getVCardAttrParams($vObj, Reader::getDefaultParams($vCardAttr));
         $vCardParamListsMatch = self::isVcardParamsMatch($mappLdapConfig, $vCardParams, $iterativeArr);
         
@@ -87,9 +87,9 @@ class LDAP {
             		
             		if(isset($ldapKeyInfo['parameters']))
             		{
-									if(!Utility::isMultidimensional($ldapKeyInfo['parameters'], true) && is_array($ldapKeyInfo['parameters']))
+									if(!Utility::isListOfArray($ldapKeyInfo['parameters'], true) && is_array($ldapKeyInfo['parameters']))
 										$fieldmapParams = [$ldapKeyInfo['parameters']];
-									elseif(Utility::isMultidimensional($ldapKeyInfo['parameters'], true))
+									elseif(Utility::isListOfArray($ldapKeyInfo['parameters'], true))
 										$fieldmapParams = $ldapKeyInfo['parameters'];
             		}
 
@@ -144,7 +144,7 @@ class LDAP {
 
             foreach($ldapKey as $Index => $ldapKeyInfo)
             {
-                if(isset($ldapKeyInfo['parameters']) && Utility::isMultidimensional($ldapKeyInfo['parameters'], true) && in_array(null, $ldapKeyInfo['parameters']))
+                if(isset($ldapKeyInfo['parameters']) && Utility::isListOfArray($ldapKeyInfo['parameters'], true) && in_array(null, $ldapKeyInfo['parameters']))
                 {                           
                     return (['status' => true, 'configIndex' => $Index ]);
                 }
@@ -156,9 +156,9 @@ class LDAP {
 		  		
 		  		if(isset($ldapKey['parameters']))
 		  		{
-						if(!Utility::isMultidimensional($ldapKey['parameters'], true) && is_array($ldapKey['parameters']))
+						if(!Utility::isListOfArray($ldapKey['parameters'], true) && is_array($ldapKey['parameters']))
 							$fieldmapParams = [$ldapKey['parameters']];
-						elseif(Utility::isMultidimensional($ldapKey['parameters'], true))
+						elseif(Utility::isListOfArray($ldapKey['parameters'], true))
 							$fieldmapParams = $ldapKey['parameters'];
 		  		}    
 
