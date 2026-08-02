@@ -232,7 +232,7 @@ elseif(isset($argv[1]) && $argv[1] == 'housekeeping')
 			
 	if((int)$batchSize < 1) {
 		error_log("[ERROR] Invalid batch size provided. Cannot continue. Quitting.");
-		print_help($argv);
+		error_log("Check help information using: " . $argv[0] . " help");
 		exit(1);
 	}
 			
