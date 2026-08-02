@@ -2089,19 +2089,19 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				$uaValues['initial_sync_response_code'] = 400;
 			
 			// Invalid sync token
-			if($syncToken != null && (!settype($syncToken, 'integer') || $syncToken >= $addressBookSyncToken))
+			if($syncToken != null && (int)$syncToken >= $addressBookSyncToken)
 			{
 				if($uaValues['initial_sync_response_code'] != null)
-					throw Utility::responseCodeException($uaValues['initial_sync_response_code'], 'Sync token is invalid (response workaround applied for user agent id - ' . $uaValues['id'] . ')');
+					throw Utility::responseCodeException($uaValues['initial_sync_response_code'], 'Invalid or unknown sync token (response workaround applied for user agent id - ' . $uaValues['id'] . ')');
 				
 				return null;
 			}
 			
 			// Sync token expiry
-			if(settype($syncToken, 'integer') && $fullSyncToken != null && $syncToken < $fullSyncToken)
+			if($fullSyncToken != null && (int)$syncToken < $fullSyncToken)
 			{
 				if($uaValues['initial_sync_response_code'] != null)
-					throw Utility::responseCodeException($uaValues['initial_sync_response_code'], 'Sync token has expired (response workaround applied for user agent id - ' . $uaValues['id'] . ')');
+					throw Utility::responseCodeException($uaValues['initial_sync_response_code'], 'Invalid or unknown sync token (response workaround applied for user agent id - ' . $uaValues['id'] . ')');
 					
 				return null;
 			}
