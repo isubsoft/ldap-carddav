@@ -53,8 +53,8 @@ $config = [];
 //  $config['app']['log_level'] = E_ERROR | E_USER_WARNING;
 
 // Base URI for this application.
-// If you have configured clean URLs in your HTTP server configuration then, uncomment the below and update
-// if required.
+// To access the server http://hostname/BASE_URI need to used as the URL.
+// Uncomment the below and update as required to configure clean URLs.
 // Defaults to '/server.php'.
 //  $config['app']['base_uri'] = '/';
 
