@@ -237,10 +237,11 @@ $config['principal']['ldap'] = [
   //
   // If multiple values for an attribute are returned from LDAP where maximum cardinality is 1
   // then only the first value is used.
-  'fieldmap' => [  'id' => 'uid',
+  'fieldmap' => [  
+                  'id'           => 'uid',
                   'display_name' => 'cn',
                   'mail_primary' => 'mail',
-                  'mail' => 'mail'
+                  'mail'         => 'mail'
                 ]
 ];
 
@@ -257,7 +258,7 @@ $config['card']['addressbook']['ldap']['me'] = [
                               // and username placeholder can be used in applicable places. This is a 
                               // mandatory setting and must be explicitly set strictly to a boolean value.
                               
-  'writable'          => true, // If true (default) then contacts can be created, updated, renamed and 
+  'writable'        => true, // If true (default) then contacts can be created, updated, renamed and 
                               // deleted in the address book.
                               
   // For writable address books creation or deletion of contacts can be denied using the below.
@@ -314,15 +315,15 @@ $config['card']['addressbook']['ldap']['me'] = [
   //  'sync_bind_dn'       => 'cn=carddavsync,ou=People,dc=example,dc=org',
   //  'sync_bind_pw'       => '<secret>',
   
-  'scope'         => 'base',   // Scope of search for contacts
+  'scope'           => 'base',   // Scope of search for contacts
                                //  sub: Subtree
                                // list: Immediate children
                                // base: Match base DN only
   
   // It's possible to find the base of an address book DN from a search result. Useful only if the address book is user specific.
-  'search_base_dn' => 'ou=People,dc=example,dc=org',
-  'search_filter'  => '(&(objectClass=inetOrgPerson)(uid=%u))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
-  'search_scope'   => 'list',  // Scope of search
+  'search_base_dn'  => 'ou=People,dc=example,dc=org',
+  'search_filter'   => '(&(objectClass=inetOrgPerson)(uid=%u))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
+  'search_scope'    => 'list',  // Scope of search
                                //  sub: Subtree
                                // list: Immediate children
                                // base: Match base DN only
@@ -360,19 +361,19 @@ $config['card']['addressbook']['ldap']['me'] = [
   // vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only.
   //
   // Currently only 'TYPE' vCard parameter match is supported.
-  'fieldmap'      => [
+  'fieldmap' => [
     'FN'            => ['field_name' => 'cn'],
 
-    'N'              => ['field_name' => [
+    'N'             => ['field_name' => [
                                           'last_name'   => 'sn', 
-                                          'first_name'   => 'givenName'
+                                          'first_name'  => 'givenName'
                                         ]
                        ],
 
     'EMAIL'         => ['field_name' => 'mail'],
 
     'ORG'           => ['field_name' => [
-                                          'org_name'       => 'o', 
+                                          'org_name'      => 'o', 
                                           'org_unit_name' => 'ou'
                                         ]
                        ],
@@ -383,61 +384,61 @@ $config['card']['addressbook']['ldap']['me'] = [
 
     'NICKNAME'      => ['field_name' => 'displayName'],
 
-    'PHOTO'         =>   [
-                          // Mapping profile picture
-                          [
-                            'field_name' => 'jpegPhoto',
-                            'field_data_format' => 'binary',
-                            'field_data_mediatype' => ['image/jpeg', 'image/png'], // List of mediatype which a 
-                                                                                   // binary backend field will accept
-                          ]
+    'PHOTO'         => [
+                         // Mapping profile picture
+                         [
+                           'field_name'           => 'jpegPhoto',
+                           'field_data_format'    => 'binary',
+                           'field_data_mediatype' => ['image/jpeg', 'image/png'], // List of mediatype which a 
+                                                                                  // binary backend field will accept
+                         ]
+                       ],
+
+    'NOTE'          => ['field_name' => 'description'],
+
+    'TEL'           => [
+                         // Mapping pager number
+                         [  
+                           'field_name' => 'pager',
+                           'parameters' => ['TYPE' => 'pager']
                          ],
-
-    'NOTE'          =>   ['field_name' => 'description'],
-
-    'TEL'            =>   [
-                          // Mapping pager number
-                          [  
-                            'field_name' => 'pager',
-                            'parameters' => ['TYPE' => 'pager']
-                          ],
-                          
-                          // Mapping fax number
-                          [
-                            'field_name' => 'facsimileTelephoneNumber',
-                            'parameters' => [
-                                              ['TYPE' => ['fax', 'work']],
-                                              ['TYPE' => 'fax'],
-                                            ],
-                          ],
-                          
-                          // Mapping mobile number
-                          [
-                            'field_name' => 'mobile',
-                            'parameters' => ['TYPE' => 'cell']
-                          ],
-                          
-                          // Mapping home telephone number
-                          [
-                            'field_name' => 'homePhone',
-                            'parameters' => [ 
-                                              ['TYPE' => 'home'],
-                                              ['TYPE' => 'home', 'PREF' => '1']
-                                            ],
-                            'reverse_map_parameter_index' => 1
-                          ],
-                          
-                          // Mapping work telephone number
-                          [  
-                            'field_name' => 'telephoneNumber',
-                            'parameters' => [ 
-                                              ['TYPE' => 'work'],
-                                              ['TYPE' => 'work', 'PREF' => '1'],
-                                              null
-                                            ],
-                            'reverse_map_parameter_index' => 1
-                          ],
-                     ],
+                         
+                         // Mapping fax number
+                         [
+                           'field_name' => 'facsimileTelephoneNumber',
+                           'parameters' => [
+                                             ['TYPE' => ['fax', 'work']],
+                                             ['TYPE' => 'fax'],
+                                           ],
+                         ],
+                         
+                         // Mapping mobile number
+                         [
+                           'field_name' => 'mobile',
+                           'parameters' => ['TYPE' => 'cell']
+                         ],
+                         
+                         // Mapping home telephone number
+                         [
+                           'field_name' => 'homePhone',
+                           'parameters' => [ 
+                                             ['TYPE' => 'home'],
+                                             ['TYPE' => 'home', 'PREF' => '1']
+                                           ],
+                           'reverse_map_parameter_index' => 1
+                         ],
+                         
+                         // Mapping work telephone number
+                         [  
+                           'field_name' => 'telephoneNumber',
+                           'parameters' => [ 
+                                             ['TYPE' => 'work'],
+                                             ['TYPE' => 'work', 'PREF' => '1'],
+                                             null
+                                           ],
+                           'reverse_map_parameter_index' => 1
+                         ],
+                       ],
                      
       'ADR'         => [
                           // Mapping home postal address
@@ -458,9 +459,9 @@ $config['card']['addressbook']['ldap']['me'] = [
                           [
                              'field_name' => [
                                                'po_box'      => 'postOfficeBox',
-                                               'street'       => 'street',
-                                               'locality'     => 'l',
-                                               'province'     => 'st', 
+                                               'street'      => 'street',
+                                               'locality'    => 'l',
+                                               'province'    => 'st', 
                                                'postal_code' => 'postalCode'
                                              ],
                             'parameters' => ['TYPE' => 'work']
@@ -486,7 +487,7 @@ $config['card']['addressbook']['ldap']['me'] = [
   //                        ],
   
   // Backend field which points to the contact which is member of this contact group  
-  'group_member_map'          => [ 'MEMBER'      => [ 'field_name' => 'member' ] ],
+  'group_member_map'          => ['MEMBER' => ['field_name' => 'member']],
   
   // vCard    => LDAP field map
   //
@@ -496,11 +497,11 @@ $config['card']['addressbook']['ldap']['me'] = [
   // names of the components of a composite value.
   //
   // vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only.
-  'group_fieldmap'            => [     
-     'FN'          => [  'field_name' => 'cn'],
+  'group_fieldmap' => [
+    'FN'   => ['field_name' => 'cn'],
      
-     'NOTE'        => [  'field_name' => 'description']
-   ]
+    'NOTE' => ['field_name' => 'description']
+  ]
 ];
 
 
@@ -619,19 +620,19 @@ $config['card']['addressbook']['ldap']['global'] = [
   // vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only.
   //
   // Currently only 'TYPE' vCard parameter match is supported.
-  'fieldmap'      => [
+  'fieldmap' => [
     'FN'            => ['field_name' => 'cn'],
 
-    'N'              => ['field_name' => [
+    'N'             => ['field_name' => [
                                           'last_name'   => 'sn', 
-                                          'first_name'   => 'givenName'
+                                          'first_name'  => 'givenName'
                                         ]
                        ],
 
     'EMAIL'         => ['field_name' => 'mail'],
 
     'ORG'           => ['field_name' => [
-                                          'org_name'       => 'o', 
+                                          'org_name'      => 'o', 
                                           'org_unit_name' => 'ou'
                                         ]
                        ],
@@ -642,61 +643,61 @@ $config['card']['addressbook']['ldap']['global'] = [
 
     'NICKNAME'      => ['field_name' => 'displayName'],
 
-    'PHOTO'         =>   [
-                          // Mapping profile picture
-                          [
-                            'field_name' => 'jpegPhoto',
-                            'field_data_format' => 'binary',
-                            'field_data_mediatype' => ['image/jpeg', 'image/png'], // List of mediatype which a 
-                                                                                   // binary backend field will accept
-                          ]
+    'PHOTO'         => [
+                         // Mapping profile picture
+                         [
+                           'field_name'           => 'jpegPhoto',
+                           'field_data_format'    => 'binary',
+                           'field_data_mediatype' => ['image/jpeg', 'image/png'], // List of mediatype which a 
+                                                                                  // binary backend field will accept
+                         ]
+                       ],
+
+    'NOTE'          => ['field_name' => 'description'],
+
+    'TEL'           => [
+                         // Mapping pager number
+                         [  
+                           'field_name' => 'pager',
+                           'parameters' => ['TYPE' => 'pager']
                          ],
-
-    'NOTE'          =>   ['field_name' => 'description'],
-
-    'TEL'            =>   [
-                          // Mapping pager number
-                          [  
-                            'field_name' => 'pager',
-                            'parameters' => ['TYPE' => 'pager']
-                          ],
-                          
-                          // Mapping fax number
-                          [
-                            'field_name' => 'facsimileTelephoneNumber',
-                            'parameters' => [
-                                              ['TYPE' => ['fax', 'work']],
-                                              ['TYPE' => 'fax'],
-                                            ],
-                          ],
-                          
-                          // Mapping mobile number
-                          [
-                            'field_name' => 'mobile',
-                            'parameters' => ['TYPE' => 'cell']
-                          ],
-                          
-                          // Mapping home telephone number
-                          [
-                            'field_name' => 'homePhone',
-                            'parameters' => [ 
-                                              ['TYPE' => 'home'],
-                                              ['TYPE' => 'home', 'PREF' => '1']
-                                            ],
-                            'reverse_map_parameter_index' => 1
-                          ],
-                          
-                          // Mapping work telephone number
-                          [  
-                            'field_name' => 'telephoneNumber',
-                            'parameters' => [ 
-                                              ['TYPE' => 'work'],
-                                              ['TYPE' => 'work', 'PREF' => '1'],
-                                              null
-                                            ],
-                            'reverse_map_parameter_index' => 1
-                          ],
-                     ],
+                         
+                         // Mapping fax number
+                         [
+                           'field_name' => 'facsimileTelephoneNumber',
+                           'parameters' => [
+                                             ['TYPE' => ['fax', 'work']],
+                                             ['TYPE' => 'fax'],
+                                           ],
+                         ],
+                         
+                         // Mapping mobile number
+                         [
+                           'field_name' => 'mobile',
+                           'parameters' => ['TYPE' => 'cell']
+                         ],
+                         
+                         // Mapping home telephone number
+                         [
+                           'field_name' => 'homePhone',
+                           'parameters' => [ 
+                                             ['TYPE' => 'home'],
+                                             ['TYPE' => 'home', 'PREF' => '1']
+                                           ],
+                           'reverse_map_parameter_index' => 1
+                         ],
+                         
+                         // Mapping work telephone number
+                         [  
+                           'field_name' => 'telephoneNumber',
+                           'parameters' => [ 
+                                             ['TYPE' => 'work'],
+                                             ['TYPE' => 'work', 'PREF' => '1'],
+                                             null
+                                           ],
+                           'reverse_map_parameter_index' => 1
+                         ],
+                       ],
                      
       'ADR'         => [
                           // Mapping home postal address
@@ -717,9 +718,9 @@ $config['card']['addressbook']['ldap']['global'] = [
                           [
                              'field_name' => [
                                                'po_box'      => 'postOfficeBox',
-                                               'street'       => 'street',
-                                               'locality'     => 'l',
-                                               'province'     => 'st', 
+                                               'street'      => 'street',
+                                               'locality'    => 'l',
+                                               'province'    => 'st', 
                                                'postal_code' => 'postalCode'
                                              ],
                             'parameters' => ['TYPE' => 'work']
@@ -745,7 +746,7 @@ $config['card']['addressbook']['ldap']['global'] = [
   //                        ],
   
   // Backend field which points to the contact which is member of this contact group  
-  'group_member_map'          => [ 'MEMBER'      => [ 'field_name' => 'member' ] ],
+  'group_member_map'          => ['MEMBER' => ['field_name' => 'member']],
   
   // vCard    => LDAP field map
   //
@@ -755,11 +756,11 @@ $config['card']['addressbook']['ldap']['global'] = [
   // names of the components of a composite value.
   //
   // vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only.
-  'group_fieldmap'            => [     
-     'FN'          => [  'field_name' => 'cn'],
+  'group_fieldmap' => [
+    'FN'   => ['field_name' => 'cn'],
      
-     'NOTE'        => [  'field_name' => 'description']
-   ]
+    'NOTE' => ['field_name' => 'description']
+  ]
 ];
 
 
@@ -878,19 +879,19 @@ $config['card']['addressbook']['ldap']['personal'] = [
   // vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only.
   //
   // Currently only 'TYPE' vCard parameter match is supported.
-  'fieldmap'      => [
+  'fieldmap' => [
     'FN'            => ['field_name' => 'cn'],
 
-    'N'              => ['field_name' => [
+    'N'             => ['field_name' => [
                                           'last_name'   => 'sn', 
-                                          'first_name'   => 'givenName'
+                                          'first_name'  => 'givenName'
                                         ]
                        ],
 
     'EMAIL'         => ['field_name' => 'mail'],
 
     'ORG'           => ['field_name' => [
-                                          'org_name'       => 'o', 
+                                          'org_name'      => 'o', 
                                           'org_unit_name' => 'ou'
                                         ]
                        ],
@@ -901,61 +902,61 @@ $config['card']['addressbook']['ldap']['personal'] = [
 
     'NICKNAME'      => ['field_name' => 'displayName'],
 
-    'PHOTO'         =>   [
-                          // Mapping profile picture
-                          [
-                            'field_name' => 'jpegPhoto',
-                            'field_data_format' => 'binary',
-                            'field_data_mediatype' => ['image/jpeg', 'image/png'], // List of mediatype which a 
-                                                                                   // binary backend field will accept
-                          ]
+    'PHOTO'         => [
+                         // Mapping profile picture
+                         [
+                           'field_name'           => 'jpegPhoto',
+                           'field_data_format'    => 'binary',
+                           'field_data_mediatype' => ['image/jpeg', 'image/png'], // List of mediatype which a 
+                                                                                  // binary backend field will accept
+                         ]
+                       ],
+
+    'NOTE'          => ['field_name' => 'description'],
+
+    'TEL'           => [
+                         // Mapping pager number
+                         [  
+                           'field_name' => 'pager',
+                           'parameters' => ['TYPE' => 'pager']
                          ],
-
-    'NOTE'          =>   ['field_name' => 'description'],
-
-    'TEL'            =>   [
-                          // Mapping pager number
-                          [  
-                            'field_name' => 'pager',
-                            'parameters' => ['TYPE' => 'pager']
-                          ],
-                          
-                          // Mapping fax number
-                          [
-                            'field_name' => 'facsimileTelephoneNumber',
-                            'parameters' => [
-                                              ['TYPE' => ['fax', 'work']],
-                                              ['TYPE' => 'fax'],
-                                            ],
-                          ],
-                          
-                          // Mapping mobile number
-                          [
-                            'field_name' => 'mobile',
-                            'parameters' => ['TYPE' => 'cell']
-                          ],
-                          
-                          // Mapping home telephone number
-                          [
-                            'field_name' => 'homePhone',
-                            'parameters' => [ 
-                                              ['TYPE' => 'home'],
-                                              ['TYPE' => 'home', 'PREF' => '1']
-                                            ],
-                            'reverse_map_parameter_index' => 1
-                          ],
-                          
-                          // Mapping work telephone number
-                          [  
-                            'field_name' => 'telephoneNumber',
-                            'parameters' => [ 
-                                              ['TYPE' => 'work'],
-                                              ['TYPE' => 'work', 'PREF' => '1'],
-                                              null
-                                            ],
-                            'reverse_map_parameter_index' => 1
-                          ],
-                     ],
+                         
+                         // Mapping fax number
+                         [
+                           'field_name' => 'facsimileTelephoneNumber',
+                           'parameters' => [
+                                             ['TYPE' => ['fax', 'work']],
+                                             ['TYPE' => 'fax'],
+                                           ],
+                         ],
+                         
+                         // Mapping mobile number
+                         [
+                           'field_name' => 'mobile',
+                           'parameters' => ['TYPE' => 'cell']
+                         ],
+                         
+                         // Mapping home telephone number
+                         [
+                           'field_name' => 'homePhone',
+                           'parameters' => [ 
+                                             ['TYPE' => 'home'],
+                                             ['TYPE' => 'home', 'PREF' => '1']
+                                           ],
+                           'reverse_map_parameter_index' => 1
+                         ],
+                         
+                         // Mapping work telephone number
+                         [  
+                           'field_name' => 'telephoneNumber',
+                           'parameters' => [ 
+                                             ['TYPE' => 'work'],
+                                             ['TYPE' => 'work', 'PREF' => '1'],
+                                             null
+                                           ],
+                           'reverse_map_parameter_index' => 1
+                         ],
+                       ],
                      
       'ADR'         => [
                           // Mapping home postal address
@@ -976,9 +977,9 @@ $config['card']['addressbook']['ldap']['personal'] = [
                           [
                              'field_name' => [
                                                'po_box'      => 'postOfficeBox',
-                                               'street'       => 'street',
-                                               'locality'     => 'l',
-                                               'province'     => 'st', 
+                                               'street'      => 'street',
+                                               'locality'    => 'l',
+                                               'province'    => 'st', 
                                                'postal_code' => 'postalCode'
                                              ],
                             'parameters' => ['TYPE' => 'work']
@@ -1004,7 +1005,7 @@ $config['card']['addressbook']['ldap']['personal'] = [
   //                        ],
   
   // Backend field which points to the contact which is member of this contact group  
-  'group_member_map'          => [ 'MEMBER'      => [ 'field_name' => 'member' ] ],
+  'group_member_map'          => ['MEMBER' => ['field_name' => 'member']],
   
   // vCard    => LDAP field map
   //
@@ -1014,9 +1015,9 @@ $config['card']['addressbook']['ldap']['personal'] = [
   // names of the components of a composite value.
   //
   // vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only.
-  'group_fieldmap'            => [     
-     'FN'          => [  'field_name' => 'cn'],
+  'group_fieldmap' => [
+    'FN'   => ['field_name' => 'cn'],
      
-     'NOTE'        => [  'field_name' => 'description']
-   ]
+    'NOTE' => ['field_name' => 'description']
+  ]
 ];
