@@ -741,7 +741,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		      }
 		      
 		      if($cardExists)
-						throw new SabreDAVException\BadRequest("Card with same identity exist");
+						throw new SabreDAVException\BadRequest("Card with same identity exist.");
         }
         
         if($operation == 'UPDATE')
@@ -761,7 +761,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		      }
 		      
 		      if(!$cardIdMatch)
-						throw new SabreDAVException\BadRequest("Card identity does not match");
+						throw new SabreDAVException\BadRequest("Card identity does not match.");
         }
         
         $isContactGroup = false;
