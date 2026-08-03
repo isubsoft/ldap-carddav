@@ -83,8 +83,8 @@ $config['sync_database'] = [
   'dsn' => 'sqlite:%datadir/sync/syncdb/sqlite/cards.db',
   'username' => '', // Defaults to null.
   'password' => '', // Defaults to null.
-  'options' => [], 	// Currently only PDO::ATTR_TIMEOUT and PDO::ATTR_PERSISTENT attribute(s) is accepted. 
-  									// Defaults to empty array.
+  'options' => [],   // Currently only PDO::ATTR_TIMEOUT and PDO::ATTR_PERSISTENT attribute(s) is accepted. 
+                    // Defaults to empty array.
 
   // Database specific statements to be executed before database is used 
   // by the application. Can be used to set some dynamic client side parameters for this application
@@ -101,25 +101,25 @@ $config['sync_database'] = [
   // sqlite: PRAGMA foreign_keys = ON
   // mysql: SET foreign_key_checks = ON
   'init_commands' => [
-  	// Example for pgsql
-  	//  'SET search_path TO <my_schema>'
+    // Example for pgsql
+    //  'SET search_path TO <my_schema>'
   ]
 ];
 
 
 // LDAP server configuration.
 $config['server']['ldap'] = [
-  'host'         				=> '<hostname>', // If not set then system default LDAP URI will be used.
-  // 'port'          			=> 389, // If not set then default ports for ldap and ldaps schemes will be used.
-  // 'ldap_version'  			=> 3, // If not set then LDAPv3 will be used. LDAPv2 or below are not supported.
-  'network_timeout' 		=> 10, // The timeout (in seconds) for connect + bind attempts. 
-  														 // This is only supported in PHP >= 5.3.0 with OpenLDAP 2.x
-  														 
+  'host'                 => '<hostname>', // If not set then system default LDAP URI will be used.
+  // 'port'                => 389, // If not set then default ports for ldap and ldaps schemes will be used.
+  // 'ldap_version'        => 3, // If not set then LDAPv3 will be used. LDAPv2 or below are not supported.
+  'network_timeout'     => 10, // The timeout (in seconds) for connect + bind attempts. 
+                               // This is only supported in PHP >= 5.3.0 with OpenLDAP 2.x
+                               
   // Make sure your LDAP client environment is setup correctly according to your system for using SSL/TLS certificate 
   // based connection security before enabling any secure options below.
-  'connection_security'	=> 'none' 	// none (default): No connection security will be established.
-  																	// secure: Secure (ldaps) protocol will be used to connect to the server.
-  																	// starttls: Starttls protocol will be used to connect to the server.
+  'connection_security'  => 'none'   // none (default): No connection security will be established.
+                                    // secure: Secure (ldaps) protocol will be used to connect to the server.
+                                    // starttls: Starttls protocol will be used to connect to the server.
 ];
 
 // Caching. Allowed backends are mentioned below.
@@ -237,27 +237,27 @@ $config['principal']['ldap'] = [
   //
   // If multiple values for an attribute are returned from LDAP where maximum cardinality is 1
   // then only the first value is used.
-  'fieldmap' => [	'id' => 'uid',
-  								'display_name' => 'cn',
-  								'mail_primary' => 'mail',
-  								'mail' => 'mail'
-  							]
+  'fieldmap' => [  'id' => 'uid',
+                  'display_name' => 'cn',
+                  'mail_primary' => 'mail',
+                  'mail' => 'mail'
+                ]
 ];
 
 
 // Address book.
 $config['card']['addressbook']['ldap']['me'] = [
-  'name'          	=> 'Me',
+  'name'            => 'Me',
   'description'     => 'My contact',
     
   // 'user_specific' and 'writable' values are used as initialization parameters for the sync database. 
   // Once the sync database has been initialized changing the values here to any conflicting values will 
   // lead to this application not processing requests for this address book.
-  'user_specific' 	=> true, // If this is true then address book will be treated as belonging to the user 
+  'user_specific'   => true, // If this is true then address book will be treated as belonging to the user 
                               // and username placeholder can be used in applicable places. This is a 
                               // mandatory setting and must be explicitly set strictly to a boolean value.
                               
-  'writable'     	 	=> true, // If true (default) then contacts can be created, updated, renamed and 
+  'writable'          => true, // If true (default) then contacts can be created, updated, renamed and 
                               // deleted in the address book.
                               
   // For writable address books creation or deletion of contacts can be denied using the below.
@@ -271,7 +271,7 @@ $config['card']['addressbook']['ldap']['me'] = [
   
   // Use this address book as a directory (i.e. for lookups only) for Apple devices
   // Defaults to false
-  //  'directory'				=> true,
+  //  'directory'        => true,
   
   // Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
   // of the address book from backend every time they sync their address book. Set the below to 
@@ -287,32 +287,32 @@ $config['card']['addressbook']['ldap']['me'] = [
   //  'force_full_sync_interval' => 86400,
   
   // Maximum size of a card (in bytes) which is accepted for create/update. Defaults to 16 KiB.
-  //  'max_size'				=> 16384,
+  //  'max_size'        => 16384,
   
   // The following placeholders are available to be used in 'base_dn' and 'search_filter' below as applicable.
   // %u  - Username of the user whose address book is being accessed.
   // %dn - DN as returned by LDAP search for address book DN.
   
-  'base_dn'       	=> '%dn', // Address book DN (used as base DN to search for contacts 
-  														// and as parent DN for new contacts).
+  'base_dn'         => '%dn', // Address book DN (used as base DN to search for contacts 
+                              // and as parent DN for new contacts).
   
   // LDAP filter to be used to search for contacts
-  'filter'        	=> '(objectClass=inetOrgPerson)',
+  'filter'          => '(objectClass=inetOrgPerson)',
   
   // Bind user to search/read/write contacts. If 'bind_dn' and 'bind_pass' values are not provided below 
   // and if this address book is marked as 'user_specific' then 'bind_dn' and 'bind_pass' values provided 
   // in $config['auth']['ldap'] will be used instead.
   // This bind user must have read access to entryUUID, createTimestamp and modifyTimestamp operational attributes 
   // of all contacts in the address book in addition to contact data.
-  'bind_dn'       	=> 'cn=admin,ou=People,dc=example,dc=org',
-  'bind_pass'     	=> '<secret>',
+  'bind_dn'         => 'cn=admin,ou=People,dc=example,dc=org',
+  'bind_pass'       => '<secret>',
   
   // Sync LDAP bind user can be used for contact searches if there are size or time limits on 'bind_dn' in LDAP.
   // Read and write of contact data will still be performed by 'bind_dn'. 'sync_bind_dn' should have liberal or 
   // no size or time limits and must have read access to entryUUID, createTimestamp and modifyTimestamp attribute 
   // of all contacts in the address book. Access to other contact attributes is not required by this user.
   //  'sync_bind_dn'       => 'cn=carddavsync,ou=People,dc=example,dc=org',
-  //  'sync_bind_pw'     	=> '<secret>',
+  //  'sync_bind_pw'       => '<secret>',
   
   'scope'         => 'base',   // Scope of search for contacts
                                //  sub: Subtree
@@ -339,16 +339,16 @@ $config['card']['addressbook']['ldap']['me'] = [
   // LDAP_Object_Classes, required_fields, LDAP_rdn
   'LDAP_Object_Classes' => ['inetOrgPerson'],
   'required_fields'     => ['cn', 'sn'],
-  'LDAP_rdn'      			=> 'uid',
+  'LDAP_rdn'            => 'uid',
 
   // Backend contact field acl. By default no access is denied to any backend field.
   // 'eval' can have following values
   // r (default) - Evaluate 'list' as read only fields
   // w           - Evaluate 'list' as writable fields, rest of the fields are treated as read only
-  'field_acl'     => 	[ 
-  											'eval' => 'w',
-  											'list' => ['displayName', 'homePhone', 'telephoneNumber', 'facsimileTelephoneNumber', 'pager', 'mobile', 'homePostalAddress', 'preferredLanguage']
-  										],
+  'field_acl'     =>   [ 
+                        'eval' => 'w',
+                        'list' => ['displayName', 'homePhone', 'telephoneNumber', 'facsimileTelephoneNumber', 'pager', 'mobile', 'homePostalAddress', 'preferredLanguage']
+                      ],
 
   // vCard    => LDAP field map
   //
@@ -363,108 +363,108 @@ $config['card']['addressbook']['ldap']['me'] = [
   'fieldmap'      => [
     'FN'            => ['field_name' => 'cn'],
 
-    'N'							=> ['field_name' => [
-    																			'last_name' 	=> 'sn', 
-    																			'first_name' 	=> 'givenName'
-    																		]
-    									 ],
+    'N'              => ['field_name' => [
+                                          'last_name'   => 'sn', 
+                                          'first_name'   => 'givenName'
+                                        ]
+                       ],
 
-  	'EMAIL'         => ['field_name' => 'mail'],
+    'EMAIL'         => ['field_name' => 'mail'],
 
-  	'ORG'         	=> ['field_name' => [
-  																				'org_name' 			=> 'o', 
-  																				'org_unit_name' => 'ou'
-  																			]
-  										 ],
+    'ORG'           => ['field_name' => [
+                                          'org_name'       => 'o', 
+                                          'org_unit_name' => 'ou'
+                                        ]
+                       ],
 
     'TITLE'         => ['field_name' => 'title'],
     
-    'ROLE'        	=> ['field_name' => 'employeeType'],
+    'ROLE'          => ['field_name' => 'employeeType'],
 
     'NICKNAME'      => ['field_name' => 'displayName'],
 
-  	'PHOTO'         => 	[
-    											// Mapping profile picture
-  												[
-  													'field_name' => 'jpegPhoto',
-  			                  	'field_data_format' => 'binary',
-  			                  	'field_data_mediatype' => ['image/jpeg', 'image/png'], // List of mediatype which a 
-  			                  																												 // binary backend field will accept
-  			                  ]
-                       	],
+    'PHOTO'         =>   [
+                          // Mapping profile picture
+                          [
+                            'field_name' => 'jpegPhoto',
+                            'field_data_format' => 'binary',
+                            'field_data_mediatype' => ['image/jpeg', 'image/png'], // List of mediatype which a 
+                                                                                   // binary backend field will accept
+                          ]
+                         ],
 
-    'NOTE'        	=> 	['field_name' => 'description'],
+    'NOTE'          =>   ['field_name' => 'description'],
 
-    'TEL'						=> 	[
-    											// Mapping pager number
-  			                  [	
-  			                  	'field_name' => 'pager',
-  					                'parameters' => ['TYPE' => 'pager']
-  			                  ],
-  			                  
-    											// Mapping fax number
-  	                      [
-  	                      	'field_name' => 'facsimileTelephoneNumber',
-  	                        'parameters' => [
-  	                        									['TYPE' => ['fax', 'work']],
-  	                        									['TYPE' => 'fax'],
-  	                        								],
-  	                    	],
-  	                    	
-    											// Mapping mobile number
-  			                  [
-  			                  	'field_name' => 'mobile',
-  			                    'parameters' => ['TYPE' => 'cell']
-  			                  ],
-  			                  
-    											// Mapping home telephone number
-    											[
-  	  											'field_name' => 'homePhone',
-  	                        'parameters' => [ 
-  	                                          ['TYPE' => 'home'],
-  	                        									['TYPE' => 'home', 'PREF' => '1']
-  	                                        ],
-  					                'reverse_map_parameter_index' => 1
+    'TEL'            =>   [
+                          // Mapping pager number
+                          [  
+                            'field_name' => 'pager',
+                            'parameters' => ['TYPE' => 'pager']
                           ],
                           
-    											// Mapping work telephone number
-                          [	
-                          	'field_name' => 'telephoneNumber',
-  	                        'parameters' => [ 
-  	                                          ['TYPE' => 'work'],
-  	                        									['TYPE' => 'work', 'PREF' => '1'],
-  	                                          null
-  	                                        ],
-  					                'reverse_map_parameter_index' => 1
+                          // Mapping fax number
+                          [
+                            'field_name' => 'facsimileTelephoneNumber',
+                            'parameters' => [
+                                              ['TYPE' => ['fax', 'work']],
+                                              ['TYPE' => 'fax'],
+                                            ],
+                          ],
+                          
+                          // Mapping mobile number
+                          [
+                            'field_name' => 'mobile',
+                            'parameters' => ['TYPE' => 'cell']
+                          ],
+                          
+                          // Mapping home telephone number
+                          [
+                            'field_name' => 'homePhone',
+                            'parameters' => [ 
+                                              ['TYPE' => 'home'],
+                                              ['TYPE' => 'home', 'PREF' => '1']
+                                            ],
+                            'reverse_map_parameter_index' => 1
+                          ],
+                          
+                          // Mapping work telephone number
+                          [  
+                            'field_name' => 'telephoneNumber',
+                            'parameters' => [ 
+                                              ['TYPE' => 'work'],
+                                              ['TYPE' => 'work', 'PREF' => '1'],
+                                              null
+                                            ],
+                            'reverse_map_parameter_index' => 1
                           ],
                      ],
                      
       'ADR'         => [
-  	  										// Mapping home postal address
-  	    									[
-  													'field_name' => 'homePostalAddress',
-  			                    'parameters' => ['TYPE' => 'home'],
-  			                    'map_component_separator' => '$'
-  	                      ],
-  	                      
-  	  										// Mapping other postal address
-  	    									[
-  													'field_name' => 'postalAddress',
-  			                    'parameters' => [null],
-  			                    'map_component_separator' => '$'
-  	                      ],
+                          // Mapping home postal address
+                          [
+                            'field_name' => 'homePostalAddress',
+                            'parameters' => ['TYPE' => 'home'],
+                            'map_component_separator' => '$'
+                          ],
+                          
+                          // Mapping other postal address
+                          [
+                            'field_name' => 'postalAddress',
+                            'parameters' => [null],
+                            'map_component_separator' => '$'
+                          ],
 
-  	  										// Mapping location
-  	                      [
-  	     										'field_name' => [
-  	     																			'po_box'			=> 'postOfficeBox',
-  	     																			'street' 			=> 'street',
-  	     																			'locality' 		=> 'l',
-  	     																			'province' 		=> 'st', 
-  	     																			'postal_code' => 'postalCode'
-  	     																		],
-  	                        'parameters' => ['TYPE' => 'work']
-  	                      ]
+                          // Mapping location
+                          [
+                             'field_name' => [
+                                               'po_box'      => 'postOfficeBox',
+                                               'street'       => 'street',
+                                               'locality'     => 'l',
+                                               'province'     => 'st', 
+                                               'postal_code' => 'postalCode'
+                                             ],
+                            'parameters' => ['TYPE' => 'work']
+                          ]
                        ],
 
       'LANG'        => ['field_name' => 'preferredLanguage']
@@ -474,16 +474,16 @@ $config['card']['addressbook']['ldap']['me'] = [
   // group_LDAP_Object_Classes, group_required_fields, group_LDAP_rdn
   'group_LDAP_Object_Classes' => ['groupOfNames'],
   'group_required_fields'     => ['cn', 'member'],
-  'group_LDAP_rdn'      	    => 'cn',
+  'group_LDAP_rdn'            => 'cn',
   
   // Backend contact field acl. By default no access is denied to any backend field.
   // 'eval' can have following values
   // r (default) - Evaluate 'list' as read only fields
   // w           - Evaluate 'list' as writable fields, rest of the fields are treated as read only
-  //  'group_field_acl' => 	[ 
-  //													'eval' => 'r',
-  //													'list' => []
-  //												],
+  //  'group_field_acl' =>   [ 
+  //                          'eval' => 'r',
+  //                          'list' => []
+  //                        ],
   
   // Backend field which points to the contact which is member of this contact group  
   'group_member_map'          => [ 'MEMBER'      => [ 'field_name' => 'member' ] ],
@@ -497,26 +497,26 @@ $config['card']['addressbook']['ldap']['me'] = [
   //
   // vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only.
   'group_fieldmap'            => [     
-  	 'FN'          => [	'field_name' => 'cn'],
-   	
-  	 'NOTE'        => [	'field_name' => 'description']
+     'FN'          => [  'field_name' => 'cn'],
+     
+     'NOTE'        => [  'field_name' => 'description']
    ]
 ];
 
 
 // Address book.
 $config['card']['addressbook']['ldap']['global'] = [
-  'name'          	=> 'Global Address Book',
+  'name'            => 'Global Address Book',
   'description'     => 'Global address book',
     
   // 'user_specific' and 'writable' values are used as initialization parameters for the sync database. 
   // Once the sync database has been initialized changing the values here to any conflicting values will 
   // lead to this application not processing requests for this address book.
-  'user_specific' 	=> false, // If this is true then address book will be treated as belonging to the user 
+  'user_specific'   => false, // If this is true then address book will be treated as belonging to the user 
                               // and username placeholder can be used in applicable places. This is a 
                               // mandatory setting and must be explicitly set strictly to a boolean value.
                               
-  'writable'     	 	=> false, // If true (default) then contacts can be created, updated, renamed and 
+  'writable'          => false, // If true (default) then contacts can be created, updated, renamed and 
                               // deleted in the address book.
                               
   // For writable address books creation or deletion of contacts can be denied using the below.
@@ -530,7 +530,7 @@ $config['card']['addressbook']['ldap']['global'] = [
   
   // Use this address book as a directory (i.e. for lookups only) for Apple devices
   // Defaults to false
-  'directory'				=> true,
+  'directory'        => true,
   
   // Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
   // of the address book from backend every time they sync their address book. Set the below to 
@@ -546,32 +546,32 @@ $config['card']['addressbook']['ldap']['global'] = [
   //  'force_full_sync_interval' => 86400,
   
   // Maximum size of a card (in bytes) which is accepted for create/update. Defaults to 16 KiB.
-  //  'max_size'				=> 16384,
+  //  'max_size'        => 16384,
   
   // The following placeholders are available to be used in 'base_dn' and 'search_filter' below as applicable.
   // %u  - Username of the user whose address book is being accessed.
   // %dn - DN as returned by LDAP search for address book DN.
   
-  'base_dn'       	=> 'ou=People,dc=example,dc=org', // Address book DN (used as base DN to search for contacts 
-  																										// and as parent DN for new contacts).
+  'base_dn'         => 'ou=People,dc=example,dc=org', // Address book DN (used as base DN to search for contacts 
+                                                      // and as parent DN for new contacts).
   
   // LDAP filter to be used to search for contacts
-  'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
+  'filter'          => '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
   
   // Bind user to search/read/write contacts. If 'bind_dn' and 'bind_pass' values are not provided below 
   // and if this address book is marked as 'user_specific' then 'bind_dn' and 'bind_pass' values provided 
   // in $config['auth']['ldap'] will be used instead.
   // This bind user must have read access to entryUUID, createTimestamp and modifyTimestamp operational attributes 
   // of all contacts in the address book in addition to contact data.
-  'bind_dn'       	=> 'cn=admin,ou=People,dc=example,dc=org',
-  'bind_pass'     	=> '<secret>',
+  'bind_dn'         => 'cn=admin,ou=People,dc=example,dc=org',
+  'bind_pass'       => '<secret>',
   
   // Sync LDAP bind user can be used for contact searches if there are size or time limits on 'bind_dn' in LDAP.
   // Read and write of contact data will still be performed by 'bind_dn'. 'sync_bind_dn' should have liberal or 
   // no size or time limits and must have read access to entryUUID, createTimestamp and modifyTimestamp attribute 
   // of all contacts in the address book. Access to other contact attributes is not required by this user.
   //  'sync_bind_dn'       => 'cn=carddavsync,ou=People,dc=example,dc=org',
-  //  'sync_bind_pw'     	=> '<secret>',
+  //  'sync_bind_pw'       => '<secret>',
   
   'scope'         => 'list',   // Scope of search for contacts
                                //  sub: Subtree
@@ -598,16 +598,16 @@ $config['card']['addressbook']['ldap']['global'] = [
   // LDAP_Object_Classes, required_fields, LDAP_rdn
   'LDAP_Object_Classes' => ['inetOrgPerson'],
   'required_fields'     => ['cn', 'sn'],
-  'LDAP_rdn'      			=> 'uid',
+  'LDAP_rdn'            => 'uid',
 
   // Backend contact field acl. By default no access is denied to any backend field.
   // 'eval' can have following values
   // r (default) - Evaluate 'list' as read only fields
   // w           - Evaluate 'list' as writable fields, rest of the fields are treated as read only
-  //  'field_acl'     => 	[ 
-  //												'eval' => 'r',
-  //												'list' => []
-  //											],
+  //  'field_acl'     =>   [ 
+  //                        'eval' => 'r',
+  //                        'list' => []
+  //                      ],
 
   // vCard    => LDAP field map
   //
@@ -622,108 +622,108 @@ $config['card']['addressbook']['ldap']['global'] = [
   'fieldmap'      => [
     'FN'            => ['field_name' => 'cn'],
 
-    'N'							=> ['field_name' => [
-    																			'last_name' 	=> 'sn', 
-    																			'first_name' 	=> 'givenName'
-    																		]
-    									 ],
+    'N'              => ['field_name' => [
+                                          'last_name'   => 'sn', 
+                                          'first_name'   => 'givenName'
+                                        ]
+                       ],
 
-  	'EMAIL'         => ['field_name' => 'mail'],
+    'EMAIL'         => ['field_name' => 'mail'],
 
-  	'ORG'         	=> ['field_name' => [
-  																				'org_name' 			=> 'o', 
-  																				'org_unit_name' => 'ou'
-  																			]
-  										 ],
+    'ORG'           => ['field_name' => [
+                                          'org_name'       => 'o', 
+                                          'org_unit_name' => 'ou'
+                                        ]
+                       ],
 
     'TITLE'         => ['field_name' => 'title'],
     
-    'ROLE'        	=> ['field_name' => 'employeeType'],
+    'ROLE'          => ['field_name' => 'employeeType'],
 
     'NICKNAME'      => ['field_name' => 'displayName'],
 
-  	'PHOTO'         => 	[
-    											// Mapping profile picture
-  												[
-  													'field_name' => 'jpegPhoto',
-  			                  	'field_data_format' => 'binary',
-  			                  	'field_data_mediatype' => ['image/jpeg', 'image/png'], // List of mediatype which a 
-  			                  																												 // binary backend field will accept
-  			                  ]
-                       	],
+    'PHOTO'         =>   [
+                          // Mapping profile picture
+                          [
+                            'field_name' => 'jpegPhoto',
+                            'field_data_format' => 'binary',
+                            'field_data_mediatype' => ['image/jpeg', 'image/png'], // List of mediatype which a 
+                                                                                   // binary backend field will accept
+                          ]
+                         ],
 
-    'NOTE'        	=> 	['field_name' => 'description'],
+    'NOTE'          =>   ['field_name' => 'description'],
 
-    'TEL'						=> 	[
-    											// Mapping pager number
-  			                  [	
-  			                  	'field_name' => 'pager',
-  					                'parameters' => ['TYPE' => 'pager']
-  			                  ],
-  			                  
-    											// Mapping fax number
-  	                      [
-  	                      	'field_name' => 'facsimileTelephoneNumber',
-  	                        'parameters' => [
-  	                        									['TYPE' => ['fax', 'work']],
-  	                        									['TYPE' => 'fax'],
-  	                        								],
-  	                    	],
-  	                    	
-    											// Mapping mobile number
-  			                  [
-  			                  	'field_name' => 'mobile',
-  			                    'parameters' => ['TYPE' => 'cell']
-  			                  ],
-  			                  
-    											// Mapping home telephone number
-    											[
-  	  											'field_name' => 'homePhone',
-  	                        'parameters' => [ 
-  	                                          ['TYPE' => 'home'],
-  	                        									['TYPE' => 'home', 'PREF' => '1']
-  	                                        ],
-  					                'reverse_map_parameter_index' => 1
+    'TEL'            =>   [
+                          // Mapping pager number
+                          [  
+                            'field_name' => 'pager',
+                            'parameters' => ['TYPE' => 'pager']
                           ],
                           
-    											// Mapping work telephone number
-                          [	
-                          	'field_name' => 'telephoneNumber',
-  	                        'parameters' => [ 
-  	                                          ['TYPE' => 'work'],
-  	                        									['TYPE' => 'work', 'PREF' => '1'],
-  	                                          null
-  	                                        ],
-  					                'reverse_map_parameter_index' => 1
+                          // Mapping fax number
+                          [
+                            'field_name' => 'facsimileTelephoneNumber',
+                            'parameters' => [
+                                              ['TYPE' => ['fax', 'work']],
+                                              ['TYPE' => 'fax'],
+                                            ],
+                          ],
+                          
+                          // Mapping mobile number
+                          [
+                            'field_name' => 'mobile',
+                            'parameters' => ['TYPE' => 'cell']
+                          ],
+                          
+                          // Mapping home telephone number
+                          [
+                            'field_name' => 'homePhone',
+                            'parameters' => [ 
+                                              ['TYPE' => 'home'],
+                                              ['TYPE' => 'home', 'PREF' => '1']
+                                            ],
+                            'reverse_map_parameter_index' => 1
+                          ],
+                          
+                          // Mapping work telephone number
+                          [  
+                            'field_name' => 'telephoneNumber',
+                            'parameters' => [ 
+                                              ['TYPE' => 'work'],
+                                              ['TYPE' => 'work', 'PREF' => '1'],
+                                              null
+                                            ],
+                            'reverse_map_parameter_index' => 1
                           ],
                      ],
                      
       'ADR'         => [
-  	  										// Mapping home postal address
-  	    									[
-  													'field_name' => 'homePostalAddress',
-  			                    'parameters' => ['TYPE' => 'home'],
-  			                    'map_component_separator' => '$'
-  	                      ],
-  	                      
-  	  										// Mapping other postal address
-  	    									[
-  													'field_name' => 'postalAddress',
-  			                    'parameters' => [null],
-  			                    'map_component_separator' => '$'
-  	                      ],
+                          // Mapping home postal address
+                          [
+                            'field_name' => 'homePostalAddress',
+                            'parameters' => ['TYPE' => 'home'],
+                            'map_component_separator' => '$'
+                          ],
+                          
+                          // Mapping other postal address
+                          [
+                            'field_name' => 'postalAddress',
+                            'parameters' => [null],
+                            'map_component_separator' => '$'
+                          ],
 
-  	  										// Mapping location
-  	                      [
-  	     										'field_name' => [
-  	     																			'po_box'			=> 'postOfficeBox',
-  	     																			'street' 			=> 'street',
-  	     																			'locality' 		=> 'l',
-  	     																			'province' 		=> 'st', 
-  	     																			'postal_code' => 'postalCode'
-  	     																		],
-  	                        'parameters' => ['TYPE' => 'work']
-  	                      ]
+                          // Mapping location
+                          [
+                             'field_name' => [
+                                               'po_box'      => 'postOfficeBox',
+                                               'street'       => 'street',
+                                               'locality'     => 'l',
+                                               'province'     => 'st', 
+                                               'postal_code' => 'postalCode'
+                                             ],
+                            'parameters' => ['TYPE' => 'work']
+                          ]
                        ],
 
       'LANG'        => ['field_name' => 'preferredLanguage']
@@ -733,16 +733,16 @@ $config['card']['addressbook']['ldap']['global'] = [
   // group_LDAP_Object_Classes, group_required_fields, group_LDAP_rdn
   'group_LDAP_Object_Classes' => ['groupOfNames'],
   'group_required_fields'     => ['cn', 'member'],
-  'group_LDAP_rdn'      	    => 'cn',
+  'group_LDAP_rdn'            => 'cn',
   
   // Backend contact field acl. By default no access is denied to any backend field.
   // 'eval' can have following values
   // r (default) - Evaluate 'list' as read only fields
   // w           - Evaluate 'list' as writable fields, rest of the fields are treated as read only
-  //  'group_field_acl' => 	[ 
-  //													'eval' => 'r',
-  //													'list' => []
-  //												],
+  //  'group_field_acl' =>   [ 
+  //                          'eval' => 'r',
+  //                          'list' => []
+  //                        ],
   
   // Backend field which points to the contact which is member of this contact group  
   'group_member_map'          => [ 'MEMBER'      => [ 'field_name' => 'member' ] ],
@@ -756,26 +756,26 @@ $config['card']['addressbook']['ldap']['global'] = [
   //
   // vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only.
   'group_fieldmap'            => [     
-  	 'FN'          => [	'field_name' => 'cn'],
-   	
-  	 'NOTE'        => [	'field_name' => 'description']
+     'FN'          => [  'field_name' => 'cn'],
+     
+     'NOTE'        => [  'field_name' => 'description']
    ]
 ];
 
 
 // Address book.
 $config['card']['addressbook']['ldap']['personal'] = [
-  'name'          	=> 'Personal Address Book',
+  'name'            => 'Personal Address Book',
   'description'     => 'Personal address book of the user',
 
   // 'user_specific' and 'writable' values are used as initialization parameters for the sync database. 
   // Once the sync database has been initialized changing the values here to any conflicting values will 
   // lead to this application not processing requests for this address book.
-  'user_specific' 	=> true, // If this is true then address book will be treated as belonging to the user 
+  'user_specific'   => true, // If this is true then address book will be treated as belonging to the user 
                               // and username placeholder can be used in applicable places. This is a 
                               // mandatory setting and must be explicitly set strictly to a boolean value.
                               
-  'writable'     	 	=> true, // If true (default) then contacts can be created, updated, renamed and 
+  'writable'          => true, // If true (default) then contacts can be created, updated, renamed and 
                               // deleted in the address book.
                               
   // For writable address books creation or deletion of contacts can be denied using the below.
@@ -789,7 +789,7 @@ $config['card']['addressbook']['ldap']['personal'] = [
   
   // Use this address book as a directory (i.e. for lookups only) for Apple devices
   // Defaults to false
-  //  'directory'				=> true,
+  //  'directory'        => true,
 
   // Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
   // of the address book from backend every time they sync their address book. Set the below to 
@@ -805,32 +805,32 @@ $config['card']['addressbook']['ldap']['personal'] = [
   //  'force_full_sync_interval' => 86400,
   
   // Maximum size of a card (in bytes) which is accepted for create/update. Defaults to 16 KiB.
-  //  'max_size'				=> 16384,
+  //  'max_size'        => 16384,
   
   // The following placeholders are available to be used in 'base_dn' and 'search_filter' below as applicable.
   // %u  - Username of the user whose address book is being accessed.
   // %dn - DN as returned by LDAP search for address book DN.
   
-  'base_dn'       	=> 'ou=Address Book,%dn', // Address book DN (used as base DN to search for contacts 
-  																						// and as parent DN for new contacts).
+  'base_dn'         => 'ou=Address Book,%dn', // Address book DN (used as base DN to search for contacts 
+                                              // and as parent DN for new contacts).
   
-  // LDAP filter to be used to search for contacts	
-  'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
+  // LDAP filter to be used to search for contacts  
+  'filter'          => '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
   
   // Bind user to search/read/write contacts. If 'bind_dn' and 'bind_pass' values are not provided below 
   // and if this address book is marked as 'user_specific' then 'bind_dn' and 'bind_pass' values provided 
   // in $config['auth']['ldap'] will be used instead.
   // This bind user must have read access to entryUUID, createTimestamp and modifyTimestamp operational attributes 
   // of all contacts in the address book in addition to contact data.
-  //  'bind_dn'       	=> '',
+  //  'bind_dn'         => '',
   //  'bind_pass'     => '',
   
   // Sync LDAP bind user can be used for contact searches if there are size or time limits on 'bind_dn' in LDAP.
   // Read and write of contact data will still be performed by 'bind_dn'. 'sync_bind_dn' should have liberal or 
   // no size or time limits and must have read access to entryUUID, createTimestamp and modifyTimestamp attribute 
   // of all contacts in the address book. Access to other contact attributes is not required by this user.
-  //  'sync_bind_dn'       	=> 'cn=carddavsync,ou=People,dc=example,dc=org',
-  //  'sync_bind_pw'     	=> '<secret>',
+  //  'sync_bind_dn'         => 'cn=carddavsync,ou=People,dc=example,dc=org',
+  //  'sync_bind_pw'       => '<secret>',
   
   'scope'         => 'list',   // Scope of search for contacts
                                //  sub: Subtree
@@ -857,16 +857,16 @@ $config['card']['addressbook']['ldap']['personal'] = [
   // LDAP_Object_Classes, required_fields, LDAP_rdn
   'LDAP_Object_Classes' => ['inetOrgPerson'],
   'required_fields'     => ['cn', 'sn'],
-  'LDAP_rdn'      			=> 'cn',
+  'LDAP_rdn'            => 'cn',
 
   // Backend contact field acl. By default no access is denied to any backend field.
   // 'eval' can have following values
   // r (default) - Evaluate 'list' as read only fields
   // w           - Evaluate 'list' as writable fields, rest of the fields are treated as read only
-  //  'field_acl'     => 	[ 
-  //												'eval' => 'r',
-  //												'list' => []
-  //											],
+  //  'field_acl'     =>   [ 
+  //                        'eval' => 'r',
+  //                        'list' => []
+  //                      ],
   
   // vCard    => LDAP field map
   //
@@ -881,108 +881,108 @@ $config['card']['addressbook']['ldap']['personal'] = [
   'fieldmap'      => [
     'FN'            => ['field_name' => 'cn'],
 
-    'N'							=> ['field_name' => [
-    																			'last_name' 	=> 'sn', 
-    																			'first_name' 	=> 'givenName'
-    																		]
-    									 ],
+    'N'              => ['field_name' => [
+                                          'last_name'   => 'sn', 
+                                          'first_name'   => 'givenName'
+                                        ]
+                       ],
 
-  	'EMAIL'         => ['field_name' => 'mail'],
+    'EMAIL'         => ['field_name' => 'mail'],
 
-  	'ORG'         	=> ['field_name' => [
-  																				'org_name' 			=> 'o', 
-  																				'org_unit_name' => 'ou'
-  																			]
-  										 ],
+    'ORG'           => ['field_name' => [
+                                          'org_name'       => 'o', 
+                                          'org_unit_name' => 'ou'
+                                        ]
+                       ],
 
     'TITLE'         => ['field_name' => 'title'],
     
-    'ROLE'        	=> ['field_name' => 'employeeType'],
+    'ROLE'          => ['field_name' => 'employeeType'],
 
     'NICKNAME'      => ['field_name' => 'displayName'],
 
-  	'PHOTO'         => 	[
-    											// Mapping profile picture
-  												[
-  													'field_name' => 'jpegPhoto',
-  			                  	'field_data_format' => 'binary',
-  			                  	'field_data_mediatype' => ['image/jpeg', 'image/png'], // List of mediatype which a 
-  			                  																												 // binary backend field will accept
-  			                  ]
-                       	],
+    'PHOTO'         =>   [
+                          // Mapping profile picture
+                          [
+                            'field_name' => 'jpegPhoto',
+                            'field_data_format' => 'binary',
+                            'field_data_mediatype' => ['image/jpeg', 'image/png'], // List of mediatype which a 
+                                                                                   // binary backend field will accept
+                          ]
+                         ],
 
-    'NOTE'        	=> 	['field_name' => 'description'],
+    'NOTE'          =>   ['field_name' => 'description'],
 
-    'TEL'						=> 	[
-    											// Mapping pager number
-  			                  [	
-  			                  	'field_name' => 'pager',
-  					                'parameters' => ['TYPE' => 'pager']
-  			                  ],
-  			                  
-    											// Mapping fax number
-  	                      [
-  	                      	'field_name' => 'facsimileTelephoneNumber',
-  	                        'parameters' => [
-  	                        									['TYPE' => ['fax', 'work']],
-  	                        									['TYPE' => 'fax'],
-  	                        								],
-  	                    	],
-  	                    	
-    											// Mapping mobile number
-  			                  [
-  			                  	'field_name' => 'mobile',
-  			                    'parameters' => ['TYPE' => 'cell']
-  			                  ],
-  			                  
-    											// Mapping home telephone number
-    											[
-  	  											'field_name' => 'homePhone',
-  	                        'parameters' => [ 
-  	                                          ['TYPE' => 'home'],
-  	                        									['TYPE' => 'home', 'PREF' => '1']
-  	                                        ],
-  					                'reverse_map_parameter_index' => 1
+    'TEL'            =>   [
+                          // Mapping pager number
+                          [  
+                            'field_name' => 'pager',
+                            'parameters' => ['TYPE' => 'pager']
                           ],
                           
-    											// Mapping work telephone number
-                          [	
-                          	'field_name' => 'telephoneNumber',
-  	                        'parameters' => [ 
-  	                                          ['TYPE' => 'work'],
-  	                        									['TYPE' => 'work', 'PREF' => '1'],
-  	                                          null
-  	                                        ],
-  					                'reverse_map_parameter_index' => 1
+                          // Mapping fax number
+                          [
+                            'field_name' => 'facsimileTelephoneNumber',
+                            'parameters' => [
+                                              ['TYPE' => ['fax', 'work']],
+                                              ['TYPE' => 'fax'],
+                                            ],
+                          ],
+                          
+                          // Mapping mobile number
+                          [
+                            'field_name' => 'mobile',
+                            'parameters' => ['TYPE' => 'cell']
+                          ],
+                          
+                          // Mapping home telephone number
+                          [
+                            'field_name' => 'homePhone',
+                            'parameters' => [ 
+                                              ['TYPE' => 'home'],
+                                              ['TYPE' => 'home', 'PREF' => '1']
+                                            ],
+                            'reverse_map_parameter_index' => 1
+                          ],
+                          
+                          // Mapping work telephone number
+                          [  
+                            'field_name' => 'telephoneNumber',
+                            'parameters' => [ 
+                                              ['TYPE' => 'work'],
+                                              ['TYPE' => 'work', 'PREF' => '1'],
+                                              null
+                                            ],
+                            'reverse_map_parameter_index' => 1
                           ],
                      ],
                      
       'ADR'         => [
-  	  										// Mapping home postal address
-  	    									[
-  													'field_name' => 'homePostalAddress',
-  			                    'parameters' => ['TYPE' => 'home'],
-  			                    'map_component_separator' => '$'
-  	                      ],
-  	                      
-  	  										// Mapping other postal address
-  	    									[
-  													'field_name' => 'postalAddress',
-  			                    'parameters' => [null],
-  			                    'map_component_separator' => '$'
-  	                      ],
+                          // Mapping home postal address
+                          [
+                            'field_name' => 'homePostalAddress',
+                            'parameters' => ['TYPE' => 'home'],
+                            'map_component_separator' => '$'
+                          ],
+                          
+                          // Mapping other postal address
+                          [
+                            'field_name' => 'postalAddress',
+                            'parameters' => [null],
+                            'map_component_separator' => '$'
+                          ],
 
-  	  										// Mapping location
-  	                      [
-  	     										'field_name' => [
-  	     																			'po_box'			=> 'postOfficeBox',
-  	     																			'street' 			=> 'street',
-  	     																			'locality' 		=> 'l',
-  	     																			'province' 		=> 'st', 
-  	     																			'postal_code' => 'postalCode'
-  	     																		],
-  	                        'parameters' => ['TYPE' => 'work']
-  	                      ]
+                          // Mapping location
+                          [
+                             'field_name' => [
+                                               'po_box'      => 'postOfficeBox',
+                                               'street'       => 'street',
+                                               'locality'     => 'l',
+                                               'province'     => 'st', 
+                                               'postal_code' => 'postalCode'
+                                             ],
+                            'parameters' => ['TYPE' => 'work']
+                          ]
                        ],
 
       'LANG'        => ['field_name' => 'preferredLanguage']
@@ -992,16 +992,16 @@ $config['card']['addressbook']['ldap']['personal'] = [
   // group_LDAP_Object_Classes, group_required_fields, group_LDAP_rdn
   'group_LDAP_Object_Classes' => ['groupOfNames'],
   'group_required_fields'     => ['cn', 'member'],
-  'group_LDAP_rdn'      	    => 'cn',
+  'group_LDAP_rdn'            => 'cn',
   
   // Backend contact field acl. By default no access is denied to any backend field.
   // 'eval' can have following values
   // r (default) - Evaluate 'list' as read only fields
   // w           - Evaluate 'list' as writable fields, rest of the fields are treated as read only
-  //  'group_field_acl' => 	[ 
-  //													'eval' => 'r',
-  //													'list' => []
-  //												],
+  //  'group_field_acl' =>   [ 
+  //                          'eval' => 'r',
+  //                          'list' => []
+  //                        ],
   
   // Backend field which points to the contact which is member of this contact group  
   'group_member_map'          => [ 'MEMBER'      => [ 'field_name' => 'member' ] ],
@@ -1015,8 +1015,8 @@ $config['card']['addressbook']['ldap']['personal'] = [
   //
   // vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only.
   'group_fieldmap'            => [     
-  	 'FN'          => [	'field_name' => 'cn'],
-   	
-  	 'NOTE'        => [	'field_name' => 'description']
+     'FN'          => [  'field_name' => 'cn'],
+     
+     'NOTE'        => [  'field_name' => 'description']
    ]
 ];
