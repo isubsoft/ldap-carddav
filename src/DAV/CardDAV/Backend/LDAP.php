@@ -1084,7 +1084,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					else {
 						// Trying to set a suitable RDN field during a merge update when configured RDN field is not set.
 						if(!array_key_exists($rdnField, $ldapInfo)) {
-							$tmpOldLdapRdn = explode('=', $oldLdapRdn);
+							$tmpOldLdapRdn = explode('=', $oldLdapRdn, 2);
 							$oldRdnField = strtolower($tmpOldLdapRdn[0]);
 
 							if(array_key_exists($oldRdnField, $ldapInfo))
