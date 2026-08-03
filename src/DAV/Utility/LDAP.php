@@ -33,12 +33,12 @@ class LDAP {
      * @var array
      */
 		public static $ldapClientErrorNo = [
-			0x14 => 'There is duplicate data in one or more field(s)',
-			0x15 => "Data format in one or more field(s) was incorrect",
-			0x20 => "Not found",
-			0x32 => "Access denied",
-			0x41 => "One or more required field(s) was empty",
-			0x44 => "Contact with same name already exist"
+			0x14 => 'There is duplicate data in one or more field(s).',
+			0x15 => "Data format in one or more field(s) was incorrect.",
+			0x20 => "Not found.",
+			0x32 => "Access denied.",
+			0x41 => "One or more required field(s) was empty.",
+			0x44 => "Object with same name already exist."
 		];
 
     /**
