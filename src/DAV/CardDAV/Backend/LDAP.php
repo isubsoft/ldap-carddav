@@ -736,7 +736,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		      }
 		      
 		      if($cardExists)
-						throw new SabreDAVException\BadRequest("Card with same identity exist");
+						throw new SabreDAVException\BadRequest("Card with same identity exist.");
         }
         
         if($operation == 'UPDATE')
@@ -756,7 +756,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		      }
 		      
 		      if(!$cardIdMatch)
-						throw new SabreDAVException\BadRequest("Card identity does not match");
+						throw new SabreDAVException\BadRequest("Card identity does not match.");
         }
         
         $isContactGroup = false;
@@ -1060,7 +1060,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					else {
 						// Trying to set a suitable RDN field during a merge update when configured RDN field is not set.
 						if(!array_key_exists($rdnField, $ldapInfo)) {
-							$tmpOldLdapRdn = explode('=', $oldLdapRdn);
+							$tmpOldLdapRdn = explode('=', $oldLdapRdn, 2);
 							$oldRdnField = strtolower($tmpOldLdapRdn[0]);
 
 							if(array_key_exists($oldRdnField, $ldapInfo))
