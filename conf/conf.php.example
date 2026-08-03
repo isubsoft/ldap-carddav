@@ -76,41 +76,41 @@ $config = [];
 
 // Sync database configuration.
 $config['sync_database'] = [
-  // See https://www.php.net/manual/en/pdo.drivers.php for setting 
-  // database driver specific dsn, username, password and options below.
-  // The DSN string below can use %datadir as placeholder for the data directory path of the application.
-  // Remember %datadir is an absolute directory path. To use %datadir as a literal use %%datadir .
-  'dsn' => 'sqlite:%datadir/sync/syncdb/sqlite/cards.db',
-  'username' => '', // Defaults to null.
-  'password' => '', // Defaults to null.
-  'options' => [], 	// Currently only PDO::ATTR_TIMEOUT and PDO::ATTR_PERSISTENT attribute(s) is accepted. 
-  // Defaults to empty array.
+	// See https://www.php.net/manual/en/pdo.drivers.php for setting 
+	// database driver specific dsn, username, password and options below.
+	// The DSN string below can use %datadir as placeholder for the data directory path of the application.
+	// Remember %datadir is an absolute directory path. To use %datadir as a literal use %%datadir .
+	'dsn' => 'sqlite:%datadir/sync/syncdb/sqlite/cards.db',
+	'username' => '', // Defaults to null.
+	'password' => '', // Defaults to null.
+	'options' => [], 	// Currently only PDO::ATTR_TIMEOUT and PDO::ATTR_PERSISTENT attribute(s) is accepted. 
+										// Defaults to empty array.
 
-  // Database specific statements to be executed before database is used 
-  // by the application. Can be used to set some dynamic client side parameters for this application
-  // which cannot be set via other means in a reliable manner. Defaults to empty array.
-  // WARNING: DO NOT use statements which violate the requirements for sync database like turning off
-  // database transactions.
-  //
-  // The following type of statements are supported for respective database product.
-  // sqlite: PRAGMA
-  // mysql: SET
-  // pgsql: SET
-  //
-  // The following database specific statements are anyways executed in the end.
-  // sqlite: PRAGMA foreign_keys = ON
-  // mysql: SET foreign_key_checks = ON
-  'init_commands' => [
-  // Example for pgsql
-  //  'SET search_path TO <my_schema>'
-  ]
+	// Database specific statements to be executed before database is used 
+	// by the application. Can be used to set some dynamic client side parameters for this application
+	// which cannot be set via other means in a reliable manner. Defaults to empty array.
+	// WARNING: DO NOT use statements which violate the requirements for sync database like turning off
+	// database transactions.
+	//
+	// The following type of statements are supported for respective database product.
+	// sqlite: PRAGMA
+	// mysql: SET
+	// pgsql: SET
+	//
+	// The following database specific statements are anyways executed in the end.
+	// sqlite: PRAGMA foreign_keys = ON
+	// mysql: SET foreign_key_checks = ON
+	'init_commands' => [
+		// Example for pgsql
+		//  'SET search_path TO <my_schema>'
+	]
 ];
 
 
 // LDAP server configuration.
 $config['server']['ldap'] = [
   'host'         				=> '<hostname>', // If not set then system default LDAP URI will be used.
-  // 'port'          			=> 389, // If not set then default ports for ldap and ldaps schemes will be used.
+	// 'port'          			=> 389, // If not set then default ports for ldap and ldaps schemes will be used.
   // 'ldap_version'  			=> 3, // If not set then LDAPv3 will be used. LDAPv2 or below are not supported.
   'network_timeout' 		=> 10, // The timeout (in seconds) for connect + bind attempts. 
   														 // This is only supported in PHP >= 5.3.0 with OpenLDAP 2.x
@@ -141,27 +141,27 @@ $config['cache']['card']['backend'] = 'memory';
 
 // Configure caching backend below.
 $config['cache']['backend'] = [
-  // Local_FS does not have any configurable parameters here. Directory pointed to by 'cachedir' key above need 
-  // to be setup correctly though.
-  //
-  // Apcu does not have any configurable parameters here. Runtime parameters can be set according to - 
-  // https://www.php.net/manual/en/apcu.configuration.php
-  //
-  // Memory does not have any configurable parameters here.
-  //
-  // Memcached configuration.
-  //  'memcached' => [
-    // Authentication credentials for memcached server. If not set no authentication credentials will be provided to 
-    // the server ( check https://www.php.net/manual/en/memcached.setsaslauthdata.php ).
-    //  'auth' => ['username' => '', 'password' => ''],
+	// Local_FS does not have any configurable parameters here. Directory pointed to by 'cachedir' key above need 
+	// to be setup correctly though.
+	//
+	// Apcu does not have any configurable parameters here. Runtime parameters can be set according to - 
+	// https://www.php.net/manual/en/apcu.configuration.php
+	//
+	// Memory does not have any configurable parameters here.
+	//
+	// Memcached configuration.
+	//  'memcached' => [
+	  // Authentication credentials for memcached server. If not set no authentication credentials will be provided to 
+	  // the server ( check https://www.php.net/manual/en/memcached.setsaslauthdata.php ).
+	  //  'auth' => ['username' => '', 'password' => ''],
 
-    // Set memcached servers. Should be same as $servers parameter to function \Memcached::addServers ( check 
-    // https://www.php.net/manual/en/memcached.addservers.php ).
-    //  'servers' => [
-    //    ['<hostname1>', <port1>, <weight1>],
-    //    ['<hostname2>', <port2>, <weight2>]
-    //  ]
-  //  ]
+	  // Set memcached servers. Should be same as $servers parameter to function \Memcached::addServers ( check 
+	  // https://www.php.net/manual/en/memcached.addservers.php ).
+	  //  'servers' => [
+	  //    ['<hostname1>', <port1>, <weight1>],
+	  //    ['<hostname2>', <port2>, <weight2>]
+	  //  ]
+	//  ]
 ];
 
 
@@ -173,8 +173,8 @@ $config['cache']['backend'] = [
 // Only basic HTTP authentication scheme can be used by a client to provide user credentials.
 //
 $config['auth']['ldap'] = [
-  // Authentication realm. Defaults to 'isubsoft/ldap-carddav'.
-  // 'realm' => '',
+	// Authentication realm. Defaults to 'isubsoft/ldap-carddav'.
+	// 'realm' => '',
 
   // The following placeholders are available to be used in bind_dn, bind_pass and search_filter as applicable
   // %u  - Username sent by client for authentication
@@ -188,11 +188,11 @@ $config['auth']['ldap'] = [
   // It's possible to bind to a DN from a search result.
   'search_base_dn' => '', // Provide a separate base DN for search if different from 'base_dn' above else leave blank.
   'search_filter'  => '(&(objectClass=inetOrgPerson)(employeeNumber=*)(uid=%u))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
-  'search_scope'         => 'list',   // Scope of search
-                                      //  sub: Subtree
-                                      // list: Immediate children
-                                      // base: Match base DN only
-                                      
+	'search_scope'         => 'list',   // Scope of search
+	                                    //  sub: Subtree
+	                                    // list: Immediate children
+	                                    // base: Match base DN only
+	                                    
   // DN and password to bind as before searching for bind DN, if anonymous search is not allowed.
   'search_bind_dn' => 'cn=admin,ou=People,dc=example,dc=org',
   'search_bind_pw' => '<secret>'
@@ -214,20 +214,20 @@ $config['principal']['ldap'] = [
   // It's possible to search for principal DN(s)
   'search_base_dn' => '', // Provide a separate base DN for search if different from 'base_dn' above else leave blank.
   'search_filter'  => '(|(&(objectClass=inetOrgPerson)(employeeNumber=*))(objectClass=groupOfNames))',   // Filter criteria for valid principals.
-  'search_scope'         => 'list',   // Scope of search
-                                      //  sub: Subtree
-                                      // list: Immediate children
-                                      // base: Match base DN only
+	'search_scope'         => 'list',   // Scope of search
+	                                    //  sub: Subtree
+	                                    // list: Immediate children
+	                                    // base: Match base DN only
   
   // DN and password to bind as before searching for principal DN(s) and reading attributes mapped in fieldmap.
-  // This bind user in addition must have read access to entryUUID operational attribute of the principal.
+	// This bind user in addition must have read access to entryUUID operational attribute of the principal.
   'search_bind_dn' => 'cn=admin,ou=People,dc=example,dc=org',
   'search_bind_pw' => '<secret>',
 
-  // Principal property => LDAP field map.
-  //
-  // Use primary name of the backend field here not it's alias.
-  //
+	// Principal property => LDAP field map.
+	//
+	// Use primary name of the backend field here not it's alias.
+	//
   // The following properties can be mapped.
   // id            - Username used in authentication (cardinality 1*).
   // display_name  - Display name (cardinality 1)
@@ -242,10 +242,10 @@ $config['principal']['ldap'] = [
   								'mail' => 'mail'
   							],
   							
-  // Group principal property => LDAP field map.
-  //
-  // Use primary name of the backend field here not it's alias.
-  //
+	// Group principal property => LDAP field map.
+	//
+	// Use primary name of the backend field here not it's alias.
+	//
   // The following properties can be mapped.
   // id            - Username used in authentication (cardinality 1*).
   // display_name  - Display name (cardinality 1)
@@ -254,148 +254,148 @@ $config['principal']['ldap'] = [
   // If multiple values for an attribute are returned from LDAP where maximum cardinality is 1
   // then only the first value is used.
   'group_fieldmap' => [	'id' => 'cn',
-  'display_name' => 'cn',
-  'member' => 'member'
-  ]
+												'display_name' => 'cn',
+												'member' => 'member'
+											]
 ];
 
 
 // Address book.
 $config['card']['addressbook']['ldap']['me'] = [
-  'name'          	=> 'Me',
+	'name'          	=> 'Me',
   'description'     => 'My contact',
     
-  // 'user_specific' and 'writable' values are used as initialization parameters for the sync database. 
-  // Once the sync database has been initialized changing the values here to any conflicting values will 
-  // lead to this application not processing requests for this address book.
-  'user_specific' 	=> true, // If this is true then address book will be treated as belonging to the user 
-                              // and username placeholder can be used in applicable places. This is a 
-                              // mandatory setting and must be explicitly set strictly to a boolean value.
-                              
-  'writable'     	 	=> true, // If true (default) then contacts can be created, updated, renamed and 
-                              // deleted in the address book.
-                              
-  // For writable address books creation or deletion of contacts can be denied using the below.
-  // WARNING: Not setting the below to appropriate values(s) can lead to contacts being added and/or deleted
-  // to the address book when only update of certain contact fields is desired.
-  // The following values are accepted
-  // create : Cannot add new contacts.
-  // delete : Cannot delete any contact.
-  // By default no access is denied.
-  'write_acl_deny'  => ['create', 'delete'],
-  
-  // Use this address book as a directory (i.e. for lookups only) for Apple devices
-  // Defaults to false
-  //  'directory'				=> true,
-  
-  // An address book can be restricted to a group or to only members of a group and are called shared address 
-  // books. Set the below to true to make this address book a shared address book. These address books are not 
-  // shown in address book list of normal users and need to be accessed via direct address book URI like 
-  // /addressbooks/group-name/addressbook-name/. Takes effect when user_specific is also set to true for this 
-  // address book.
-  //  'shared' => true,
-  
-  // Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
-  // of the address book from backend every time they sync their address book. Set the below to 
-  // prevent full address book refresh from backend at least for this interval (in seconds).
-  // A larger value will lead to better performance. 
-  // Defaults to four hours.
-  //  'full_refresh_interval' => 14400,
+	// 'user_specific' and 'writable' values are used as initialization parameters for the sync database. 
+	// Once the sync database has been initialized changing the values here to any conflicting values will 
+	// lead to this application not processing requests for this address book.
+	'user_specific' 	=> true, // If this is true then address book will be treated as belonging to the user 
+	                            // and username placeholder can be used in applicable places. This is a 
+	                            // mandatory setting and must be explicitly set strictly to a boolean value.
+	                            
+	'writable'     	 	=> true, // If true (default) then contacts can be created, updated, renamed and 
+	                            // deleted in the address book.
+	                            
+	// For writable address books creation or deletion of contacts can be denied using the below.
+	// WARNING: Not setting the below to appropriate values(s) can lead to contacts being added and/or deleted
+	// to the address book when only update of certain contact fields is desired.
+	// The following values are accepted
+	// create : Cannot add new contacts.
+	// delete : Cannot delete any contact.
+	// By default no access is denied.
+	'write_acl_deny'  => ['create', 'delete'],
+	
+	// Use this address book as a directory (i.e. for lookups only) for Apple devices
+	// Defaults to false
+	//  'directory'				=> true,
+	
+	// An address book can be restricted to a group or to only members of a group and are called shared address 
+	// books. Set the below to true to make this address book a shared address book. These address books are not 
+	// shown in address book list of normal users and need to be accessed via direct address book URI like 
+	// /addressbooks/group-name/addressbook-name/. Takes effect when user_specific is also set to true for this 
+	// address book.
+	//  'shared' => true,
+	
+	// Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
+	// of the address book from backend every time they sync their address book. Set the below to 
+	// prevent full address book refresh from backend at least for this interval (in seconds).
+	// A larger value will lead to better performance. 
+	// Defaults to four hours.
+	//  'full_refresh_interval' => 14400,
 
-  // For WebDAV sync clients there is no way to know about contacts which are deleted in the backend but not by 
-  // this application. Set the below to delete those contacts in WebDAV sync clients at this interval at worst. 
-  // A larger value will lead to better performance.
-  // Defaults to a day.
-  //  'force_full_sync_interval' => 86400,
-  
-  // Maximum size of a card (in bytes) which is accepted for create/update. Defaults to 16 KiB.
-  //  'max_size'				=> 16384,
-  
+	// For WebDAV sync clients there is no way to know about contacts which are deleted in the backend but not by 
+	// this application. Set the below to delete those contacts in WebDAV sync clients at this interval at worst. 
+	// A larger value will lead to better performance.
+	// Defaults to a day.
+	//  'force_full_sync_interval' => 86400,
+	
+	// Maximum size of a card (in bytes) which is accepted for create/update. Defaults to 16 KiB.
+	//  'max_size'				=> 16384,
+	
   // The following placeholders are available to be used in 'base_dn' and 'search_filter' below as applicable.
   // %u  - Username of the user whose address book is being accessed.
   // %dn - DN as returned by LDAP search for address book DN.
   
-  'base_dn'       	=> '%dn', // Address book DN (used as base DN to search for contacts 
-  // and as parent DN for new contacts).
-  
-  // LDAP filter to be used to search for contacts
-  'filter'        	=> '(objectClass=inetOrgPerson)',
-  
-  // Bind user to search/read/write contacts. If 'bind_dn' and 'bind_pass' values are not provided below 
-  // and if this address book is marked as 'user_specific' then 'bind_dn' and 'bind_pass' values provided 
-  // in $config['auth']['ldap'] will be used instead.
-  // This bind user must have read access to entryUUID, createTimestamp and modifyTimestamp operational attributes 
-  // of all contacts in the address book in addition to contact data.
-  'bind_dn'       	=> 'cn=admin,ou=People,dc=example,dc=org',
-  'bind_pass'     	=> '<secret>',
-  
-  // Sync LDAP bind user can be used for contact searches if there are size or time limits on 'bind_dn' in LDAP.
-  // Read and write of contact data will still be performed by 'bind_dn'. 'sync_bind_dn' should have liberal or 
-  // no size or time limits and must have read access to entryUUID, createTimestamp and modifyTimestamp attribute 
-  // of all contacts in the address book. Access to other contact attributes is not required by this user.
-  //  'sync_bind_dn'       => 'cn=carddavsync,ou=People,dc=example,dc=org',
-  //  'sync_bind_pw'     	=> '<secret>',
-  
-  'scope'         => 'base',   // Scope of search for contacts
-                               //  sub: Subtree
-                               // list: Immediate children
-                               // base: Match base DN only
-  
+	'base_dn'       	=> '%dn', // Address book DN (used as base DN to search for contacts 
+															// and as parent DN for new contacts).
+	
+	// LDAP filter to be used to search for contacts
+	'filter'        	=> '(objectClass=inetOrgPerson)',
+	
+	// Bind user to search/read/write contacts. If 'bind_dn' and 'bind_pass' values are not provided below 
+	// and if this address book is marked as 'user_specific' then 'bind_dn' and 'bind_pass' values provided 
+	// in $config['auth']['ldap'] will be used instead.
+	// This bind user must have read access to entryUUID, createTimestamp and modifyTimestamp operational attributes 
+	// of all contacts in the address book in addition to contact data.
+	'bind_dn'       	=> 'cn=admin,ou=People,dc=example,dc=org',
+	'bind_pass'     	=> '<secret>',
+	
+	// Sync LDAP bind user can be used for contact searches if there are size or time limits on 'bind_dn' in LDAP.
+	// Read and write of contact data will still be performed by 'bind_dn'. 'sync_bind_dn' should have liberal or 
+	// no size or time limits and must have read access to entryUUID, createTimestamp and modifyTimestamp attribute 
+	// of all contacts in the address book. Access to other contact attributes is not required by this user.
+	//  'sync_bind_dn'       => 'cn=carddavsync,ou=People,dc=example,dc=org',
+	//  'sync_bind_pw'     	=> '<secret>',
+	
+	'scope'         => 'base',   // Scope of search for contacts
+	                             //  sub: Subtree
+	                             // list: Immediate children
+	                             // base: Match base DN only
+	
   // It's possible to find the base of an address book DN from a search result. Useful only if the address book is user specific.
   'search_base_dn' => 'ou=People,dc=example,dc=org',
   'search_filter'  => '(&(objectClass=inetOrgPerson)(uid=%u))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
-  'search_scope'   => 'list',  // Scope of search
-                               //  sub: Subtree
-                               // list: Immediate children
-                               // base: Match base DN only
-  
-  // Backend data update policy. Valid options are below.
-  // merge (default)  - Would only replace backend contact attibutes present in field map here and 
-  //                    leave others intact.
-  // replace          - Would replace whole backend contact with attibutes present in 
-  //                    field map here. WARNING: This option may lead to loss of contact attributes 
-  //                    in the backend which are not present in field map here.
-  //  'backend_data_update_policy' => 'merge',
-  
-  // If writable is true then these fields need to be populated:
-  // LDAP_Object_Classes, required_fields, LDAP_rdn
-  'LDAP_Object_Classes'     => ['inetOrgPerson'],
-  'required_fields'         => ['cn', 'sn'],
-  'required_field_default'  => ['cn' => '(null)', 'sn' => '(null)'],
-  'LDAP_rdn'      			    => 'uid',
-  
-  // Sometimes contacts may not be created in backend due to conflicting DNs
-  // You can set the below to true to rename the rdn by appending text of format ' (crvs#<random_number>)'
-  // Make sure your LDAP_rdn attribute can accept such a formatted text before setting the below
-  // to true.
-  // Defaults to false
-  //  'LDAP_rdn_autorename'     => true,
-  
-  // Set the below to true to replace the rdn value to be renamed with the new value (rdn value with appended text)
-  // instead of adding it as a new value to the LDAP_rdn. If LDAP_rdn is a single valued attribute in the backend
-  // this must be set to true.
-  // Defaults to false
-  //  'LDAP_rdn_autorename_replace' => true,
+	'search_scope'   => 'list',  // Scope of search
+	                             //  sub: Subtree
+	                             // list: Immediate children
+	                             // base: Match base DN only
+	
+	// Backend data update policy. Valid options are below.
+	// merge (default)  - Would only replace backend contact attibutes present in field map here and 
+	//                    leave others intact.
+	// replace          - Would replace whole backend contact with attibutes present in 
+	//                    field map here. WARNING: This option may lead to loss of contact attributes 
+	//                    in the backend which are not present in field map here.
+	//  'backend_data_update_policy' => 'merge',
+	
+	// If writable is true then these fields need to be populated:
+	// LDAP_Object_Classes, required_fields, LDAP_rdn
+	'LDAP_Object_Classes'     => ['inetOrgPerson'],
+	'required_fields'         => ['cn', 'sn'],
+	'required_field_default'  => ['cn' => '(null)', 'sn' => '(null)'],
+	'LDAP_rdn'      			    => 'uid',
+	
+	// Sometimes contacts may not be created in backend due to conflicting DNs
+	// You can set the below to true to rename the rdn by appending text of format ' (crvs#<random_number>)'
+	// Make sure your LDAP_rdn attribute can accept such a formatted text before setting the below
+	// to true.
+	// Defaults to false
+	//  'LDAP_rdn_autorename'     => true,
+	
+	// Set the below to true to replace the rdn value to be renamed with the new value (rdn value with appended text)
+	// instead of adding it as a new value to the LDAP_rdn. If LDAP_rdn is a single valued attribute in the backend
+	// this must be set to true.
+	// Defaults to false
+	//  'LDAP_rdn_autorename_replace' => true,
 
-  // Backend contact field acl. By default no access is denied to any backend field.
-  // 'eval' can have following values
-  // r (default) - Evaluate 'list' as read only fields
-  // w           - Evaluate 'list' as writable fields, rest of the fields are treated as read only
-  'field_acl'     => 	[ 
-  'eval' => 'w',
-  'list' => ['displayName', 'homePhone', 'telephoneNumber', 'facsimileTelephoneNumber', 'pager', 'mobile', 'homePostalAddress', 'preferredLanguage']
-  ],
+	// Backend contact field acl. By default no access is denied to any backend field.
+	// 'eval' can have following values
+	// r (default) - Evaluate 'list' as read only fields
+	// w           - Evaluate 'list' as writable fields, rest of the fields are treated as read only
+	'field_acl'     => 	[ 
+												'eval' => 'w',
+												'list' => ['displayName', 'homePhone', 'telephoneNumber', 'facsimileTelephoneNumber', 'pager', 'mobile', 'homePostalAddress', 'preferredLanguage']
+											],
 
-  // vCard    => LDAP field map
-  //
-  // Use primary name of the field only and not it's alias.
-  //
-  // To map a composite value property to individual backend fields check conf/vcard_metadata.json for 
-  // logical names of the components of a composite value.
-  //
-  // vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only.
-  //
-  // Currently only 'TYPE' vCard parameter match is supported.
+	// vCard    => LDAP field map
+	//
+	// Use primary name of the field only and not it's alias.
+	//
+	// To map a composite value property to individual backend fields check conf/vcard_metadata.json for 
+	// logical names of the components of a composite value.
+	//
+	// vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only.
+	//
+	// Currently only 'TYPE' vCard parameter match is supported.
   'fieldmap'      => [
     'FN'            => ['field_name' => 'cn'],
 
@@ -405,13 +405,13 @@ $config['card']['addressbook']['ldap']['me'] = [
     																		]
     									 ],
 
-  'EMAIL'         => ['field_name' => 'mail'],
+		'EMAIL'         => ['field_name' => 'mail'],
 
-  'ORG'         	=> ['field_name' => [
-  'org_name' 			=> 'o', 
-  'org_unit_name' => 'ou'
-  ]
-   ],
+		'ORG'         	=> ['field_name' => [
+																					'org_name' 			=> 'o', 
+																					'org_unit_name' => 'ou'
+																				]
+											 ],
 
     'TITLE'         => ['field_name' => 'title'],
     
@@ -419,277 +419,277 @@ $config['card']['addressbook']['ldap']['me'] = [
 
     'NICKNAME'      => ['field_name' => 'displayName'],
 
-  'PHOTO'         => 	[
+		'PHOTO'         => 	[
     											// Mapping profile picture
-  [
-  'field_name' => 'jpegPhoto',
-                    	'field_data_format' => 'binary',
-                    	'field_data_mediatype' => ['image/jpeg', 'image/png'], // List of mediatype which a 
-                    																												 // binary backend field will accept
-                    ]
+													[
+														'field_name' => 'jpegPhoto',
+				                  	'field_data_format' => 'binary',
+				                  	'field_data_mediatype' => ['image/jpeg', 'image/png'], // List of mediatype which a 
+				                  																												 // binary backend field will accept
+				                  ]
                        	],
 
     'NOTE'        	=> 	['field_name' => 'description'],
 
     'TEL'						=> 	[
     											// Mapping pager number
-                    [	
-                    	'field_name' => 'pager',
-                  'parameters' => ['TYPE' => 'pager']
-                    ],
-                    
+				                  [	
+				                  	'field_name' => 'pager',
+						                'parameters' => ['TYPE' => 'pager']
+				                  ],
+				                  
     											// Mapping fax number
-                        [
-                        	'field_name' => 'facsimileTelephoneNumber',
-                          'parameters' => [
-                          									['TYPE' => ['fax', 'work']],
-                          									['TYPE' => 'fax'],
-                          								],
-                      	],
-                      	
+		                      [
+		                      	'field_name' => 'facsimileTelephoneNumber',
+		                        'parameters' => [
+		                        									['TYPE' => ['fax', 'work']],
+		                        									['TYPE' => 'fax'],
+		                        								],
+		                    	],
+		                    	
     											// Mapping mobile number
-                    [
-                    	'field_name' => 'mobile',
-                      'parameters' => ['TYPE' => 'cell']
-                    ],
-                    
+				                  [
+				                  	'field_name' => 'mobile',
+				                    'parameters' => ['TYPE' => 'cell']
+				                  ],
+				                  
     											// Mapping home telephone number
     											[
-    											'field_name' => 'homePhone',
-                          'parameters' => [ 
-                                            ['TYPE' => 'home'],
-                          									['TYPE' => 'home', 'PREF' => '1']
-                                          ],
-                  'reverse_map_parameter_index' => 1
+		  											'field_name' => 'homePhone',
+		                        'parameters' => [ 
+		                                          ['TYPE' => 'home'],
+		                        									['TYPE' => 'home', 'PREF' => '1']
+		                                        ],
+						                'reverse_map_parameter_index' => 1
                           ],
                           
     											// Mapping work telephone number
                           [	
                           	'field_name' => 'telephoneNumber',
-                          'parameters' => [ 
-                                            ['TYPE' => 'work'],
-                          									['TYPE' => 'work', 'PREF' => '1'],
-                                            null
-                                          ],
-                  'reverse_map_parameter_index' => 1
+		                        'parameters' => [ 
+		                                          ['TYPE' => 'work'],
+		                        									['TYPE' => 'work', 'PREF' => '1'],
+		                                          null
+		                                        ],
+						                'reverse_map_parameter_index' => 1
                           ],
                      ],
                      
       'ADR'         => [
-    										// Mapping home postal address
-      									[
-  'field_name' => 'homePostalAddress',
-                      'parameters' => ['TYPE' => 'home'],
-                      'map_component_separator' => '$'
-                        ],
-                        
-    										// Mapping other postal address
-      									[
-  'field_name' => 'postalAddress',
-                      'parameters' => [null],
-                      'map_component_separator' => '$'
-                        ],
+		  										// Mapping home postal address
+		    									[
+														'field_name' => 'homePostalAddress',
+				                    'parameters' => ['TYPE' => 'home'],
+				                    'map_component_separator' => '$'
+		                      ],
+		                      
+		  										// Mapping other postal address
+		    									[
+														'field_name' => 'postalAddress',
+				                    'parameters' => [null],
+				                    'map_component_separator' => '$'
+		                      ],
 
-    										// Mapping location
-                        [
-       										'field_name' => [
-       																			'po_box'			=> 'postOfficeBox',
-       																			'street' 			=> 'street',
-       																			'locality' 		=> 'l',
-       																			'province' 		=> 'st', 
-       																			'postal_code' => 'postalCode'
-       																		],
-                          'parameters' => ['TYPE' => 'work']
-                        ]
+		  										// Mapping location
+		                      [
+		     										'field_name' => [
+		     																			'po_box'			=> 'postOfficeBox',
+		     																			'street' 			=> 'street',
+		     																			'locality' 		=> 'l',
+		     																			'province' 		=> 'st', 
+		     																			'postal_code' => 'postalCode'
+		     																		],
+		                        'parameters' => ['TYPE' => 'work']
+		                      ]
                        ],
 
       'LANG'        => ['field_name' => 'preferredLanguage']
-  ],
-  
-  // If writable is true then these fields need to be populated:
-  // group_LDAP_Object_Classes, group_required_fields, group_LDAP_rdn
-  'group_LDAP_Object_Classes'    => ['groupOfNames'],
-  'group_required_fields'        => ['cn', 'member'],
-  'group_required_field_default' => ['cn' => '(null)', 'member' => 'cn=dummyRefInt'],
-  'group_LDAP_rdn'      	       => 'cn',
-  
-  // Sometimes contacts may not be created in backend due to conflicting DNs
-  // You can set the below to true to rename the rdn by appending text of format ' (crvs#<random_number>)'
-  // Make sure your group_LDAP_rdn attribute can accept such a formatted text before setting the below
-  // to true.
-  // Defaults to false
-  //  'group_LDAP_rdn_autorename'     => true,
-  
-  // Set the below to true to replace the rdn value to be renamed with the new value (rdn value with appended text)
-  // instead of adding it as a new value to the group_LDAP_rdn. If group_LDAP_rdn is a single valued attribute in the backend
-  // this must be set to true.
-  // Defaults to false
-  //  'group_LDAP_rdn_autorename_replace' => true,
-  
-  // Backend contact field acl. By default no access is denied to any backend field.
-  // 'eval' can have following values
-  // r (default) - Evaluate 'list' as read only fields
-  // w           - Evaluate 'list' as writable fields, rest of the fields are treated as read only
-  //  'group_field_acl' => 	[ 
-  //													'eval' => 'r',
-  //													'list' => []
-  //												],
-  
-  // Backend field which points to the contact which is member of this contact group  
-  'group_member_map'          => [ 'MEMBER'      => [ 'field_name' => 'member' ] ],
-  
-  // vCard    => LDAP field map
-  //
-  // Use primary name of the backend field here not it's alias.
-  //
-  // To map a composite value property to an individual backend field check conf/vcard_metadata.json for logical 
-  // names of the components of a composite value.
-  //
-  // vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only.
-  'group_fieldmap'            => [     
-   'FN'          => [	'field_name' => 'cn'],
-   	
-   'NOTE'        => [	'field_name' => 'description']
-   ]
+	],
+	
+	// If writable is true then these fields need to be populated:
+	// group_LDAP_Object_Classes, group_required_fields, group_LDAP_rdn
+	'group_LDAP_Object_Classes'    => ['groupOfNames'],
+	'group_required_fields'        => ['cn', 'member'],
+	'group_required_field_default' => ['cn' => '(null)', 'member' => 'cn=dummyRefInt'],
+	'group_LDAP_rdn'      	       => 'cn',
+	
+	// Sometimes contacts may not be created in backend due to conflicting DNs
+	// You can set the below to true to rename the rdn by appending text of format ' (crvs#<random_number>)'
+	// Make sure your group_LDAP_rdn attribute can accept such a formatted text before setting the below
+	// to true.
+	// Defaults to false
+	//  'group_LDAP_rdn_autorename'     => true,
+	
+	// Set the below to true to replace the rdn value to be renamed with the new value (rdn value with appended text)
+	// instead of adding it as a new value to the group_LDAP_rdn. If group_LDAP_rdn is a single valued attribute in the backend
+	// this must be set to true.
+	// Defaults to false
+	//  'group_LDAP_rdn_autorename_replace' => true,
+	
+	// Backend contact field acl. By default no access is denied to any backend field.
+	// 'eval' can have following values
+	// r (default) - Evaluate 'list' as read only fields
+	// w           - Evaluate 'list' as writable fields, rest of the fields are treated as read only
+	//  'group_field_acl' => 	[ 
+	//													'eval' => 'r',
+	//													'list' => []
+	//												],
+	
+	// Backend field which points to the contact which is member of this contact group  
+	'group_member_map'          => [ 'MEMBER'      => [ 'field_name' => 'member' ] ],
+	
+	// vCard    => LDAP field map
+	//
+	// Use primary name of the backend field here not it's alias.
+	//
+	// To map a composite value property to an individual backend field check conf/vcard_metadata.json for logical 
+	// names of the components of a composite value.
+	//
+	// vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only.
+	'group_fieldmap'            => [     
+		 'FN'          => [	'field_name' => 'cn'],
+	 	
+		 'NOTE'        => [	'field_name' => 'description']
+	 ]
 ];
 
 
 // Address book.
 $config['card']['addressbook']['ldap']['global'] = [
-  'name'          	=> 'Global Address Book',
+	'name'          	=> 'Global Address Book',
   'description'     => 'Global address book',
     
-  // 'user_specific' and 'writable' values are used as initialization parameters for the sync database. 
-  // Once the sync database has been initialized changing the values here to any conflicting values will 
-  // lead to this application not processing requests for this address book.
-  'user_specific' 	=> false, // If this is true then address book will be treated as belonging to the user 
-                              // and username placeholder can be used in applicable places. This is a 
-                              // mandatory setting and must be explicitly set strictly to a boolean value.
-                              
-  'writable'     	 	=> false, // If true (default) then contacts can be created, updated, renamed and 
-                              // deleted in the address book.
-                              
-  // For writable address books creation or deletion of contacts can be denied using the below.
-  // WARNING: Not setting the below to appropriate values(s) can lead to contacts being added and/or deleted
-  // to the address book when only update of certain contact fields is desired.
-  // The following values are accepted
-  // create : Cannot add new contacts.
-  // delete : Cannot delete any contact.
-  // By default no access is denied.
-  //  'write_acl_deny'  => ['create', 'delete'],
-  
-  // Use this address book as a directory (i.e. for lookups only) for Apple devices
-  // Defaults to false
-  'directory'				=> true,
-  
-  // An address book can be restricted to a group or to only members of a group and are called shared address 
-  // books. Set the below to true to make this address book a shared address book. These address books are not 
-  // shown in address book list of normal users and need to be accessed via direct address book URI like 
-  // /addressbooks/group-name/addressbook-name/. Takes effect when user_specific is also set to true for this 
-  // address book.
-  //  'shared' => true,
-  
-  // Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
-  // of the address book from backend every time they sync their address book. Set the below to 
-  // prevent full address book refresh from backend at least for this interval (in seconds).
-  // A larger value will lead to better performance. 
-  // Defaults to four hours.
-  //  'full_refresh_interval' => 14400,
+	// 'user_specific' and 'writable' values are used as initialization parameters for the sync database. 
+	// Once the sync database has been initialized changing the values here to any conflicting values will 
+	// lead to this application not processing requests for this address book.
+	'user_specific' 	=> false, // If this is true then address book will be treated as belonging to the user 
+	                            // and username placeholder can be used in applicable places. This is a 
+	                            // mandatory setting and must be explicitly set strictly to a boolean value.
+	                            
+	'writable'     	 	=> false, // If true (default) then contacts can be created, updated, renamed and 
+	                            // deleted in the address book.
+	                            
+	// For writable address books creation or deletion of contacts can be denied using the below.
+	// WARNING: Not setting the below to appropriate values(s) can lead to contacts being added and/or deleted
+	// to the address book when only update of certain contact fields is desired.
+	// The following values are accepted
+	// create : Cannot add new contacts.
+	// delete : Cannot delete any contact.
+	// By default no access is denied.
+	//  'write_acl_deny'  => ['create', 'delete'],
+	
+	// Use this address book as a directory (i.e. for lookups only) for Apple devices
+	// Defaults to false
+	'directory'				=> true,
+	
+	// An address book can be restricted to a group or to only members of a group and are called shared address 
+	// books. Set the below to true to make this address book a shared address book. These address books are not 
+	// shown in address book list of normal users and need to be accessed via direct address book URI like 
+	// /addressbooks/group-name/addressbook-name/. Takes effect when user_specific is also set to true for this 
+	// address book.
+	//  'shared' => true,
+	
+	// Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
+	// of the address book from backend every time they sync their address book. Set the below to 
+	// prevent full address book refresh from backend at least for this interval (in seconds).
+	// A larger value will lead to better performance. 
+	// Defaults to four hours.
+	//  'full_refresh_interval' => 14400,
 
-  // For WebDAV sync clients there is no way to know about contacts which are deleted in the backend but not by 
-  // this application. Set the below to delete those contacts in WebDAV sync clients at this interval at worst. 
-  // A larger value will lead to better performance.
-  // Defaults to a day.
-  //  'force_full_sync_interval' => 86400,
-  
-  // Maximum size of a card (in bytes) which is accepted for create/update. Defaults to 16 KiB.
-  //  'max_size'				=> 16384,
-  
+	// For WebDAV sync clients there is no way to know about contacts which are deleted in the backend but not by 
+	// this application. Set the below to delete those contacts in WebDAV sync clients at this interval at worst. 
+	// A larger value will lead to better performance.
+	// Defaults to a day.
+	//  'force_full_sync_interval' => 86400,
+	
+	// Maximum size of a card (in bytes) which is accepted for create/update. Defaults to 16 KiB.
+	//  'max_size'				=> 16384,
+	
   // The following placeholders are available to be used in 'base_dn' and 'search_filter' below as applicable.
   // %u  - Username of the user whose address book is being accessed.
   // %dn - DN as returned by LDAP search for address book DN.
   
-  'base_dn'       	=> 'ou=People,dc=example,dc=org', // Address book DN (used as base DN to search for contacts 
-  // and as parent DN for new contacts).
-  
-  // LDAP filter to be used to search for contacts
-  'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
-  
-  // Bind user to search/read/write contacts. If 'bind_dn' and 'bind_pass' values are not provided below 
-  // and if this address book is marked as 'user_specific' then 'bind_dn' and 'bind_pass' values provided 
-  // in $config['auth']['ldap'] will be used instead.
-  // This bind user must have read access to entryUUID, createTimestamp and modifyTimestamp operational attributes 
-  // of all contacts in the address book in addition to contact data.
-  'bind_dn'       	=> 'cn=admin,ou=People,dc=example,dc=org',
-  'bind_pass'     	=> '<secret>',
-  
-  // Sync LDAP bind user can be used for contact searches if there are size or time limits on 'bind_dn' in LDAP.
-  // Read and write of contact data will still be performed by 'bind_dn'. 'sync_bind_dn' should have liberal or 
-  // no size or time limits and must have read access to entryUUID, createTimestamp and modifyTimestamp attribute 
-  // of all contacts in the address book. Access to other contact attributes is not required by this user.
-  //  'sync_bind_dn'       => 'cn=carddavsync,ou=People,dc=example,dc=org',
-  //  'sync_bind_pw'     	=> '<secret>',
-  
-  'scope'         => 'list',   // Scope of search for contacts
-                               //  sub: Subtree
-                               // list: Immediate children
-                               // base: Match base DN only
-  
+	'base_dn'       	=> 'ou=People,dc=example,dc=org', // Address book DN (used as base DN to search for contacts 
+																											// and as parent DN for new contacts).
+	
+	// LDAP filter to be used to search for contacts
+	'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
+	
+	// Bind user to search/read/write contacts. If 'bind_dn' and 'bind_pass' values are not provided below 
+	// and if this address book is marked as 'user_specific' then 'bind_dn' and 'bind_pass' values provided 
+	// in $config['auth']['ldap'] will be used instead.
+	// This bind user must have read access to entryUUID, createTimestamp and modifyTimestamp operational attributes 
+	// of all contacts in the address book in addition to contact data.
+	'bind_dn'       	=> 'cn=admin,ou=People,dc=example,dc=org',
+	'bind_pass'     	=> '<secret>',
+	
+	// Sync LDAP bind user can be used for contact searches if there are size or time limits on 'bind_dn' in LDAP.
+	// Read and write of contact data will still be performed by 'bind_dn'. 'sync_bind_dn' should have liberal or 
+	// no size or time limits and must have read access to entryUUID, createTimestamp and modifyTimestamp attribute 
+	// of all contacts in the address book. Access to other contact attributes is not required by this user.
+	//  'sync_bind_dn'       => 'cn=carddavsync,ou=People,dc=example,dc=org',
+	//  'sync_bind_pw'     	=> '<secret>',
+	
+	'scope'         => 'list',   // Scope of search for contacts
+	                             //  sub: Subtree
+	                             // list: Immediate children
+	                             // base: Match base DN only
+	
   // It's possible to find the base of an address book DN from a search result. Useful only if the address book is user specific.
   //  'search_base_dn' => 'ou=People,dc=example,dc=org',
   //  'search_filter'  => '(&(objectClass=inetOrgPerson)(uid=%u))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
-  //  'search_scope'   => 'list',  // Scope of search
-                               //  sub: Subtree
-                               // list: Immediate children
-                               // base: Match base DN only
-  
-  // Backend data update policy. Valid options are below.
-  // merge (default)  - Would only replace backend contact attibutes present in field map here and 
-  //                    leave others intact.
-  // replace          - Would replace whole backend contact with attibutes present in 
-  //                    field map here. WARNING: This option may lead to loss of contact attributes 
-  //                    in the backend which are not present in field map here.
-  //  'backend_data_update_policy' => 'merge',
-  
-  // If writable is true then these fields need to be populated:
-  // LDAP_Object_Classes, required_fields, LDAP_rdn
-  'LDAP_Object_Classes'    => ['inetOrgPerson'],
-  'required_fields'        => ['cn', 'sn'],
-  //  'required_field_default' => ['cn' => '(null)', 'sn' => '(null)'],
-  'LDAP_rdn'      			   => 'uid',
-  
-  // Sometimes contacts may not be created in backend due to conflicting DNs
-  // You can set the below to true to rename the rdn by appending text of format ' (crvs#<random_number>)'
-  // Make sure your LDAP_rdn attribute can accept such a formatted text before setting the below
-  // to true.
-  // Defaults to false
-  //  'LDAP_rdn_autorename'     => true,
-  
-  // Set the below to true to replace the rdn value to be renamed with the new value (rdn value with appended text)
-  // instead of adding it as a new value to the LDAP_rdn. If LDAP_rdn is a single valued attribute in the backend
-  // this must be set to true.
-  // Defaults to false
-  //  'LDAP_rdn_autorename_replace' => true,
+	//  'search_scope'   => 'list',  // Scope of search
+	                             //  sub: Subtree
+	                             // list: Immediate children
+	                             // base: Match base DN only
+	
+	// Backend data update policy. Valid options are below.
+	// merge (default)  - Would only replace backend contact attibutes present in field map here and 
+	//                    leave others intact.
+	// replace          - Would replace whole backend contact with attibutes present in 
+	//                    field map here. WARNING: This option may lead to loss of contact attributes 
+	//                    in the backend which are not present in field map here.
+	//  'backend_data_update_policy' => 'merge',
+	
+	// If writable is true then these fields need to be populated:
+	// LDAP_Object_Classes, required_fields, LDAP_rdn
+	'LDAP_Object_Classes'    => ['inetOrgPerson'],
+	'required_fields'        => ['cn', 'sn'],
+	//  'required_field_default' => ['cn' => '(null)', 'sn' => '(null)'],
+	'LDAP_rdn'      			   => 'uid',
+	
+	// Sometimes contacts may not be created in backend due to conflicting DNs
+	// You can set the below to true to rename the rdn by appending text of format ' (crvs#<random_number>)'
+	// Make sure your LDAP_rdn attribute can accept such a formatted text before setting the below
+	// to true.
+	// Defaults to false
+	//  'LDAP_rdn_autorename'     => true,
+	
+	// Set the below to true to replace the rdn value to be renamed with the new value (rdn value with appended text)
+	// instead of adding it as a new value to the LDAP_rdn. If LDAP_rdn is a single valued attribute in the backend
+	// this must be set to true.
+	// Defaults to false
+	//  'LDAP_rdn_autorename_replace' => true,
 
-  // Backend contact field acl. By default no access is denied to any backend field.
-  // 'eval' can have following values
-  // r (default) - Evaluate 'list' as read only fields
-  // w           - Evaluate 'list' as writable fields, rest of the fields are treated as read only
-  //  'field_acl'     => 	[ 
-  //												'eval' => 'r',
-  //												'list' => []
-  //											],
+	// Backend contact field acl. By default no access is denied to any backend field.
+	// 'eval' can have following values
+	// r (default) - Evaluate 'list' as read only fields
+	// w           - Evaluate 'list' as writable fields, rest of the fields are treated as read only
+	//  'field_acl'     => 	[ 
+	//												'eval' => 'r',
+	//												'list' => []
+	//											],
 
-  // vCard    => LDAP field map
-  //
-  // Use primary name of the backend field here not it's alias.
-  //
-  // To map a composite value property to individual backend fields check conf/vcard_metadata.json for 
-  // logical names of the components of a composite value.
-  //
-  // vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only.
-  //
-  // Currently only 'TYPE' vCard parameter match is supported.
+	// vCard    => LDAP field map
+	//
+	// Use primary name of the backend field here not it's alias.
+	//
+	// To map a composite value property to individual backend fields check conf/vcard_metadata.json for 
+	// logical names of the components of a composite value.
+	//
+	// vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only.
+	//
+	// Currently only 'TYPE' vCard parameter match is supported.
   'fieldmap'      => [
     'FN'            => ['field_name' => 'cn'],
 
@@ -699,13 +699,13 @@ $config['card']['addressbook']['ldap']['global'] = [
     																		]
     									 ],
 
-  'EMAIL'         => ['field_name' => 'mail'],
+		'EMAIL'         => ['field_name' => 'mail'],
 
-  'ORG'         	=> ['field_name' => [
-  'org_name' 			=> 'o', 
-  'org_unit_name' => 'ou'
-  ]
-   ],
+		'ORG'         	=> ['field_name' => [
+																					'org_name' 			=> 'o', 
+																					'org_unit_name' => 'ou'
+																				]
+											 ],
 
     'TITLE'         => ['field_name' => 'title'],
     
@@ -713,277 +713,277 @@ $config['card']['addressbook']['ldap']['global'] = [
 
     'NICKNAME'      => ['field_name' => 'displayName'],
 
-  'PHOTO'         => 	[
+		'PHOTO'         => 	[
     											// Mapping profile picture
-  [
-  'field_name' => 'jpegPhoto',
-                    	'field_data_format' => 'binary',
-                    	'field_data_mediatype' => ['image/jpeg', 'image/png'], // List of mediatype which a 
-                    																												 // binary backend field will accept
-                    ]
+													[
+														'field_name' => 'jpegPhoto',
+				                  	'field_data_format' => 'binary',
+				                  	'field_data_mediatype' => ['image/jpeg', 'image/png'], // List of mediatype which a 
+				                  																												 // binary backend field will accept
+				                  ]
                        	],
 
     'NOTE'        	=> 	['field_name' => 'description'],
 
     'TEL'						=> 	[
     											// Mapping pager number
-                    [	
-                    	'field_name' => 'pager',
-                  'parameters' => ['TYPE' => 'pager']
-                    ],
-                    
+				                  [	
+				                  	'field_name' => 'pager',
+						                'parameters' => ['TYPE' => 'pager']
+				                  ],
+				                  
     											// Mapping fax number
-                        [
-                        	'field_name' => 'facsimileTelephoneNumber',
-                          'parameters' => [
-                          									['TYPE' => ['fax', 'work']],
-                          									['TYPE' => 'fax'],
-                          								],
-                      	],
-                      	
+		                      [
+		                      	'field_name' => 'facsimileTelephoneNumber',
+		                        'parameters' => [
+		                        									['TYPE' => ['fax', 'work']],
+		                        									['TYPE' => 'fax'],
+		                        								],
+		                    	],
+		                    	
     											// Mapping mobile number
-                    [
-                    	'field_name' => 'mobile',
-                      'parameters' => ['TYPE' => 'cell']
-                    ],
-                    
+				                  [
+				                  	'field_name' => 'mobile',
+				                    'parameters' => ['TYPE' => 'cell']
+				                  ],
+				                  
     											// Mapping home telephone number
     											[
-    											'field_name' => 'homePhone',
-                          'parameters' => [ 
-                                            ['TYPE' => 'home'],
-                          									['TYPE' => 'home', 'PREF' => '1']
-                                          ],
-                  'reverse_map_parameter_index' => 1
+		  											'field_name' => 'homePhone',
+		                        'parameters' => [ 
+		                                          ['TYPE' => 'home'],
+		                        									['TYPE' => 'home', 'PREF' => '1']
+		                                        ],
+						                'reverse_map_parameter_index' => 1
                           ],
                           
     											// Mapping work telephone number
                           [	
                           	'field_name' => 'telephoneNumber',
-                          'parameters' => [ 
-                                            ['TYPE' => 'work'],
-                          									['TYPE' => 'work', 'PREF' => '1'],
-                                            null
-                                          ],
-                  'reverse_map_parameter_index' => 1
+		                        'parameters' => [ 
+		                                          ['TYPE' => 'work'],
+		                        									['TYPE' => 'work', 'PREF' => '1'],
+		                                          null
+		                                        ],
+						                'reverse_map_parameter_index' => 1
                           ],
                      ],
                      
       'ADR'         => [
-    										// Mapping home postal address
-      									[
-  'field_name' => 'homePostalAddress',
-                      'parameters' => ['TYPE' => 'home'],
-                      'map_component_separator' => '$'
-                        ],
-                        
-    										// Mapping other postal address
-      									[
-  'field_name' => 'postalAddress',
-                      'parameters' => [null],
-                      'map_component_separator' => '$'
-                        ],
+		  										// Mapping home postal address
+		    									[
+														'field_name' => 'homePostalAddress',
+				                    'parameters' => ['TYPE' => 'home'],
+				                    'map_component_separator' => '$'
+		                      ],
+		                      
+		  										// Mapping other postal address
+		    									[
+														'field_name' => 'postalAddress',
+				                    'parameters' => [null],
+				                    'map_component_separator' => '$'
+		                      ],
 
-    										// Mapping location
-                        [
-       										'field_name' => [
-       																			'po_box'			=> 'postOfficeBox',
-       																			'street' 			=> 'street',
-       																			'locality' 		=> 'l',
-       																			'province' 		=> 'st', 
-       																			'postal_code' => 'postalCode'
-       																		],
-                          'parameters' => ['TYPE' => 'work']
-                        ]
+		  										// Mapping location
+		                      [
+		     										'field_name' => [
+		     																			'po_box'			=> 'postOfficeBox',
+		     																			'street' 			=> 'street',
+		     																			'locality' 		=> 'l',
+		     																			'province' 		=> 'st', 
+		     																			'postal_code' => 'postalCode'
+		     																		],
+		                        'parameters' => ['TYPE' => 'work']
+		                      ]
                        ],
 
       'LANG'        => ['field_name' => 'preferredLanguage']
-  ],
-  
-  // If writable is true then these fields need to be populated:
-  // group_LDAP_Object_Classes, group_required_fields, group_LDAP_rdn
-  'group_LDAP_Object_Classes'    => ['groupOfNames'],
-  'group_required_fields'        => ['cn', 'member'],
-  'group_required_field_default' => ['cn' => '(null)', 'member' => 'cn=dummyRefInt'],
-  'group_LDAP_rdn'      	       => 'cn',
-  
-  // Sometimes contacts may not be created in backend due to conflicting DNs
-  // You can set the below to true to rename the rdn by appending text of format ' (crvs#<random_number>)'
-  // Make sure your group_LDAP_rdn attribute can accept such a formatted text before setting the below
-  // to true.
-  // Defaults to false
-  //  'group_LDAP_rdn_autorename'     => true,
-  
-  // Set the below to true to replace the rdn value to be renamed with the new value (rdn value with appended text)
-  // instead of adding it as a new value to the group_LDAP_rdn. If group_LDAP_rdn is a single valued attribute in the backend
-  // this must be set to true.
-  // Defaults to false
-  //  'group_LDAP_rdn_autorename_replace' => true,
-  
-  // Backend contact field acl. By default no access is denied to any backend field.
-  // 'eval' can have following values
-  // r (default) - Evaluate 'list' as read only fields
-  // w           - Evaluate 'list' as writable fields, rest of the fields are treated as read only
-  //  'group_field_acl' => 	[ 
-  //													'eval' => 'r',
-  //													'list' => []
-  //												],
-  
-  // Backend field which points to the contact which is member of this contact group  
-  'group_member_map'          => [ 'MEMBER'      => [ 'field_name' => 'member' ] ],
-  
-  // vCard    => LDAP field map
-  //
-  // Use primary name of the backend field here not it's alias.
-  //
-  // To map a composite value property to an individual backend field check conf/vcard_metadata.json for logical 
-  // names of the components of a composite value.
-  //
-  // vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only.
-  'group_fieldmap'            => [     
-   'FN'          => [	'field_name' => 'cn'],
-   	
-   'NOTE'        => [	'field_name' => 'description']
-   ]
+	],
+	
+	// If writable is true then these fields need to be populated:
+	// group_LDAP_Object_Classes, group_required_fields, group_LDAP_rdn
+	'group_LDAP_Object_Classes'    => ['groupOfNames'],
+	'group_required_fields'        => ['cn', 'member'],
+	'group_required_field_default' => ['cn' => '(null)', 'member' => 'cn=dummyRefInt'],
+	'group_LDAP_rdn'      	       => 'cn',
+	
+	// Sometimes contacts may not be created in backend due to conflicting DNs
+	// You can set the below to true to rename the rdn by appending text of format ' (crvs#<random_number>)'
+	// Make sure your group_LDAP_rdn attribute can accept such a formatted text before setting the below
+	// to true.
+	// Defaults to false
+	//  'group_LDAP_rdn_autorename'     => true,
+	
+	// Set the below to true to replace the rdn value to be renamed with the new value (rdn value with appended text)
+	// instead of adding it as a new value to the group_LDAP_rdn. If group_LDAP_rdn is a single valued attribute in the backend
+	// this must be set to true.
+	// Defaults to false
+	//  'group_LDAP_rdn_autorename_replace' => true,
+	
+	// Backend contact field acl. By default no access is denied to any backend field.
+	// 'eval' can have following values
+	// r (default) - Evaluate 'list' as read only fields
+	// w           - Evaluate 'list' as writable fields, rest of the fields are treated as read only
+	//  'group_field_acl' => 	[ 
+	//													'eval' => 'r',
+	//													'list' => []
+	//												],
+	
+	// Backend field which points to the contact which is member of this contact group  
+	'group_member_map'          => [ 'MEMBER'      => [ 'field_name' => 'member' ] ],
+	
+	// vCard    => LDAP field map
+	//
+	// Use primary name of the backend field here not it's alias.
+	//
+	// To map a composite value property to an individual backend field check conf/vcard_metadata.json for logical 
+	// names of the components of a composite value.
+	//
+	// vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only.
+	'group_fieldmap'            => [     
+		 'FN'          => [	'field_name' => 'cn'],
+	 	
+		 'NOTE'        => [	'field_name' => 'description']
+	 ]
 ];
 
 
 // Address book.
 $config['card']['addressbook']['ldap']['personal'] = [
-  'name'          	=> 'Personal Address Book',
+	'name'          	=> 'Personal Address Book',
   'description'     => 'Personal address book of the user',
 
-  // 'user_specific' and 'writable' values are used as initialization parameters for the sync database. 
-  // Once the sync database has been initialized changing the values here to any conflicting values will 
-  // lead to this application not processing requests for this address book.
-  'user_specific' 	=> true, // If this is true then address book will be treated as belonging to the user 
-                              // and username placeholder can be used in applicable places. This is a 
-                              // mandatory setting and must be explicitly set strictly to a boolean value.
-                              
-  'writable'     	 	=> true, // If true (default) then contacts can be created, updated, renamed and 
-                              // deleted in the address book.
-                              
-  // For writable address books creation or deletion of contacts can be denied using the below.
-  // WARNING: Not setting the below to appropriate values(s) can lead to contacts being added and/or deleted
-  // to the address book when only update of certain contact fields is desired.
-  // The following values are accepted
-  // create : Cannot add new contacts.
-  // delete : Cannot delete any contact.
-  // By default no access is denied.
-  //  'write_acl_deny'  => ['create', 'delete'],
-  
-  // Use this address book as a directory (i.e. for lookups only) for Apple devices
-  // Defaults to false
-  //  'directory'				=> true,
-  
-  // An address book can be restricted to a group or to only members of a group and are called shared address 
-  // books. Set the below to true to make this address book a shared address book. These address books are not 
-  // shown in address book list of normal users and need to be accessed via direct address book URI like 
-  // /addressbooks/group-name/addressbook-name/. Takes effect when user_specific is also set to true for this 
-  // address book.
-  //  'shared' => true,
+	// 'user_specific' and 'writable' values are used as initialization parameters for the sync database. 
+	// Once the sync database has been initialized changing the values here to any conflicting values will 
+	// lead to this application not processing requests for this address book.
+	'user_specific' 	=> true, // If this is true then address book will be treated as belonging to the user 
+	                            // and username placeholder can be used in applicable places. This is a 
+	                            // mandatory setting and must be explicitly set strictly to a boolean value.
+	                            
+	'writable'     	 	=> true, // If true (default) then contacts can be created, updated, renamed and 
+	                            // deleted in the address book.
+	                            
+	// For writable address books creation or deletion of contacts can be denied using the below.
+	// WARNING: Not setting the below to appropriate values(s) can lead to contacts being added and/or deleted
+	// to the address book when only update of certain contact fields is desired.
+	// The following values are accepted
+	// create : Cannot add new contacts.
+	// delete : Cannot delete any contact.
+	// By default no access is denied.
+	//  'write_acl_deny'  => ['create', 'delete'],
+	
+	// Use this address book as a directory (i.e. for lookups only) for Apple devices
+	// Defaults to false
+	//  'directory'				=> true,
+	
+	// An address book can be restricted to a group or to only members of a group and are called shared address 
+	// books. Set the below to true to make this address book a shared address book. These address books are not 
+	// shown in address book list of normal users and need to be accessed via direct address book URI like 
+	// /addressbooks/group-name/addressbook-name/. Takes effect when user_specific is also set to true for this 
+	// address book.
+	//  'shared' => true,
 
-  // Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
-  // of the address book from backend every time they sync their address book. Set the below to 
-  // prevent full address book refresh from backend at least for this interval (in seconds).
-  // A larger value will lead to better performance. 
-  // Defaults to four hours.
-  //  'full_refresh_interval' => 14400,
+	// Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
+	// of the address book from backend every time they sync their address book. Set the below to 
+	// prevent full address book refresh from backend at least for this interval (in seconds).
+	// A larger value will lead to better performance. 
+	// Defaults to four hours.
+	//  'full_refresh_interval' => 14400,
 
-  // For WebDAV sync clients there is no way to know about contacts which are deleted in the backend but not by 
-  // this application. Set the below to delete those contacts in WebDAV sync clients at this interval at worst. 
-  // A larger value will lead to better performance.
-  // Defaults to a day.
-  //  'force_full_sync_interval' => 86400,
-  
-  // Maximum size of a card (in bytes) which is accepted for create/update. Defaults to 16 KiB.
-  //  'max_size'				=> 16384,
-  
+	// For WebDAV sync clients there is no way to know about contacts which are deleted in the backend but not by 
+	// this application. Set the below to delete those contacts in WebDAV sync clients at this interval at worst. 
+	// A larger value will lead to better performance.
+	// Defaults to a day.
+	//  'force_full_sync_interval' => 86400,
+	
+	// Maximum size of a card (in bytes) which is accepted for create/update. Defaults to 16 KiB.
+	//  'max_size'				=> 16384,
+	
   // The following placeholders are available to be used in 'base_dn' and 'search_filter' below as applicable.
   // %u  - Username of the user whose address book is being accessed.
   // %dn - DN as returned by LDAP search for address book DN.
   
-  'base_dn'       	=> 'ou=Address Book,%dn', // Address book DN (used as base DN to search for contacts 
-  // and as parent DN for new contacts).
-  
-  // LDAP filter to be used to search for contacts	
-  'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
-  
-  // Bind user to search/read/write contacts. If 'bind_dn' and 'bind_pass' values are not provided below 
-  // and if this address book is marked as 'user_specific' then 'bind_dn' and 'bind_pass' values provided 
-  // in $config['auth']['ldap'] will be used instead.
-  // This bind user must have read access to entryUUID, createTimestamp and modifyTimestamp operational attributes 
-  // of all contacts in the address book in addition to contact data.
-  //  'bind_dn'       	=> '',
-  //  'bind_pass'     => '',
-  
-  // Sync LDAP bind user can be used for contact searches if there are size or time limits on 'bind_dn' in LDAP.
-  // Read and write of contact data will still be performed by 'bind_dn'. 'sync_bind_dn' should have liberal or 
-  // no size or time limits and must have read access to entryUUID, createTimestamp and modifyTimestamp attribute 
-  // of all contacts in the address book. Access to other contact attributes is not required by this user.
-  //  'sync_bind_dn'       	=> 'cn=carddavsync,ou=People,dc=example,dc=org',
-  //  'sync_bind_pw'     	=> '<secret>',
-  
-  'scope'         => 'list',   // Scope of search for contacts
-                               //  sub: Subtree
-                               // list: Immediate children
-                               // base: Match base DN only
-  
+	'base_dn'       	=> 'ou=Address Book,%dn', // Address book DN (used as base DN to search for contacts 
+																							// and as parent DN for new contacts).
+	
+	// LDAP filter to be used to search for contacts	
+	'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
+	
+	// Bind user to search/read/write contacts. If 'bind_dn' and 'bind_pass' values are not provided below 
+	// and if this address book is marked as 'user_specific' then 'bind_dn' and 'bind_pass' values provided 
+	// in $config['auth']['ldap'] will be used instead.
+	// This bind user must have read access to entryUUID, createTimestamp and modifyTimestamp operational attributes 
+	// of all contacts in the address book in addition to contact data.
+	//  'bind_dn'       	=> '',
+	//  'bind_pass'     => '',
+	
+	// Sync LDAP bind user can be used for contact searches if there are size or time limits on 'bind_dn' in LDAP.
+	// Read and write of contact data will still be performed by 'bind_dn'. 'sync_bind_dn' should have liberal or 
+	// no size or time limits and must have read access to entryUUID, createTimestamp and modifyTimestamp attribute 
+	// of all contacts in the address book. Access to other contact attributes is not required by this user.
+	//  'sync_bind_dn'       	=> 'cn=carddavsync,ou=People,dc=example,dc=org',
+	//  'sync_bind_pw'     	=> '<secret>',
+	
+	'scope'         => 'list',   // Scope of search for contacts
+	                             //  sub: Subtree
+	                             // list: Immediate children
+	                             // base: Match base DN only
+	
   // It's possible to find the base of an address book DN from a search result. Useful only if the address book is user specific.
   'search_base_dn' => 'ou=People,dc=example,dc=org',
   'search_filter'  => '(&(objectClass=inetOrgPerson)(uid=%u))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
-  'search_scope'   => 'list',  // Scope of search
-                               //  sub: Subtree
-                               // list: Immediate children
-                               // base: Match base DN only
-  
-  // Backend data update policy. Valid options are below.
-  // merge (default)  - Would only replace backend contact attibutes present in field map here and 
-  //                    leave others intact.
-  // replace          - Would replace whole backend contact with attibutes present in 
-  //                    field map here. WARNING: This option may lead to loss of contact attributes 
-  //                    in the backend which are not present in field map here.
-  //  'backend_data_update_policy' => 'merge',
+	'search_scope'   => 'list',  // Scope of search
+	                             //  sub: Subtree
+	                             // list: Immediate children
+	                             // base: Match base DN only
+	
+	// Backend data update policy. Valid options are below.
+	// merge (default)  - Would only replace backend contact attibutes present in field map here and 
+	//                    leave others intact.
+	// replace          - Would replace whole backend contact with attibutes present in 
+	//                    field map here. WARNING: This option may lead to loss of contact attributes 
+	//                    in the backend which are not present in field map here.
+	//  'backend_data_update_policy' => 'merge',
 
-  // If writable is true then these fields need to be populated:
-  // LDAP_Object_Classes, required_fields, LDAP_rdn
-  'LDAP_Object_Classes'    => ['inetOrgPerson'],
-  'required_fields'        => ['cn', 'sn'],
-  'required_field_default' => ['cn' => '(null)', 'sn' => '(null)'],
-  'LDAP_rdn'      			   => 'cn',
-  
-  // Sometimes contacts may not be created in backend due to conflicting DNs
-  // You can set the below to true to rename the rdn by appending text of format ' (crvs#<random_number>)'
-  // Make sure your LDAP_rdn attribute can accept such a formatted text before setting the below
-  // to true.
-  // Defaults to false
-  //  'LDAP_rdn_autorename'     => true,
-  
-  // Set the below to true to replace the rdn value to be renamed with the new value (rdn value with appended text)
-  // instead of adding it as a new value to the LDAP_rdn. If LDAP_rdn is a single valued attribute in the backend
-  // this must be set to true.
-  // Defaults to false
-  //  'LDAP_rdn_autorename_replace' => true,
+	// If writable is true then these fields need to be populated:
+	// LDAP_Object_Classes, required_fields, LDAP_rdn
+	'LDAP_Object_Classes'    => ['inetOrgPerson'],
+	'required_fields'        => ['cn', 'sn'],
+	'required_field_default' => ['cn' => '(null)', 'sn' => '(null)'],
+	'LDAP_rdn'      			   => 'cn',
+	
+	// Sometimes contacts may not be created in backend due to conflicting DNs
+	// You can set the below to true to rename the rdn by appending text of format ' (crvs#<random_number>)'
+	// Make sure your LDAP_rdn attribute can accept such a formatted text before setting the below
+	// to true.
+	// Defaults to false
+	//  'LDAP_rdn_autorename'     => true,
+	
+	// Set the below to true to replace the rdn value to be renamed with the new value (rdn value with appended text)
+	// instead of adding it as a new value to the LDAP_rdn. If LDAP_rdn is a single valued attribute in the backend
+	// this must be set to true.
+	// Defaults to false
+	//  'LDAP_rdn_autorename_replace' => true,
 
-  // Backend contact field acl. By default no access is denied to any backend field.
-  // 'eval' can have following values
-  // r (default) - Evaluate 'list' as read only fields
-  // w           - Evaluate 'list' as writable fields, rest of the fields are treated as read only
-  //  'field_acl'     => 	[ 
-  //												'eval' => 'r',
-  //												'list' => []
-  //											],
-  
-  // vCard    => LDAP field map
-  //
-  // Use primary name of the backend field here not it's alias.
-  //
-  // To map a composite value property to individual backend fields check conf/vcard_metadata.json for 
-  // logical names of the components of a composite value.
-  //
-  // vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only.
-  //
-  // Currently only 'TYPE' vCard parameter match is supported.
+	// Backend contact field acl. By default no access is denied to any backend field.
+	// 'eval' can have following values
+	// r (default) - Evaluate 'list' as read only fields
+	// w           - Evaluate 'list' as writable fields, rest of the fields are treated as read only
+	//  'field_acl'     => 	[ 
+	//												'eval' => 'r',
+	//												'list' => []
+	//											],
+	
+	// vCard    => LDAP field map
+	//
+	// Use primary name of the backend field here not it's alias.
+	//
+	// To map a composite value property to individual backend fields check conf/vcard_metadata.json for 
+	// logical names of the components of a composite value.
+	//
+	// vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only.
+	//
+	// Currently only 'TYPE' vCard parameter match is supported.
   'fieldmap'      => [
     'FN'            => ['field_name' => 'cn'],
 
@@ -993,13 +993,13 @@ $config['card']['addressbook']['ldap']['personal'] = [
     																		]
     									 ],
 
-  'EMAIL'         => ['field_name' => 'mail'],
+		'EMAIL'         => ['field_name' => 'mail'],
 
-  'ORG'         	=> ['field_name' => [
-  'org_name' 			=> 'o', 
-  'org_unit_name' => 'ou'
-  ]
-   ],
+		'ORG'         	=> ['field_name' => [
+																					'org_name' 			=> 'o', 
+																					'org_unit_name' => 'ou'
+																				]
+											 ],
 
     'TITLE'         => ['field_name' => 'title'],
     
@@ -1007,276 +1007,276 @@ $config['card']['addressbook']['ldap']['personal'] = [
 
     'NICKNAME'      => ['field_name' => 'displayName'],
 
-  'PHOTO'         => 	[
+		'PHOTO'         => 	[
     											// Mapping profile picture
-  [
-  'field_name' => 'jpegPhoto',
-                    	'field_data_format' => 'binary',
-                    	'field_data_mediatype' => ['image/jpeg', 'image/png'], // List of mediatype which a 
-                    																												 // binary backend field will accept
-                    ]
+													[
+														'field_name' => 'jpegPhoto',
+				                  	'field_data_format' => 'binary',
+				                  	'field_data_mediatype' => ['image/jpeg', 'image/png'], // List of mediatype which a 
+				                  																												 // binary backend field will accept
+				                  ]
                        	],
 
     'NOTE'        	=> 	['field_name' => 'description'],
 
     'TEL'						=> 	[
     											// Mapping pager number
-                    [	
-                    	'field_name' => 'pager',
-                  'parameters' => ['TYPE' => 'pager']
-                    ],
-                    
+				                  [	
+				                  	'field_name' => 'pager',
+						                'parameters' => ['TYPE' => 'pager']
+				                  ],
+				                  
     											// Mapping fax number
-                        [
-                        	'field_name' => 'facsimileTelephoneNumber',
-                          'parameters' => [
-                          									['TYPE' => ['fax', 'work']],
-                          									['TYPE' => 'fax'],
-                          								],
-                      	],
-                      	
+		                      [
+		                      	'field_name' => 'facsimileTelephoneNumber',
+		                        'parameters' => [
+		                        									['TYPE' => ['fax', 'work']],
+		                        									['TYPE' => 'fax'],
+		                        								],
+		                    	],
+		                    	
     											// Mapping mobile number
-                    [
-                    	'field_name' => 'mobile',
-                      'parameters' => ['TYPE' => 'cell']
-                    ],
-                    
+				                  [
+				                  	'field_name' => 'mobile',
+				                    'parameters' => ['TYPE' => 'cell']
+				                  ],
+				                  
     											// Mapping home telephone number
     											[
-    											'field_name' => 'homePhone',
-                          'parameters' => [ 
-                                            ['TYPE' => 'home'],
-                          									['TYPE' => 'home', 'PREF' => '1']
-                                          ],
-                  'reverse_map_parameter_index' => 1
+		  											'field_name' => 'homePhone',
+		                        'parameters' => [ 
+		                                          ['TYPE' => 'home'],
+		                        									['TYPE' => 'home', 'PREF' => '1']
+		                                        ],
+						                'reverse_map_parameter_index' => 1
                           ],
                           
     											// Mapping work telephone number
                           [	
                           	'field_name' => 'telephoneNumber',
-                          'parameters' => [ 
-                                            ['TYPE' => 'work'],
-                          									['TYPE' => 'work', 'PREF' => '1'],
-                                            null
-                                          ],
-                  'reverse_map_parameter_index' => 1
+		                        'parameters' => [ 
+		                                          ['TYPE' => 'work'],
+		                        									['TYPE' => 'work', 'PREF' => '1'],
+		                                          null
+		                                        ],
+						                'reverse_map_parameter_index' => 1
                           ],
                      ],
                      
       'ADR'         => [
-    										// Mapping home postal address
-      									[
-  'field_name' => 'homePostalAddress',
-                      'parameters' => ['TYPE' => 'home'],
-                      'map_component_separator' => '$'
-                        ],
-                        
-    										// Mapping other postal address
-      									[
-  'field_name' => 'postalAddress',
-                      'parameters' => [null],
-                      'map_component_separator' => '$'
-                        ],
+		  										// Mapping home postal address
+		    									[
+														'field_name' => 'homePostalAddress',
+				                    'parameters' => ['TYPE' => 'home'],
+				                    'map_component_separator' => '$'
+		                      ],
+		                      
+		  										// Mapping other postal address
+		    									[
+														'field_name' => 'postalAddress',
+				                    'parameters' => [null],
+				                    'map_component_separator' => '$'
+		                      ],
 
-    										// Mapping location
-                        [
-       										'field_name' => [
-       																			'po_box'			=> 'postOfficeBox',
-       																			'street' 			=> 'street',
-       																			'locality' 		=> 'l',
-       																			'province' 		=> 'st', 
-       																			'postal_code' => 'postalCode'
-       																		],
-                          'parameters' => ['TYPE' => 'work']
-                        ]
+		  										// Mapping location
+		                      [
+		     										'field_name' => [
+		     																			'po_box'			=> 'postOfficeBox',
+		     																			'street' 			=> 'street',
+		     																			'locality' 		=> 'l',
+		     																			'province' 		=> 'st', 
+		     																			'postal_code' => 'postalCode'
+		     																		],
+		                        'parameters' => ['TYPE' => 'work']
+		                      ]
                        ],
 
       'LANG'        => ['field_name' => 'preferredLanguage']
-  ],
-  
-  // If writable is true then these fields need to be populated:
-  // group_LDAP_Object_Classes, group_required_fields, group_LDAP_rdn
-  'group_LDAP_Object_Classes'    => ['groupOfNames'],
-  'group_required_fields'        => ['cn', 'member'],
-  'group_required_field_default' => ['cn' => '(null)', 'member' => 'cn=dummyRefInt'],
-  'group_LDAP_rdn'      	       => 'cn',
-  
-  // Sometimes contacts may not be created in backend due to conflicting DNs
-  // You can set the below to true to rename the rdn by appending text of format ' (crvs#<random_number>)'
-  // Make sure your group_LDAP_rdn attribute can accept such a formatted text before setting the below
-  // to true.
-  // Defaults to false
-  //  'group_LDAP_rdn_autorename'     => true,
-  
-  // Set the below to true to replace the rdn value to be renamed with the new value (rdn value with appended text)
-  // instead of adding it as a new value to the group_LDAP_rdn. If group_LDAP_rdn is a single valued attribute in the backend
-  // this must be set to true.
-  // Defaults to false
-  //  'group_LDAP_rdn_autorename_replace' => true,
-  
-  // Backend contact field acl. By default no access is denied to any backend field.
-  // 'eval' can have following values
-  // r (default) - Evaluate 'list' as read only fields
-  // w           - Evaluate 'list' as writable fields, rest of the fields are treated as read only
-  //  'group_field_acl' => 	[ 
-  //													'eval' => 'r',
-  //													'list' => []
-  //												],
-  
-  // Backend field which points to the contact which is member of this contact group  
-  'group_member_map'          => [ 'MEMBER'      => [ 'field_name' => 'member' ] ],
-  
-  // vCard    => LDAP field map
-  //
-  // Use primary name of the backend field here not it's alias.
-  //
-  // To map a composite value property to an individual backend field check conf/vcard_metadata.json for logical 
-  // names of the components of a composite value.
-  //
-  // vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only.
-  'group_fieldmap'            => [     
-   'FN'          => [	'field_name' => 'cn'],
-   	
-   'NOTE'        => [	'field_name' => 'description']
-   ]
+	],
+	
+	// If writable is true then these fields need to be populated:
+	// group_LDAP_Object_Classes, group_required_fields, group_LDAP_rdn
+	'group_LDAP_Object_Classes'    => ['groupOfNames'],
+	'group_required_fields'        => ['cn', 'member'],
+	'group_required_field_default' => ['cn' => '(null)', 'member' => 'cn=dummyRefInt'],
+	'group_LDAP_rdn'      	       => 'cn',
+	
+	// Sometimes contacts may not be created in backend due to conflicting DNs
+	// You can set the below to true to rename the rdn by appending text of format ' (crvs#<random_number>)'
+	// Make sure your group_LDAP_rdn attribute can accept such a formatted text before setting the below
+	// to true.
+	// Defaults to false
+	//  'group_LDAP_rdn_autorename'     => true,
+	
+	// Set the below to true to replace the rdn value to be renamed with the new value (rdn value with appended text)
+	// instead of adding it as a new value to the group_LDAP_rdn. If group_LDAP_rdn is a single valued attribute in the backend
+	// this must be set to true.
+	// Defaults to false
+	//  'group_LDAP_rdn_autorename_replace' => true,
+	
+	// Backend contact field acl. By default no access is denied to any backend field.
+	// 'eval' can have following values
+	// r (default) - Evaluate 'list' as read only fields
+	// w           - Evaluate 'list' as writable fields, rest of the fields are treated as read only
+	//  'group_field_acl' => 	[ 
+	//													'eval' => 'r',
+	//													'list' => []
+	//												],
+	
+	// Backend field which points to the contact which is member of this contact group  
+	'group_member_map'          => [ 'MEMBER'      => [ 'field_name' => 'member' ] ],
+	
+	// vCard    => LDAP field map
+	//
+	// Use primary name of the backend field here not it's alias.
+	//
+	// To map a composite value property to an individual backend field check conf/vcard_metadata.json for logical 
+	// names of the components of a composite value.
+	//
+	// vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only.
+	'group_fieldmap'            => [     
+		 'FN'          => [	'field_name' => 'cn'],
+	 	
+		 'NOTE'        => [	'field_name' => 'description']
+	 ]
 ];
 
 // Address book.
 $config['card']['addressbook']['ldap']['shared'] = [
-  'name'          	=> 'Shared Address Book',
+	'name'          	=> 'Shared Address Book',
   'description'     => 'Shared address book',
 
-  // 'user_specific' and 'writable' values are used as initialization parameters for the sync database. 
-  // Once the sync database has been initialized changing the values here to any conflicting values will 
-  // lead to this application not processing requests for this address book.
-  'user_specific' 	=> true, // If this is true then address book will be treated as belonging to the user 
-                              // and username placeholder can be used in applicable places. This is a 
-                              // mandatory setting and must be explicitly set strictly to a boolean value.
-                              
-  'writable'     	 	=> true, // If true (default) then contacts can be created, updated, renamed and 
-                              // deleted in the address book.
-                              
-  // For writable address books creation or deletion of contacts can be denied using the below.
-  // WARNING: Not setting the below to appropriate values(s) can lead to contacts being added and/or deleted
-  // to the address book when only update of certain contact fields is desired.
-  // The following values are accepted
-  // create : Cannot add new contacts.
-  // delete : Cannot delete any contact.
-  // By default no access is denied.
-  //  'write_acl_deny'  => ['create', 'delete'],
-  
-  // Use this address book as a directory (i.e. for lookups only) for Apple devices
-  // Defaults to false
-  //  'directory'				=> true,
-  
-  // An address book can be restricted to a group or to only members of a group and are called shared address 
-  // books. Set the below to true to make this address book a shared address book. These address books are not 
-  // shown in address book list of normal users and need to be accessed via direct address book URI like 
-  // /addressbooks/group-name/addressbook-name/. Takes effect when user_specific is also set to true for this 
-  // address book.
-  'shared' => true,
+	// 'user_specific' and 'writable' values are used as initialization parameters for the sync database. 
+	// Once the sync database has been initialized changing the values here to any conflicting values will 
+	// lead to this application not processing requests for this address book.
+	'user_specific' 	=> true, // If this is true then address book will be treated as belonging to the user 
+	                            // and username placeholder can be used in applicable places. This is a 
+	                            // mandatory setting and must be explicitly set strictly to a boolean value.
+	                            
+	'writable'     	 	=> true, // If true (default) then contacts can be created, updated, renamed and 
+	                            // deleted in the address book.
+	                            
+	// For writable address books creation or deletion of contacts can be denied using the below.
+	// WARNING: Not setting the below to appropriate values(s) can lead to contacts being added and/or deleted
+	// to the address book when only update of certain contact fields is desired.
+	// The following values are accepted
+	// create : Cannot add new contacts.
+	// delete : Cannot delete any contact.
+	// By default no access is denied.
+	//  'write_acl_deny'  => ['create', 'delete'],
+	
+	// Use this address book as a directory (i.e. for lookups only) for Apple devices
+	// Defaults to false
+	//  'directory'				=> true,
+	
+	// An address book can be restricted to a group or to only members of a group and are called shared address 
+	// books. Set the below to true to make this address book a shared address book. These address books are not 
+	// shown in address book list of normal users and need to be accessed via direct address book URI like 
+	// /addressbooks/group-name/addressbook-name/. Takes effect when user_specific is also set to true for this 
+	// address book.
+	'shared' => true,
 
-  // Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
-  // of the address book from backend every time they sync their address book. Set the below to 
-  // prevent full address book refresh from backend at least for this interval (in seconds).
-  // A larger value will lead to better performance. 
-  // Defaults to four hours.
-  //  'full_refresh_interval' => 14400,
+	// Many clients do not use WebDAV sync to get address book changes leading to a full refresh 
+	// of the address book from backend every time they sync their address book. Set the below to 
+	// prevent full address book refresh from backend at least for this interval (in seconds).
+	// A larger value will lead to better performance. 
+	// Defaults to four hours.
+	//  'full_refresh_interval' => 14400,
 
-  // For WebDAV sync clients there is no way to know about contacts which are deleted in the backend but not by 
-  // this application. Set the below to delete those contacts in WebDAV sync clients at this interval at worst. 
-  // A larger value will lead to better performance.
-  // Defaults to a day.
-  //  'force_full_sync_interval' => 86400,
-  
-  // Maximum size of a card (in bytes) which is accepted for create/update. Defaults to 16 KiB.
-  //  'max_size'				=> 16384,
-  
+	// For WebDAV sync clients there is no way to know about contacts which are deleted in the backend but not by 
+	// this application. Set the below to delete those contacts in WebDAV sync clients at this interval at worst. 
+	// A larger value will lead to better performance.
+	// Defaults to a day.
+	//  'force_full_sync_interval' => 86400,
+	
+	// Maximum size of a card (in bytes) which is accepted for create/update. Defaults to 16 KiB.
+	//  'max_size'				=> 16384,
+	
   // The following placeholders are available to be used in 'base_dn' and 'search_filter' below as applicable.
   // %u  - Username of the user whose address book is being accessed.
   // %dn - DN as returned by LDAP search for address book DN.
   
-  'base_dn'       	=> 'ou=Address Book,%dn', // Address book DN (used as base DN to search for contacts 
-  // and as parent DN for new contacts).
-  
-  // LDAP filter to be used to search for contacts	
-  'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
-  
-  // Bind user to search/read/write contacts. If 'bind_dn' and 'bind_pass' values are not provided below 
-  // and if this address book is marked as 'user_specific' then 'bind_dn' and 'bind_pass' values provided 
-  // in $config['auth']['ldap'] will be used instead.
-  // This bind user must have read access to entryUUID, createTimestamp and modifyTimestamp operational attributes 
-  // of all contacts in the address book in addition to contact data.
-  //  'bind_dn'       	=> '',
-  //  'bind_pass'     => '',
-  
-  // Sync LDAP bind user can be used for contact searches if there are size or time limits on 'bind_dn' in LDAP.
-  // Read and write of contact data will still be performed by 'bind_dn'. 'sync_bind_dn' should have liberal or 
-  // no size or time limits and must have read access to entryUUID, createTimestamp and modifyTimestamp attribute 
-  // of all contacts in the address book. Access to other contact attributes is not required by this user.
-  //  'sync_bind_dn'       	=> 'cn=carddavsync,ou=People,dc=example,dc=org',
-  //  'sync_bind_pw'     	=> '<secret>',
-  
-  'scope'         => 'list',   // Scope of search for contacts
-                               //  sub: Subtree
-                               // list: Immediate children
-                               // base: Match base DN only
-  
+	'base_dn'       	=> 'ou=Address Book,%dn', // Address book DN (used as base DN to search for contacts 
+																							// and as parent DN for new contacts).
+	
+	// LDAP filter to be used to search for contacts	
+	'filter'        	=> '(|(objectClass=inetOrgPerson)(objectClass=groupOfNames))',
+	
+	// Bind user to search/read/write contacts. If 'bind_dn' and 'bind_pass' values are not provided below 
+	// and if this address book is marked as 'user_specific' then 'bind_dn' and 'bind_pass' values provided 
+	// in $config['auth']['ldap'] will be used instead.
+	// This bind user must have read access to entryUUID, createTimestamp and modifyTimestamp operational attributes 
+	// of all contacts in the address book in addition to contact data.
+	//  'bind_dn'       	=> '',
+	//  'bind_pass'     => '',
+	
+	// Sync LDAP bind user can be used for contact searches if there are size or time limits on 'bind_dn' in LDAP.
+	// Read and write of contact data will still be performed by 'bind_dn'. 'sync_bind_dn' should have liberal or 
+	// no size or time limits and must have read access to entryUUID, createTimestamp and modifyTimestamp attribute 
+	// of all contacts in the address book. Access to other contact attributes is not required by this user.
+	//  'sync_bind_dn'       	=> 'cn=carddavsync,ou=People,dc=example,dc=org',
+	//  'sync_bind_pw'     	=> '<secret>',
+	
+	'scope'         => 'list',   // Scope of search for contacts
+	                             //  sub: Subtree
+	                             // list: Immediate children
+	                             // base: Match base DN only
+	
   // It's possible to find the base of an address book DN from a search result. Useful only if the address book is user specific.
   'search_base_dn' => 'ou=People,dc=example,dc=org',
   'search_filter'  => '(&(objectClass=groupOfNames)(cn=%u))',   // e.g. '(&(objectClass=posixAccount)(uid=%u))'
-  'search_scope'   => 'list',  // Scope of search
-                               //  sub: Subtree
-                               // list: Immediate children
-                               // base: Match base DN only
-  
-  // Backend data update policy. Valid options are below.
-  // merge (default)  - Would only replace backend contact attibutes present in field map here and 
-  //                    leave others intact.
-  // replace          - Would replace whole backend contact with attibutes present in 
-  //                    field map here. WARNING: This option may lead to loss of contact attributes 
-  //                    in the backend which are not present in field map here.
-  //  'backend_data_update_policy' => 'merge',
+	'search_scope'   => 'list',  // Scope of search
+	                             //  sub: Subtree
+	                             // list: Immediate children
+	                             // base: Match base DN only
+	
+	// Backend data update policy. Valid options are below.
+	// merge (default)  - Would only replace backend contact attibutes present in field map here and 
+	//                    leave others intact.
+	// replace          - Would replace whole backend contact with attibutes present in 
+	//                    field map here. WARNING: This option may lead to loss of contact attributes 
+	//                    in the backend which are not present in field map here.
+	//  'backend_data_update_policy' => 'merge',
 
-  // If writable is true then these fields need to be populated:
-  // LDAP_Object_Classes, required_fields, LDAP_rdn
-  'LDAP_Object_Classes'    => ['inetOrgPerson'],
-  'required_fields'        => ['cn', 'sn'],
-  'required_field_default' => ['cn' => '(null)', 'sn' => '(null)'],
-  'LDAP_rdn'      			   => 'cn',
-  
-  // Sometimes contacts may not be created in backend due to conflicting DNs
-  // You can set the below to true to rename the rdn by appending text of format ' (crvs#<random_number>)'
-  // Make sure your LDAP_rdn attribute can accept such a formatted text before setting the below
-  // to true.
-  // Defaults to false
-  //  'LDAP_rdn_autorename'     => true,
-  
-  // Set the below to true to replace the rdn value to be renamed with the new value (rdn value with appended text)
-  // instead of adding it as a new value to the LDAP_rdn. If LDAP_rdn is a single valued attribute in the backend
-  // this must be set to true.
-  // Defaults to false
-  //  'LDAP_rdn_autorename_replace' => true,
+	// If writable is true then these fields need to be populated:
+	// LDAP_Object_Classes, required_fields, LDAP_rdn
+	'LDAP_Object_Classes'    => ['inetOrgPerson'],
+	'required_fields'        => ['cn', 'sn'],
+	'required_field_default' => ['cn' => '(null)', 'sn' => '(null)'],
+	'LDAP_rdn'      			   => 'cn',
+	
+	// Sometimes contacts may not be created in backend due to conflicting DNs
+	// You can set the below to true to rename the rdn by appending text of format ' (crvs#<random_number>)'
+	// Make sure your LDAP_rdn attribute can accept such a formatted text before setting the below
+	// to true.
+	// Defaults to false
+	//  'LDAP_rdn_autorename'     => true,
+	
+	// Set the below to true to replace the rdn value to be renamed with the new value (rdn value with appended text)
+	// instead of adding it as a new value to the LDAP_rdn. If LDAP_rdn is a single valued attribute in the backend
+	// this must be set to true.
+	// Defaults to false
+	//  'LDAP_rdn_autorename_replace' => true,
 
-  // Backend contact field acl. By default no access is denied to any backend field.
-  // 'eval' can have following values
-  // r (default) - Evaluate 'list' as read only fields
-  // w           - Evaluate 'list' as writable fields, rest of the fields are treated as read only
-  //  'field_acl'     => 	[ 
-  //												'eval' => 'r',
-  //												'list' => []
-  //											],
-  
-  // vCard    => LDAP field map
-  //
-  // Use primary name of the backend field here not it's alias.
-  //
-  // To map a composite value property to individual backend fields check conf/vcard_metadata.json for 
-  // logical names of the components of a composite value.
-  //
-  // vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only.
-  //
-  // Currently only 'TYPE' vCard parameter match is supported.
+	// Backend contact field acl. By default no access is denied to any backend field.
+	// 'eval' can have following values
+	// r (default) - Evaluate 'list' as read only fields
+	// w           - Evaluate 'list' as writable fields, rest of the fields are treated as read only
+	//  'field_acl'     => 	[ 
+	//												'eval' => 'r',
+	//												'list' => []
+	//											],
+	
+	// vCard    => LDAP field map
+	//
+	// Use primary name of the backend field here not it's alias.
+	//
+	// To map a composite value property to individual backend fields check conf/vcard_metadata.json for 
+	// logical names of the components of a composite value.
+	//
+	// vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only.
+	//
+	// Currently only 'TYPE' vCard parameter match is supported.
   'fieldmap'      => [
     'FN'            => ['field_name' => 'cn'],
 
@@ -1286,13 +1286,13 @@ $config['card']['addressbook']['ldap']['shared'] = [
     																		]
     									 ],
 
-  'EMAIL'         => ['field_name' => 'mail'],
+		'EMAIL'         => ['field_name' => 'mail'],
 
-  'ORG'         	=> ['field_name' => [
-  'org_name' 			=> 'o', 
-  'org_unit_name' => 'ou'
-  ]
-   ],
+		'ORG'         	=> ['field_name' => [
+																					'org_name' 			=> 'o', 
+																					'org_unit_name' => 'ou'
+																				]
+											 ],
 
     'TITLE'         => ['field_name' => 'title'],
     
@@ -1300,136 +1300,136 @@ $config['card']['addressbook']['ldap']['shared'] = [
 
     'NICKNAME'      => ['field_name' => 'displayName'],
 
-  'PHOTO'         => 	[
+		'PHOTO'         => 	[
     											// Mapping profile picture
-  [
-  'field_name' => 'jpegPhoto',
-                    	'field_data_format' => 'binary',
-                    	'field_data_mediatype' => ['image/jpeg', 'image/png'], // List of mediatype which a 
-                    																												 // binary backend field will accept
-                    ]
+													[
+														'field_name' => 'jpegPhoto',
+				                  	'field_data_format' => 'binary',
+				                  	'field_data_mediatype' => ['image/jpeg', 'image/png'], // List of mediatype which a 
+				                  																												 // binary backend field will accept
+				                  ]
                        	],
 
     'NOTE'        	=> 	['field_name' => 'description'],
 
     'TEL'						=> 	[
     											// Mapping pager number
-                    [	
-                    	'field_name' => 'pager',
-                  'parameters' => ['TYPE' => 'pager']
-                    ],
-                    
+				                  [	
+				                  	'field_name' => 'pager',
+						                'parameters' => ['TYPE' => 'pager']
+				                  ],
+				                  
     											// Mapping fax number
-                        [
-                        	'field_name' => 'facsimileTelephoneNumber',
-                          'parameters' => [
-                          									['TYPE' => ['fax', 'work']],
-                          									['TYPE' => 'fax'],
-                          								],
-                      	],
-                      	
+		                      [
+		                      	'field_name' => 'facsimileTelephoneNumber',
+		                        'parameters' => [
+		                        									['TYPE' => ['fax', 'work']],
+		                        									['TYPE' => 'fax'],
+		                        								],
+		                    	],
+		                    	
     											// Mapping mobile number
-                    [
-                    	'field_name' => 'mobile',
-                      'parameters' => ['TYPE' => 'cell']
-                    ],
-                    
+				                  [
+				                  	'field_name' => 'mobile',
+				                    'parameters' => ['TYPE' => 'cell']
+				                  ],
+				                  
     											// Mapping home telephone number
     											[
-    											'field_name' => 'homePhone',
-                          'parameters' => [ 
-                                            ['TYPE' => 'home'],
-                          									['TYPE' => 'home', 'PREF' => '1']
-                                          ],
-                  'reverse_map_parameter_index' => 1
+		  											'field_name' => 'homePhone',
+		                        'parameters' => [ 
+		                                          ['TYPE' => 'home'],
+		                        									['TYPE' => 'home', 'PREF' => '1']
+		                                        ],
+						                'reverse_map_parameter_index' => 1
                           ],
                           
     											// Mapping work telephone number
                           [	
                           	'field_name' => 'telephoneNumber',
-                          'parameters' => [ 
-                                            ['TYPE' => 'work'],
-                          									['TYPE' => 'work', 'PREF' => '1'],
-                                            null
-                                          ],
-                  'reverse_map_parameter_index' => 1
+		                        'parameters' => [ 
+		                                          ['TYPE' => 'work'],
+		                        									['TYPE' => 'work', 'PREF' => '1'],
+		                                          null
+		                                        ],
+						                'reverse_map_parameter_index' => 1
                           ],
                      ],
                      
       'ADR'         => [
-    										// Mapping home postal address
-      									[
-  'field_name' => 'homePostalAddress',
-                      'parameters' => ['TYPE' => 'home'],
-                      'map_component_separator' => '$'
-                        ],
-                        
-    										// Mapping other postal address
-      									[
-  'field_name' => 'postalAddress',
-                      'parameters' => [null],
-                      'map_component_separator' => '$'
-                        ],
+		  										// Mapping home postal address
+		    									[
+														'field_name' => 'homePostalAddress',
+				                    'parameters' => ['TYPE' => 'home'],
+				                    'map_component_separator' => '$'
+		                      ],
+		                      
+		  										// Mapping other postal address
+		    									[
+														'field_name' => 'postalAddress',
+				                    'parameters' => [null],
+				                    'map_component_separator' => '$'
+		                      ],
 
-    										// Mapping location
-                        [
-       										'field_name' => [
-       																			'po_box'			=> 'postOfficeBox',
-       																			'street' 			=> 'street',
-       																			'locality' 		=> 'l',
-       																			'province' 		=> 'st', 
-       																			'postal_code' => 'postalCode'
-       																		],
-                          'parameters' => ['TYPE' => 'work']
-                        ]
+		  										// Mapping location
+		                      [
+		     										'field_name' => [
+		     																			'po_box'			=> 'postOfficeBox',
+		     																			'street' 			=> 'street',
+		     																			'locality' 		=> 'l',
+		     																			'province' 		=> 'st', 
+		     																			'postal_code' => 'postalCode'
+		     																		],
+		                        'parameters' => ['TYPE' => 'work']
+		                      ]
                        ],
 
       'LANG'        => ['field_name' => 'preferredLanguage']
-  ],
-  
-  // If writable is true then these fields need to be populated:
-  // group_LDAP_Object_Classes, group_required_fields, group_LDAP_rdn
-  'group_LDAP_Object_Classes'    => ['groupOfNames'],
-  'group_required_fields'        => ['cn', 'member'],
-  'group_required_field_default' => ['cn' => '(null)', 'member' => 'cn=dummyRefInt'],
-  'group_LDAP_rdn'      	       => 'cn',
-  
-  // Sometimes contacts may not be created in backend due to conflicting DNs
-  // You can set the below to true to rename the rdn by appending text of format ' (crvs#<random_number>)'
-  // Make sure your group_LDAP_rdn attribute can accept such a formatted text before setting the below
-  // to true.
-  // Defaults to false
-  //  'group_LDAP_rdn_autorename'     => true,
-  
-  // Set the below to true to replace the rdn value to be renamed with the new value (rdn value with appended text)
-  // instead of adding it as a new value to the group_LDAP_rdn. If group_LDAP_rdn is a single valued attribute in the backend
-  // this must be set to true.
-  // Defaults to false
-  //  'group_LDAP_rdn_autorename_replace' => true,
-  
-  // Backend contact field acl. By default no access is denied to any backend field.
-  // 'eval' can have following values
-  // r (default) - Evaluate 'list' as read only fields
-  // w           - Evaluate 'list' as writable fields, rest of the fields are treated as read only
-  //  'group_field_acl' => 	[ 
-  //													'eval' => 'r',
-  //													'list' => []
-  //												],
-  
-  // Backend field which points to the contact which is member of this contact group  
-  'group_member_map'          => [ 'MEMBER'      => [ 'field_name' => 'member' ] ],
-  
-  // vCard    => LDAP field map
-  //
-  // Use primary name of the backend field here not it's alias.
-  //
-  // To map a composite value property to an individual backend field check conf/vcard_metadata.json for logical 
-  // names of the components of a composite value.
-  //
-  // vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only.
-  'group_fieldmap'            => [     
-   'FN'          => [	'field_name' => 'cn'],
-   	
-   'NOTE'        => [	'field_name' => 'description']
-   ]
+	],
+	
+	// If writable is true then these fields need to be populated:
+	// group_LDAP_Object_Classes, group_required_fields, group_LDAP_rdn
+	'group_LDAP_Object_Classes'    => ['groupOfNames'],
+	'group_required_fields'        => ['cn', 'member'],
+	'group_required_field_default' => ['cn' => '(null)', 'member' => 'cn=dummyRefInt'],
+	'group_LDAP_rdn'      	       => 'cn',
+	
+	// Sometimes contacts may not be created in backend due to conflicting DNs
+	// You can set the below to true to rename the rdn by appending text of format ' (crvs#<random_number>)'
+	// Make sure your group_LDAP_rdn attribute can accept such a formatted text before setting the below
+	// to true.
+	// Defaults to false
+	//  'group_LDAP_rdn_autorename'     => true,
+	
+	// Set the below to true to replace the rdn value to be renamed with the new value (rdn value with appended text)
+	// instead of adding it as a new value to the group_LDAP_rdn. If group_LDAP_rdn is a single valued attribute in the backend
+	// this must be set to true.
+	// Defaults to false
+	//  'group_LDAP_rdn_autorename_replace' => true,
+	
+	// Backend contact field acl. By default no access is denied to any backend field.
+	// 'eval' can have following values
+	// r (default) - Evaluate 'list' as read only fields
+	// w           - Evaluate 'list' as writable fields, rest of the fields are treated as read only
+	//  'group_field_acl' => 	[ 
+	//													'eval' => 'r',
+	//													'list' => []
+	//												],
+	
+	// Backend field which points to the contact which is member of this contact group  
+	'group_member_map'          => [ 'MEMBER'      => [ 'field_name' => 'member' ] ],
+	
+	// vCard    => LDAP field map
+	//
+	// Use primary name of the backend field here not it's alias.
+	//
+	// To map a composite value property to an individual backend field check conf/vcard_metadata.json for logical 
+	// names of the components of a composite value.
+	//
+	// vCard property and the corresponding parameter match should be according to vCard v4.0 specifications only.
+	'group_fieldmap'            => [     
+		 'FN'          => [	'field_name' => 'cn'],
+	 	
+		 'NOTE'        => [	'field_name' => 'description']
+	 ]
 ];
