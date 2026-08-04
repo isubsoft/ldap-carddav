@@ -367,6 +367,12 @@ $config['card']['addressbook']['ldap']['me'] = [
   'required_fields'     => ['cn', 'sn'],
 	'required_field_default'  => ['cn' => '(null)', 'sn' => '(null)'],
   'LDAP_rdn'            => 'uid',
+  
+  // If RDN field as defined above does not receive any value, another available field
+  // can be used as the RDN field. This will prevent the contact from not being created/updated due to
+  // lack of value in the above designated RDN field.
+  // Defaults to false.
+  //  'LDAP_rdn_autoselect' => true,
 
 	// Sometimes contacts may not be created in backend due to conflicting DNs
 	// You can set the below to true to rename the rdn by appending text of format ' (crvs#<random_number>)'
@@ -517,6 +523,12 @@ $config['card']['addressbook']['ldap']['me'] = [
 	'group_required_field_default' => ['cn' => '(null)', 'member' => 'cn=dummyRefInt'],
   'group_LDAP_rdn'            => 'cn',
   
+  // If RDN field as defined above does not receive any value, another available field
+  // can be used as the RDN field. This will prevent the contact from not being created/updated due to
+  // lack of value in the above designated RDN field.
+  // Defaults to false.
+  //  'group_LDAP_rdn_autoselect' => true,
+  
 	// Sometimes contacts may not be created in backend due to conflicting DNs
 	// You can set the below to true to rename the rdn by appending text of format ' (crvs#<random_number>)'
 	// Make sure your group_LDAP_rdn attribute can accept such a formatted text before setting the below
@@ -661,6 +673,12 @@ $config['card']['addressbook']['ldap']['global'] = [
   'required_fields'     => ['cn', 'sn'],
 	//  'required_field_default' => ['cn' => '(null)', 'sn' => '(null)'],
   'LDAP_rdn'            => 'uid',
+  
+  // If RDN field as defined above does not receive any value, another available field
+  // can be used as the RDN field. This will prevent the contact from not being created/updated due to
+  // lack of value in the above designated RDN field.
+  // Defaults to false.
+  //  'LDAP_rdn_autoselect' => true,
 
 	// Sometimes contacts may not be created in backend due to conflicting DNs
 	// You can set the below to true to rename the rdn by appending text of format ' (crvs#<random_number>)'
@@ -810,6 +828,12 @@ $config['card']['addressbook']['ldap']['global'] = [
   'group_required_fields'     => ['cn', 'member'],
 	'group_required_field_default' => ['cn' => '(null)', 'member' => 'cn=dummyRefInt'],
   'group_LDAP_rdn'            => 'cn',
+  
+  // If RDN field as defined above does not receive any value, another available field
+  // can be used as the RDN field. This will prevent the contact from not being created/updated due to
+  // lack of value in the above designated RDN field.
+  // Defaults to false.
+  //  'group_LDAP_rdn_autoselect' => true,
   
 	// Sometimes contacts may not be created in backend due to conflicting DNs
 	// You can set the below to true to rename the rdn by appending text of format ' (crvs#<random_number>)'
@@ -955,6 +979,12 @@ $config['card']['addressbook']['ldap']['personal'] = [
   'required_fields'     => ['cn', 'sn'],
 	'required_field_default' => ['cn' => '(null)', 'sn' => '(null)'],
   'LDAP_rdn'            => 'cn',
+  
+  // If RDN field as defined above does not receive any value, another available field
+  // can be used as the RDN field. This will prevent the contact from not being created/updated due to
+  // lack of value in the above designated RDN field.
+  // Defaults to false.
+  //  'LDAP_rdn_autoselect' => true,
 
 	// Sometimes contacts may not be created in backend due to conflicting DNs
 	// You can set the below to true to rename the rdn by appending text of format ' (crvs#<random_number>)'
@@ -1104,6 +1134,12 @@ $config['card']['addressbook']['ldap']['personal'] = [
   'group_required_fields'     => ['cn', 'member'],
 	'group_required_field_default' => ['cn' => '(null)', 'member' => 'cn=dummyRefInt'],
   'group_LDAP_rdn'            => 'cn',
+  
+  // If RDN field as defined above does not receive any value, another available field
+  // can be used as the RDN field. This will prevent the contact from not being created/updated due to
+  // lack of value in the above designated RDN field.
+  // Defaults to false.
+  //  'group_LDAP_rdn_autoselect' => true,
 	
 	// Sometimes contacts may not be created in backend due to conflicting DNs
 	// You can set the below to true to rename the rdn by appending text of format ' (crvs#<random_number>)'
@@ -1248,6 +1284,12 @@ $config['card']['addressbook']['ldap']['shared'] = [
 	'required_fields'        => ['cn', 'sn'],
 	'required_field_default' => ['cn' => '(null)', 'sn' => '(null)'],
 	'LDAP_rdn'      			   => 'cn',
+	
+  // If RDN field as defined above does not receive any value, another available field
+  // can be used as the RDN field. This will prevent the contact from not being created/updated due to
+  // lack of value in the above designated RDN field.
+  // Defaults to false.
+  //  'LDAP_rdn_autoselect' => true,
 	
 	// Sometimes contacts may not be created in backend due to conflicting DNs
 	// You can set the below to true to rename the rdn by appending text of format ' (crvs#<random_number>)'
@@ -1397,6 +1439,12 @@ $config['card']['addressbook']['ldap']['shared'] = [
 	'group_required_fields'        => ['cn', 'member'],
 	'group_required_field_default' => ['cn' => '(null)', 'member' => 'cn=dummyRefInt'],
 	'group_LDAP_rdn'      	       => 'cn',
+	
+  // If RDN field as defined above does not receive any value, another available field
+  // can be used as the RDN field. This will prevent the contact from not being created/updated due to
+  // lack of value in the above designated RDN field.
+  // Defaults to false.
+  //  'group_LDAP_rdn_autoselect' => true,
 	
 	// Sometimes contacts may not be created in backend due to conflicting DNs
 	// You can set the below to true to rename the rdn by appending text of format ' (crvs#<random_number>)'

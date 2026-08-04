@@ -772,8 +772,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
         $requiredFields = [];
 				$requiredFieldDefault = [];
         $rdnField = null;
-        $rdnAutorenameReplace = false;
+        $rdnAutoselect = false;
         $rdnAutorename = false;
+        $rdnAutorenameReplace = false;
         $fieldAclEval = 'r';
         $fieldAclList = [];
         $readOnlyFields = [];
@@ -796,8 +797,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						$requiredFieldDefault[strtolower($key)] = $value;
           
           $rdnField = (!isset($addressBookConfig['group_LDAP_rdn']))?null:strtolower($addressBookConfig['group_LDAP_rdn']);
-          $rdnAutorename = (!isset($addressBookConfig['group_LDAP_rdn_autorename']))?false:$addressBookConfig['group_LDAP_rdn_autorename'];
-          $rdnAutorenameReplace = (!isset($addressBookConfig['group_LDAP_rdn_autorename_replace']))?false:$addressBookConfig['group_LDAP_rdn_autorename_replace'];
+          $rdnAutoselect = (!isset($addressBookConfig['group_LDAP_rdn_autoselect']) || !is_bool($addressBookConfig['group_LDAP_rdn_autoselect']))?false:$addressBookConfig['group_LDAP_rdn_autoselect'];
+          $rdnAutorename = (!isset($addressBookConfig['group_LDAP_rdn_autorename']) || !is_bool($addressBookConfig['group_LDAP_rdn_autorename']))?false:$addressBookConfig['group_LDAP_rdn_autorename'];
+          $rdnAutorenameReplace = (!isset($addressBookConfig['group_LDAP_rdn_autorename_replace']) || !is_bool($addressBookConfig['group_LDAP_rdn_autorename_replace']))?false:$addressBookConfig['group_LDAP_rdn_autorename_replace'];
           $fieldAclEval = (!isset($addressBookConfig['group_field_acl']['eval']))?(self::$defaultFieldAclEval):strtolower($addressBookConfig['group_field_acl']['eval']);
           
           foreach((!isset($addressBookConfig['group_field_acl']['list']) || !is_array($addressBookConfig['group_field_acl']['list']))?[]:$addressBookConfig['group_field_acl']['list'] as $field)
@@ -815,8 +817,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						$requiredFieldDefault[strtolower($key)] = $value;
           
           $rdnField = (!isset($addressBookConfig['LDAP_rdn']))?null:strtolower($addressBookConfig['LDAP_rdn']);
-          $rdnAutorename = (!isset($addressBookConfig['LDAP_rdn_autorename']))?false:$addressBookConfig['LDAP_rdn_autorename'];
-          $rdnAutorenameReplace = (!isset($addressBookConfig['LDAP_rdn_autorename_replace']))?false:$addressBookConfig['LDAP_rdn_autorename_replace'];
+          $rdnAutoselect = (!isset($addressBookConfig['LDAP_rdn_autoselect']) || !is_bool($addressBookConfig['LDAP_rdn_autoselect']))?false:$addressBookConfig['LDAP_rdn_autoselect'];
+          $rdnAutorename = (!isset($addressBookConfig['LDAP_rdn_autorename']) || !is_bool($addressBookConfig['LDAP_rdn_autorename']))?false:$addressBookConfig['LDAP_rdn_autorename'];
+          $rdnAutorenameReplace = (!isset($addressBookConfig['LDAP_rdn_autorename_replace']) || !is_bool($addressBookConfig['LDAP_rdn_autorename_replace']))?false:$addressBookConfig['LDAP_rdn_autorename_replace'];
           $fieldAclEval = (!isset($addressBookConfig['field_acl']['eval']))?(self::$defaultFieldAclEval):strtolower($addressBookConfig['field_acl']['eval']);
           
           foreach((!isset($addressBookConfig['field_acl']['list']) || !is_array($addressBookConfig['field_acl']['list']))?[]:$addressBookConfig['field_acl']['list'] as $field)
@@ -1045,20 +1048,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					$noDeleteFields[] =  'objectclass';
 						
 					if($backendDataUpdatePolicy == 'replace') {
-						// Apply any defaults
-					  foreach ($requiredFields as $field) {
-					   	if(!array_key_exists($field, $ldapInfo)) {
-								if(array_key_exists($field, $requiredFieldDefault) && !empty($requiredFieldDefault[$field]))
-									$ldapInfo[$field] = $requiredFieldDefault[$field];
-								else {
-									trigger_error("Consider adding defaults for the required backend field(s) in '$addressBookId' address book configuration", E_USER_NOTICE);
-									throw new SabreDAVException\BadRequest("Required field(s) not present, check with the server administrator for the list of field(s) which are required to be filled.");
-								}
-							}
-					  }
-					  
 						// Trying to set a suitable RDN field when the configured RDN field is not set.
-						if(!array_key_exists($rdnField, $ldapInfo)) {
+						if(!array_key_exists($rdnField, $ldapInfo) && $rdnAutoselect) {
 							trigger_error("Rdn field did not receive any value. Check '$addressBookId' address book configuration.", E_USER_WARNING);
 							
 							$isNewRdnFound = false;
@@ -1074,6 +1065,18 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 								throw new SabreDAVException\BadRequest("Identity field was not present, check with the server administrator for the list of field(s) which are required to be filled.");
 							}
 						}
+						
+						// Apply any defaults
+					  foreach ($requiredFields as $field) {
+					   	if(!array_key_exists($field, $ldapInfo)) {
+								if(array_key_exists($field, $requiredFieldDefault) && !empty($requiredFieldDefault[$field]))
+									$ldapInfo[$field] = $requiredFieldDefault[$field];
+								else {
+									trigger_error("Consider adding defaults for the required backend field(s) in '$addressBookId' address book configuration", E_USER_NOTICE);
+									throw new SabreDAVException\BadRequest("Required field(s) not present, check with the server administrator for the list of field(s) which are required to be filled.");
+								}
+							}
+					  }
 					  
 					  // Mark existing backend fields for deletion.
 						foreach($oldLdapAttrList as $field)
@@ -1250,20 +1253,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					// Object class is an internally required field for this operation
 					$requiredFields[] = 'objectclass';
 					
-					// Apply any defaults
-			    foreach ($requiredFields as $field) {
-				  	if(!array_key_exists($field, $ldapInfo)) {
-			      	if(array_key_exists($field, $requiredFieldDefault) && !empty($requiredFieldDefault[$field]))
-			      		$ldapInfo[$field] = $requiredFieldDefault[$field];
-			      	else {
-			      		trigger_error("Consider adding defaults for the required backend field(s) in '$addressBookId' address book configuration", E_USER_NOTICE);
-								throw new SabreDAVException\BadRequest("Required field(s) not present, check with the server administrator for the list of field(s) which are required to be filled.");
-							}
-						}
-			    }
-			    
 					// Trying to set a suitable RDN field when the configured RDN field did not receive any value.
-					if(!array_key_exists($rdnField, $ldapInfo)) {
+					if(!array_key_exists($rdnField, $ldapInfo) && $rdnAutoselect) {
 						$isNewRdnFound = false;
 						
 						foreach(array_keys($ldapInfo) as $field)
@@ -1277,6 +1268,18 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							throw new SabreDAVException\BadRequest("Required field(s) not present, check with the server administrator for the list of field(s) which are required to filled.");
 						}
 					}
+					
+					// Apply any defaults
+			    foreach ($requiredFields as $field) {
+				  	if(!array_key_exists($field, $ldapInfo)) {
+			      	if(array_key_exists($field, $requiredFieldDefault) && !empty($requiredFieldDefault[$field]))
+			      		$ldapInfo[$field] = $requiredFieldDefault[$field];
+			      	else {
+			      		trigger_error("Consider adding defaults for the required backend field(s) in '$addressBookId' address book configuration", E_USER_NOTICE);
+								throw new SabreDAVException\BadRequest("Required field(s) not present, check with the server administrator for the list of field(s) which are required to be filled.");
+							}
+						}
+			    }
 			    
 					// Unset backend attributes which are marked read only.
 					foreach($readOnlyFields as $field)
