@@ -2019,21 +2019,15 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					}
 				}
 
-				$filter = '(&' . $addressBookConfig['filter'] . '(createtimestamp>=' . gmdate('YmdHis', $backendSyncToken) . 'Z)(!(createtimestamp>=' . gmdate('YmdHis', $addressBookSyncToken) . 'Z)))';
-				$data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $filter, ['entryuuid'], strtolower($addressBookConfig['scope']));
-
-				if($data === false)
-		    	throw new SabreDAVException\ServiceUnavailable();
-		    	
 				// Preparing PDO statements which are used inside a loop
 				try {
-					$query = 'SELECT delete_sync_token FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?';
+					$query = 'SELECT card_uri, delete_sync_token FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?';
 					$stmt01 = $this->pdo->prepare($query);
 					
-					$query = "UPDATE " . self::$backendMapTableName . " SET delete_sync_token = null, modify_sync_token = null, create_sync_token = ? WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?";
+					$query = 'UPDATE ' . self::$backendMapTableName . ' SET delete_sync_token = null, modify_sync_token = null, create_sync_token = ? WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?';
 					$stmt02 = $this->pdo->prepare($query);
 					
-					$query = "INSERT INTO " . self::$backendMapTableName . " (user_id, addressbook_id, card_uri, card_uid, backend_id, create_sync_token)  VALUES (?, ?, ?, ?, ?, ?)";
+					$query = 'INSERT INTO ' . self::$backendMapTableName . ' (user_id, addressbook_id, card_uri, card_uid, backend_id, create_sync_token)  VALUES (?, ?, ?, ?, ?, ?)';
 					$stmt03 = $this->pdo->prepare($query);
 				}
 				catch (\Throwable $th) {
@@ -2041,6 +2035,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					throw new SabreDAVException\ServiceUnavailable();
 				}
 
+				$filter = '(&' . $addressBookConfig['filter'] . '(createtimestamp>=' . gmdate('YmdHis', $backendSyncToken) . 'Z)(!(createtimestamp>=' . gmdate('YmdHis', $addressBookSyncToken) . 'Z)))';
+				$data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $filter, ['entryuuid'], strtolower($addressBookConfig['scope']));
+
+				if($data === false)
+		    	throw new SabreDAVException\ServiceUnavailable();
+		    	
 				while($data = Utility::LdapIterativeFetch($ldapConn, $data['entryIns'], $data['fetchFirst']))
 				{
 					if(!isset($data['data']['entryUUID'][0]))
@@ -2079,22 +2079,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
 				if($data === false)
 					throw new SabreDAVException\ServiceUnavailable();
-					
-				// Preparing PDO statements which are used inside a loop
-				try {
-					$query = 'SELECT card_uri, delete_sync_token FROM ' . self::$backendMapTableName . ' WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?';
-					$stmt01 = $this->pdo->prepare($query);
-					
-					$query = "UPDATE " . self::$backendMapTableName . " SET delete_sync_token = null, modify_sync_token = null, create_sync_token = ? WHERE user_id = ? AND addressbook_id = ? AND backend_id = ?";
-					$stmt02 = $this->pdo->prepare($query);
-					
-					$query = "INSERT INTO " . self::$backendMapTableName . " (user_id, addressbook_id, card_uri, card_uid, backend_id, create_sync_token)  VALUES (?, ?, ?, ?, ?, ?)";
-					$stmt03 = $this->pdo->prepare($query);
-				}
-				catch (\Throwable $th) {
-					trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
-					throw new SabreDAVException\ServiceUnavailable();
-				}
 					
 				while($data = Utility::LdapIterativeFetch($ldapConn, $data['entryIns'], $data['fetchFirst']))
 				{
