@@ -1280,6 +1280,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							}
 						}
 			    }
+						
+					// WARNING: Do not set any more values in backend data beyond this point.
 			    
 					// Unset backend attributes which are marked read only.
 					foreach($readOnlyFields as $field)
