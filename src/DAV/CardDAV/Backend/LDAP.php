@@ -289,7 +289,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
     {
 			$systemUser = null;
       $addressBooks = [];
-      $principal = $this->principalBackend->getPrincipalByPath($principalUri);
+      $principal = $this->principalBackend->getPrincipalByPathExt($principalUri);
       
       if($principal == [])
       	return $addressBooks;
