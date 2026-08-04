@@ -1067,8 +1067,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							}
 					  }
 					  
-						if(!array_key_exists($rdnField, $ldapInfo))
-							throw new SabreDAVException\BadRequest("Identity field does not have a valid value.");
+						if(!array_key_exists($rdnField, $ldapInfo)) {
+							trigger_error("Rdn field did not receive any value. Check '$addressBookId' address book configuration.", E_USER_NOTICE);
+							throw new SabreDAVException\BadRequest("Identity field was not present, check with the server administrator for the list of field(s) which are required to be filled.");
+						}
 					  
 					  // Mark existing backend fields for deletion.
 						foreach($oldLdapAttrList as $field)
@@ -1192,7 +1194,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		      	$ldapErrorNo = ldap_errno($ldapConn);
 		      	
 		      	if($ldapErrorNo == 0x41)
-		      		trigger_error("Consider adding defaults for required backend field(s) including the rdn field in '$addressBookId' address book configuration", E_USER_NOTICE);
+		      		trigger_error("Consider adding defaults for required backend field(s) in '$addressBookId' address book configuration", E_USER_NOTICE);
 		      	
 						Utility::handleLdapError($ldapErrorNo);
 						
@@ -1240,9 +1242,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						}
 			    }
 			    
-					if(!array_key_exists($rdnField, $ldapInfo))
-						throw new SabreDAVException\BadRequest("Identity field does not have a valid value.");
-						
+					if(!array_key_exists($rdnField, $ldapInfo)) {
+						trigger_error("Rdn field did not receive any value. Check '$addressBookId' address book configuration.", E_USER_NOTICE);
+						throw new SabreDAVException\BadRequest("Identity field was not present, check with the server administrator for the list of field(s) which are required to be filled.");
+					}
+	
 					// WARNING: Do not set any more values in backend data beyond this point.
 			    
 					// Unset backend attributes which are marked read only.
@@ -1283,7 +1287,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					}
 						
 	      	if($ldapErrorNo == 0x41)
-	      		trigger_error("Consider adding defaults for required backend field(s) including the rdn field in '$addressBookId' address book configuration", E_USER_NOTICE);
+	      		trigger_error("Consider adding defaults for required backend field(s) in '$addressBookId' address book configuration", E_USER_NOTICE);
 						
 					if($ldapErrorNo != 0x0) {
 						Utility::handleLdapError($ldapErrorNo);
