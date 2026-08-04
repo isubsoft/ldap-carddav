@@ -1185,6 +1185,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						trigger_error("Rdn field did not receive any value. Check '$addressBookId' address book configuration.", E_USER_NOTICE);
 						throw new SabreDAVException\BadRequest("Identity field was not present, check with the server administrator for the list of field(s) which are required to be filled.");
 					}
+					
+					// WARNING: Do not set any more values in backend data beyond this point.
 			    
 					// Unset backend attributes which are marked read only.
 					foreach($readOnlyFields as $field)
