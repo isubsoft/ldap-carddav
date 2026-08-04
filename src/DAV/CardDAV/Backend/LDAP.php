@@ -1027,7 +1027,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					$noDeleteFields[] =  'objectclass';
 						
 					if($backendDataUpdatePolicy == 'replace') {
-						// Apply any defaults
 					  foreach ($requiredFields as $field) {
 					   	if(!array_key_exists($field, $ldapInfo))
 								throw new SabreDAVException\BadRequest("Required field(s) not present, check with the server administrator for the list of field(s) which are required to be filled.");
@@ -1177,7 +1176,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					// Object class is an internally required field for this operation
 					$requiredFields[] = 'objectclass';
 					
-					// Apply any defaults
 			    foreach ($requiredFields as $field) {
 				  	if(!array_key_exists($field, $ldapInfo))
 							throw new SabreDAVException\BadRequest("Required field(s) not present, check with the server administrator for the list of field(s) which are required to be filled.");
