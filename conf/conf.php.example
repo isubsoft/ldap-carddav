@@ -340,7 +340,14 @@ $config['card']['addressbook']['ldap']['me'] = [
   // LDAP_Object_Classes, required_fields, LDAP_rdn
   'LDAP_Object_Classes' => ['inetOrgPerson'],
   'required_fields'     => ['cn', 'sn'],
+	'required_field_default'  => ['cn' => '(null)', 'sn' => '(null)'],
   'LDAP_rdn'            => 'uid',
+  
+  // If RDN field as defined above does not receive any value, another available field
+  // can be used as the RDN field. This will prevent the contact from not being created/updated due to
+  // lack of value in the above designated RDN field.
+  // Defaults to false.
+  //  'LDAP_rdn_autoselect' => true,
 
   // Backend contact field acl. By default no access is denied to any backend field.
   // 'eval' can have following values
@@ -475,8 +482,14 @@ $config['card']['addressbook']['ldap']['me'] = [
   // group_LDAP_Object_Classes, group_required_fields, group_LDAP_rdn
   'group_LDAP_Object_Classes' => ['groupOfNames'],
   'group_required_fields'     => ['cn', 'member'],
+	'group_required_field_default' => ['cn' => '(null)', 'member' => 'cn=dummyRefInt'],
   'group_LDAP_rdn'            => 'cn',
   
+  // If RDN field as defined above does not receive any value, another available field
+  // can be used as the RDN field. This will prevent the contact from not being created/updated due to
+  // lack of value in the above designated RDN field.
+  // Defaults to false.
+  //  'group_LDAP_rdn_autoselect' => true,
   // Backend contact field acl. By default no access is denied to any backend field.
   // 'eval' can have following values
   // r (default) - Evaluate 'list' as read only fields
@@ -599,7 +612,14 @@ $config['card']['addressbook']['ldap']['global'] = [
   // LDAP_Object_Classes, required_fields, LDAP_rdn
   'LDAP_Object_Classes' => ['inetOrgPerson'],
   'required_fields'     => ['cn', 'sn'],
+	//  'required_field_default' => ['cn' => '(null)', 'sn' => '(null)'],
   'LDAP_rdn'            => 'uid',
+  
+  // If RDN field as defined above does not receive any value, another available field
+  // can be used as the RDN field. This will prevent the contact from not being created/updated due to
+  // lack of value in the above designated RDN field.
+  // Defaults to false.
+  //  'LDAP_rdn_autoselect' => true,
 
   // Backend contact field acl. By default no access is denied to any backend field.
   // 'eval' can have following values
@@ -734,7 +754,14 @@ $config['card']['addressbook']['ldap']['global'] = [
   // group_LDAP_Object_Classes, group_required_fields, group_LDAP_rdn
   'group_LDAP_Object_Classes' => ['groupOfNames'],
   'group_required_fields'     => ['cn', 'member'],
+	'group_required_field_default' => ['cn' => '(null)', 'member' => 'cn=dummyRefInt'],
   'group_LDAP_rdn'            => 'cn',
+  
+  // If RDN field as defined above does not receive any value, another available field
+  // can be used as the RDN field. This will prevent the contact from not being created/updated due to
+  // lack of value in the above designated RDN field.
+  // Defaults to false.
+  //  'group_LDAP_rdn_autoselect' => true,
   
   // Backend contact field acl. By default no access is denied to any backend field.
   // 'eval' can have following values
@@ -858,7 +885,14 @@ $config['card']['addressbook']['ldap']['personal'] = [
   // LDAP_Object_Classes, required_fields, LDAP_rdn
   'LDAP_Object_Classes' => ['inetOrgPerson'],
   'required_fields'     => ['cn', 'sn'],
+	'required_field_default' => ['cn' => '(null)', 'sn' => '(null)'],
   'LDAP_rdn'            => 'cn',
+  
+  // If RDN field as defined above does not receive any value, another available field
+  // can be used as the RDN field. This will prevent the contact from not being created/updated due to
+  // lack of value in the above designated RDN field.
+  // Defaults to false.
+  //  'LDAP_rdn_autoselect' => true,
 
   // Backend contact field acl. By default no access is denied to any backend field.
   // 'eval' can have following values
@@ -993,7 +1027,14 @@ $config['card']['addressbook']['ldap']['personal'] = [
   // group_LDAP_Object_Classes, group_required_fields, group_LDAP_rdn
   'group_LDAP_Object_Classes' => ['groupOfNames'],
   'group_required_fields'     => ['cn', 'member'],
+	'group_required_field_default' => ['cn' => '(null)', 'member' => 'cn=dummyRefInt'],
   'group_LDAP_rdn'            => 'cn',
+
+  // If RDN field as defined above does not receive any value, another available field
+  // can be used as the RDN field. This will prevent the contact from not being created/updated due to
+  // lack of value in the above designated RDN field.
+  // Defaults to false.
+  //  'group_LDAP_rdn_autoselect' => true,
   
   // Backend contact field acl. By default no access is denied to any backend field.
   // 'eval' can have following values
