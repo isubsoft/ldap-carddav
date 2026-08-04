@@ -302,26 +302,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 			}
     	
     	$this->principalBackendId = $principal['__backend_id'];
-  		
-			try 
-			{
-		    $query = 'SELECT user_id FROM ' . self::$systemUsersTableName;
-		    $stmt = $this->pdo->prepare($query);
-		    $stmt->execute();
-		    
-		    $row = $stmt->fetch(\PDO::FETCH_ASSOC);
-		    
-		    if($row !== false)
-		    	$systemUser = $row['user_id'];
-		    
-		  } catch (\Throwable $th) {
-				trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
-		  }
-		  
+    	
 			if (!isset($this->getAddressBooksPdoPrepStmt['stmt01'])) {
 				// Preparing PDO statements which are used inside a loop
 				try {
-					$query = 'SELECT user_specific, writable FROM ' . self::$addressBooksTableName . ' WHERE addressbook_id =?';
+		    	$query = 'SELECT user_id FROM ' . self::$systemUsersTableName;
 					$this->getAddressBooksPdoPrepStmt['stmt01'] = $this->pdo->prepare($query);
 				}
 				catch (\Throwable $th) {
@@ -331,12 +316,38 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		  }
 		  
 		  $stmt01 = $this->getAddressBooksPdoPrepStmt['stmt01'];
+  		
+			try 
+			{
+		    $stmt01->execute();
+		    $row = $stmt01->fetch(\PDO::FETCH_ASSOC);
+		    
+		    if($row !== false)
+		    	$systemUser = $row['user_id'];
+		    
+		  } catch (\Throwable $th) {
+				trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
+		  }
+		  
+			if (!isset($this->getAddressBooksPdoPrepStmt['stmt02'])) {
+				// Preparing PDO statements which are used inside a loop
+				try {
+					$query = 'SELECT user_specific, writable FROM ' . self::$addressBooksTableName . ' WHERE addressbook_id =?';
+					$this->getAddressBooksPdoPrepStmt['stmt02'] = $this->pdo->prepare($query);
+				}
+				catch (\Throwable $th) {
+					trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
+					throw new SabreDAVException\ServiceUnavailable();
+				}
+		  }
+		  
+		  $stmt02 = $this->getAddressBooksPdoPrepStmt['stmt02'];
       
       foreach ($this->config['card']['addressbook']['ldap'] as $addressBookId => $addressBookConfig) {
       	if(!isset($this->addressbook[$addressBookId])) {
 					try {
-					  $stmt01->execute([$addressBookId]);
-					  $row = $stmt01->fetch(\PDO::FETCH_ASSOC);
+					  $stmt02->execute([$addressBookId]);
+					  $row = $stmt02->fetch(\PDO::FETCH_ASSOC);
 					} 
 					catch (\Throwable $th) {
 						trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
