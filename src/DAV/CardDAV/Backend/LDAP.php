@@ -2001,7 +2001,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 			$minSyncInterval = ($fullRefreshInterval / 10 > 1800)?1800:$fullRefreshInterval / 10;
 			
 			if($addressBookSyncToken - $backendSyncToken > $minSyncInterval)
-			{
+			{ // Perform backend search for changes
 				$this->setAddressbookBackendProperties($addressBookId);
 				
 				$addressBookDn = $this->addressbook[$addressBookId]['addressbookDn'];
@@ -2034,18 +2034,36 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 					throw new SabreDAVException\ServiceUnavailable();
 				}
+				
+				$getChangesFromBackendFile = __TMP_DIR__ . '/' . __APP_NAME__ . '_' . strtolower(md5(implode('/', [self::$fullRefreshTableName, $syncDbUserId, $addressBookId]))) . '_process.lock';
+				
+				if(file_exists($getChangesFromBackendFile)) {
+					trigger_error("Get backend changes for address book '$addressBookId' of sync database user '$syncDbUserId' is in progress in another local session. Client will be notified to retry after sometime. If this message continue to appear after a few retries by the client, the following local file may have to be manually removed - '$getChangesFromBackendFile' and this may require the server process to be stopped.", E_USER_NOTICE);
+					throw new SabreDAVException\ServiceUnavailable("The server is currently processing a long running request in another session and cannot process this request at this time, kindly retry after sometime. If this issue persist after a few retries, contact the server administrator.");
+				}
+				
+				$getChangesFromBackendFileHandle = fopen($getChangesFromBackendFile, 'x');
+					
+				if($getChangesFromBackendFileHandle === false)
+					throw new SabreDAVException\ServiceUnavailable();
 
 				$filter = '(&' . $addressBookConfig['filter'] . '(createtimestamp>=' . gmdate('YmdHis', $backendSyncToken) . 'Z)(!(createtimestamp>=' . gmdate('YmdHis', $addressBookSyncToken) . 'Z)))';
 				$data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $filter, ['entryuuid'], strtolower($addressBookConfig['scope']));
 
-				if($data === false)
+				if($data === false) {
+					fclose($getChangesFromBackendFileHandle);
+					unlink($getChangesFromBackendFile);
 		    	throw new SabreDAVException\ServiceUnavailable();
+		    }
 		    	
 				while($data = Utility::LdapIterativeFetch($ldapConn, $data['entryIns'], $data['fetchFirst']))
 				{
 					if(!isset($data['data']['entryUUID'][0]))
 					{
 						trigger_error("Read access to required operational attributes in LDAP not present for address book '$addressBookId'. Check bind user or sync bind user in the address book configuration.", E_USER_WARNING);
+						
+						fclose($getChangesFromBackendFileHandle);
+						unlink($getChangesFromBackendFile);
 						throw new SabreDAVException\ServiceUnavailable();
 					}
 					
@@ -2070,6 +2088,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						}
 					} catch (\Throwable $th) {
 						trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
+						
+						fclose($getChangesFromBackendFileHandle);
+						unlink($getChangesFromBackendFile);
 						throw new SabreDAVException\ServiceUnavailable();
 					}
 				}
@@ -2077,14 +2098,20 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				$filter = '(&' . $addressBookConfig['filter'] . '(!(createtimestamp>=' . gmdate('YmdHis', $backendSyncToken) . 'Z))(modifytimestamp>=' . gmdate('YmdHis', $backendSyncToken) . 'Z)(!(modifytimestamp>=' . gmdate('YmdHis', $addressBookSyncToken) . 'Z)))';
 				$data = Utility::LdapIterativeQuery($ldapConn, $addressBookDn, $filter, ['entryuuid', 'modifytimestamp'], strtolower($addressBookConfig['scope']));
 
-				if($data === false)
+				if($data === false) {
+					fclose($getChangesFromBackendFileHandle);
+					unlink($getChangesFromBackendFile);
 					throw new SabreDAVException\ServiceUnavailable();
+				}
 					
 				while($data = Utility::LdapIterativeFetch($ldapConn, $data['entryIns'], $data['fetchFirst']))
 				{
 					if(!isset($data['data']['entryUUID'][0]) || !isset($data['data']['modifyTimestamp'][0]))
 					{
 						trigger_error("Read access to required operational attributes in LDAP not present.", E_USER_WARNING);
+						
+						fclose($getChangesFromBackendFileHandle);
+						unlink($getChangesFromBackendFile);
 						throw new SabreDAVException\ServiceUnavailable();
 					}
 
@@ -2128,6 +2155,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							$this->addChange($addressBookId, $cardUri, 'MODIFY');
 					} catch (\Throwable $th) {
 						trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
+						
+						fclose($getChangesFromBackendFileHandle);
+						unlink($getChangesFromBackendFile);
 						throw new SabreDAVException\ServiceUnavailable();
 					}
 				}
@@ -2138,8 +2168,14 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					$sql->execute([$addressBookSyncToken, $syncDbUserId, $addressBookId]);
 				} catch (\Throwable $th) {
 					trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
+					
+					fclose($getChangesFromBackendFileHandle);
+					unlink($getChangesFromBackendFile);
 					throw new SabreDAVException\ServiceUnavailable();
 				}
+				
+				fclose($getChangesFromBackendFileHandle);
+				unlink($getChangesFromBackendFile);
 			}
 			
 			$cardUri = null;
