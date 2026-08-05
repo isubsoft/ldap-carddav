@@ -184,15 +184,7 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
       return [$principal];
     }
 
-    /**
-     * Returns a specific principal, specified by it's path.
-     * The returned structure should be the exact same as from
-     * getPrincipalsByPrefix.
-     *
-     * @param string $path
-     * @return array
-     */
-    function getPrincipalByPath($path)
+    function getPrincipalByPathExt($path)
     {
         $principalId = basename($path);
         $currentUserPrincipalId = $GLOBALS['currentUserPrincipalId'];
@@ -282,6 +274,25 @@ class LDAP extends \Sabre\DAVACL\PrincipalBackend\AbstractBackend {
 	      $principal['uri'] = $path;
 	      
 	      return $principal;
+    }
+    
+    /**
+     * Returns a specific principal, specified by it's path.
+     * The returned structure should be the exact same as from
+     * getPrincipalsByPrefix.
+     *
+     * @param string $path
+     * @return array
+     */
+    function getPrincipalByPath($path)
+    {
+			$principal = [];
+			$principal = $this->getPrincipalByPathExt($path);
+			
+			if(array_key_exists('__backend_id', $principal))
+				unset($principal['__backend_id']);
+				
+			return $principal;
     }
 
     /**
