@@ -1062,20 +1062,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 
 							if(array_key_exists($oldRdnField, $ldapInfo))
 								$rdnField = $oldRdnField;
-							else {
-								if($rdnField != $oldRdnField)
-									trigger_error("Rdn field and existing rdn field did not receive any value. Check '$addressBookId' address book configuration.", E_USER_WARNING);
-								
+							else
 								$noDeleteFields[] = $oldRdnField;
-								$noDeleteFields = array_unique($noDeleteFields);
-
-								foreach(array_keys($ldapInfo) as $field)
-									if(!in_array($field, ['objectclass'])) { // Avoid objectclass field to be set as RDN field.
-										$rdnField = $field;
-										unset($noDeleteFields[array_search($oldRdnField, $noDeleteFields)]);
-										break;
-									}
-							}
 						}
 					}
 					
@@ -1131,39 +1119,44 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					}
 					else
 						$isRenameRequired = false;
-					
-					if($isRenameRequired && count($validRenameLdapRdnAttrValue, COUNT_NORMAL) < 1)
-						throw new SabreDAVException\BadRequest("Identity field does not have a valid value.");
-					
-					foreach($validRenameLdapRdnAttrValue as $tmpNewLdapRdnAttrValue) {
-						$tmpNewLdapRdn = $rdnField . '=' . ldap_escape($tmpNewLdapRdnAttrValue, "", LDAP_ESCAPE_DN);
 						
-						ldap_rename($ldapConn, $oldLdapTree, $tmpNewLdapRdn, null, false);
+					if($isRenameRequired) {
+						if(in_array('create', $writeAclDeny) || in_array('delete', $writeAclDeny))
+							throw new SabreDAVException\Forbidden("Address book '$addressBookId' has no 'create' and 'delete' access.");
 						
-						$ldapErrorNo = ldap_errno($ldapConn);
+						if(count($validRenameLdapRdnAttrValue, COUNT_NORMAL) < 1)
+							throw new SabreDAVException\BadRequest("Identity field does not have a valid value.");
 						
-						if($ldapErrorNo == 0x0) {
-							$ldapTree = $tmpNewLdapRdn . ',' . $parentOldLdapTree;
+						foreach($validRenameLdapRdnAttrValue as $tmpNewLdapRdnAttrValue) {
+							$tmpNewLdapRdn = $rdnField . '=' . ldap_escape($tmpNewLdapRdnAttrValue, "", LDAP_ESCAPE_DN);
 							
-							if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null, -60))
-								trigger_error("Could not expire cache", E_USER_WARNING);
+							ldap_rename($ldapConn, $oldLdapTree, $tmpNewLdapRdn, null, false);
+							
+							$ldapErrorNo = ldap_errno($ldapConn);
+							
+							if($ldapErrorNo == 0x0) {
+								$ldapTree = $tmpNewLdapRdn . ',' . $parentOldLdapTree;
 								
-							$this->addChange($addressBookId, $cardUri, 'MODIFY');
-							break;
+								if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null, -60))
+									trigger_error("Could not expire cache", E_USER_WARNING);
+									
+								$this->addChange($addressBookId, $cardUri, 'MODIFY');
+								break;
+							}
+							
+							if($ldapErrorNo == 0x44) {
+								continue;
+							}
+							else
+								break;
 						}
 						
-						if($ldapErrorNo == 0x44) {
-							continue;
+						if($ldapErrorNo != 0x0) {
+							Utility::handleLdapError($ldapErrorNo);
+							
+							trigger_error("LDAP error: " . ldap_err2str($ldapErrorNo), E_USER_WARNING);
+							throw new SabreDAVException\ServiceUnavailable("Unknown error while saving card.");
 						}
-						else
-							break;
-					}
-					
-					if($ldapErrorNo != 0x0) {
-						Utility::handleLdapError($ldapErrorNo);
-						
-						trigger_error("LDAP error: " . ldap_err2str($ldapErrorNo), E_USER_WARNING);
-						throw new SabreDAVException\ServiceUnavailable("Unknown error while saving card.");
 					}
 						
 					if(!ldap_mod_replace($ldapConn, $ldapTree, $ldapInfo)) {
