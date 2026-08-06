@@ -1098,18 +1098,18 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							if(array_key_exists($oldRdnField, $ldapInfo))
 								$rdnField = $oldRdnField;
 							else {
-								if($rdnField != $oldRdnField)
-									trigger_error("Rdn field and existing rdn field did not receive any value. Check '$addressBookId' address book configuration.", E_USER_WARNING);
-								
 								$noDeleteFields[] = $oldRdnField;
-								$noDeleteFields = array_unique($noDeleteFields);
-
-								foreach(array_keys($ldapInfo) as $field)
-									if(!in_array($field, ['objectclass'])) { // Avoid objectclass field to be set as RDN field.
-										$rdnField = $field;
-										unset($noDeleteFields[array_search($oldRdnField, $noDeleteFields)]);
-										break;
-									}
+								
+								if($rdnAutoselect) {
+									$noDeleteFields = array_unique($noDeleteFields);
+								
+									foreach(array_keys($ldapInfo) as $field)
+										if(!in_array($field, ['objectclass'])) { // Avoid objectclass field to be set as RDN field.
+											$rdnField = $field;
+											unset($noDeleteFields[array_search($oldRdnField, $noDeleteFields)]);
+											break;
+										}
+								}
 							}
 						}
 					}
@@ -1172,7 +1172,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							throw new SabreDAVException\Forbidden("Address book '$addressBookId' has no 'create' and 'delete' access.");
 						
 						if(count($validRenameLdapRdnAttrValue, COUNT_NORMAL) < 1)
-						throw new SabreDAVException\BadRequest("Identity field does not have a valid value.");
+							throw new SabreDAVException\BadRequest("Identity field does not have a valid value.");
 					
 						foreach($validRenameLdapRdnAttrValue as $tmpNewLdapRdnAttrValue) {
 							$tmpNewLdapRdn = $rdnField . '=' . ldap_escape($tmpNewLdapRdnAttrValue, "", LDAP_ESCAPE_DN);
@@ -1184,10 +1184,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							if($ldapErrorNo == 0x0) {
 								$ldapTree = $tmpNewLdapRdn . ',' . $parentOldLdapTree;
 									
-									if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null, -60))
-										trigger_error("Could not expire cache", E_USER_WARNING);
-										
-									$this->addChange($addressBookId, $cardUri, 'MODIFY');
+								if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null, -60))
+									trigger_error("Could not expire cache", E_USER_WARNING);
+									
+								$this->addChange($addressBookId, $cardUri, 'MODIFY');
 								break;
 							}
 							
