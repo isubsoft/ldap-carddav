@@ -1167,39 +1167,44 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					else
 						$isRenameRequired = false;
 					
-					if($isRenameRequired && count($validRenameLdapRdnAttrValue, COUNT_NORMAL) < 1)
+					if($isRenameRequired) {
+						if(in_array('create', $writeAclDeny) || in_array('delete', $writeAclDeny))
+							throw new SabreDAVException\Forbidden("Address book '$addressBookId' has no 'create' and 'delete' access.");
+						
+						if(count($validRenameLdapRdnAttrValue, COUNT_NORMAL) < 1)
 						throw new SabreDAVException\BadRequest("Identity field does not have a valid value.");
 					
-					foreach($validRenameLdapRdnAttrValue as $tmpNewLdapRdnAttrValue) {
-						$tmpNewLdapRdn = $rdnField . '=' . ldap_escape($tmpNewLdapRdnAttrValue, "", LDAP_ESCAPE_DN);
-						
-						ldap_rename($ldapConn, $oldLdapTree, $tmpNewLdapRdn, null, false);
-						
-						$ldapErrorNo = ldap_errno($ldapConn);
-						
-						if($ldapErrorNo == 0x0) {
-							$ldapTree = $tmpNewLdapRdn . ',' . $parentOldLdapTree;
-							break;
+						foreach($validRenameLdapRdnAttrValue as $tmpNewLdapRdnAttrValue) {
+							$tmpNewLdapRdn = $rdnField . '=' . ldap_escape($tmpNewLdapRdnAttrValue, "", LDAP_ESCAPE_DN);
+							
+							ldap_rename($ldapConn, $oldLdapTree, $tmpNewLdapRdn, null, false);
+							
+							$ldapErrorNo = ldap_errno($ldapConn);
+							
+							if($ldapErrorNo == 0x0) {
+								$ldapTree = $tmpNewLdapRdn . ',' . $parentOldLdapTree;
+									
+									if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null, -60))
+										trigger_error("Could not expire cache", E_USER_WARNING);
+										
+									$this->addChange($addressBookId, $cardUri, 'MODIFY');
+								break;
+							}
+							
+							if($ldapErrorNo == 0x44) {
+								continue;
+							}
+							else
+								break;
 						}
 						
-						if($ldapErrorNo == 0x44) {
-							continue;
+						if($ldapErrorNo != 0x0) {
+							Utility::handleLdapError($ldapErrorNo);
+							
+							trigger_error("LDAP error: " . ldap_err2str($ldapErrorNo), E_USER_WARNING);
+							throw new SabreDAVException\ServiceUnavailable("Unknown error while saving card.");
 						}
-						else
-							break;
 					}
-					
-					if($ldapErrorNo != 0x0) {
-						Utility::handleLdapError($ldapErrorNo);
-						
-						trigger_error("LDAP error: " . ldap_err2str($ldapErrorNo), E_USER_WARNING);
-						throw new SabreDAVException\ServiceUnavailable("Unknown error while saving card.");
-					}
-						
-					if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null, -60))
-						trigger_error("Could not expire cache", E_USER_WARNING);
-						
-					$this->addChange($addressBookId, $cardUri, 'MODIFY');
 					
 					if(!ldap_mod_replace($ldapConn, $ldapTree, $ldapInfo)) {
 		      	$ldapErrorNo = ldap_errno($ldapConn);
@@ -2125,7 +2130,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					if(!isset($data['data']['entryUUID'][0]))
 					{
 						trigger_error("Read access to required operational attributes in LDAP not present for address book '$addressBookId'. Check bind user or sync bind user in the address book configuration.", E_USER_WARNING);
-						
 						fclose($getChangesFromBackendFileHandle);
 						unlink($getChangesFromBackendFile);
 						throw new SabreDAVException\ServiceUnavailable();
@@ -2152,7 +2156,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						}
 					} catch (\Throwable $th) {
 						trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
-						
 						fclose($getChangesFromBackendFileHandle);
 						unlink($getChangesFromBackendFile);
 						throw new SabreDAVException\ServiceUnavailable();
@@ -2173,7 +2176,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					if(!isset($data['data']['entryUUID'][0]) || !isset($data['data']['modifyTimestamp'][0]))
 					{
 						trigger_error("Read access to required operational attributes in LDAP not present.", E_USER_WARNING);
-						
 						fclose($getChangesFromBackendFileHandle);
 						unlink($getChangesFromBackendFile);
 						throw new SabreDAVException\ServiceUnavailable();
@@ -2219,7 +2221,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							$this->addChange($addressBookId, $cardUri, 'MODIFY');
 					} catch (\Throwable $th) {
 						trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
-						
 						fclose($getChangesFromBackendFileHandle);
 						unlink($getChangesFromBackendFile);
 						throw new SabreDAVException\ServiceUnavailable();
@@ -2232,7 +2233,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					$sql->execute([$addressBookSyncToken, $syncDbUserId, $addressBookId]);
 				} catch (\Throwable $th) {
 					trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
-					
 					fclose($getChangesFromBackendFileHandle);
 					unlink($getChangesFromBackendFile);
 					throw new SabreDAVException\ServiceUnavailable();
