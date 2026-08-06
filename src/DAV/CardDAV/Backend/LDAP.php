@@ -2144,10 +2144,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							{
 								if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null, -60))
 		    					trigger_error("Could not expire cache", E_USER_WARNING);
-									
-								$this->addChange($addressBookId, $cardUri, 'MODIFY');
 							}
 						}
+						
+						$this->addChange($addressBookId, $cardUri, 'MODIFY');
 					} catch (\Throwable $th) {
 						trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
 						fclose($getChangesFromBackendFileHandle);
