@@ -1038,11 +1038,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					$noDeleteFields[] =  'objectclass';
 						
 					if($backendDataUpdatePolicy == 'replace') {
-					  foreach ($requiredFields as $field) {
-					   	if(!array_key_exists($field, $ldapInfo))
-								throw new SabreDAVException\BadRequest("Required field(s) not present, check with the server administrator for the list of field(s) which are required to be filled.");
-					  }
-					  
 						// Setting existing RDN field as RDN during an update when configured RDN field is not set.
 						if(!array_key_exists($rdnField, $ldapInfo)) {
 							$tmpOldLdapRdn = explode('=', $oldLdapRdn, 2);
@@ -1059,6 +1054,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					  // Mark existing backend fields for deletion.
 						foreach($oldLdapAttrList as $field)
 							$toBeDeletedFields[] = $field;
+							
+					  foreach ($requiredFields as $field) {
+					   	if(!array_key_exists($field, $ldapInfo))
+								throw new SabreDAVException\BadRequest("Required field(s) not present, check with the server administrator for the list of field(s) which are required to be filled.");
+					  }
 					}
 					
 					// Merge backend data update policy
@@ -1192,15 +1192,15 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					// Object class is an internally required field for this operation
 					$requiredFields[] = 'objectclass';
 					
-			    foreach ($requiredFields as $field) {
-				  	if(!array_key_exists($field, $ldapInfo))
-							throw new SabreDAVException\BadRequest("Required field(s) not present, check with the server administrator for the list of field(s) which are required to be filled.");
-			    }
-			    
 					if(!array_key_exists($rdnField, $ldapInfo)) {
 						trigger_error("Rdn field did not receive any value. Check '$addressBookId' address book configuration.", E_USER_NOTICE);
 						throw new SabreDAVException\BadRequest("Identity field was not present, check with the server administrator for the list of field(s) which are required to be filled.");
 					}
+					
+			    foreach ($requiredFields as $field) {
+				  	if(!array_key_exists($field, $ldapInfo))
+							throw new SabreDAVException\BadRequest("Required field(s) not present, check with the server administrator for the list of field(s) which are required to be filled.");
+			    }
 					
 					// WARNING: Do not set any more values in backend data beyond this point.
 			    
