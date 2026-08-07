@@ -1130,7 +1130,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					else
 						$isRenameRequired = false;
 						
-					if($isRenameRequired && !(in_array('create', $writeAclDeny) || in_array('delete', $writeAclDeny))) {
+					if($isRenameRequired) {
+						if(in_array('create', $writeAclDeny) || in_array('delete', $writeAclDeny)) {
+							trigger_error("Rename of the contact was needed to save the contact in the backend but could not be performed due to insufficient access. Check '$addressBookId' address book configuration.", E_USER_WARNING);
+							throw new SabreDAVException\Forbidden("Address book '$addressBookId' has no 'rename' access.");
+						}
+ 
 						if(count($validRenameLdapRdnAttrValue, COUNT_NORMAL) < 1)
 							throw new SabreDAVException\BadRequest("Identity field does not have a valid value.");
 						
