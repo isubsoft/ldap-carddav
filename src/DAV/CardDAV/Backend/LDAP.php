@@ -1021,6 +1021,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					
 					$oldLdapRdn = $componentOldLdapTree[0];
 					
+					$tmpOldLdapRdn = explode('=', $oldLdapRdn, 2);
+					$oldRdnField = strtolower($tmpOldLdapRdn[0]);
+					
 					// Collect attributes from existing contact data.
 					for($index=0; $index<$oldLdapInfo['count']; $index++)
 						$oldLdapAttrList[] = $oldLdapInfo[$index];
@@ -1038,19 +1041,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					$noDeleteFields[] =  'objectclass';
 						
 					if($backendDataUpdatePolicy == 'replace') {
-						// Setting existing RDN field as RDN during an update when configured RDN field is not set.
-						if(!array_key_exists($rdnField, $ldapInfo)) {
-							$tmpOldLdapRdn = explode('=', $oldLdapRdn, 2);
-							$oldRdnField = strtolower($tmpOldLdapRdn[0]);
-
-							if(array_key_exists($oldRdnField, $ldapInfo))
-								$rdnField = $oldRdnField;
-							else {
-								trigger_error("Rdn field or old rdn field did not receive any value. Check '$addressBookId' address book configuration.", E_USER_NOTICE);
-								throw new SabreDAVException\BadRequest("Identity field was not present, check with the server administrator for the list of field(s) which are required to be filled.");
-							}
-						}
-					  
 					  // Mark existing backend fields for deletion.
 						foreach($oldLdapAttrList as $field)
 							$toBeDeletedFields[] = $field;
@@ -1061,20 +1051,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					  }
 					}
 					
-					// Merge backend data update policy
-					else {
-						// Setting existing RDN field as RDN during an update when configured RDN field is not set.
-						if(!array_key_exists($rdnField, $ldapInfo)) {
-							$tmpOldLdapRdn = explode('=', $oldLdapRdn, 2);
-							$oldRdnField = strtolower($tmpOldLdapRdn[0]);
-
-							if(array_key_exists($oldRdnField, $ldapInfo))
-								$rdnField = $oldRdnField;
-							elseif(in_array($oldRdnField, $mappedBackendAttributes)) {
-								trigger_error("Rdn field or old rdn field did not receive any value. Check '$addressBookId' address book configuration.", E_USER_NOTICE);
-								throw new SabreDAVException\BadRequest("Identity field was not present, check with the server administrator for the list of field(s) which are required to be filled.");
-							}
-						}
+					// Setting existing RDN field as RDN during an update when configured RDN field is not set.
+					if(!array_key_exists($rdnField, $ldapInfo)) {
+						if(array_key_exists($oldRdnField, $ldapInfo))
+							$rdnField = $oldRdnField;
 					}
 					
 					// WARNING: Do not set any more values in backend data beyond this point.
@@ -1131,14 +1111,14 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						$isRenameRequired = false;
 						
 					if($isRenameRequired) {
-						if(in_array('create', $writeAclDeny) || in_array('delete', $writeAclDeny)) {
-							trigger_error("Rename of the contact was needed to save the contact in the backend but could not be performed due to insufficient access. Check '$addressBookId' address book configuration.", E_USER_WARNING);
-							throw new SabreDAVException\Forbidden("Address book '$addressBookId' has no 'rename' access.");
-						}
- 
 						if(count($validRenameLdapRdnAttrValue, COUNT_NORMAL) < 1)
 							throw new SabreDAVException\BadRequest("Identity field does not have a valid value.");
 						
+						if(in_array('create', $writeAclDeny) || in_array('delete', $writeAclDeny)) {
+							trigger_error("Rename of the contact was needed in the backend but could not be performed due to insufficient access. Check '$addressBookId' address book configuration.", E_USER_WARNING);
+							throw new SabreDAVException\Forbidden("Address book '$addressBookId' has no 'rename' access.");
+						}
+							
 						foreach($validRenameLdapRdnAttrValue as $tmpNewLdapRdnAttrValue) {
 							$tmpNewLdapRdn = $rdnField . '=' . ldap_escape($tmpNewLdapRdnAttrValue, "", LDAP_ESCAPE_DN);
 							
@@ -1148,6 +1128,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							
 							if($ldapErrorNo == 0x0) {
 								$ldapTree = $tmpNewLdapRdn . ',' . $parentOldLdapTree;
+								$oldRdnField = $rdnField;
 								
 								if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null, -60))
 									trigger_error("Could not expire cache", E_USER_WARNING);
@@ -1169,6 +1150,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							trigger_error("LDAP error: " . ldap_err2str($ldapErrorNo), E_USER_WARNING);
 							throw new SabreDAVException\ServiceUnavailable("Unknown error while saving card.");
 						}
+					}
+					
+					if(array_key_exists($oldRdnField, $ldapInfo) && $ldapInfo[$oldRdnField] == []) {
+						trigger_error("Existing identity field is being deleted during update. Check '$addressBookId' address book configuration.", E_USER_WARNING);
+						throw new SabreDAVException\BadRequest("Identity field does not have a valid value.");
 					}
 						
 					if(!ldap_mod_replace($ldapConn, $ldapTree, $ldapInfo)) {
@@ -1192,11 +1178,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					// Object class is an internally required field for this operation
 					$requiredFields[] = 'objectclass';
 					
-					if(!array_key_exists($rdnField, $ldapInfo)) {
-						trigger_error("Rdn field did not receive any value. Check '$addressBookId' address book configuration.", E_USER_NOTICE);
-						throw new SabreDAVException\BadRequest("Identity field was not present, check with the server administrator for the list of field(s) which are required to be filled.");
-					}
-					
 			    foreach ($requiredFields as $field) {
 				  	if(!array_key_exists($field, $ldapInfo))
 							throw new SabreDAVException\BadRequest("Required field(s) not present, check with the server administrator for the list of field(s) which are required to be filled.");
@@ -1212,13 +1193,15 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					$validAddLdapRdnAttrValue = [];
 					$ldapTree = null;
 			    
-			    if(is_array($ldapInfo[$rdnField])) {
-						foreach($ldapInfo[$rdnField] as $fieldValue)
-							if($fieldValue != null && $fieldValue != '')
-		      			$validAddLdapRdnAttrValue[] = $fieldValue;
+			    if(array_key_exists($rdnField, $ldapInfo)) {
+					  if(is_array($ldapInfo[$rdnField])) {
+							foreach($ldapInfo[$rdnField] as $fieldValue)
+								if($fieldValue != null && $fieldValue != '')
+				    			$validAddLdapRdnAttrValue[] = $fieldValue;
+						}
+						elseif($ldapInfo[$rdnField] != null && $ldapInfo[$rdnField] != '')
+							$validAddLdapRdnAttrValue[] = $ldapInfo[$rdnField];
 					}
-					elseif($ldapInfo[$rdnField] != null && $ldapInfo[$rdnField] != '')
-						$validAddLdapRdnAttrValue[] = $ldapInfo[$rdnField];
 
 					if(count($validAddLdapRdnAttrValue, COUNT_NORMAL) < 1)
 						throw new SabreDAVException\BadRequest("Identity field does not have a valid value.");
