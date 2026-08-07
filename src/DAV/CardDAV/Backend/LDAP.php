@@ -1043,9 +1043,17 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 								throw new SabreDAVException\BadRequest("Required field(s) not present, check with the server administrator for the list of field(s) which are required to be filled.");
 					  }
 					  
+						// Setting existing RDN field as RDN during an update when configured RDN field is not set.
 						if(!array_key_exists($rdnField, $ldapInfo)) {
-							trigger_error("Rdn field did not receive any value. Check '$addressBookId' address book configuration.", E_USER_NOTICE);
-							throw new SabreDAVException\BadRequest("Identity field was not present, check with the server administrator for the list of field(s) which are required to be filled.");
+							$tmpOldLdapRdn = explode('=', $oldLdapRdn, 2);
+							$oldRdnField = strtolower($tmpOldLdapRdn[0]);
+
+							if(array_key_exists($oldRdnField, $ldapInfo))
+								$rdnField = $oldRdnField;
+							else {
+								trigger_error("Rdn field or old rdn field did not receive any value. Check '$addressBookId' address book configuration.", E_USER_NOTICE);
+								throw new SabreDAVException\BadRequest("Identity field was not present, check with the server administrator for the list of field(s) which are required to be filled.");
+							}
 						}
 					  
 					  // Mark existing backend fields for deletion.
@@ -1055,15 +1063,17 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					
 					// Merge backend data update policy
 					else {
-						// Trying to set a suitable RDN field during a merge update when configured RDN field is not set.
+						// Setting existing RDN field as RDN during an update when configured RDN field is not set.
 						if(!array_key_exists($rdnField, $ldapInfo)) {
 							$tmpOldLdapRdn = explode('=', $oldLdapRdn, 2);
 							$oldRdnField = strtolower($tmpOldLdapRdn[0]);
 
 							if(array_key_exists($oldRdnField, $ldapInfo))
 								$rdnField = $oldRdnField;
-							else
-								$noDeleteFields[] = $oldRdnField;
+							elseif(in_array($oldRdnField, $mappedBackendAttributes)) {
+								trigger_error("Rdn field or old rdn field did not receive any value. Check '$addressBookId' address book configuration.", E_USER_NOTICE);
+								throw new SabreDAVException\BadRequest("Identity field was not present, check with the server administrator for the list of field(s) which are required to be filled.");
+							}
 						}
 					}
 					
