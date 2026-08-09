@@ -1137,9 +1137,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 								break;
 							}
 							
-							if($ldapErrorNo == 0x44) {
+							if(in_array($ldapErrorNo, [0x44, 0x22]))
 								continue;
-							}
 							else
 								break;
 						}
@@ -1159,6 +1158,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						
 					if(!ldap_mod_replace($ldapConn, $ldapTree, $ldapInfo)) {
 		      	$ldapErrorNo = ldap_errno($ldapConn);
+		      	
+						if($ldapErrorNo == 0x45) {
+							trigger_error("Object class modification of existing contact is not allowed in the backend. Check '$addressBookId' address book configuration.", E_USER_WARNING);
+							throw new SabreDAVException\ServiceUnavailable();
+						}
 		      	
 						Utility::handleLdapError($ldapErrorNo);
 						
@@ -1226,6 +1230,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					}
 						
 					if($ldapErrorNo != 0x0) {
+						if($ldapErrorNo == 0x22)
+							throw new SabreDAVException\BadRequest("Identity field does not have a valid value.");
+						
 						Utility::handleLdapError($ldapErrorNo);
 						
 						trigger_error("LDAP error: " . ldap_err2str($ldapErrorNo), E_USER_WARNING);
