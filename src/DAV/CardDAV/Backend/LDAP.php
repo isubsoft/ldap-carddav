@@ -1192,6 +1192,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 			    
 					$validAddLdapRdnAttrValue = [];
 					$ldapTree = null;
+					$ldapErrorNo = 0x0;
 			    
 			    if(array_key_exists($rdnField, $ldapInfo)) {
 					  if(is_array($ldapInfo[$rdnField])) {
