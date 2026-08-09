@@ -1230,9 +1230,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					}
 						
 					if($ldapErrorNo != 0x0) {
-						if($ldapErrorNo == 0x22)
-							throw new SabreDAVException\BadRequest("Identity field does not have a valid value.");
-						
 						Utility::handleLdapError($ldapErrorNo);
 						
 						trigger_error("LDAP error: " . ldap_err2str($ldapErrorNo), E_USER_WARNING);
