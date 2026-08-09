@@ -1161,9 +1161,8 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 								break;
 							}
 							
-							if($ldapErrorNo == 0x44) {
+							if(in_array($ldapErrorNo, [0x44, 0x22]))
 								continue;
-							}
 							else
 								break;
 						}
@@ -1186,6 +1185,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 		      	
 		      	if($ldapErrorNo == 0x41)
 		      		trigger_error("Consider adding defaults for required backend field(s) in '$addressBookId' address book configuration", E_USER_NOTICE);
+
+						if($ldapErrorNo == 0x45) {
+							trigger_error("Object class modification of existing contact is not allowed in the backend. Check '$addressBookId' address book configuration.", E_USER_WARNING);
+							throw new SabreDAVException\ServiceUnavailable();
+						}
 		      	
 						Utility::handleLdapError($ldapErrorNo);
 						
@@ -1233,6 +1237,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 			    
 					$validAddLdapRdnAttrValue = [];
 					$ldapTree = null;
+					$ldapErrorNo = 0x0;
 			    
 			    if(array_key_exists($rdnField, $ldapInfo)) {
 					  if(is_array($ldapInfo[$rdnField])) {
@@ -1269,6 +1274,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 	      		trigger_error("Consider adding defaults for required backend field(s) in '$addressBookId' address book configuration", E_USER_NOTICE);
 						
 					if($ldapErrorNo != 0x0) {
+						if($ldapErrorNo == 0x22)
+							throw new SabreDAVException\BadRequest("Identity field does not have a valid value.");
+
 						Utility::handleLdapError($ldapErrorNo);
 						
 						trigger_error("LDAP error: " . ldap_err2str($ldapErrorNo), E_USER_WARNING);
