@@ -1367,9 +1367,6 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				if(in_array(strtolower($operation), $writeAclDeny))
 					throw new SabreDAVException\Forbidden("Address book '$addressBookId' has no '" . strtolower($operation) . "' access.");
         
-        $this->setAddressbookBackendProperties($addressBookId);
-        
-        $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
         $data = $this->fetchLdapContactDataByUri($addressBookId, $cardUri, ['dn', 'entryUUID']);
         
         if($data === false) {
@@ -1386,6 +1383,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					throw new SabreDAVException\Conflict("Not found");
         
         $ldapTree = $data[0]['dn'];
+        
+        $this->setAddressbookBackendProperties($addressBookId);
+        
+        $ldapConn = $this->addressbook[$addressBookId]['LdapConnection'];
 
 	      if(!ldap_delete($ldapConn, $ldapTree)) {
 					$ldapErrorNo = ldap_errno($ldapConn);
