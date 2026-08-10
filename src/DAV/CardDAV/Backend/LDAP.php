@@ -461,30 +461,16 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
      */
     function getCards($addressBookId)
     {
-				$syncDbUserId = $this->addressbook[$addressBookId]['syncDbUserId'];
         $result = [];
-				$cardValues = null;
         
         foreach($this->getMappedContacts($addressBookId) as $contact) {
-       		$cardValues = $this->cache->get(self::getCacheKey($syncDbUserId, $addressBookId, $contact['card_uri']), null);
-       		
-       		if($cardValues == [] || $cardValues == null) {
-		     		if(isset($contact['modified_timestamp']))
-					 		$cardValues = [ 
-					 			'lastmodified'  => $contact['modified_timestamp']
-							];
-						else {
-							$cardValues = $this->getCard($addressBookId, $contact['card_uri']);
-							
-							if($cardValues === false)
-								continue;
-						}
-					}
+					$cardValues = $this->getCard($addressBookId, $contact['card_uri']);
+					
+					if($cardValues === false)
+						continue;
 					
       		unset($cardValues['carddata']);
-					
-			    $cardValues['id'] = $contact['card_uid'];
-			    $cardValues['uri'] = $contact['card_uri'];
+
       		$result[] = $cardValues;
         }
         
@@ -2069,7 +2055,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						
 						if($row !== false) {
 							// Updating the card as new which was earlier marked as deleted.
-							if($row['delete_sync_token'] !== null && $row['delete_sync_token'] !== '') {
+							if($row['delete_sync_token'] !== null && $row['delete_sync_token'] !== '' && (int)$row['delete_sync_token'] < $addressBookSyncToken) {
 								$stmt02->execute([time(), $syncDbUserId, $addressBookId, $backendId]);
 							}
 						}
@@ -2115,7 +2101,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						
 						if($row !== false) {
 							// Updating the card as new which was earlier marked as deleted.
-							if($row['delete_sync_token'] !== null && $row['delete_sync_token'] !== '') {
+							if($row['delete_sync_token'] !== null && $row['delete_sync_token'] !== '' && (int)$row['delete_sync_token'] < $addressBookSyncToken) {
 								$stmt02->execute([time(), $syncDbUserId, $addressBookId, $backendId]);
 								continue;
 							}
@@ -2467,7 +2453,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						$cardUri = $row['card_uri'];
 							
 						// Updating the card as new which was earlier marked as deleted.
-						if($row['delete_sync_token'] !== null && $row['delete_sync_token'] !== '') {
+						if($row['delete_sync_token'] !== null && $row['delete_sync_token'] !== '' && (int)$row['delete_sync_token'] < $addressBookSyncToken) {
 						
 							try {
 								$stmt03->execute([time(), $syncDbUserId, $addressBookId, $backendId]);
@@ -2498,8 +2484,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					$contacts[] = [
 						'card_uri' => $cardUri,
 						'card_uid' => $cardUid,
-						'backend_id' => $backendId,
-						'modified_timestamp' => $cardModifiedTimestamp
+						'backend_id' => $backendId
 					];
 				}
 					
