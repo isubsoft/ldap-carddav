@@ -39,6 +39,7 @@ class LDAP {
 			0x22 => "Identity field does not have a valid value.",
 			0x20 => "Not found.",
 			0x32 => "Access denied.",
+			0x40 => "Identity field does not have a valid value.",
 			0x41 => "One or more required field(s) was empty.",
 			0x44 => "Object with same name already exist."
 		];

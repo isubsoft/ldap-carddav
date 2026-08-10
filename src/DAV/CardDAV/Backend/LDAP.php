@@ -1137,7 +1137,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 								break;
 							}
 							
-							if(in_array($ldapErrorNo, [0x44, 0x22]))
+							if(in_array($ldapErrorNo, [0x22, 0x40, 0x44]))
 								continue;
 							else
 								break;
@@ -1223,7 +1223,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 							break;
 						}
 						
-						if($ldapErrorNo == 0x44)
+						if(in_array($ldapErrorNo, [0x22, 0x40, 0x44]))
 							continue;
 						else
 							break;
