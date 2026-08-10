@@ -2055,8 +2055,11 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						
 						if($row !== false) {
 							// Updating the card as new which was earlier marked as deleted.
-							if($row['delete_sync_token'] !== null && $row['delete_sync_token'] !== '' && (int)$row['delete_sync_token'] < $addressBookSyncToken) {
-								$stmt02->execute([time(), $syncDbUserId, $addressBookId, $backendId]);
+							if($row['delete_sync_token'] !== null && $row['delete_sync_token'] !== '') {
+								if((int)$row['delete_sync_token'] < $addressBookSyncToken)
+									$stmt02->execute([time(), $syncDbUserId, $addressBookId, $backendId]);
+								else
+									continue;
 							}
 						}
 						else {
@@ -2101,8 +2104,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						
 						if($row !== false) {
 							// Updating the card as new which was earlier marked as deleted.
-							if($row['delete_sync_token'] !== null && $row['delete_sync_token'] !== '' && (int)$row['delete_sync_token'] < $addressBookSyncToken) {
-								$stmt02->execute([time(), $syncDbUserId, $addressBookId, $backendId]);
+							if($row['delete_sync_token'] !== null && $row['delete_sync_token'] !== '') {
+								if((int)$row['delete_sync_token'] < $addressBookSyncToken)
+									$stmt02->execute([time(), $syncDbUserId, $addressBookId, $backendId]);
+								
 								continue;
 							}
 							
@@ -2453,16 +2458,19 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						$cardUri = $row['card_uri'];
 							
 						// Updating the card as new which was earlier marked as deleted.
-						if($row['delete_sync_token'] !== null && $row['delete_sync_token'] !== '' && (int)$row['delete_sync_token'] < $addressBookSyncToken) {
-						
-							try {
-								$stmt03->execute([time(), $syncDbUserId, $addressBookId, $backendId]);
-							} catch (\Throwable $th) {
-								trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
-								fclose($fullRefreshLockFileHandle);
-								unlink($fullRefreshLockFile);
-								throw new SabreDAVException\ServiceUnavailable();
+						if($row['delete_sync_token'] !== null && $row['delete_sync_token'] !== '') {
+							if((int)$row['delete_sync_token'] < $addressBookSyncToken) {
+								try {
+									$stmt03->execute([time(), $syncDbUserId, $addressBookId, $backendId]);
+								} catch (\Throwable $th) {
+									trigger_error("Caught exception. Error message: " . $th->getMessage(), E_USER_WARNING);
+									fclose($fullRefreshLockFileHandle);
+									unlink($fullRefreshLockFile);
+									throw new SabreDAVException\ServiceUnavailable();
+								}
 							}
+							else
+								continue;
 						}
 						else {
 							$cardValues = $this->cache->get(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null);
