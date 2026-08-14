@@ -1954,21 +1954,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 			if($uaValues['id'] == 'moz_tb')
 				$uaValues['initial_sync_response_code'] = 400;
 			
-			// Invalid sync token
-			if($syncToken != null && (int)$syncToken >= $addressBookSyncToken)
+			// Check for invalid or expired sync token
+			if(!is_numeric($syncToken) || (int)$syncToken != $syncToken || $syncToken >= $addressBookSyncToken || ($fullSyncToken != null && $syncToken < $fullSyncToken))
 			{
 				if($uaValues['initial_sync_response_code'] != null)
 					throw Utility::responseCodeException($uaValues['initial_sync_response_code'], 'Invalid or unknown sync token (response workaround applied for user agent id - ' . $uaValues['id'] . ')');
 				
-				return null;
-			}
-			
-			// Sync token expiry
-			if($fullSyncToken != null && (int)$syncToken < $fullSyncToken)
-			{
-				if($uaValues['initial_sync_response_code'] != null)
-					throw Utility::responseCodeException($uaValues['initial_sync_response_code'], 'Invalid or unknown sync token (response workaround applied for user agent id - ' . $uaValues['id'] . ')');
-					
 				return null;
 			}
 			
