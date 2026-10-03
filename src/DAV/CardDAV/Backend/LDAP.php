@@ -2009,8 +2009,18 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				$getChangesFromBackendFile = __TMP_DIR__ . '/' . __APP_NAME__ . '_' . strtolower(md5(implode('/', [self::$fullRefreshTableName, $syncDbUserId, $addressBookId]))) . '_process.lock';
 				
 				if(file_exists($getChangesFromBackendFile)) {
-					trigger_error("Get backend changes for address book '$addressBookId' of sync database user '$syncDbUserId' is in progress in another local session. Client will be notified to retry after sometime. If this message continue to appear after a few retries by the client, the following local file may have to be manually removed - '$getChangesFromBackendFile' and this may require the server process to be stopped.", E_USER_NOTICE);
-					throw new SabreDAVException\ServiceUnavailable("The server is currently processing a long running request in another session and cannot process this request at this time, kindly retry after sometime. If this issue persist after a few retries, contact the server administrator.");
+					$processTimeout = 300;
+					$processInProgress = true;
+					
+					if($addressBookSyncToken - filectime($getChangesFromBackendFile) > $processTimeout) {
+						if(unlink($getChangesFromBackendFile))
+							$processInProgress = false;
+						else
+							trigger_error("Get backend changes for address book '$addressBookId' of sync database user '$syncDbUserId' has timed out. Local file - '$getChangesFromBackendFile' may now have to be manually removed and this may require the server process to be stopped.", E_USER_NOTICE);
+					}
+					
+					if($processInProgress)
+						throw new SabreDAVException\ServiceUnavailable("The server is currently processing a long running request in another session and cannot process this request at this time, kindly retry after 2 minutes. If this issue persist after a few retries, contact the server administrator.");
 				}
 				
 				$getChangesFromBackendFileHandle = fopen($getChangesFromBackendFile, 'x');
@@ -2368,8 +2378,18 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				$fullRefreshLockFile = __TMP_DIR__ . '/' . __APP_NAME__ . '_' . strtolower(md5(implode('/', [self::$fullRefreshTableName, $syncDbUserId, $addressBookId]))) . '_process.lock';
 				
 				if(file_exists($fullRefreshLockFile)) {
-					trigger_error("Full refresh of address book '$addressBookId' of sync database user '$syncDbUserId' is in progress in another local session. Client will be notified to retry after sometime. If this message continue to appear after a few retries by the client, the following local file may have to be manually removed - '$fullRefreshLockFile' and this may require the server process to be stopped.", E_USER_NOTICE);
-					throw new SabreDAVException\ServiceUnavailable("The server is currently processing a long running request in another session and cannot process this request at this time, kindly retry after sometime. If this issue persist after a few retries, contact the server administrator.");
+					$processTimeout = 600;
+					$processInProgress = true;
+					
+					if($addressBookSyncToken - filectime($fullRefreshLockFile) > $processTimeout) {
+						if(unlink($fullRefreshLockFile))
+							$processInProgress = false;
+						else
+							trigger_error("Full refresh of address book '$addressBookId' of sync database user '$syncDbUserId' has timed out. Local file - '$fullRefreshLockFile' may have to be manually removed and this may require the server process to be stopped.", E_USER_NOTICE);
+					}
+					
+					if($processInProgress)
+						throw new SabreDAVException\ServiceUnavailable("The server is currently processing a long running request in another session and cannot process this request at this time, kindly retry after 5 minutes. If this issue persist after a few retries, contact the server administrator.");
 				}
 				
 				$fullRefreshLockFileHandle = fopen($fullRefreshLockFile, 'x');
