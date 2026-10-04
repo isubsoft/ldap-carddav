@@ -2009,8 +2009,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				$getChangesFromBackendFile = __TMP_DIR__ . '/' . __APP_NAME__ . '_' . strtolower(md5(implode('/', [self::$fullRefreshTableName, $syncDbUserId, $addressBookId]))) . '_process.lock';
 				
 				if(file_exists($getChangesFromBackendFile)) {
-					$processTimeout = 300;
 					$processInProgress = true;
+					$processTimeout = 300;
+					$processRetryIntervalInMin = 2;
 					
 					if($addressBookSyncToken - filectime($getChangesFromBackendFile) > $processTimeout) {
 						if(unlink($getChangesFromBackendFile))
@@ -2020,7 +2021,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					}
 					
 					if($processInProgress)
-						throw new SabreDAVException\ServiceUnavailable("The server is currently processing a long running request in another session and cannot process this request at this time, kindly retry after 2 minutes. If this issue persist after a few retries, contact the server administrator.");
+						throw new ISubsoftDAVException\ServiceUnavailableEx("The server is currently processing a long running request in another session and cannot process this request at this time, kindly retry after " . $processRetryIntervalInMin . " minutes. If this issue persist after a few retries, contact the server administrator.", ["Retry-After" => $processRetryIntervalInMin * 60]);
 				}
 				
 				$getChangesFromBackendFileHandle = fopen($getChangesFromBackendFile, 'x');
@@ -2378,8 +2379,9 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				$fullRefreshLockFile = __TMP_DIR__ . '/' . __APP_NAME__ . '_' . strtolower(md5(implode('/', [self::$fullRefreshTableName, $syncDbUserId, $addressBookId]))) . '_process.lock';
 				
 				if(file_exists($fullRefreshLockFile)) {
-					$processTimeout = 600;
 					$processInProgress = true;
+					$processTimeout = 600;
+					$processRetryIntervalInMin = 5;
 					
 					if($addressBookSyncToken - filectime($fullRefreshLockFile) > $processTimeout) {
 						if(unlink($fullRefreshLockFile))
@@ -2389,7 +2391,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					}
 					
 					if($processInProgress)
-						throw new SabreDAVException\ServiceUnavailable("The server is currently processing a long running request in another session and cannot process this request at this time, kindly retry after 5 minutes. If this issue persist after a few retries, contact the server administrator.");
+						throw new ISubsoftDAVException\ServiceUnavailableEx("The server is currently processing a long running request in another session and cannot process this request at this time, kindly retry after " . $processRetryIntervalInMin . " minutes. If this issue persist after a few retries, contact the server administrator.", ["Retry-After" => $processRetryIntervalInMin * 60]);
 				}
 				
 				$fullRefreshLockFileHandle = fopen($fullRefreshLockFile, 'x');
