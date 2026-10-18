@@ -1116,7 +1116,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 								$ldapTree = $tmpNewLdapRdn . ',' . $parentOldLdapTree;
 								$oldRdnField = $rdnField;
 								
-								if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null, -60))
+								if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null, -3600))
 									trigger_error("Could not expire cache", E_USER_WARNING);
 									
 								$this->addChange($addressBookId, $cardUri, 'MODIFY');
@@ -1156,7 +1156,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						throw new SabreDAVException\ServiceUnavailable("Unknown error while saving card.");
 					}
 						
-					if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null, -60))
+					if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null, -3600))
 			    	trigger_error("Could not expire cache", E_USER_WARNING);
 			    	
 					$this->addChange($addressBookId, $cardUri, 'MODIFY');
@@ -2146,7 +2146,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						{ 
 							if($cardValues['lastmodified'] < strtotime($data['data']['modifyTimestamp'][0]))
 							{
-								if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null, -60))
+								if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null, -3600))
 		    					trigger_error("Could not expire cache", E_USER_WARNING);
 									
 								$this->addChange($addressBookId, $cardUri, 'MODIFY');
@@ -2508,7 +2508,7 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 								{
 									if($cardValues['lastmodified'] < $cardModifiedTimestamp)
 									{
-										if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null, -60))
+										if(!$this->cache->set(self::getCacheKey($syncDbUserId, $addressBookId, $cardUri), null, -3600))
 											trigger_error("Could not expire cache", E_USER_WARNING);
 									
 										$this->addChange($addressBookId, $cardUri, 'MODIFY');
