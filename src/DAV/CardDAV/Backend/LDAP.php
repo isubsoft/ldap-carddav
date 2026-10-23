@@ -951,18 +951,18 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 				foreach(array_keys($ldapInfo) as $key) {
 					if(is_array($ldapInfo[$key])) {
 						foreach(array_keys($ldapInfo[$key]) as $index) {
-							if((string)$ldapInfo[$key][$index] == '')
+							if($ldapInfo[$key][$index] === null || $ldapInfo[$key][$index] === '')
 								unset($ldapInfo[$key][$index]);
 						}
 						
 						// If remaining is an empty array then it needs to be removed as backend does not accept
 						// an empty array during add.
-						if($ldapInfo[$key] == [])
+						if($ldapInfo[$key] === [])
 							unset($ldapInfo[$key]);
 						else
 							$ldapInfo[$key] = array_unique($ldapInfo[$key]);
 					}
-					elseif((string)$ldapInfo[$key] == '')
+					elseif($ldapInfo[$key] === null || $ldapInfo[$key] === '')
 						unset($ldapInfo[$key]);
 				}
 
