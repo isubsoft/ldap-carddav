@@ -948,12 +948,10 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 					$readOnlyFields = $fieldAclList;
 					
 				// Remove empty and duplicate values as if they were never sent in the first place.
-		    $tmpLdapInfo = $ldapInfo;
-
-				foreach($tmpLdapInfo as $key => $value) {
-					if(is_array($value)) {
-						foreach($value as $index => $fieldValue) {
-							if((string)$fieldValue == '')
+				foreach(array_keys($ldapInfo) as $key) {
+					if(is_array($ldapInfo[$key])) {
+						foreach(array_keys($ldapInfo[$key]) as $index) {
+							if((string)$ldapInfo[$key][$index] == '')
 								unset($ldapInfo[$key][$index]);
 						}
 						
@@ -962,14 +960,12 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 						if($ldapInfo[$key] == [])
 							unset($ldapInfo[$key]);
 						else
-							$ldapInfo[$key] = array_unique($value);
+							$ldapInfo[$key] = array_unique($ldapInfo[$key]);
 					}
-					elseif((string)$value == '')
+					elseif((string)$ldapInfo[$key] == '')
 						unset($ldapInfo[$key]);
 				}
 
-		    unset($tmpLdapInfo);
-					
 				if($operation == 'UPDATE')
 				{
 					// List of fields not be marked for deletion as determined dynamically during the
