@@ -34,9 +34,11 @@ php-memcached
 [package(s) if using apcu as cache backend]
 php-apcu
 
-[package(s) if using apache as web server]
-apache2
+[package(s) if using apache web server with mod-php]
 libapache2-mod-php
+
+[package(s) if using fcgi]
+php-fpm
 
 -- Assumptions
 1. It is assumed that PHP will be executed by system user www-data on the host server. In case it is not, you can replace any reference to user www-data below with the appropriate user in your system.
