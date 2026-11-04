@@ -2096,10 +2096,13 @@ class LDAP extends \Sabre\CardDAV\Backend\AbstractBackend implements \Sabre\Card
 	    					trigger_error("Could not expire cache", E_USER_WARNING);
 								
 							$this->addChange($addressBookId, $cardUri, 'MODIFY');
+							continue;
 						}
 					}
-					else
+					else {
 						$this->addChange($addressBookId, $cardUri, 'MODIFY');
+						continue;
+					}
 				}
 					
         try {
