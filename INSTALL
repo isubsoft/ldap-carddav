@@ -60,7 +60,7 @@ Copy conf/conf.php.example as conf/conf.php (henceforth called the conf file) an
 3. Execute 'php src/App/syncdb.php init' to initialize the sync database.
 
 -- Application file/directory permissions
-1. Make sure no application files or directories are initially owned by system user www-data.
+1. Make sure no application files or directories are initially owned or are writable by system user www-data.
 2. The conf file MUST NOT be world readable but MUST be readable and preferably not writable by system user www-data.
    Equivalent UNIX command: chmod o-rwx conf/conf.php && chmod g-w conf/conf.php && chgrp www-data conf/conf.php
 3. Data directory need to be writable by system user www-data and MUST NOT be world readable. All sub directories of data directory need to be writable by system user www-data. Default data directory is data.
