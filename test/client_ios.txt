@@ -1,7 +1,7 @@
 ---- Retrieve information of a principal
 
 -- REQUEST
-curl --dump-header /dev/stderr --silent --location -u %username:%password --request PROPFIND '%base_url/principals/%principal/' \
+curl --dump-header /dev/stderr --silent --location --anyauth -u %username:%password --request PROPFIND '%base_url/principals/%principal/' \
 --header 'Content-Type: application/xml' \
 --header 'Depth: 1' \
 --header 'Accept-Charset: utf-8' \
@@ -77,7 +77,7 @@ curl --dump-header /dev/stderr --silent --location -u %username:%password --requ
 ---- Retrieve information on address books of a principal
 
 -- REQUEST
-curl --dump-header /dev/stderr --silent --location -u %username:%password --request PROPFIND '%base_url/addressbooks/%principal/' \
+curl --dump-header /dev/stderr --silent --location --anyauth -u %username:%password --request PROPFIND '%base_url/addressbooks/%principal/' \
 --header 'Content-Type: application/xml' \
 --header 'Depth: 1' \
 --header 'Accept-Charset: utf-8' \
@@ -492,7 +492,7 @@ curl --dump-header /dev/stderr --silent --location -u %username:%password --requ
 ---- Retrieve addressbook information
 
 -- REQUEST
-curl --dump-header /dev/stderr --silent --location -u %username:%password --request PROPFIND '%base_url/addressbooks/%principal/%addressbook/' \
+curl --dump-header /dev/stderr --silent --location --anyauth -u %username:%password --request PROPFIND '%base_url/addressbooks/%principal/%addressbook/' \
 --header 'Content-Type: application/xml' \
 --header 'Depth: 1' \
 --header 'Accept-Charset: utf-8' \
@@ -544,7 +544,7 @@ curl --dump-header /dev/stderr --silent --location -u %username:%password --requ
 ---- Add me-card property to an addressbook
 
 -- REQUEST
-curl --dump-header /dev/stderr --silent --location -u %username:%password --request PROPPATCH '%base_url/addressbooks/%principal/' \
+curl --dump-header /dev/stderr --silent --location --anyauth -u %username:%password --request PROPPATCH '%base_url/addressbooks/%principal/' \
 --header 'Content-Type: application/xml' \
 --header 'Accept-Charset: utf-8' \
 --data '<?xml version="1.0" encoding="UTF-8"?>
