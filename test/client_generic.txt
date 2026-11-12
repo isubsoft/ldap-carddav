@@ -415,13 +415,13 @@ curl --dump-header /dev/stderr --silent --location --anyauth -u %username:%passw
 --header 'Content-Type: application/xml' \
 --header 'Accept-Charset: utf-8' \
 --header 'Depth: 0' \
---data '<d:propfind xmlns:d="DAV:" xmlns:cs="http://calendarserver.org/ns/" xmlns:sabre="http://sabredav.org/ns">
-  <d:prop>
-     <d:displayname />
-     <cs:getctag />
-     <sabre:sync-token />
-  </d:prop>
-</d:propfind>'
+--data '<propfind xmlns="DAV:" xmlns:card="urn:ietf:params:xml:ns:carddav" xmlns:cs="http://calendarserver.org/ns/" xmlns:d="DAV:">
+  <prop>
+     <displayname/>
+     <cs:getctag/>
+     <sync-token/>
+  </prop>
+</propfind>'
 
 -- SAMPLE RESPONSE BODY
 <?xml version="1.0"?>
