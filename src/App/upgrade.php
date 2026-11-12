@@ -84,19 +84,19 @@ $upgradeDbSqlFile = [];
 
 if($pdo_scheme == 'sqlite') {
 	$upgradeDbSqlFile = [
-		__BASE_DIR__ . "/upgrade/sql/" . $pdo_scheme . "/10_stage_1_ddl.sql",
-		__BASE_DIR__ . "/sql/" . $pdo_scheme . "/30_trigger_ddl.sql",
-		__BASE_DIR__ . "/upgrade/sql/" . $pdo_scheme . "/10_stage_2_ddl.sql"
+		__BASE_DIR__ . "/sql/upgrade/" . $pdo_scheme . "/10_stage_1_ddl.sql",
+		__BASE_DIR__ . "/sql/install/" . $pdo_scheme . "/30_trigger_ddl.sql",
+		__BASE_DIR__ . "/sql/upgrade/" . $pdo_scheme . "/10_stage_2_ddl.sql"
 	];
 }
 else {
 	$upgradeDbSqlFile = [
-		__BASE_DIR__ . "/upgrade/sql/" . $pdo_scheme . "/10_ddl.sql",
-		__BASE_DIR__ . "/sql/" . $pdo_scheme . "/30_trigger_ddl.sql"
+		__BASE_DIR__ . "/sql/upgrade/" . $pdo_scheme . "/10_ddl.sql",
+		__BASE_DIR__ . "/sql/install/" . $pdo_scheme . "/30_trigger_ddl.sql"
 	];
 }
 
-$upgradeDbSqlFile[] = __BASE_DIR__ . "/sql/90_data_seed_dml.sql";
+$upgradeDbSqlFile[] = __BASE_DIR__ . "/sql/install/90_data_seed_dml.sql";
 
 echo "[INFO] Performing sync database schema version upgrade from " . (json_encode($currentSyncDbVersion)) . " => " .  (json_encode($syncDbVersion)) . PHP_EOL;
 
