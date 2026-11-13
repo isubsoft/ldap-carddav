@@ -1,7 +1,7 @@
 ---- Get resource urls (given here for sake of completeness and discovery)
 
 -- REQUEST
-curl --dump-header /dev/stderr --silent --location -u %username:%password --request PROPFIND '%base_url/' \
+curl --dump-header /dev/stderr --silent --location --anyauth -u %username:%password --request PROPFIND '%base_url/' \
 --header 'Content-Type: application/xml' \
 --header 'Accept-Charset: utf-8' \
 --header 'Depth: 1' \
@@ -54,7 +54,7 @@ curl --dump-header /dev/stderr --silent --location -u %username:%password --requ
 ---- Get principals (returns only current principal due to ACL, given here for sake of completeness)
 
 -- REQUEST
-curl --dump-header /dev/stderr --silent --location -u %username:%password --request PROPFIND '%base_url/principals/' \
+curl --dump-header /dev/stderr --silent --location --anyauth -u %username:%password --request PROPFIND '%base_url/principals/' \
 --header 'Content-Type: application/xml' \
 --header 'Accept-Charset: utf-8' \
 --header 'Depth: 1' \
@@ -96,7 +96,7 @@ curl --dump-header /dev/stderr --silent --location -u %username:%password --requ
 ---- Get current principal 
 
 -- REQUEST
-curl --dump-header /dev/stderr --silent --location -u %username:%password --request PROPFIND '%base_url/' \
+curl --dump-header /dev/stderr --silent --location --anyauth -u %username:%password --request PROPFIND '%base_url/' \
 --header 'Content-Type: application/xml' \
 --header 'Accept-Charset: utf-8' \
 --header 'Depth: 0' \
@@ -127,7 +127,7 @@ curl --dump-header /dev/stderr --silent --location -u %username:%password --requ
 ---- Get extended information about a principal 
 
 -- REQUEST
-curl --dump-header /dev/stderr --silent --location -u %username:%password --request PROPFIND '%base_url/principals/%principal/' \
+curl --dump-header /dev/stderr --silent --location --anyauth -u %username:%password --request PROPFIND '%base_url/principals/%principal/' \
 --header 'Content-Type: application/xml' \
 --header 'Accept-Charset: utf-8' \
 --header 'Depth: 0' \
@@ -320,7 +320,7 @@ curl --dump-header /dev/stderr --silent --location -u %username:%password --requ
 ---- Get addressbook home of a principal - 
 
 -- REQUEST
-curl --dump-header /dev/stderr --silent --location -u %username:%password --request PROPFIND '%base_url/principals/%principal/' \
+curl --dump-header /dev/stderr --silent --location --anyauth -u %username:%password --request PROPFIND '%base_url/principals/%principal/' \
 --header 'Content-Type: application/xml' \
 --header 'Accept-Charset: utf-8' \
 --header 'Depth: 0' \
@@ -351,7 +351,7 @@ curl --dump-header /dev/stderr --silent --location -u %username:%password --requ
 ---- Get list of addressbooks of a principal
 
 -- REQUEST
-curl --dump-header /dev/stderr --silent --location -u %username:%password --request PROPFIND '%base_url/addressbooks/%principal/' \
+curl --dump-header /dev/stderr --silent --location --anyauth -u %username:%password --request PROPFIND '%base_url/addressbooks/%principal/' \
 --header 'Content-Type: application/xml' \
 --header 'Accept-Charset: utf-8' \
 --header 'Depth: 1' \
@@ -405,7 +405,7 @@ curl --dump-header /dev/stderr --silent --location -u %username:%password --requ
 ---- Retrieve addressbook information -
 
 -- REQUEST
-curl --dump-header /dev/stderr --silent --location -u %username:%password --request PROPFIND '%base_url/addressbooks/%principal/%addressbook/' \
+curl --dump-header /dev/stderr --silent --location --anyauth -u %username:%password --request PROPFIND '%base_url/addressbooks/%principal/%addressbook/' \
 --header 'Content-Type: application/xml' \
 --header 'Depth: 0' \
 --header 'Accept-Charset: utf-8' \
@@ -439,7 +439,7 @@ curl --dump-header /dev/stderr --silent --location -u %username:%password --requ
 ---- List contacts of an addressbook
 
 -- REQUEST
-curl --dump-header /dev/stderr --silent --location -u %username:%password --request REPORT '%base_url/addressbooks/%principal/%addressbook/' \
+curl --dump-header /dev/stderr --silent --location --anyauth -u %username:%password --request REPORT '%base_url/addressbooks/%principal/%addressbook/' \
 --header 'Content-Type: application/xml' \
 --header 'Depth: 1' \
 --header 'Accept-Charset: utf-8' \
@@ -478,7 +478,7 @@ curl --dump-header /dev/stderr --silent --location -u %username:%password --requ
 ---- Fetch contact data in vcard format
 
 -- REQUEST
-curl --dump-header /dev/stderr --silent --location -u %username:%password --header 'Accept: text/vcard; version=3.0' --location --request GET '%base_url/addressbooks/%principal/%addressbook/%card_uri'
+curl --dump-header /dev/stderr --silent --location --anyauth -u %username:%password --header 'Accept: text/vcard; version=3.0' --location --request GET '%base_url/addressbooks/%principal/%addressbook/%card_uri'
 
 -- SAMPLE RESPONSE BODY
 BEGIN:VCARD
@@ -499,7 +499,7 @@ END:VCARD
 ---- Fetch contacts data with multiget
 
 -- REQUEST
-curl --dump-header /dev/stderr --silent --location -u %username:%password --request REPORT '%base_url/addressbooks/%principal/%addressbook/' \
+curl --dump-header /dev/stderr --silent --location --anyauth -u %username:%password --request REPORT '%base_url/addressbooks/%principal/%addressbook/' \
 --header 'Content-Type: application/xml' \
 --header 'Depth: 1' \
 --header 'Accept-Charset: utf-8' \
@@ -568,7 +568,7 @@ curl --dump-header /dev/stderr --silent --location -u %username:%password --requ
 ---- Update contact
 
 -- REQUEST
-curl --dump-header /dev/stderr --silent --location -u %username:%password --request PUT '%base_url/addressbooks/%principal/%addressbook/%card_uri' \
+curl --dump-header /dev/stderr --silent --location --anyauth -u %username:%password --request PUT '%base_url/addressbooks/%principal/%addressbook/%card_uri' \
 --header 'Content-Type: text/vcard' \
 --header 'Accept-Charset: utf-8' \
 --upload-file contact.vcf
@@ -581,7 +581,7 @@ HTTP/1.1 204 No Content
 ---- Create a contact
 
 -- REQUEST
-curl --dump-header /dev/stderr --silent --location -u %username:%password --request PUT '%base_url/addressbooks/%principal/%addressbook/%card_uri' \
+curl --dump-header /dev/stderr --silent --location --anyauth -u %username:%password --request PUT '%base_url/addressbooks/%principal/%addressbook/%card_uri' \
 --header 'Content-Type: text/vcard' \
 --header 'Accept-Charset: utf-8' \
 --upload-file contact.vcf
@@ -594,7 +594,7 @@ HTTP/1.1 201 No Content
 10. Delete contact
 
 -- REQUEST
-curl --dump-header /dev/stderr --silent --location -u %username:%password --request DELETE '%base_url/addressbooks/%principal/%addressbook/%card_uri'
+curl --dump-header /dev/stderr --silent --location --anyauth -u %username:%password --request DELETE '%base_url/addressbooks/%principal/%addressbook/%card_uri'
 
 -- SAMPLE RESPONSE BODY
 HTTP/1.1 204 No Content
@@ -604,17 +604,17 @@ HTTP/1.1 204 No Content
 ---- Get First Sync Token
 
 -- REQUEST
-curl --dump-header /dev/stderr --silent --location -u %username:%password --request PROPFIND '%base_url/addressbooks/%principal/%addressbook/' \
+curl --dump-header /dev/stderr --silent --location --anyauth -u %username:%password --request PROPFIND '%base_url/addressbooks/%principal/%addressbook/' \
 --header 'Content-Type: application/xml' \
 --header 'Accept-Charset: utf-8' \
 --header 'Depth: 0' \
---data '<d:propfind xmlns:d="DAV:" xmlns:cs="http://calendarserver.org/ns/" xmlns:sabre="http://sabredav.org/ns">
-  <d:prop>
-     <d:displayname />
-     <cs:getctag />
-     <sabre:sync-token />
-  </d:prop>
-</d:propfind>'
+--data '<propfind xmlns="DAV:" xmlns:card="urn:ietf:params:xml:ns:carddav" xmlns:cs="http://calendarserver.org/ns/" xmlns:d="DAV:">
+  <prop>
+     <displayname/>
+     <cs:getctag/>
+     <sync-token/>
+  </prop>
+</propfind>'
 
 -- SAMPLE RESPONSE BODY
 <?xml version="1.0"?>
@@ -642,7 +642,7 @@ curl --dump-header /dev/stderr --silent --location -u %username:%password --requ
 12. Get changes for addressbook
 
 -- REQUEST
-curl --dump-header /dev/stderr --silent --location -u %username:%password --request REPORT '%base_url/addressbooks/%principal/%addressbook/' \
+curl --dump-header /dev/stderr --silent --location --anyauth -u %username:%password --request REPORT '%base_url/addressbooks/%principal/%addressbook/' \
 --header 'Content-Type: application/xml' \
 --header 'Accept-Charset: utf-8' \
 --header 'Depth: 0' \
